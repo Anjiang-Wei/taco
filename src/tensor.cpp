@@ -634,6 +634,7 @@ void TensorBase::compile() {
   stmt = parallelizeOuterLoop(stmt);
   compile(stmt, content->assembleWhileCompute);
 }
+
 void TensorBase::compile(taco::IndexStmt stmt, bool assembleWhileCompute) {
   if (!needsCompile()) {
     return;
@@ -673,10 +674,8 @@ taco_tensor_t* TensorBase::getTacoTensorT() {
 void TensorBase::syncValues() {
   if (content->needsPack) {
     pack();
-  } else if (content->needsCompute) {
-    compile();
-    assemble();
-    compute();
+  } else if (content->needsCompute && doEvaluateAtAssign()) {
+    evaluate();
   }
 }
 
@@ -795,7 +794,7 @@ vector<void*> packArguments(const TensorBase& tensor) {
 
 void TensorBase::assemble() {
   taco_uassert(!needsCompile()) << error::assemble_without_compile;
-  if (!needsAssemble()) {
+  if (!needsAssemble() && doEvaluateAtAssign()) {
     return;
   }
   // Sync operand tensors if needed.
@@ -816,7 +815,7 @@ void TensorBase::assemble() {
 
 void TensorBase::compute() {
   taco_uassert(!needsCompile()) << error::compute_without_compile;
-  if (!needsCompute()) {
+  if (!needsCompute() && doEvaluateAtAssign()) {
     return;
   }
   setNeedsCompute(false);
@@ -891,6 +890,10 @@ string TensorBase::getSource() const {
 }
 
 void TensorBase::compileSource(std::string source) {
+  taco_uassert(needsCompile()) << "Cannot compile with custom source if "
+                               << "kernel already compiled";
+  setNeedsCompile(false);
+
   taco_iassert(getAssignment().getRhs().defined())
       << error::compile_without_expr;
 
@@ -914,7 +917,6 @@ void TensorBase::compileSource(std::string source) {
   }
   content->module->setSource(source + "\n" + ss.str());
   content->module->compile();
-  setNeedsCompile(false);
 }
 
 TensorBase::HelperFuncsCache TensorBase::helperFunctions;
@@ -1376,6 +1378,16 @@ void taco_set_num_threads(int num_threads) {
 
 int taco_get_num_threads() {
   return taco_num_threads;
+}
+
+static bool evaluateAtAssign = true;
+
+void setEvaluateAtAssign(bool evalAtAssign) {
+  evaluateAtAssign = evalAtAssign;
+}
+
+bool doEvaluateAtAssign() {
+  return evaluateAtAssign;
 }
 
 // Partitioning and data placement related methods.
