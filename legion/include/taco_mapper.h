@@ -18,15 +18,43 @@ public:
     PLACEMENT_SHARD = (1 << 6),
     // Marks that the task should have its read-only regions be eligible for collection.
     UNTRACK_VALID_REGIONS = (1 << 7),
+    MAP_COLLECTIVE_INSTANCE = (1 << 8),
   };
 
   TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &machine, const Legion::Processor &local, const char* name);
+
+  CachedMappingPolicy default_policy_select_task_cache_policy(
+      Legion::Mapping::MapperContext ctx, const Legion::Task &task) override {
+    return DEFAULT_CACHE_POLICY_DISABLE;
+  }
+
 
   void select_sharding_functor(const Legion::Mapping::MapperContext ctx,
                                const Legion::Task &task,
                                const SelectShardingFunctorInput &input,
                                SelectShardingFunctorOutput &output) override;
 
+  Legion::LayoutConstraintID default_policy_select_layout_constraints(
+      Legion::Mapping::MapperContext ctx, Legion::Memory target_memory,
+      const Legion::RegionRequirement &req,
+      MappingKind mapping_kind,
+      bool needs_field_constraint_check,
+      bool &force_new_instances) override;
+
+  bool tm_create_custom_instances(Legion::Mapping::MapperContext ctx,
+                                  Legion::Processor target, Legion::Memory target_memory,
+                                  const Legion::RegionRequirement &req, unsigned index,
+                                  std::set<Legion::FieldID> &needed_fields, // will destroy
+                                  const Legion::TaskLayoutConstraintSet &layout_constraints,
+                                  Legion::LayoutConstraintSet constraints,
+                                  bool needs_field_constraint_check,
+                                  std::vector<Legion::Mapping::PhysicalInstance> &instances,
+                                  size_t *footprint = NULL);
+
+  void default_map_task(const Legion::Mapping::MapperContext ctx,
+                const Legion::Task &task,
+                const MapTaskInput &input,
+                MapTaskOutput &output);
   void map_task(const Legion::Mapping::MapperContext ctx,
                 const Legion::Task &task,
                 const MapTaskInput &input,
