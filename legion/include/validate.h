@@ -27,6 +27,9 @@ void tacoValidateOMP(const Legion::Task* task, Legion::PhysicalRegion r, Legion:
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < volume; i++) {
     assert(ar[pitches.unflatten(i, rect.lo)] == *(T*)(task->args));
+    // if (ar[pitches.unflatten(i, rect.lo)] != *(T*)(task->args)) {
+    //   std::cout << pitches.unflatten(i, rect.lo) << " -> " << ar[pitches.unflatten(i, rect.lo)] << std::endl;
+    // }
   }
 }
 
