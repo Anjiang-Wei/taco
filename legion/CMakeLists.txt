@@ -100,6 +100,8 @@ add_app_folder(ttmc)
 
 add_cuda_folder(cuda-test)
 
+add_app_folder(future-test)
+
 # Add a variety of tests for the generated code.
 
 # Tests for cannon.
