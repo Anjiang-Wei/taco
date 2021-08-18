@@ -14,6 +14,8 @@ enum TaskIDs {
   TID_WORKER,
 };
 
+const int MAX_CONCURRENT = 3;
+
 // Let's write a custom mapper to try and buffer the tasks.
 class MyMapper : public Mapping::DefaultMapper {
 public:
@@ -40,16 +42,21 @@ public:
       auto task = *it;
       bool schedule = true;
       if (task->task_id == TID_WORKER) {
-        // TODO (rohany): Is target proc valid to do here? What is the ordering
-        //  of mapper calls between select_task_options and this?
-        auto waitEvent = this->queue[task->target_proc];
-        if (waitEvent.exists()) {
-          // If there is an event, then wait behind it.
+        // See how many tasks we have in flight.
+        auto inflight = this->queue[task->target_proc];
+        if (inflight.size() == MAX_CONCURRENT) {
+          // We've hit the cap, so we can't schedule any more tasks.
           schedule = false;
-          returnEvent = waitEvent;
+          // As a heuristic, we'll wait on the first mapper event to
+          // finish, as it's likely that one will finish first.
+          returnEvent = inflight.front().event;
         } else {
-          // Otherwise, create an event to listen on.
-          this->queue[task->target_proc] = this->runtime->create_mapper_event(ctx);
+          // Otherwise, we can schedule the task. Create a new event
+          // and queue it up on the processor.
+          this->queue[task->target_proc].push_back({
+            .id = task->get_unique_id(),
+            .event = this->runtime->create_mapper_event(ctx),
+          });
         }
       }
       if (schedule && (*it)->get_depth() == max_depth)
@@ -80,9 +87,17 @@ public:
     assert(task.task_id == TID_WORKER);
     auto prof = input.profiling_responses.get_measurement<ProfilingMeasurements::OperationStatus>();
     assert(prof->result == Realm::ProfilingMeasurements::OperationStatus::COMPLETED_SUCCESSFULLY);
-    auto event = this->queue[task.target_proc];
+    std::deque<InFlightTask>& inflight = this->queue[task.target_proc];
+    // Iterate through the queue and find the event for this task.
+    MapperEvent event;
+    for (auto it = inflight.begin(); it != inflight.end(); it++) {
+      if (it->id == task.get_unique_id()) {
+        event = it->event;
+        inflight.erase(it);
+        break;
+      }
+    }
     assert(event.exists());
-    this->queue[task.target_proc] = MapperEvent();
     this->runtime->trigger_mapper_event(ctx, event);
   }
 
@@ -94,7 +109,11 @@ public:
   }
 
   // Map from processor to MapperEvents.
-  std::map<Processor, MapperEvent> queue;
+  struct InFlightTask {
+    UniqueID id;
+    MapperEvent event;
+  };
+  std::map<Processor, std::deque<InFlightTask>> queue;
 };
 
 void worker(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
@@ -114,15 +133,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto ispace = runtime->create_index_space(ctx, Rect<1>(0, 9));
   auto reg = runtime->create_logical_region(ctx, ispace, fspace);
 
-  Future f;
   for (int i = 0; i < 10; i++) {
     int32_t idx = i;
     TaskLauncher launcher(TID_WORKER, TaskArgument(&idx, sizeof(int32_t)));
     launcher.add_region_requirement(RegionRequirement(reg, LEGION_REDOP_SUM_FLOAT64, SIMULTANEOUS, reg).add_field(FID_VAL));
-    if (f.valid()) {
-      launcher.add_future(f);
-    }
-    f = runtime->execute_task(ctx, launcher);
+    runtime->execute_task(ctx, launcher);
   }
 }
 
