@@ -140,3 +140,6 @@ target_link_libraries(spmv Legion::Legion)
 # Utility to preload tns files into hdf5 files for easier ingestion.
 add_executable(tnstohdf5 fileio/tnstohdf5.cpp)
 target_link_libraries(tnstohdf5 Legion::Legion)
+
+add_executable(future-bug future-bug/main.cpp)
+target_link_libraries(future-bug Legion::Legion)
