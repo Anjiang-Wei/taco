@@ -92,7 +92,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto parts = partitionForcomputeLegion(ctx, runtime, A, B, C, gx, gy, gz);
 
   std::vector<size_t> times;
-  for (int i = 0; i < 11; i++) {
+  for (int i = 0; i < 2; i++) {
     // tacoFill<valType>(ctx, runtime, A, aPart, 0);
     // tacoFill<valType>(ctx, runtime, B, bPart, 1);
     // tacoFill<valType>(ctx, runtime, C, cPart, 1);

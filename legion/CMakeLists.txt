@@ -7,6 +7,9 @@ endif(OPENMP)
 # a non-system provided HDF5 installation.
 find_package(HDF5 REQUIRED)
 
+set(TILEDMM_GPU_BACKEND CUDA CACHE STRING "GPU backend" FORCE)
+add_subdirectory(Tiled-MM)
+
 # Include the headers and supporting source files.
 include_directories(include/ OpenBLAS/install/include "${CMAKE_BINARY_DIR}/include")
 link_directories(OpenBLAS/install/lib)
@@ -51,7 +54,7 @@ function(add_app_folder folder)
     if (Legion_USE_CUDA)
         if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${folder}/taco-generated.cu")
             cuda_add_executable("${folder}-cuda" "${folder}/main.cpp" "${folder}/taco-generated.cu" ${LG_SOURCES} ${LG_CU_SOURCES})
-            target_link_libraries("${folder}-cuda" Legion::Legion cublas -fopenmp)
+            target_link_libraries("${folder}-cuda" Tiled-MM Legion::Legion cublas -fopenmp)
 	    # set_property(TARGET "${folder}-cuda" PROPERTY CUDA_ARCHITECTURES 60)
 	    # target_compile_options("${folder}-cuda" PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:-arch=sm_60>)
 	    # target_compile_options("${folder}-cuda" PUBLIC -gencode arch=compute_50,code=sm_50)

@@ -3,6 +3,10 @@
 #include "leaf_kernels.cuh"
 #include "taco_legion_header.h"
 #include "taco_mapper.h"
+
+#include "Tiled-MM/tiled_mm.hpp"
+
+
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 using namespace Legion;
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
@@ -324,26 +328,41 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     return ;
 
   double alpha = 1.0000000000000000;
-  cublasHandle_t handle = getCuBLAS();
-  cudaStream_t taskStream = cudaStream_t();
-  cudaStreamCreate(&(taskStream));
-  CHECK_CUBLAS(cublasSetStream(handle, taskStream));
-  CHECK_CUBLAS(cublasDgemm(
-    handle,
-    CUBLAS_OP_N,
-    CUBLAS_OP_N,
-    (1 + (cDomain.hi()[1] - cDomain.lo()[1])),
-    (1 + (bDomain.hi()[0] - bDomain.lo()[0])),
-    (1 + (cDomain.hi()[0] - cDomain.lo()[0])),
-    &(alpha),
-    c_vals.ptr(cDomain.lo()),
-    (c_vals.accessor.strides[0] / sizeof(double)),
-    b_vals.ptr(bDomain.lo()),
-    (b_vals.accessor.strides[0] / sizeof(double)),
-    &(alpha),
+  auto tctx = gpu::make_context<double>(2, 5000, 5000, 5000);
+  gpu::gemm(
+    *tctx, 
+    const_cast<double*>(b_vals.ptr(bDomain.lo())), 
+    const_cast<double*>(c_vals.ptr(cDomain.lo())), 
     a_vals.ptr(aDomain.lo()),
-    (a_vals.accessor.strides[0] / sizeof(double))
-  ));
+    (1 + (bDomain.hi()[0] - bDomain.lo()[0])),
+    (1 + (cDomain.hi()[1] - cDomain.lo()[1])),
+    (1 + (cDomain.hi()[0] - cDomain.lo()[0])),
+    alpha,
+    alpha,
+    false /* pin_buffers */
+  );
+  
+
+  // cublasHandle_t handle = getCuBLAS();
+  // cudaStream_t taskStream = cudaStream_t();
+  // cudaStreamCreate(&(taskStream));
+  // CHECK_CUBLAS(cublasSetStream(handle, taskStream));
+  // CHECK_CUBLAS(cublasDgemm(
+  //   handle,
+  //   CUBLAS_OP_N,
+  //   CUBLAS_OP_N,
+  //   (1 + (cDomain.hi()[1] - cDomain.lo()[1])),
+  //   (1 + (bDomain.hi()[0] - bDomain.lo()[0])),
+  //   (1 + (cDomain.hi()[0] - cDomain.lo()[0])),
+  //   &(alpha),
+  //   c_vals.ptr(cDomain.lo()),
+  //   (c_vals.accessor.strides[0] / sizeof(double)),
+  //   b_vals.ptr(bDomain.lo()),
+  //   (b_vals.accessor.strides[0] / sizeof(double)),
+  //   &(alpha),
+  //   a_vals.ptr(aDomain.lo()),
+  //   (a_vals.accessor.strides[0] / sizeof(double))
+  // ));
 }
 
 void computeLegion(Context ctx, Runtime* runtime, LogicalRegion a, LogicalRegion b, LogicalRegion c, LogicalPartition aPartition, LogicalPartition bPartition, LogicalPartition cPartition, int32_t gx, int32_t gy, int32_t gz) {

@@ -75,6 +75,13 @@ TACOMapper::TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &mach
     }
   }
 
+  this->zcmems = std::vector<Memory>(this->machine.get_address_space_count());
+  Machine::MemoryQuery zcs(this->machine);
+  zcs.only_kind(Memory::Z_COPY_MEM);
+  for (auto it = zcs.begin(); it != zcs.end(); it++) {
+    this->zcmems[it->address_space()] = *it;
+  }
+
   if (this->multipleShardsPerNode) {
     // If we have GPUs, map each local CPU to a local GPU corresponding to each shard.
     // If we actually have GPUs, then the number of GPUs should be equal to the number of CPUs.
@@ -232,6 +239,9 @@ Memory TACOMapper::default_policy_select_target_memory(Legion::Mapping::MapperCo
     auto it = this->numaDomains.find(target_proc);
     assert(it != this->numaDomains.end());
     return it->second;
+  } else if (target_proc.kind() == Processor::TOC_PROC) {
+    // Try allocating some things in ZCMemory.
+    return this->zcmems[target_proc.address_space()];
   } else {
     return DefaultMapper::default_policy_select_target_memory(ctx, target_proc, req, mc);
   }

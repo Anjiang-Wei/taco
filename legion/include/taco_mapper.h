@@ -174,6 +174,8 @@ private:
   //  that all need to be backpressured then I'm not sure how that will work.
   std::map<Legion::Processor, std::deque<InFlightTask>> backPressureQueue;
 
+  std::vector<Legion::Memory> zcmems;
+
   // TODO (rohany): It may end up being necessary that we need to explicitly map
   //  regions for placement tasks. If so, Manolis says the following approach
   //  is the right thing:
