@@ -97,6 +97,7 @@ class DMMBench:
     def backpressureArgs(self, procs):
         if procs in [8, 32, 128]:
             return ['-tm:enable_backpressure', '-tm:backpressure_max_in_flight', '1', '-ll:defalloc', '0']
+            # return ['-tm:enable_backpressure', '-tm:backpressure_max_in_flight', '1']
         else:
             return []
 
@@ -347,6 +348,7 @@ class SolomonikGPUBench(DMMBench):
           64: (8, 1, 8),
           128: (8, 2, 8),
           256: (16, 1, 16),
+          512: (16, 2, 16),
           1024: (32, 1, 32),
         }
 

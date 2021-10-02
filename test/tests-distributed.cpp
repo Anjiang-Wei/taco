@@ -178,8 +178,7 @@ TEST(distributed, cuda_pummaMM) {
 
   auto gpuGrid = Grid(2, 2);
   std::vector<TensorDistribution> dist{
-      TensorDistribution(grid),
-      TensorDistribution(gpuGrid, taco::ParallelUnit::DistributedGPU),
+    TensorDistribution(partGrid, ParallelUnit::DistributedGPU),
   };
 
   Tensor<double> a("a", {dim, dim}, Format{Dense, Dense}, dist);
@@ -285,8 +284,7 @@ TEST(distributed, cuda_summaMM) {
 
   auto gpuGrid = Grid(2, 2);
   std::vector<TensorDistribution> dist{
-    TensorDistribution(grid),
-    TensorDistribution(gpuGrid, taco::ParallelUnit::DistributedGPU),
+    TensorDistribution(partGrid, ParallelUnit::DistributedGPU),
   };
 
   Tensor<double> a("a", {dim, dim}, Format{Dense, Dense}, dist);
@@ -880,8 +878,7 @@ TEST(distributed, cuda_cannonMM) {
 
   auto gpuGrid = Grid(2, 2);
   std::vector<TensorDistribution> dist{
-    TensorDistribution(grid, ParallelUnit::DistributedNode),
-    TensorDistribution(gpuGrid, ParallelUnit::DistributedGPU),
+    TensorDistribution(partGrid, ParallelUnit::DistributedGPU),
   };
 
   Tensor<double> a("a", {dim, dim}, Format{Dense, Dense}, dist);
