@@ -116,10 +116,14 @@ extern Datatype ArgumentMap;
 // Regions and Partitions.
 extern Datatype LogicalRegion;
 extern Datatype LogicalPartition;
+extern Datatype IndexPartition;
 // A DomainPointColoring.
 extern Datatype DomainPointColoring;
 // A RegionRequirement.
 extern Datatype RegionRequirement;
+// Runtime types for tensors and partitions;
+extern Datatype LegionTensor;
+extern Datatype LegionTensorPartition;
 // An n-dimensional point.
 Datatype Point(int n);
 // An n-dimensional rectangle.
@@ -135,6 +139,10 @@ extern Datatype IndexSpace;
 Datatype IndexSpaceT(int n);
 Datatype DeferredBuffer(Datatype bufType, int dim);
 Datatype Pointer(Datatype baseType);
+// Represents a templated C++ std::vector.
+Datatype Vector(Datatype elemType);
+// Represents a templated C++ std::unique_ptr.
+Datatype UniquePtr(Datatype elemType);
 
 Datatype max_type(Datatype a, Datatype b);
 

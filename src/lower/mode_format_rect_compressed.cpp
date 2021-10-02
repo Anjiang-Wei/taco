@@ -239,26 +239,34 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   return ir::Block::make({initCs, finalize});
 }
 
-ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode) const {
+ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const {
+  auto maybeAddColor = [&](std::vector<ir::Expr> args) {
+    if (!partitionColor.defined()) {
+      return args;
+    }
+    args.push_back(partitionColor);
+    return args;
+  };
   auto pack = mode.getModePack();
   // Partition the pos region in the same way that the parent is partitioned,
   // as there is a pos entry for each of the entries in the parent.
   // TODO (rohany): Add these variables to the mode.
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
-  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyPartition", {ir::ctx, ir::runtime, parentPartition, this->getRegion(pack, POS)}, Auto));
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyPartition", maybeAddColor(
+      {ir::ctx, ir::runtime, parentPartition, this->getRegion(pack, POS)}), Auto));
   // Then, using the partition of pos, create a dependent partition of the crd array.
   auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
   auto posIndexPart = ir::MethodCall::make(posPart, "get_index_partition", {}, false /* deref */, Auto);
   auto createCrdPartCall = ir::Call::make(
     "runtime->create_partition_by_image_range",
-    {
+    maybeAddColor({
       ir::ctx,
       ir::MethodCall::make(this->getRegion(pack, CRD), "get_index_space", {}, false /* deref */, Auto),
       posPart,
       this->getRegion(pack, POS_PARENT),
       fidRect1,
       ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, posIndexPart}, Auto),
-    },
+    }),
     Auto
   );
   auto getCrdLogicalPartCall = ir::Call::make(
@@ -275,7 +283,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
   return ModeFunction(ir::Block::make({createPosPart, createCrdPart}), {posPart, crdPart, crdPart});
 }
 
-ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childPartition, Mode mode) const {
+ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr) const {
   // Here, we have a partition of the level below us. To go back up
   // from a child partition, we first partition the crd array, and then
   // use that to create a dependent partition of the pos array.

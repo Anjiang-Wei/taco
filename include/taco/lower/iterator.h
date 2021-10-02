@@ -223,10 +223,9 @@ public:
   Iterator getIndexSetIterator() const;
 
   /// Methods for creating and manipulating partitions for distribution.
-  /// TODO (rohany): These are directly lifted from the ModeFormatImpl.
   ModeFunction getCreateInitialPartition() const;
-  ModeFunction getPartitionFromParent(ir::Expr parentPartition) const;
-  ModeFunction getPartitionFromChild(ir::Expr childPartition) const;
+  ModeFunction getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const;
+  ModeFunction getPartitionFromChild(ir::Expr childPartition, ir::Expr partitionColor) const;
 
   /// getRegions returns the set of regions used by the iterator.
   /// See the corresponding comment in mode_format_impl.h.

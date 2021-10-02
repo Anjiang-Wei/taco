@@ -479,12 +479,12 @@ ModeFunction Iterator::getCreateInitialPartition() const {
   return getMode().getModeFormat().impl->getCreateInitialPartition(getMode());
 }
 
-ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition) const {
-  return getMode().getModeFormat().impl->getPartitionFromParent(parentPartition, getMode());
+ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const {
+  return getMode().getModeFormat().impl->getPartitionFromParent(parentPartition, getMode(), partitionColor);
 }
 
-ModeFunction Iterator::getPartitionFromChild(ir::Expr childPartition) const {
-  return getMode().getModeFormat().impl->getPartitionFromChild(childPartition, getMode());
+ModeFunction Iterator::getPartitionFromChild(ir::Expr childPartition, ir::Expr partitionColor) const {
+  return getMode().getModeFormat().impl->getPartitionFromChild(childPartition, getMode(), partitionColor);
 }
 
 std::vector<ModeRegion> Iterator::getRegions() {

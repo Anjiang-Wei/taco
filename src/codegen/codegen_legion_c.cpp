@@ -155,6 +155,8 @@ void CodegenLegionC::visit(const PackTaskArgs *node) {
 // This is a no-op because we pull this IR-node out and handle it specially when constructing
 // the header of a task.
 void CodegenLegionC::visit(const UnpackTensorData*) {}
+// This operation is also a no-op for a similar reason.
+void CodegenLegionC::visit(const DeclareStruct*) {}
 
 void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
   this->stmt = stmt;

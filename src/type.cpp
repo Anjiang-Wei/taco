@@ -433,8 +433,11 @@ Datatype TaskArgument = Datatype("TaskArgument");
 Datatype ArgumentMap = Datatype("ArgumentMap");
 Datatype LogicalRegion = Datatype("LogicalRegion");
 Datatype LogicalPartition = Datatype("LogicalPartition");
+Datatype IndexPartition = Datatype("IndexPartition");
 Datatype DomainPointColoring = Datatype("DomainPointColoring");
 Datatype RegionRequirement = Datatype("RegionRequirement");
+Datatype LegionTensor = Datatype("LegionTensor");
+Datatype LegionTensorPartition = Datatype("LegionTensorPartition");
 Datatype Point(int n) {
   return templateGen("Point", n);
 }
@@ -463,6 +466,12 @@ Datatype Pointer(Datatype baseType) {
   std::stringstream s;
   s << baseType << "*";
   return Datatype(s.str());
+}
+Datatype Vector(Datatype elemType) {
+  return Datatype("std::vector<" + util::toString(elemType) + ">");
+}
+Datatype UniquePtr(Datatype elemType) {
+  return Datatype("std::unique_ptr<" + util::toString(elemType) + ">");
 }
 
 }

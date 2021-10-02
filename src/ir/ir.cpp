@@ -968,6 +968,14 @@ Stmt UnpackTensorData::make(std::vector<ir::Expr> regions) {
   return utd;
 }
 
+Stmt DeclareStruct::make(std::string name, std::vector<std::string> fields, std::vector<Datatype> fieldTypes) {
+  DeclareStruct* ds = new DeclareStruct;
+  ds->name = name;
+  ds->fields = fields;
+  ds->fieldTypes = fieldTypes;
+  return ds;
+}
+
 // GetProperty
 Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
   GetProperty* gp = new GetProperty;
@@ -1152,6 +1160,8 @@ template<> void StmtNode<Return>::accept(IRVisitorStrict *v)
 const { v->visit((const Return*)this); }
 template<> void StmtNode<UnpackTensorData>::accept(IRVisitorStrict *v)
 const { v->visit((const UnpackTensorData*)this); }
+template<> void StmtNode<DeclareStruct>::accept(IRVisitorStrict *v)
+const { v->visit((const DeclareStruct*)this); }
 
 // printing methods
 std::ostream& operator<<(std::ostream& os, const Stmt& stmt) {

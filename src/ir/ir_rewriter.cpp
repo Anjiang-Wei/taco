@@ -582,6 +582,10 @@ void IRRewriter::visit(const UnpackTensorData* op) {
   }
 }
 
+void IRRewriter::visit(const DeclareStruct* op) {
+  stmt = op;
+}
+
 void IRRewriter::visit(const Return* op) {
   if (op->ret.defined()) {
     Expr ret = rewrite(op->ret);

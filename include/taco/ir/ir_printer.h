@@ -78,6 +78,7 @@ protected:
   virtual void visit(const PackTaskArgs*);
   virtual void visit(const Return*);
   virtual void visit(const UnpackTensorData*);
+  virtual void visit(const DeclareStruct*);
 
   std::ostream &stream;
   int indent;

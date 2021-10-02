@@ -272,6 +272,9 @@ void IRVisitor::visit(const UnpackTensorData* op) {
   }
 }
 
+void IRVisitor::visit(const DeclareStruct* op) {
+}
+
 void IRVisitor::visit(const Print* op) {
   for (auto e: op->params)
     e.accept(this);

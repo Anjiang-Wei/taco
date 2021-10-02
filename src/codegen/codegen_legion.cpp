@@ -45,8 +45,7 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   } else if (op->property == TensorProperty::IndicesAccessor) {
     auto fid = op->accessorArgs.field.as<ir::Symbol>()->name;
     auto regionAccessing = op->accessorArgs.regionAccessing;
-    // TODO (rohany): Do I need to use the varmap here?
-    ret << accessorType(op) << " " << varname << "(" << ir::Expr(regionAccessing) << ", " << fid << ");\n";
+    ret << accessorType(op) << " " << varname << "(" << regionAccessing << ", " << fid << ");\n";
   } else {
     return CodeGen::unpackTensorProperty(varname, op, is_output_prop);
   }
@@ -462,6 +461,29 @@ void CodegenLegion::analyzeAndCreateTasks(std::ostream& out) {
 
       funcIdx++;
     }
+
+    // We also need to generate any structs declared by this function before we generate
+    // code for the function.
+    struct DeclareStructFinder : public IRVisitor {
+      void visit(const DeclareStruct* ds) {
+        this->declares.push_back(ds);
+      }
+      std::vector<Stmt> declares;
+    };
+    DeclareStructFinder df;
+    ffunc.accept(&df);
+
+    for (auto& declareExpr : df.declares) {
+      auto declare = declareExpr.as<DeclareStruct>();
+      out << "struct " << declare->name << " {\n";
+      this->indent++;
+      for (size_t i = 0; i < declare->fields.size(); i++) {
+        doIndent();
+        out << printType(declare->fieldTypes[i], false) << " " << declare->fields[i] << ";\n";
+      }
+      this->indent--;
+      out << "};\n\n";
+    }
   }
 }
 
@@ -489,6 +511,12 @@ void CodegenLegion::emitRegisterTasks(std::ostream &out) {
             this->isLeaf = false;
           }
           node->contents.accept(this);
+        }
+        void visit(const Call* node) {
+          // Tasks that create partitions aren't leaf tasks either.
+          if (node->func.find("create_index_partition") != std::string::npos) {
+            this->isLeaf = false;
+          }
         }
         bool isLeaf = true;
       };
