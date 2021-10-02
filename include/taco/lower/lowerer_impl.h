@@ -628,8 +628,26 @@ private:
   };
   LegionLoweringKind legionLoweringKind;
   // computeOnlyPartitions holds onto a partition argument for each tensor
-  // when the LegionLoweringKind is COMPUTE_ONLY.
+  // when the LegionLoweringKind is COMPUTE_ONLY. These partition arguments
+  // are the top level partition for each tensor. All sub-partitions are
+  // indexed through the iteration space point identifier scheme.
   std::map<TensorVar, ir::Expr> computeOnlyPartitions;
+
+  // Maintain a set of all of the defined index variables. Note that we cannot use
+  // the existing definedIndexVarsOrdered because it does not expand the distributed fused
+  // index variables out into their component variables.
+  std::vector<IndexVar> definedIndexVarsExpanded;
+  std::vector<ir::Expr> iterationSpacePointIdentifiers;
+  void pushIterationSpacePointIdentifier() {
+    auto len = definedIndexVarsExpanded.size();
+    std::stringstream ss;
+    ss << "pointID" << len;
+    auto var = ir::Var::make(ss.str(), Int64);
+    this->iterationSpacePointIdentifiers.push_back(var);
+  }
+  ir::Expr getIterationSpacePointIdentifier() {
+    return this->iterationSpacePointIdentifiers[this->definedIndexVarsExpanded.size() - 1];
+  }
 
   // Some common Legion expressions and types.
   static inline ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
