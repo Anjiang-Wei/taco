@@ -1509,3 +1509,16 @@ TEST(distributed, nesting) {
   auto lowered = lower(stmt, "computeLegion", false, true);
   std::cout << lowered << std::endl;
 }
+
+TEST(distributed, testSparseFormat) {
+  int dim = 10;
+  Tensor<int> a("a", {dim, dim}, Format{Dense, Dense});
+  Tensor<int> b("b", {dim, dim}, Format{Dense, LgSparse});
+  Tensor<int> c("c", {dim, dim}, Format{Dense, LgSparse});
+
+  IndexVar i("i"), j("j");
+  a(i, j) = b(i, j) + c(i, j);
+  auto stmt = a.getAssignment().concretize();
+  auto lowered = lower(stmt, "compute", false, true);
+  std::cout << lowered << std::endl;
+}
