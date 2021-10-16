@@ -1510,15 +1510,13 @@ TEST(distributed, nesting) {
   std::cout << lowered << std::endl;
 }
 
-TEST(distributed, testSparseFormat) {
+TEST(distributed, legionPackCOOtoCSR) {
   int dim = 10;
-  Tensor<int> a("a", {dim, dim}, Format{Dense, Dense});
-  Tensor<int> b("b", {dim, dim}, Format{Dense, LgSparse});
-  Tensor<int> c("c", {dim, dim}, Format{Dense, LgSparse});
-
+  Tensor<int> a("a", {dim, dim}, Format{Dense, LgSparse});
+  Tensor<int> b("b", {dim, dim}, COO(2));
   IndexVar i("i"), j("j");
-  a(i, j) = b(i, j) + c(i, j);
+  a(i, j) = b(i, j);
   auto stmt = a.getAssignment().concretize();
-  auto lowered = lower(stmt, "compute", false, true);
+  auto lowered = lower(stmt, "compute", true, true);
   std::cout << lowered << std::endl;
 }
