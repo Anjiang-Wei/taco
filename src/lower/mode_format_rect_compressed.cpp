@@ -215,6 +215,30 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   return ir::Block::make({initCs, finalize});
 }
 
+ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode) const {
+  // Partition the pos region in the same way that the parent is partitioned,
+  // as there is a pos entry for each of the entries in the parent.
+  auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyParentPartition", {}, Auto));
+  // Then, using the partition of pos, create a dependent partition of the crd array.
+  auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
+  auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("create_partition_by_image_range", {posPart}, Auto));
+  // The partition to pass down to children is the coloring of the crd array.
+  return ModeFunction(ir::Block::make({createPosPart, createCrdPart}), {posPart, crdPart, crdPart});
+}
+
+ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childPartition, Mode mode) const {
+  // Here, we have a partition of the level below us. To go back up
+  // from a child partition, we first partition the crd array, and then
+  // use that to create a dependent partition of the pos array.
+  auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
+  auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("copyChildPartition", {childPartition}, Auto));
+  auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("create_partition_by_preimage_range", {crdPart}, Auto));
+  // The resulting partition is a partition of the pos array.
+  return ModeFunction(ir::Block::make({createCrdPart, createPosPart}), {posPart, crdPart, posPart});
+}
+
 ir::Expr RectCompressedModeFormat::getPosRegion(ModePack pack) const {
   return pack.getArray(0);
 }

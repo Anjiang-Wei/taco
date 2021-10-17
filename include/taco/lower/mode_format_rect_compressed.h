@@ -33,6 +33,10 @@ public:
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
   ir::Stmt getAppendFinalizeLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
 
+  // Partitioning capabilities.
+  ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const override;
+  ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const override;
+
   std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const override;
 protected:
   ir::Expr getPosRegion(ModePack pack) const;

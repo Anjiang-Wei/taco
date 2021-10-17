@@ -231,6 +231,20 @@ public:
   getFinalizeYieldPos(ir::Expr prevSize, Mode mode) const;
   /// @}
 
+  /// Level functions related to partitioning. Very much a WIP.
+  /// {@
+  // TODO (rohany): I'm not sure what this function looks like yet, but the point
+  //  here is that you'll make an initial partition of an index space, and then
+  //  that is used to cascade down or up. Intuitively, it seems like this function
+  //  needs to take in bounds or something.
+  virtual ModeFunction getCreateInitialPartition(Mode mode) const;
+  // The idea here is that given an IndexPartition of an object, the resulting
+  // ModeFunction computes a partition of each array in the mode, and returns
+  // the partition to use to partition the lower levels of the tree.
+  virtual ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const;
+  virtual ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const;
+  /// @}
+
   /// Returns arrays associated with a tensor mode
   virtual std::vector<ir::Expr>
   getArrays(ir::Expr tensor, int mode, int level) const = 0;
