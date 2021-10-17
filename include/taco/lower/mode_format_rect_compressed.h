@@ -21,19 +21,14 @@ public:
 
   ModeFormat copy(std::vector<ModeFormat::Property> properties) const override;
 
-//  // TODO (rohany): Do I want this right now?
-//  std::vector<AttrQuery>
-//  attrQueries(std::vector<IndexVar> parentCoords, std::vector<IndexVar> childCoords) const override;
-
   // Similarly to the compressed level, this format supports position iterate.
   ModeFunction posIterBounds(ir::Expr parentPos, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const override;
 
   // Definitions for insertion into a tensor level.
-  // TODO (rohany): Return the coordinate to append to?
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const override;
   ir::Stmt getAppendEdges(ir::Expr parentPos, ir::Expr posBegin, ir::Expr posEnd, Mode mode) const override;
-  ir::Expr getSize(ir::Expr szPrev, Mode mode) const;
+  ir::Expr getSize(ir::Expr szPrev, Mode mode) const override;
   ir::Stmt getAppendInitEdges(ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
   ir::Stmt getAppendFinalizeLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
