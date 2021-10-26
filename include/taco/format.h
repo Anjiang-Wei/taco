@@ -94,6 +94,10 @@ public:
   static ModeFormat Sparse;      /// alias for compressed
   static ModeFormat Singleton;   /// alias for singleton
 
+  // Legion ModeFormats.
+  static ModeFormat LgRectCompressed;
+  static ModeFormat LgSparse;
+
   /// Properties of a mode format
   enum Property {
     FULL, NOT_FULL, ORDERED, NOT_ORDERED, UNIQUE, NOT_UNIQUE, BRANCHLESS,
@@ -188,6 +192,7 @@ extern const ModeFormat Dense;
 extern const ModeFormat Compressed;
 extern const ModeFormat Sparse;
 extern const ModeFormat Singleton;
+extern const ModeFormat LgSparse;
 
 extern const ModeFormat dense;
 extern const ModeFormat compressed;

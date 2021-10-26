@@ -292,6 +292,18 @@ Stmt ModeFormatImpl::getFinalizeYieldPos(Expr prevSize, Mode mode) const {
   return Stmt();
 }
 
+ModeFunction ModeFormatImpl::getCreateInitialPartition(Mode mode) const {
+  return ModeFunction();
+}
+
+ModeFunction ModeFormatImpl::getPartitionFromParent(ir::Expr parentPartition, Mode mode) const {
+  return ModeFunction();
+}
+
+ModeFunction ModeFormatImpl::getPartitionFromChild(ir::Expr childPartition, Mode mode) const {
+  return ModeFunction();
+}
+
 bool ModeFormatImpl::equals(const ModeFormatImpl& other) const {
   return (isFull == other.isFull &&
           isOrdered == other.isOrdered &&
