@@ -78,21 +78,21 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, int32_t c) {
+void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement AReq = RegionRequirement(APartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(A));
+  RegionRequirement AReq = RegionRequirement(APartition, 0, priv, EXCLUSIVE, get_logical_region(A));
   AReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
   dims.push_back(rpoc);
   dims.push_back(c);
-  registerPlacementShardingFunctor(ctx, runtime, shardingID(7), dims);
+  registerPlacementShardingFunctor(ctx, runtime, shardingID(1), dims);
   task_1Args taskArgsRaw;
-  taskArgsRaw.sfID = shardingID(7);
+  taskArgsRaw.sfID = shardingID(1);
   taskArgsRaw.c = c;
   taskArgsRaw.rpoc = rpoc;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_1Args));
@@ -146,21 +146,21 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, int32_t c) {
+void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement BReq = RegionRequirement(BPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(B));
+  RegionRequirement BReq = RegionRequirement(BPartition, 0, priv, EXCLUSIVE, get_logical_region(B));
   BReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
   dims.push_back(rpoc);
   dims.push_back(c);
-  registerPlacementShardingFunctor(ctx, runtime, shardingID(9), dims);
+  registerPlacementShardingFunctor(ctx, runtime, shardingID(3), dims);
   task_2Args taskArgsRaw;
-  taskArgsRaw.sfID = shardingID(9);
+  taskArgsRaw.sfID = shardingID(3);
   taskArgsRaw.c = c;
   taskArgsRaw.rpoc = rpoc;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_2Args));
@@ -214,21 +214,21 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, int32_t c) {
+void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement CReq = RegionRequirement(CPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(C));
+  RegionRequirement CReq = RegionRequirement(CPartition, 0, priv, EXCLUSIVE, get_logical_region(C));
   CReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
   dims.push_back(rpoc);
   dims.push_back(c);
-  registerPlacementShardingFunctor(ctx, runtime, shardingID(11), dims);
+  registerPlacementShardingFunctor(ctx, runtime, shardingID(5), dims);
   task_3Args taskArgsRaw;
-  taskArgsRaw.sfID = shardingID(11);
+  taskArgsRaw.sfID = shardingID(5);
   taskArgsRaw.c = c;
   taskArgsRaw.rpoc = rpoc;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_3Args));

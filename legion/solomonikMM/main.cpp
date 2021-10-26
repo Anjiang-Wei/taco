@@ -10,13 +10,16 @@ typedef double valType;
 void registerTacoTasks();
 
 std::vector<LogicalPartition> partitionForplaceLegionA(Context ctx, Runtime* runtime, LogicalRegion A, int32_t rpoc);
-void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, int32_t c);
+// void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, int32_t c, Legion::PrivilegeMode priv);
+void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c);
 
 std::vector<LogicalPartition> partitionForplaceLegionB(Context ctx, Runtime* runtime, LogicalRegion B, int32_t rpoc);
-void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, int32_t c);
+// void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, int32_t c, Legion::PrivilegeMode priv);
+void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c);
 
 std::vector<LogicalPartition> partitionForplaceLegionC(Context ctx, Runtime* runtime, LogicalRegion C, int32_t rpoc);
-void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, int32_t c);
+// void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, int32_t c, Legion::PrivilegeMode priv);
+void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c);
 
 std::vector<LogicalPartition> partitionForcomputeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion B, LogicalRegion C, int32_t rpoc, int32_t c);
 void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion B, LogicalRegion C, LogicalPartition APartition, LogicalPartition BPartition, LogicalPartition CPartition, int32_t rpoc, int32_t c, int32_t rpoc3);
@@ -87,18 +90,18 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     // TODO (rohany): We could potentially eliminate these fills to place the data right where
     //  we need it just like Johnson's algorithm. This would allow us to use larger values of c
     //  as well which might improve performance.
-    tacoFill<valType>(ctx, runtime, A, aPart, 0);
-    tacoFill<valType>(ctx, runtime, B, bPart, 1);
-    tacoFill<valType>(ctx, runtime, C, cPart, 1);
+    // tacoFill<valType>(ctx, runtime, A, aPart, 0);
+    // tacoFill<valType>(ctx, runtime, B, bPart, 1);
+    // tacoFill<valType>(ctx, runtime, C, cPart, 1);
 
     // Place the tensors.
-    placeLegionA(ctx, runtime, A, aPart, rpoc, c);
-    placeLegionB(ctx, runtime, B, bPart, rpoc, c);
-    placeLegionC(ctx, runtime, C, cPart, rpoc, c);
+    placeLegionA(ctx, runtime, A, aPart, rpoc, WRITE_ONLY, c);
+    placeLegionB(ctx, runtime, B, bPart, rpoc, WRITE_ONLY, c);
+    placeLegionC(ctx, runtime, C, cPart, rpoc, WRITE_ONLY, c);
 
     auto bench = [&]() {
       computeLegion(ctx, runtime, A, B, C, parts[0], parts[1], parts[2], rpoc, c, rpoc3);
-      placeLegionA(ctx, runtime, A, aPart, rpoc, c);
+      placeLegionA(ctx, runtime, A, aPart, rpoc, READ_ONLY, c);
     };
 
     if (i == 0) {
@@ -115,7 +118,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto nodes = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_NODE_COUNT).get<size_t>();
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "On %ld nodes achieved GFLOPS per node: %lf.\n", nodes, gflops / double(nodes));
 
-  tacoValidate<valType>(ctx, runtime, A, aPart, valType(n));
+  // tacoValidate<valType>(ctx, runtime, A, aPart, valType(n));
 }
 
 TACO_MAIN(valType)

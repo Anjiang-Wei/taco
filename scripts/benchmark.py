@@ -244,7 +244,19 @@ class JohnsonBench(DMMBench):
     def getCommand(self, procs):
         # Assuming that we're running on perfect cubes here.
         psize = self.problemSize(procs)
-        gdim = nearestCube(procs)
+        dims = {
+          2: 2,
+          4: 2,
+          8: 2,
+          16: 4,
+          32: 4,
+          64: 4,
+          128: 6,
+          256: 7,
+          512: 8,
+        }
+        assert(2 * procs in dims)
+        gdim = dims[2 * procs]
         return lassenHeader(procs) + \
                ['bin/johnsonMM', '-n', str(psize), '-gdim', str(gdim)] + \
                lgCPUArgs()
@@ -303,6 +315,7 @@ class LgCOSMABench(DMMBench):
         super().__init__(initialProblemSize)
         # Mapping from processor / "rank" count to gx,gy,gz decompositions and px,py.
         self.decomp = {
+          2: (2, 1, 1),
           4: (1, 2, 2),
           8: (2, 2, 2),
           16: (2, 2, 4),
@@ -310,6 +323,7 @@ class LgCOSMABench(DMMBench):
           64: (4, 4, 4),
           128: (4, 4, 8),
           256: (4, 8, 8),
+          512: (8, 8, 8),
         }
 
     def getCommand(self, procs):
@@ -334,6 +348,26 @@ class LgCOSMAGPUBench(LgCOSMABench):
         return lassenHeader(procs) + \
                ['bin/cosma-cuda', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2]), '-tm:untrack_valid_regions'] + \
                lgGPUMultShardsArgs(self.gpus)
+
+class SolomonikBench(DMMBench):
+    def getCommand(self, procs):
+        psize = str(self.problemSize(procs))
+        self.params = {
+          2: (2, 1, 1),
+          4: (2, 1, 2),
+          8: (2, 2, 2),
+          16: (4, 1, 4),
+          32: (4, 2, 4),
+          64: (8, 1, 8),
+          128: (8, 2, 8),
+          256: (16, 1, 16),
+          512: (16, 2, 16),
+        }
+        assert(2 * procs in self.params)
+        params = self.params[2 * procs]
+        return lassenHeader(procs) + \
+               ['bin/solomonikMM', '-n', psize, '-rpoc', str(params[0]), '-c', str(params[1]), '-rpoc3', str(params[2]), '-tm:untrack_valid_regions'] + \
+               lgCPUArgs()
 
 class SolomonikGPUBench(DMMBench):
     def __init__(self, initialProblemSize, gpus):
@@ -622,6 +656,7 @@ def main():
         "cosma-gpu": dmmgpu,
         "lgcosma": dmm,
         "lgcosma-gpu": dmmgpu,
+        "solomonik": dmm,
         "solomonik-gpu": dmmgpu,
         "summa": dmm,
         "summa-gpu": dmmgpu,
@@ -682,6 +717,8 @@ def main():
         bench = LgCOSMABench(size)
     elif args.bench == "lgcosma-gpu":
         bench = LgCOSMAGPUBench(size, args.gpus)
+    elif args.bench == "solomonik":
+        bench = SolomonikBench(size)
     elif args.bench == "solomonik-gpu":
         bench = SolomonikGPUBench(size, args.gpus)
     elif args.bench == "scalapack":

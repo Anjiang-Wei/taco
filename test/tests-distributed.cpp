@@ -948,18 +948,14 @@ TEST(distributed, johnsonMM) {
   a(i, j) = b(i, k) * c(k, j);
   auto stmt = a.getAssignment().concretize();
   std::shared_ptr<LeafCallInterface> gemm = std::make_shared<GEMM>();
+  // We don't support virtual reductions right now, so let's just eat mapping onto
+  // each socket.
   stmt = stmt
       .distribute({i, j, k}, {in, jn, kn}, {il, jl, kl}, cube)
       .communicate(a(i, j), kn)
       .communicate(b(i, k), kn)
       .communicate(c(k, j), kn)
-      // Hierarchically parallelize the computation for each NUMA region.
-      // TODO (rohany): Make the number of OpenMP processors configurable.
-      .distribute({il}, {iln}, {ill}, Grid(2))
-      .communicate(a(i, j), iln)
-      .communicate(b(i, k), iln)
-      .communicate(c(k, j), iln)
-      .swapLeafKernel(ill, gemm)
+      .swapLeafKernel(il, gemm)
       ;
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFuture */);
   // Code-generate all of the placement and compute code.
@@ -1208,9 +1204,9 @@ TEST(distributed, solomonikMM) {
   Tensor<double> B("B", {dim, dim}, Format{Dense, Dense}, dist);
   Tensor<double> C("C", {dim, dim}, Format{Dense, Dense}, dist);
 
-  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA");
-  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB");
-  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC");
+  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA", true /* waitOnFutureMap */, true /* emitPrivilege */);
+  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB", true /* waitOnFutureMap */, true /* emitPrivilege */);
+  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC", true /* waitOnFutureMap */, true /* emitPrivilege */);
 
   IndexVar i("i"), j("j"), k("k"), in("in"), il("il"), jn("jn"), jl("jl"), kn("kn"), kl("kl"), k1("k1"), k2("k2"), k1s("k1s");
   A(i, j) = B(i, k) * C(k, j);
@@ -1282,9 +1278,9 @@ TEST(distributed, cuda_solomonikMM) {
   Tensor<double> B("B", {dim, dim}, Format{Dense, Dense}, dist);
   Tensor<double> C("C", {dim, dim}, Format{Dense, Dense}, dist);
 
-  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA");
-  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB");
-  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC");
+  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA", true /* waitOnFutureMap */, true /* emitPrivilege */);
+  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB", true /* waitOnFutureMap */, true /* emitPrivilege */);
+  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC", true /* waitOnFutureMap */, true /* emitPrivilege */);
 
   IndexVar i("i"), j("j"), k("k"), in("in"), il("il"), jn("jn"), jl("jl"), kn("kn"), kl("kl"), k1("k1"), k2("k2"), k1s("k1s");
   A(i, j) = B(i, k) * C(k, j);

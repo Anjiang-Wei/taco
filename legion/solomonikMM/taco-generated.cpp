@@ -78,13 +78,13 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, int32_t c) {
+void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, LogicalPartition APartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement AReq = RegionRequirement(APartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(A));
+  RegionRequirement AReq = RegionRequirement(APartition, 0, priv, EXCLUSIVE, get_logical_region(A));
   AReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
@@ -146,13 +146,13 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, int32_t c) {
+void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, LogicalPartition BPartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement BReq = RegionRequirement(BPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(B));
+  RegionRequirement BReq = RegionRequirement(BPartition, 0, priv, EXCLUSIVE, get_logical_region(B));
   BReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
@@ -214,13 +214,13 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t kn = getIndexPoint(task, 2);
 }
 
-void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, int32_t c) {
+void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, LogicalPartition CPartition, int32_t rpoc, Legion::PrivilegeMode priv, int32_t c) {
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((rpoc - 1), (rpoc - 1), 0);
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
-  RegionRequirement CReq = RegionRequirement(CPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(C));
+  RegionRequirement CReq = RegionRequirement(CPartition, 0, priv, EXCLUSIVE, get_logical_region(C));
   CReq.add_field(FID_VAL);
   std::vector<int> dims = std::vector<int>();
   dims.push_back(rpoc);
@@ -446,31 +446,31 @@ void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_2>(registrar, "task_2");
   }
   {
     TaskVariantRegistrar registrar(taskID(3), "task_3");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_3>(registrar, "task_3");
   }
   {
     TaskVariantRegistrar registrar(taskID(4), "task_4");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_4>(registrar, "task_4");
   }
   {
     TaskVariantRegistrar registrar(taskID(5), "task_5");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_inner();
     Runtime::preregister_task_variant<task_5>(registrar, "task_5");
   }
