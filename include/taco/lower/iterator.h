@@ -218,6 +218,12 @@ public:
   /// backing the index set.
   Iterator getIndexSetIterator() const;
 
+  /// Methods for creating and manipulating partitions for distribution.
+  /// TODO (rohany): These are directly lifted from the ModeFormatImpl.
+  ModeFunction getCreateInitialPartition(Mode mode) const;
+  ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const;
+  ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const;
+
   friend bool operator==(const Iterator&, const Iterator&);
   friend bool operator<(const Iterator&, const Iterator&);
   friend std::ostream& operator<<(std::ostream&, const Iterator&);

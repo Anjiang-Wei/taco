@@ -464,11 +464,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
   //  to not write out of partitions.
   Stmt initializeResults = initResultArrays(resultAccesses, inputAccesses,
                                             reducedAccesses);
-  if (this->legion) {
+  if (this->legion && this->assemble == false) {
     initializeResults = ir::Block::make();
   }
-
-
 
   // Begin hacking on bounds inference.
 
@@ -3386,8 +3384,12 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
         Expr allocSize = isValue(parentSize, 0)
                          ? DEFAULT_ALLOC_SIZE : parentSize;
         initArrays.push_back(VarDecl::make(capacityVar, allocSize));
-        initArrays.push_back(Allocate::make(valuesArr, capacityVar, false /* is_realloc */, Expr() /* old_elements */,
-                                            clearValuesAllocation));
+        if (this->legion) {
+          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesArr, fidVal));
+        } else {
+          initArrays.push_back(Allocate::make(valuesArr, capacityVar, false /* is_realloc */, Expr() /* old_elements */,
+                                              clearValuesAllocation));
+        }
       }
 
       taco_iassert(!initArrays.empty());
@@ -3472,8 +3474,12 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
       // Allocate memory for values array after assembly if not also computing
       Expr tensor = getTensorVar(write.getTensorVar());
       Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
-      result.push_back(Allocate::make(valuesArr, parentSize, false /* is_realloc */, Expr() /* old_elements */,
-                                      clearValuesAllocation));
+      if (this->legion) {
+        result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, fidVal));
+      } else {
+        result.push_back(Allocate::make(valuesArr, parentSize, false /* is_realloc */, Expr() /* old_elements */,
+                                            clearValuesAllocation));
+      }
     }
   }
   return result.empty() ? Stmt() : Block::blanks(result);
@@ -3576,7 +3582,12 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
         // Resize values array if not large enough
         Expr capacityVar = getCapacityVar(tensor);
         Expr size = simplify(ir::Mul::make(resultParentPosNext, stride));
-        result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
+        if (this->legion) {
+          // TODO (rohany): Include management around physical regions and accessors.
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, size, values, fidVal));
+        } else {
+          result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
+        }
 
         if (hasSparseInserts(iterators, readIterators) ||
             util::contains(reducedAccesses, write)) {
@@ -3615,7 +3626,11 @@ Stmt LowererImpl::resizeAndInitValues(const std::vector<Iterator>& appenders,
     Expr pos = appender.getIteratorVar();
 
     if (generateAssembleCode()) {
-      result.push_back(doubleSizeIfFull(values, capacity, pos));
+      if (this->legion) {
+        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, values, fidVal));
+      } else {
+        result.push_back(doubleSizeIfFull(values, capacity, pos));
+      }
     }
 
     if (util::contains(reducedTensors, tensor)) {
@@ -4587,6 +4602,13 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
   for (size_t idx = 0; idx < forall.getTransfers().size(); idx++) {
     auto& t = forall.getTransfers()[idx];
     auto& tv = t.getAccess().getTensorVar();
+
+    for (int level = 0; level < tv.getOrder(); level++) {
+      ModeAccess acc(t.getAccess(), level);
+      // this->iterators.levelIterators()[acc].getMode().getModeFormat()
+//      this->iterators.levelIterators()[acc].getP
+    }
+
     // Skip fully replicated tensors.
     if (util::contains(fullyReplicatedTensors, tv)) {
       continue;

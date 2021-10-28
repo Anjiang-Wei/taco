@@ -477,9 +477,13 @@ void CodegenLegionCuda::visit(const Function* func) {
   // output body
   print(func->body);
 
+  // TODO (rohany): I don't think that we need to reassign the values to the regions,
+  //  as we don't need to write out changes to LogicalRegions. However, we might need
+  //  to do something here for LegionTensorT specific operations (maybe updating sizes
+  //  of result tensors or something like that).
   // output repack only if we allocated memory
-  if (checkForAlloc(func))
-    out << std::endl << printPack(varFinder.outputProperties, func->outputs);
+  // if (checkForAlloc(func))
+  //   out << std::endl << printPack(varFinder.outputProperties, func->outputs);
 
   if (emittingCoroutine) {
     out << printCoroutineFinish(numYields, funcName);

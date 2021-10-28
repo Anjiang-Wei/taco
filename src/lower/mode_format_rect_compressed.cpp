@@ -89,8 +89,9 @@ ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, 
     return storeIdx;
   }
 
-  // TODO (rohany): Make this a Legion realloc call.
-  ir::Stmt maybeResizeIdx = doubleSizeIfFull(idxArray, getCoordCapacity(mode), pos);
+  // TODO (rohany): Remove this hard coded field.
+  // TODO (rohany): Add management around physical regions.
+  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArray, ir::Symbol::make("FID_COORD"));
   return ir::Block::make({maybeResizeIdx, storeIdx});
 }
 
@@ -134,8 +135,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::E
   ir::Expr posCapacity = this->getPosCapacity(mode);
   ModeFormat parentModeType = mode.getParentModeType();
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
-    // TODO (rohany): Change this to a Legion realloc.
-    return doubleSizeIfFull(posArray, posCapacity, pPrevEnd);
+    // TODO (rohany): Don't make a symbol here.
+    // TODO (rohany): Management around physical/logical regions.
+    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArray, ir::Symbol::make("FID_RECT_1"));
   }
 
   // Initialize all of the spots in the pos array.
@@ -145,8 +147,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::E
   // Start off each component in the position array as <0, 0>.
   auto store = ir::Store::make(posArray, pVar, ir::makeConstructor(Rect(1), {0, 0}));
   auto initPos = ir::For::make(pVar, lb, ub, 1, store);
-  // TODO (rohany): Make this a Legion realloc.
-  ir::Stmt maybeResizePos = atLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd);
+  // TODO (rohany): Don't make a symbol here.
+  // TODO (rohany): Management around physical/logical regions.
+  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArray, ir::Symbol::make("FID_RECT_1"));
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -164,8 +167,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     posCapacity = getPosCapacity(mode);
     initStmts.push_back(ir::VarDecl::make(posCapacity, initCapacity));
   }
-  // TODO (rohany): This should be Legion malloc.
-  initStmts.push_back(ir::Allocate::make(posArray, posCapacity));
+  // TODO (rohany): I need to have separate management of the physical and logical regions.
+  // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
+  initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posArray, ir::Symbol::make("FID_VAL")));
   // Start off each component in the position array as <0, 0>.
   initStmts.push_back(ir::Store::make(posArray, 0, ir::makeConstructor(Rect(1), {0, 0})));
 
@@ -181,8 +185,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     ir::Expr crdCapacity = this->getCoordCapacity(mode);
     ir::Expr crdArray = this->getCoordRegion(mode.getModePack());
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
-    // TODO (rohany): This should be a Legion Malloc.
-    initStmts.push_back(ir::Allocate::make(crdArray, crdCapacity));
+    // TODO (rohany): I need to have separate management of the physical and logical regions.
+    // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
+    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdArray, ir::Symbol::make("FID_VAL")));
   }
 
   return ir::Block::make(initStmts);

@@ -19,6 +19,7 @@ private:
   void visit(const For* node) override;
   void visit(const Function* node) override;
   void visit(const PackTaskArgs* node) override;
+  void visit(const Allocate* node) override;
   void emitHeaders(std::ostream& o) override;
   // TODO (rohany): It also doesn't seem like I can avoid duplicating this class.
   class FindVars;

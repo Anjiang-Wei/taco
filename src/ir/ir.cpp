@@ -800,7 +800,7 @@ Stmt Yield::make(std::vector<Expr> coords, Expr val) {
 }
 
 // Allocate
-Stmt Allocate::make(Expr var, Expr num_elements, bool is_realloc, Expr old_elements, bool clear) {
+Stmt Allocate::make(Expr var, Expr num_elements, bool is_realloc, Expr old_elements, bool clear, LegionAllocPack pack) {
   taco_iassert(var.as<GetProperty>() ||
                (var.as<Var>() && var.as<Var>()->is_ptr)) <<
       "Can only allocate memory for a pointer-typed Var";
@@ -813,7 +813,34 @@ Stmt Allocate::make(Expr var, Expr num_elements, bool is_realloc, Expr old_eleme
   taco_iassert(!is_realloc || old_elements.ptr != NULL);
   alloc->old_elements = old_elements;
   alloc->clear = clear;
+  alloc->pack = pack;
   return alloc;
+}
+
+Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID) {
+  return Allocate::make(var,
+    numElements,
+    false /* is_realloc */,
+    Expr() /* old_elements */,
+    false /* clear */,
+    {
+      .logicalRegion = logicalRegion,
+      .fieldID = fieldID,
+    }
+  );
+}
+
+Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID) {
+  return Allocate::make(var,
+    numElements,
+    true /* is_realloc */,
+    oldPhysicalRegion,
+    false /* clear */,
+    {
+      .logicalRegion = logicalRegion,
+      .fieldID = fieldID,
+    }
+  );
 }
 
 // Free

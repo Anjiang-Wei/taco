@@ -311,9 +311,13 @@ void CodegenLegionC::visit(const Function* func) {
   // output body
   print(func->body);
 
+  // TODO (rohany): I don't think that we need to reassign the values to the regions,
+  //  as we don't need to write out changes to LogicalRegions. However, we might need
+  //  to do something here for LegionTensorT specific operations (maybe updating sizes
+  //  of result tensors or something like that).
   // output repack only if we allocated memory
-  if (checkForAlloc(func))
-    out << std::endl << printPack(varFinder.outputProperties, func->outputs);
+  // if (checkForAlloc(func))
+  //   out << std::endl << printPack(varFinder.outputProperties, func->outputs);
 
   if (emittingCoroutine) {
     out << printCoroutineFinish(numYields, funcName);
@@ -324,6 +328,35 @@ void CodegenLegionC::visit(const Function* func) {
 
   doIndent();
   out << "}\n";
+}
+
+void CodegenLegionC::visit(const Allocate* op) {
+  if (!op->pack.logicalRegion.defined()) {
+    CodeGen_C::visit(op);
+  } else {
+    doIndent();
+    op->var.accept(this);
+    stream << " = ";
+    if (op->is_realloc) {
+      stream << "legionRealloc(ctx, runtime, ";
+      op->pack.logicalRegion.accept(this);
+      stream << ", ";
+      op->old_elements.accept(this);
+      stream << ", ";
+      op->num_elements.accept(this);
+      stream << ", ";
+      op->pack.fieldID.accept(this);
+    } else {
+      stream << "legionMalloc(ctx, runtime, ";
+      op->pack.logicalRegion.accept(this);
+      stream << ", ";
+      op->num_elements.accept(this);
+      stream << ", ";
+      op->pack.fieldID.accept(this);
+    }
+    stream << ");";
+    stream << std::endl;
+  }
 }
 
 }

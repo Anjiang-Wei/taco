@@ -231,6 +231,16 @@ public:
   getFinalizeYieldPos(ir::Expr prevSize, Mode mode) const;
   /// @}
 
+  /// One confusion here was about dense tensors, as they needed to somehow
+  /// pass through information. The idea here is to associate an index space
+  /// with each consecutive run of dense levels in a tensor. Then, there is a
+  /// separate _initial_ partitioning process for each run of dense levels,
+  /// and that partition can be then passed down to the child levels of the
+  /// tensor to use to create dependent partitions. This can be implemented in
+  /// maybe a similar manner as the way that multiple coordinates are stored
+  /// in array of structs format by having the different modes point into the
+  /// same array via the modepack.
+  ///
   /// Level functions related to partitioning. Very much a WIP.
   /// {@
   // TODO (rohany): I'm not sure what this function looks like yet, but the point

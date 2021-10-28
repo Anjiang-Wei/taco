@@ -291,13 +291,14 @@ string CodeGen::packTensorProperty(string varname, Expr tnsr,
   // all others are int*
   if (property == TensorProperty::Dimension) {
     return "";
-  } else {
-    taco_iassert(property == TensorProperty::Indices);
+  } else if (property == TensorProperty::Indices) {
     tp = "int*";
     auto nm = index;
     ret << tensor->name << "->indices" <<
         "[" << mode << "][" << nm << "] = (uint8_t*)(" << varname
         << ");\n";
+  } else {
+    // TODO (rohany): Do we just ignore this?
   }
 
   return ret.str();

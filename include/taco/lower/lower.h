@@ -63,6 +63,11 @@ ir::Stmt lowerLegion(IndexStmt stmt, std::string functionName,
                      bool partition=true, bool compute=true, bool waitOnFuture=true, bool setPlacementPrivilege = false,
                      Lowerer lowerer=Lowerer());
 
+// TODO (rohany): Temporary work around to experiment with assembly in Legion.
+ir::Stmt lowerLegionAssemble(IndexStmt stmt, std::string functionName,
+                             bool partition=true, bool compute=true, bool waitOnFuture=true, bool setPlacementPrivilege = false,
+                             Lowerer lowerer=Lowerer());
+
 // lowerLegionSeparatePartitionCompute lowers an IndexStmt into two separate
 // functions, one that performs all of the partitioning for the statement up front,
 // and another that performs all of the compute given those partitions.

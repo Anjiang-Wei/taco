@@ -757,12 +757,25 @@ struct Allocate : public StmtNode<Allocate> {
   Expr old_elements; // used for realloc in CUDA
   bool is_realloc;
   bool clear; // Whether to use calloc to allocate this memory.
-  
+
+  // LegionAllocPack contains extra arguments necessary to perform
+  // Legion Region backed allocations.
+  struct LegionAllocPack {
+    // The logical region being allocated within.
+    Expr logicalRegion;
+    // The field ID to allocate.
+    Expr fieldID;
+  } pack;
+
   static Stmt make(Expr var, Expr num_elements, bool is_realloc=false,
-                   Expr old_elements=Expr(), bool clear=false);
+                   Expr old_elements=Expr(), bool clear=false, LegionAllocPack pack = LegionAllocPack());
   
   static const IRNodeType _type_info = IRNodeType::Allocate;
 };
+
+// Utility methods to make performing Legion allocations slightly more ergonomic.
+Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID);
+Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID);
 
 /** Free memory for a ptr var */
 struct Free : public StmtNode<Free> {

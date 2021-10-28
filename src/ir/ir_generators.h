@@ -27,5 +27,10 @@ Stmt doubleSizeIfFull(Expr a, Expr size, Expr loc);
 /// least equal to `loc` if it is full (loc cannot be written to).
 Stmt atLeastDoubleSizeIfFull(Expr a, Expr size, Expr loc);
 
+
+// Legion variants of some of the above functions.
+Stmt lgDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr oldPhysicalReg, Expr fieldID);
+Stmt lgAtLeastDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr oldPhysicalReg, Expr fieldID);
+
 }}
 #endif

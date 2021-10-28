@@ -1527,11 +1527,12 @@ TEST(distributed, legionSpMV) {
 TEST(distributed, legionPackCOOtoCSR) {
   int dim = 10;
   Tensor<int> a("a", {dim, dim}, Format{Dense, LgSparse});
+//  Tensor<int> a("a", {dim, dim}, Format{Dense, Dense});
   Tensor<int> b("b", {dim, dim}, COO(2));
   IndexVar i("i"), j("j");
   a(i, j) = b(i, j);
   auto stmt = a.getAssignment().concretize();
-  auto lowered = lower(stmt, "compute", true, true);
+  auto lowered = lowerLegionAssemble(stmt, "computeLegion", false, true);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
 }
