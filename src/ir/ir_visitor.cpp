@@ -230,6 +230,12 @@ void IRVisitor::visit(const Yield* op) {
 void IRVisitor::visit(const Allocate* op) {
   op->var.accept(this);
   op->num_elements.accept(this);
+  if (op->pack.logicalRegion.defined()) {
+    op->pack.logicalRegion.accept(this);
+  }
+  if (op->pack.fieldID.defined()) {
+    op->pack.fieldID.accept(this);
+  }
 }
 
 void IRVisitor::visit(const Free* op) {

@@ -1,5 +1,6 @@
 #include "taco/lower/mode_format_rect_compressed.h"
 #include "ir/ir_generators.h"
+#include "ir/ir_generators.h"
 
 namespace taco {
 
@@ -54,15 +55,17 @@ ModeFormat RectCompressedModeFormat::copy(std::vector<ModeFormat::Property> prop
 
 ModeFunction RectCompressedModeFormat::posIterBounds(ir::Expr parentPos, Mode mode) const {
   auto pack = mode.getModePack();
-  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(this->getPosRegion(pack), parentPos), "lo", false, Int64);
-  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(this->getPosRegion(pack), parentPos), "hi", false, Int64), 1);
+  // TODO (rohany): It seems like we might need to avoid just accessing the final element
+  //  in the region if that isn't part of our partition.
+  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(this->getRegion(pack, POS), parentPos), "lo", false, Int64);
+  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(this->getRegion(pack, POS), parentPos), "hi", false, Int64), 1);
   return ModeFunction(ir::Stmt(), {pBegin, pEnd});
 }
 
 ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const {
   taco_iassert(mode.getPackLocation() == 0);
 
-  ir::Expr idxArray = this->getCoordRegion(mode.getModePack());
+  auto idxArray = this->getRegion(mode.getModePack(), CRD);
   ir::Expr stride = (int)mode.getModePack().getNumModes();
   ir::Expr idx = ir::Load::make(idxArray, ir::Mul::make(pos, stride));
   return ModeFunction(ir::Stmt(), {idx, true});
@@ -71,17 +74,19 @@ ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<i
 
 std::vector<ir::Expr> RectCompressedModeFormat::getArrays(ir::Expr tensor, int mode, int level) const {
   std::string arraysName = util::toString(tensor) + std::to_string(level);
-  // TODO (rohany): These get properties might have to change for Legion?
-  return {ir::GetProperty::make(tensor, ir::TensorProperty::Indices,
-                            level - 1, 0, arraysName + "_pos"),
-          ir::GetProperty::make(tensor, ir::TensorProperty::Indices,
-                            level - 1, 1, arraysName + "_crd")};
+  std::vector<ir::Expr> arrays(4);
+  arrays[POS] = ir::GetProperty::make(tensor, ir::TensorProperty::Indices, level - 1, 0, arraysName + "_pos");
+  arrays[POS_PARENT] = ir::GetProperty::make(tensor, ir::TensorProperty::IndicesParents, level - 1, 0, arraysName + "_pos_parent");
+  arrays[CRD] = ir::GetProperty::make(tensor, ir::TensorProperty::Indices,level - 1, 1, arraysName + "_crd");
+  arrays[CRD_PARENT] = ir::GetProperty::make(tensor, ir::TensorProperty::IndicesParents,level - 1, 1, arraysName + "_crd_parent");
+  return arrays;
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const {
   taco_iassert(mode.getPackLocation() == 0);
 
-  ir::Expr idxArray = this->getCoordRegion(mode.getModePack());
+  auto idxArray = this->getRegion(mode.getModePack(), CRD);
+  auto idxArrayParent = this->getRegion(mode.getModePack(), CRD_PARENT);
   ir::Expr stride = (int)mode.getModePack().getNumModes();
   ir::Stmt storeIdx = ir::Store::make(idxArray, ir::Mul::make(pos, stride), coord);
 
@@ -91,13 +96,13 @@ ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, 
 
   // TODO (rohany): Remove this hard coded field.
   // TODO (rohany): Add management around physical regions.
-  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArray, ir::Symbol::make("FID_COORD"));
+  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, ir::Symbol::make("FID_COORD"));
   return ir::Block::make({maybeResizeIdx, storeIdx});
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendEdges(ir::Expr parentPos, ir::Expr posBegin, ir::Expr posEnd,
                                                   Mode mode) const {
-  ir::Expr posArray = this->getPosRegion(mode.getModePack());
+  auto posArray = this->getRegion(mode.getModePack(), POS);
   ModeFormat parentModeType = mode.getParentModeType();
   auto lo = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "lo", false /* deref */, Int64);
   auto hi = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "hi", false /* deref */, Int64);
@@ -121,7 +126,7 @@ ir::Stmt RectCompressedModeFormat::getAppendEdges(ir::Expr parentPos, ir::Expr p
 ir::Expr RectCompressedModeFormat::getSize(ir::Expr szPrev, Mode mode) const {
   // TODO (rohany): I'm not sure that this is correct. It seems like it should
   //  either get the current size from the region itself or look at high.
-  return ir::Load::make(this->getPosRegion(mode.getModePack()), szPrev);
+  return ir::Load::make(this->getRegion(mode.getModePack(), POS), szPrev);
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::Expr pPrevEnd,
@@ -131,13 +136,14 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::E
     return ir::Stmt();
   }
 
-  ir::Expr posArray = this->getPosRegion(mode.getModePack());
+  auto posArray = this->getRegion(mode.getModePack(), POS);
+  auto posArrayParent = this->getRegion(mode.getModePack(), POS_PARENT);
   ir::Expr posCapacity = this->getPosCapacity(mode);
   ModeFormat parentModeType = mode.getParentModeType();
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
     // TODO (rohany): Don't make a symbol here.
     // TODO (rohany): Management around physical/logical regions.
-    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArray, ir::Symbol::make("FID_RECT_1"));
+    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, ir::Symbol::make("FID_RECT_1"));
   }
 
   // Initialize all of the spots in the pos array.
@@ -149,7 +155,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::E
   auto initPos = ir::For::make(pVar, lb, ub, 1, store);
   // TODO (rohany): Don't make a symbol here.
   // TODO (rohany): Management around physical/logical regions.
-  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArray, ir::Symbol::make("FID_RECT_1"));
+  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, ir::Symbol::make("FID_RECT_1"));
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -157,8 +163,10 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   const bool szPrevIsZero = isa<ir::Literal>(szPrev) &&
                             to<ir::Literal>(szPrev)->equalsScalar(0);
 
+  auto pack = mode.getModePack();
   ir::Expr defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32);
-  ir::Expr posArray = this->getPosRegion(mode.getModePack());
+  auto posArray = this->getRegion(pack, POS);
+  auto posParent = this->getRegion(pack, POS_PARENT);
   ir::Expr initCapacity = szPrevIsZero ? defaultCapacity : szPrev;
   ir::Expr posCapacity = initCapacity;
 
@@ -169,7 +177,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   }
   // TODO (rohany): I need to have separate management of the physical and logical regions.
   // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
-  initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posArray, ir::Symbol::make("FID_VAL")));
+  initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, ir::Symbol::make("FID_VAL")));
   // Start off each component in the position array as <0, 0>.
   initStmts.push_back(ir::Store::make(posArray, 0, ir::makeConstructor(Rect(1), {0, 0})));
 
@@ -183,11 +191,12 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
 
   if (mode.getPackLocation() == (mode.getModePack().getNumModes() - 1)) {
     ir::Expr crdCapacity = this->getCoordCapacity(mode);
-    ir::Expr crdArray = this->getCoordRegion(mode.getModePack());
+    auto crdArray = this->getRegion(pack, CRD);
+    auto crdParent = this->getRegion(pack, CRD_PARENT);
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
     // TODO (rohany): I need to have separate management of the physical and logical regions.
     // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
-    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdArray, ir::Symbol::make("FID_VAL")));
+    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, ir::Symbol::make("FID_VAL")));
   }
 
   return ir::Block::make(initStmts);
@@ -203,7 +212,7 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   ir::Expr csVar = ir::Var::make("cs" + mode.getName(), Int64);
   ir::Stmt initCs = ir::VarDecl::make(csVar, 0);
 
-  auto pos = this->getPosRegion(mode.getModePack());
+  auto pos = this->getRegion(mode.getModePack(), POS);
   ir::Expr pVar = ir::Var::make("p" + mode.getName(), Int64);
 
   auto lo = ir::FieldAccess::make(ir::Load::make(pos, pVar), "lo", false /* deref */, Int64);
@@ -244,12 +253,8 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
   return ModeFunction(ir::Block::make({createCrdPart, createPosPart}), {posPart, crdPart, posPart});
 }
 
-ir::Expr RectCompressedModeFormat::getPosRegion(ModePack pack) const {
-  return pack.getArray(0);
-}
-
-ir::Expr RectCompressedModeFormat::getCoordRegion(ModePack pack) const {
-  return pack.getArray(1);
+ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
+  return pack.getArray(int(reg));
 }
 
 // TODO (rohany): This probably has to be changed for the same reasons as below.
@@ -267,6 +272,8 @@ ir::Expr RectCompressedModeFormat::getPosCapacity(Mode mode) const {
 
 // TODO (rohany): This probably needs to be changed (at least how we
 //  access the capacity needs to be cached rather than making runtime calls).
+//  Maybe not, since the mode makes the variable once, it probably assigns to it
+//  and tracks it.
 ir::Expr RectCompressedModeFormat::getCoordCapacity(Mode mode) const {
   const std::string varName = mode.getName() + "_crd_size";
 

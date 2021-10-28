@@ -963,11 +963,17 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
     case TensorProperty::Indices:
       taco_ierror << "Must provide both mode and index for the Indices property";
       break;
+    case TensorProperty::IndicesParents:
+      taco_ierror << "Must provide both mode and index for the Indices property";
+      break;
     case TensorProperty::Values:
       gp->name = tensorVar->name + "_vals";
       break;
     case TensorProperty::ValuesSize:
       gp->name = tensorVar->name + "_vals_size";
+      break;
+    case TensorProperty::ValuesParent:
+      gp->name = tensorVar->name + "_vals_parent";
       break;
     case TensorProperty::IndexSpace:
       gp->name = tensorVar->name + "_index_space";

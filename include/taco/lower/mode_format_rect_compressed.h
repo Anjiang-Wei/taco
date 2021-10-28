@@ -39,8 +39,14 @@ public:
 
   std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const override;
 protected:
-  ir::Expr getPosRegion(ModePack pack) const;
-  ir::Expr getCoordRegion(ModePack pack) const;
+  // TODO (rohany): I could also maybe use this to manage accessors into the regions?
+  enum RECT_COMPRESSED_REGIONS {
+    POS = 0,
+    CRD,
+    POS_PARENT,
+    CRD_PARENT,
+  };
+  ir::Expr getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const;
 
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;

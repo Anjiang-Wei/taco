@@ -256,13 +256,21 @@ string CodeGen::unpackTensorProperty(string varname, const GetProperty* op,
     tp = "int";
     ret << tp << " " << varname << " = (int)(" << tensor->name
         << "->dimensions[" << op->mode << "]);\n";
-  } else {
-      taco_iassert(op->property == TensorProperty::Indices);
+  } else if (op->property == TensorProperty::Indices) {
       tp = "int*";
       auto nm = op->index;
       ret << tp << " " << restrictKeyword() << " " << varname << " = ";
       ret << "(int*)(" << tensor->name << "->indices[" << op->mode;
       ret << "][" << nm << "]);\n";
+  } else if (op->property == TensorProperty::IndicesParents) {
+    // TODO (rohany): I'm just including this here right now for completeness. It will make sense
+    //  to later move this into the legion code generator and keep the assertion failure if you try
+    //  to use the Legion formats with a C based backend.
+    tp = "int*";
+    auto nm = op->index;
+    ret << tp << " " << restrictKeyword() << " " << varname << " = ";
+    ret << "(int*)(" << tensor->name << "->indicesParents[" << op->mode;
+    ret << "][" << nm << "]);\n";
   }
 
   return ret.str();

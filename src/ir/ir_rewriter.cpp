@@ -462,11 +462,16 @@ void IRRewriter::visit(const Yield* op) {
 void IRRewriter::visit(const Allocate* op) {
   Expr var          = rewrite(op->var);
   Expr num_elements = rewrite(op->num_elements);
-  if (var == op->var && num_elements == op->num_elements) {
+  Expr lr = rewrite(op->pack.logicalRegion);
+  Expr fid = rewrite(op->pack.fieldID);
+  if (var == op->var && num_elements == op->num_elements && lr == op->pack.logicalRegion && fid == op->pack.fieldID) {
     stmt = op;
   }
   else {
-    stmt = Allocate::make(var, num_elements, op->is_realloc, op->old_elements);
+    stmt = Allocate::make(var, num_elements, op->is_realloc, op->old_elements, op->clear, Allocate::LegionAllocPack{
+      .logicalRegion = lr,
+      .fieldID = fid,
+    });
   }
 }
 

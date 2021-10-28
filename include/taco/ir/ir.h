@@ -84,7 +84,9 @@ enum class TensorProperty {
   ModeOrdering,
   ModeTypes,
   Indices,
+  IndicesParents,
   Values,
+  ValuesParent,
   ValuesSize,
   IndexSpace,
   ValuesReadAccessor,
@@ -855,6 +857,7 @@ struct GetProperty : public ExprNode<GetProperty> {
   std::string name;
 
   static Expr make(Expr tensor, TensorProperty property, int mode=0);
+  // This constructor is used for accessing indices and parents of indices.
   static Expr make(Expr tensor, TensorProperty property, int mode,
                    int index, std::string name);
   

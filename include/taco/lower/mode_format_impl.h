@@ -241,6 +241,20 @@ public:
   /// in array of structs format by having the different modes point into the
   /// same array via the modepack.
   ///
+  /// Another revision to this --- we can't actually do this runs of dense
+  /// levels _below_ the first sparse level. The problem is that we'd need an
+  /// index space for _each entry_ in the level above. But, lo-and-behold, I
+  /// think that we could do it by just having a 1-higher dimension so that
+  /// we have a separate dimension of the index space for each entry, so then
+  /// indexing is simple. This is also great, because now we can express how
+  /// to partition a dense dimension run given a partition of the parent --
+  /// simply extend the partition along the first dimension. It seems like you
+  /// would want something like this if you had a computation on a tensor with
+  /// format {Sparse, Dense, Dense}, and you wanted to run a serial loop over
+  /// the sparse tensor that launched distributed jobs on the {Dense, Dense}
+  /// sub-levels. This is also a reasonable thing to do if you have control
+  /// replication as those child jobs are going to be cheaper to launch.
+  ///
   /// Level functions related to partitioning. Very much a WIP.
   /// {@
   // TODO (rohany): I'm not sure what this function looks like yet, but the point
