@@ -301,6 +301,10 @@ public:
   typedef AccessNode Node;
 };
 
+bool operator==(const Access&, const Access&);
+bool operator!=(const Access&, const Access&);
+bool operator<(const Access&, const Access&);
+
 
 /// A literal index expression is a scalar literal that is embedded in the code.
 /// @note In the future we may allow general tensor literals.

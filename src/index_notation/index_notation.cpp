@@ -881,6 +881,23 @@ bool Access::isModeIndexSet(int mode) const {
   return util::contains(node->indexSetModes, mode);
 }
 
+bool operator==(const Access& a, const Access& b) {
+  return a.getTensorVar() == b.getTensorVar() && a.getIndexVars() == b.getIndexVars();
+}
+
+// We have to override this so that the the parent method IntrusivePtr<T>.!= doesn't
+// get called and mix up == and !=.
+bool operator!=(const Access& a, const Access& b) {
+  return !(a == b);
+}
+
+bool operator<(const Access& a, const Access& b) {
+  if (a.getTensorVar() != b.getTensorVar()) {
+    return a.getTensorVar() < b.getTensorVar();
+  }
+  return a.getIndexVars() < b.getIndexVars();
+}
+
 TensorVar Access::getModeIndexSetTensor(int mode) const {
   taco_iassert(this->isModeIndexSet(mode));
   return getNode(*this)->indexSetModes.at(mode).tensor.getTensorVar();

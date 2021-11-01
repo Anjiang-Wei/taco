@@ -1516,9 +1516,15 @@ TEST(distributed, legionSpMV) {
   Tensor<int> B("B", {dim, dim}, Format{Dense, LgSparse});
   Tensor<int> c("c", {dim}, Format{Dense});
 
-  IndexVar i("i"), j("j");
+  IndexVar i("i"), j("j"), io("io"), ii("ii");
   a(i) = B(i, j) * c(j);
-  auto stmt = a.getAssignment().concretize();
+  auto stmt = a.getAssignment().concretize()
+               .distribute({i}, {io}, {ii}, 4)
+               .communicate(B(i, j), io)
+               .communicate(a(i), io)
+               .communicate(c(j), io)
+               ;
+
   auto lowered = lower(stmt, "compute", false, true);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);

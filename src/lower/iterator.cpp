@@ -467,6 +467,21 @@ void Iterator::setIndexSetIterator(Iterator iter) {
   this->content->indexSetIterator = iter;
 }
 
+
+ModeFunction Iterator::getCreateInitialPartition() const {
+  // TODO (rohany): This has to do some work to create an initial partition from the
+  //  dense runs in the format.
+  return getMode().getModeFormat().impl->getCreateInitialPartition(getMode());
+}
+
+ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition) const {
+  return getMode().getModeFormat().impl->getPartitionFromParent(parentPartition, getMode());
+}
+
+ModeFunction Iterator::getPartitionFromChild(ir::Expr childPartition) const {
+  return getMode().getModeFormat().impl->getPartitionFromChild(childPartition, getMode());
+}
+
 bool operator==(const Iterator& a, const Iterator& b) {
   if (a.isDimensionIterator() && b.isDimensionIterator()) {
     return a.getIndexVar() == b.getIndexVar();

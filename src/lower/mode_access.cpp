@@ -18,10 +18,10 @@ bool operator==(const ModeAccess& a, const ModeAccess& b) {
 }
 
 bool operator<(const ModeAccess& a, const ModeAccess& b) {
-  if (a.getAccess() == b.getAccess()) {
-    return a.getModePos() < b.getModePos();
+  if (a.getAccess() != b.getAccess()) {
+    return a.getAccess() < b.getAccess();
   }
-  return a.getAccess() < b.getAccess();
+  return a.getModePos() < b.getModePos();
 }
 
 std::ostream &operator<<(std::ostream &os, const ModeAccess & modeAccess) {

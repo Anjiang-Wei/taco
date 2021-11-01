@@ -220,9 +220,9 @@ public:
 
   /// Methods for creating and manipulating partitions for distribution.
   /// TODO (rohany): These are directly lifted from the ModeFormatImpl.
-  ModeFunction getCreateInitialPartition(Mode mode) const;
-  ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const;
-  ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const;
+  ModeFunction getCreateInitialPartition() const;
+  ModeFunction getPartitionFromParent(ir::Expr parentPartition) const;
+  ModeFunction getPartitionFromChild(ir::Expr childPartition) const;
 
   friend bool operator==(const Iterator&, const Iterator&);
   friend bool operator<(const Iterator&, const Iterator&);

@@ -267,6 +267,10 @@ public:
   // the partition to use to partition the lower levels of the tree.
   virtual ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const;
   virtual ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const;
+
+  // TODO (rohany): It seems like we'll also want a "getAccessors" method that complements
+  //  the getArrays method to maintain accessor variables for each of the arrays in the format.
+
   /// @}
 
   /// Returns arrays associated with a tensor mode

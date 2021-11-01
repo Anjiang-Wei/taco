@@ -4603,11 +4603,19 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     auto& t = forall.getTransfers()[idx];
     auto& tv = t.getAccess().getTensorVar();
 
-    for (int level = 0; level < tv.getOrder(); level++) {
-      ModeAccess acc(t.getAccess(), level);
-      // this->iterators.levelIterators()[acc].getMode().getModeFormat()
-//      this->iterators.levelIterators()[acc].getP
-    }
+    // TODO (rohany): This code does not crash when run, it is just included after a lengthy
+    //  debugging process around overloaded equality operators.
+    // Expr initialPart = 0;
+    // for (int level = 0; level < tv.getOrder(); level++) {
+    //   ModeAccess acc(t.getAccess(), level + 1);
+    //   auto iter = this->iterators.levelIterator(acc);
+    //   auto backMap = this->iterators.modeAccess(iter);
+    //   taco_iassert(acc == backMap);
+    //   auto part = iter.getPartitionFromParent(initialPart);
+    //   if (part.defined()) {
+    //     result.push_back(part.compute());
+    //   }
+    // }
 
     // Skip fully replicated tensors.
     if (util::contains(fullyReplicatedTensors, tv)) {
