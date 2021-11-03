@@ -83,3 +83,31 @@ Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runti
   auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(oldBounds.bounds.hi[0] + 1, newSize - 1));
   return mapRegion(ctx, runtime, subreg, fid);
 }
+
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition) {
+  std::map<DomainPoint, Domain> domains;
+  auto toCopyIndexPartition = toCopy.get_index_partition();
+  auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopyIndexPartition);
+  auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopyIndexPartition);
+  switch (colorSpace.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM:      \
+      {            \
+        for (PointInDomainIterator<DIM> itr(colorSpace); itr(); itr++) { \
+          auto subreg = runtime->get_logical_subregion_by_color(ctx, toCopy, DomainPoint(*itr)); \
+          auto domain = runtime->get_index_space_domain(ctx, subreg.get_index_space());          \
+          domains[*itr] = domain;                                        \
+        }          \
+        break;     \
+      }            \
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      assert(false);
+  }
+  // TODO (rohany): This code should definitely be reachable, but my editor thinks that it isnt...
+  // TODO (rohany): Is there a way to get the kind (i.e. disjoint, aliased etc) of the existing partition?
+  auto toPartitionIndexSpace = toPartition.get_index_space();
+  auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName);
+  return runtime->get_logical_partition(ctx, toPartition, indexPart);
+}

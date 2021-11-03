@@ -129,6 +129,8 @@ Datatype PointInDomainIterator(int n);
 // A n-dimensional domain.
 Datatype Domain();
 Datatype Domain(int n);
+// A n-dimensional index space.
+extern Datatype IndexSpace;
 // A specialized IndexSpace.
 Datatype IndexSpaceT(int n);
 Datatype DeferredBuffer(Datatype bufType, int dim);

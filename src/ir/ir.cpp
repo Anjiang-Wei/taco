@@ -512,6 +512,10 @@ Expr getLogicalRegion(Expr e) {
   return ir::Call::make("get_logical_region", {e}, Auto);
 };
 
+Expr getIndexSpace(Expr e) {
+  return ir::Call::make("get_index_space", {e}, Auto);
+}
+
 Expr MethodCall::make(Expr var, const std::string &func, const std::vector<Expr> &args, bool deref, Datatype type) {
   MethodCall *call = new MethodCall;
   call->type = type;
@@ -913,6 +917,18 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode,
   return gp;
 }
 
+Expr GetProperty::makeDenseLevelRun(Expr tensor, int index) {
+  GetProperty* gp = new GetProperty;
+  gp->tensor = tensor;
+  gp->property = TensorProperty::DenseLevelRun;
+  gp->mode = -1;
+  gp->index = index;
+  const Var* tensorVar = tensor.as<Var>();
+  gp->name = tensorVar->name + "_dense_run_" + util::toString(index);
+  gp->type = IndexSpace;
+  return gp;
+}
+
 // Sort
 Stmt Sort::make(std::vector<Expr> args) {
   Sort* sort = new Sort;
@@ -965,6 +981,9 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
       break;
     case TensorProperty::IndicesParents:
       taco_ierror << "Must provide both mode and index for the Indices property";
+      break;
+    case TensorProperty::DenseLevelRun:
+      taco_ierror << "Must provide index for the DenseLevelRun property";
       break;
     case TensorProperty::Values:
       gp->name = tensorVar->name + "_vals";
@@ -1121,6 +1140,10 @@ std::ostream& operator<<(std::ostream& os, const Expr& expr) {
   expr.accept(&printer);
   return os;
 }
+
+// Definitions of common legion expressions.
+ir::Expr ctx = ir::Symbol::make("ctx");
+ir::Expr runtime = ir::Symbol::make("runtime");
 
 } // namespace ir
 } // namespace taco

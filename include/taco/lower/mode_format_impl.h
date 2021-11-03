@@ -61,6 +61,13 @@ private:
   ir::Expr resultValues;
 };
 
+// ModeRegion is information about a region used by a mode.
+struct ModeRegion {
+  ir::Expr region;
+  ir::Expr regionParent;
+  ir::Expr field;
+};
+
 std::ostream& operator<<(std::ostream&, const AttrQueryResult&);
 
 /// Mode functions implement parts of mode capabilities, such as position
@@ -256,6 +263,8 @@ public:
   /// replication as those child jobs are going to be cheaper to launch.
   ///
   /// Level functions related to partitioning. Very much a WIP.
+  ///
+  /// The last element of each mode function is the partition to pass down to the next level.
   /// {@
   // TODO (rohany): I'm not sure what this function looks like yet, but the point
   //  here is that you'll make an initial partition of an index space, and then
@@ -270,12 +279,21 @@ public:
 
   // TODO (rohany): It seems like we'll also want a "getAccessors" method that complements
   //  the getArrays method to maintain accessor variables for each of the arrays in the format.
+  // TODO (rohany): In addition / in complement to the "getAccessors" method, we'll also want
+  //  a method that just tells (from the format) how to set up the accessors for each tensor,
+  //  and we can then insert one of these at the head of each task so that we can correctly unpack
+  //  each of the packed regions from the input regions.
 
   /// @}
 
   /// Returns arrays associated with a tensor mode
-  virtual std::vector<ir::Expr>
-  getArrays(ir::Expr tensor, int mode, int level) const = 0;
+  virtual std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const = 0;
+
+  // getRegions is an analagous function to getArrays that returns all of the Regions used
+  // by a particular mode, as well as the parent of each region.  Next, the regions returned
+  // from getRegions must be returned in the same order as the partitions in the ModeFunctions
+  // returned from getPartitionFrom{Parent,Child}.
+  virtual std::vector<ModeRegion> getRegions(ir::Expr tensor, int level) const;
 
   friend bool operator==(const ModeFormatImpl&, const ModeFormatImpl&);
   friend bool operator!=(const ModeFormatImpl&, const ModeFormatImpl&);

@@ -12,9 +12,11 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   auto tensor = op->tensor.as<Var>();
   ret << "  ";
   if (op->property == TensorProperty::Dimension) {
-    tp = "int";
-    ret << tp << " " << varname << " = runtime->get_index_space_domain(get_index_space(" << tensor->name <<
-        ")).hi()[" << op->mode << "] + 1;\n";
+//    tp = "int";
+//    ret << tp << " " << varname << " = runtime->get_index_space_domain(get_index_space(" << tensor->name <<
+//        ")).hi()[" << op->mode << "] + 1;\n";
+    // TODO (rohany): Does this need to be an int64?
+    ret << "int " << varname << " = " << tensor->name << "->dims[" << op->mode << "];\n";
   } else if (op->property == TensorProperty::IndexSpace) {
     tp = "auto";
     ret << tp << " " << varname << " = get_index_space(" << tensor->name << ");\n";
@@ -26,6 +28,16 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   } else if (op->property == TensorProperty::ValuesReductionAccessor) {
     ret << accessorType(op) << " " << varname << "(" << tensor->name
         << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
+  } else if (op->property == TensorProperty::DenseLevelRun) {
+    ret << "auto " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
+  } else if (op->property == TensorProperty::Values) {
+    ret << "auto " << varname << " = " << tensor->name << "->values;\n";
+  } else if (op->property == TensorProperty::ValuesParent) {
+    ret << "auto " << varname << " = " << tensor->name << "->valuesParent;\n";
+  } else if (op->property == TensorProperty::Indices) {
+    ret << "auto " << varname << " = " << tensor->name << "->indices[" << op->mode << "][" << op->index << "];\n";
+  } else if (op->property == TensorProperty::IndicesParents) {
+    ret << "auto " << varname << " = " << tensor->name << "->indicesParents[" << op->mode << "][" << op->index << "];\n";
   } else {
     return CodeGen::unpackTensorProperty(varname, op, is_output_prop);
   }
@@ -78,7 +90,7 @@ std::string CodegenLegion::printFuncName(const Function *func,
     }
 
     if (var->is_tensor) {
-      ret << delimiter << "LogicalRegion " << var->name;
+      ret << delimiter << "LegionTensor* " << var->name;
     } else {
       auto tp = printType(var->type, var->is_ptr);
       ret << delimiter << tp << " " << var->name;
@@ -98,7 +110,7 @@ std::string CodegenLegion::printFuncName(const Function *func,
     taco_iassert(var) << "Unable to convert output " << func->inputs[i]
                       << " to Var";
     if (var->is_tensor) {
-      ret << delimiter << "LogicalRegion " << var->name;
+      ret << delimiter << "LegionTensor* " << var->name;
     } else {
       auto tp = printType(var->type, var->is_ptr);
       ret << delimiter << tp << " " << var->name;

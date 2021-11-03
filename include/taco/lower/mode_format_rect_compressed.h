@@ -38,6 +38,7 @@ public:
   ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const override;
 
   std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const override;
+  std::vector<ModeRegion> getRegions(ir::Expr tensor, int level) const override;
 protected:
   // TODO (rohany): I could also maybe use this to manage accessors into the regions?
   enum RECT_COMPRESSED_REGIONS {
@@ -51,6 +52,8 @@ protected:
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;
 
+  static inline ir::Expr fidRect1 = ir::Symbol::make("FID_RECT_1");
+  static inline ir::Expr fidCoord = ir::Symbol::make("FID_COORD");
   const long long allocSize;
 };
 

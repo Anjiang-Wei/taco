@@ -304,6 +304,10 @@ ModeFunction ModeFormatImpl::getPartitionFromChild(ir::Expr childPartition, Mode
   return ModeFunction();
 }
 
+std::vector<ModeRegion> ModeFormatImpl::getRegions(ir::Expr tensor, int level) const {
+  return {};
+}
+
 bool ModeFormatImpl::equals(const ModeFormatImpl& other) const {
   return (isFull == other.isFull &&
           isOrdered == other.isOrdered &&

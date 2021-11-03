@@ -461,6 +461,7 @@ protected:
       Forall forall,
       ir::Expr domain,
       std::map<TensorVar, ir::Expr>& partitionings,
+      std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> fullyReplicatedTensors,
       std::vector<ir::Expr> colorings,
       const std::vector<IndexVar>& distIvars
@@ -475,6 +476,7 @@ protected:
       Forall forall,
       ir::Expr domain,
       std::map<TensorVar, ir::Expr> partitionings,
+      std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> tensorsAccessed,
       int taskID
   );
@@ -631,7 +633,20 @@ private:
   // when the LegionLoweringKind is COMPUTE_ONLY.
   std::map<TensorVar, ir::Expr> computeOnlyPartitions;
 
-  // Some common Legion expressions and types.
+  // TODO (rohany): Not sure where is the best place to put this class.
+  //  I'm also not sure if it's better to do this analysis as part of the
+  //  analysis done by the lowerer, or to have a "multi-mode" ModeFormat.
+  struct DenseFormatRuns {
+    DenseFormatRuns(const Transfer& t, Iterators& iterators);
+    struct DenseRun {
+      std::vector<int> modes;
+      std::vector<int> levels;
+    };
+    std::vector<DenseRun> runs;
+  };
+
+  // Some common Legion expressions and types. Symbols that are needed outside of
+  // the lowerer are defined in ir.{h, cpp}.
   static inline ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
   static inline ir::Expr aliasedPart = ir::Symbol::make("LEGION_ALIASED_COMPLETE_KIND");
   static inline ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
@@ -640,9 +655,7 @@ private:
   static inline ir::Expr exclusive = ir::Symbol::make("EXCLUSIVE");
   static inline ir::Expr simultaneous = ir::Symbol::make("LEGION_SIMULTANEOUS");
   static inline ir::Expr fidVal = ir::Symbol::make("FID_VAL");
-  static inline ir::Expr ctx = ir::Symbol::make("ctx");
   static inline ir::Expr task = ir::Symbol::make("task");
-  static inline ir::Expr runtime = ir::Symbol::make("runtime");
   static inline ir::Expr virtualMap = ir::Symbol::make("Mapping::DefaultMapper::VIRTUAL_MAP");
   static inline ir::Expr placementMap = ir::Symbol::make("TACOMapper::PLACEMENT");
   static inline ir::Expr placementShard = ir::Symbol::make("TACOMapper::PLACEMENT_SHARD");

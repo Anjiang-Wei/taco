@@ -23,6 +23,7 @@ class ModeFunction;
 class Mode;
 class Format;
 class AttrQueryResult;
+struct ModeRegion;
 
 namespace ir {
 class Stmt;
@@ -65,6 +66,9 @@ public:
 
   /// Returns true if the iterator iterates over a mode.
   bool isModeIterator() const;
+
+  // Special case to identify Dense mode formats.
+  bool isDense() const;
 
   /// Properties of level being iterated.
   bool isFull() const;
@@ -223,6 +227,10 @@ public:
   ModeFunction getCreateInitialPartition() const;
   ModeFunction getPartitionFromParent(ir::Expr parentPartition) const;
   ModeFunction getPartitionFromChild(ir::Expr childPartition) const;
+
+  /// getRegions returns the set of regions used by the iterator.
+  /// See the corresponding comment in mode_format_impl.h.
+  std::vector<ModeRegion> getRegions();
 
   friend bool operator==(const Iterator&, const Iterator&);
   friend bool operator<(const Iterator&, const Iterator&);

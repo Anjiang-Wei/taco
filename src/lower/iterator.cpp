@@ -179,6 +179,11 @@ bool Iterator::isModeIterator() const {
   return content->mode.defined();
 }
 
+bool Iterator::isDense() const {
+  taco_iassert(defined());
+  return getMode().defined() && getMode().getModeFormat() == ModeFormat::Dense;
+}
+
 bool Iterator::isFull() const {
   taco_iassert(defined());
   if (isDimensionIterator()) return !content->beginVar.defined() && !content->endVar.defined();
@@ -480,6 +485,11 @@ ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition) const {
 
 ModeFunction Iterator::getPartitionFromChild(ir::Expr childPartition) const {
   return getMode().getModeFormat().impl->getPartitionFromChild(childPartition, getMode());
+}
+
+std::vector<ModeRegion> Iterator::getRegions() {
+  auto mode = getMode();
+  return mode.getModeFormat().impl->getRegions(getTensor(), mode.getLevel());
 }
 
 bool operator==(const Iterator& a, const Iterator& b) {

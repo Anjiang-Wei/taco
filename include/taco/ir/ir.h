@@ -92,6 +92,7 @@ enum class TensorProperty {
   ValuesReadAccessor,
   ValuesWriteAccessor,
   ValuesReductionAccessor,
+  DenseLevelRun,
 };
 
 /** Base class for backend IR */
@@ -512,6 +513,9 @@ Expr makeConstructor(Datatype type, std::vector<Expr> args);
 // getLogicalRegion is a utility method that wraps an expression
 // in a get_logical_region call.
 Expr getLogicalRegion(Expr e);
+// getIndexSpace is a utility method that wraps an expression
+// in a get_index_space call.
+Expr getIndexSpace(Expr e);
 
 struct MethodCall : public ExprNode<MethodCall> {
   Expr var;
@@ -860,6 +864,7 @@ struct GetProperty : public ExprNode<GetProperty> {
   // This constructor is used for accessing indices and parents of indices.
   static Expr make(Expr tensor, TensorProperty property, int mode,
                    int index, std::string name);
+  static Expr makeDenseLevelRun(Expr tensor, int index);
   
   static const IRNodeType _type_info = IRNodeType::GetProperty;
 };
@@ -918,6 +923,10 @@ bool isValue(Expr expr, T val) {
   }
   return false;
 }
+
+// Common legion expressions and types for use in different places.
+extern ir::Expr ctx;
+extern ir::Expr runtime;
 
 }}
 #endif

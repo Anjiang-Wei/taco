@@ -82,6 +82,15 @@ std::vector<ir::Expr> RectCompressedModeFormat::getArrays(ir::Expr tensor, int m
   return arrays;
 }
 
+std::vector<ModeRegion> RectCompressedModeFormat::getRegions(ir::Expr tensor, int level) const {
+  // TODO (rohany): getArrays does not the mode argument, so we omit it here.
+  auto arrays = this->getArrays(tensor, 0, level);
+  return {
+      ModeRegion{.region = arrays[POS], .regionParent = arrays[POS_PARENT], .field = fidRect1},
+      ModeRegion{.region = arrays[CRD], .regionParent = arrays[CRD_PARENT], .field = fidCoord},
+  };
+}
+
 ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const {
   taco_iassert(mode.getPackLocation() == 0);
 
@@ -176,8 +185,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     initStmts.push_back(ir::VarDecl::make(posCapacity, initCapacity));
   }
   // TODO (rohany): I need to have separate management of the physical and logical regions.
-  // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
-  initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, ir::Symbol::make("FID_VAL")));
+  initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1));
   // Start off each component in the position array as <0, 0>.
   initStmts.push_back(ir::Store::make(posArray, 0, ir::makeConstructor(Rect(1), {0, 0})));
 
@@ -195,8 +203,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     auto crdParent = this->getRegion(pack, CRD_PARENT);
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
     // TODO (rohany): I need to have separate management of the physical and logical regions.
-    // TODO (rohany): Make it part of the mode constructor to choose what the field ID is -- FID_VAL isn't right here.
-    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, ir::Symbol::make("FID_VAL")));
+    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord));
   }
 
   return ir::Block::make(initStmts);
@@ -230,13 +237,28 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
 }
 
 ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode) const {
+  auto pack = mode.getModePack();
   // Partition the pos region in the same way that the parent is partitioned,
   // as there is a pos entry for each of the entries in the parent.
+  // TODO (rohany): Add these variables to the mode.
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
-  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyParentPartition", {}, Auto));
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyPartition", {ir::ctx, ir::runtime, parentPartition, this->getRegion(pack, POS)}, Auto));
   // Then, using the partition of pos, create a dependent partition of the crd array.
   auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
-  auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("create_partition_by_image_range", {posPart}, Auto));
+  auto posIndexPart = ir::MethodCall::make(posPart, "get_index_partition", {}, false /* deref */, Auto);
+  auto createCrdPartCall = ir::Call::make(
+    "runtime->create_partition_by_image_range",
+    {
+      ir::ctx,
+      ir::MethodCall::make(this->getRegion(pack, CRD), "get_index_space", {}, false /* deref */, Auto),
+      posPart,
+      this->getRegion(pack, POS_PARENT),
+      fidRect1,
+      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, posIndexPart}, Auto),
+    },
+    Auto
+  );
+  auto createCrdPart = ir::VarDecl::make(crdPart, createCrdPartCall);
   // The partition to pass down to children is the coloring of the crd array.
   return ModeFunction(ir::Block::make({createPosPart, createCrdPart}), {posPart, crdPart, crdPart});
 }

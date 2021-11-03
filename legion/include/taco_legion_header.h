@@ -44,7 +44,6 @@ struct LegionTensor {
   Legion::LogicalRegion vals;
   Legion::LogicalRegion valsParent;
 
-  // TODO (rohany): Is this the right way to go about this?
   // denseLevelRuns is a set of index spaces corresponding to each run of dense
   // levels in the tensor. It is used to create partitions of the dense levels
   // for use in partitioning following levels of the tensor.
@@ -61,5 +60,8 @@ struct LegionTensor {
 // Functions for performing allocations on a region.
 Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, size_t size, Legion::FieldID fid);
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid);
+
+// Copy a partition onto a region with the same index space.
+Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::LogicalRegion toPartition);
 
 #endif // TACO_LEGION_INCLUDES_H

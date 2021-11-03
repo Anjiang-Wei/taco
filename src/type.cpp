@@ -450,6 +450,7 @@ Datatype Domain() {
 Datatype Domain(int n) {
   return templateGen("DomainT", n);
 }
+Datatype IndexSpace = Datatype("IndexSpace");
 Datatype IndexSpaceT(int n) {
   return templateGen("IndexSpaceT", n);
 }
