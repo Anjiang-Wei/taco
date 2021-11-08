@@ -719,12 +719,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }));
 
-  for (auto& it : this->tensorVars) {
-    auto pointT = Point(it.first.getType().getOrder());
-    auto accessor = ir::Var::make(it.first.getName() + "_access_point", pointT);
-    this->pointAccessVars[it.first] = accessor;
-  }
-
   match(stmt, function<void(const ForallNode*)>([&](const ForallNode* node) {
     // Want to derive bounds for each distributed forall. Can worry about how to
     // connect this all together later.
@@ -1459,22 +1453,9 @@ Stmt LowererImpl::lowerForallCloned(Forall forall) {
 
   // build loop with guards (not vectorized)
   if (!varsWithGuard.empty()) {
-    // Remember all the accessors that we emitted before lowering this forall.
-    auto emitted = this->emittedPointAccessors;
     ignoreVectorize = true;
     unvectorizedLoop = lowerForall(forall);
     ignoreVectorize = false;
-    // Remote all the accessors that were added by this forall, so that the cloned
-    // forall will also generate those accessors.
-    std::set<TensorVar> toRemove;
-    for (auto e : this->emittedPointAccessors) {
-      if (emitted.count(e) == 0) {
-        toRemove.insert(e);
-      }
-    }
-    for (auto r : toRemove) {
-      this->emittedPointAccessors.erase(r);
-    }
   }
 
   // build loop without guards
@@ -3694,9 +3675,6 @@ std::vector<IndexVar> getIndexVarFamily(const Iterator& it) {
 
 Stmt LowererImpl::declLocatePosVars(vector<Iterator> locators) {
   vector<Stmt> result;
-  // We first collect pointAccesses in a buffer to ensure that we always emit them in
-  // the same order.
-  vector<std::pair<TensorVar, Stmt>> pointAccesses;
   for (Iterator& locator : locators) {
     accessibleIterators.insert(locator);
 
@@ -3738,43 +3716,11 @@ Stmt LowererImpl::declLocatePosVars(vector<Iterator> locators) {
         result.push_back(declarePosVar);
 
         if (locateIterator.isLeaf()) {
-          if (this->legion) {
-            // Emit the point accessor for it here.
-            // TODO (rohany): Use a reverse map.
-            TensorVar tv;
-            for (auto& it : this->tensorVars) {
-              if (it.second == locateIterator.getTensor()) {
-                tv = it.first;
-              }
-            }
-            if (!util::contains(this->emittedPointAccessors, tv)) {
-              auto ivars = getIndexVarFamily(locateIterator);
-              auto pointT = Point(ivars.size());
-              auto point = this->pointAccessVars[tv];
-              std::function<Expr(IndexVar)> getExpr = [&](IndexVar i) {
-                return this->indexVarToExprMap.at(i);
-              };
-              auto makePoint = makeConstructor(pointT, util::map(ivars, getExpr));
-              pointAccesses.push_back(std::make_pair(tv, ir::VarDecl::make(point, makePoint)));
-              this->emittedPointAccessors.insert(tv);
-            }
-          }
           break;
         }
         locateIterator = locateIterator.getChild();
       } while (accessibleIterators.contains(locateIterator));
     }
-  }
-  // Sort the emitted point accesses at this level.
-  struct TensorVarSorter {
-    typedef std::pair<TensorVar, Stmt> elem;
-    bool operator() (elem e1, elem e2) {
-      return e1.first.getName() < e2.first.getName();
-    }
-  } tvs;
-  std::sort(pointAccesses.begin(), pointAccesses.end(), tvs);
-  for (auto it : pointAccesses) {
-    result.push_back(it.second);
   }
   return result.empty() ? Stmt() : Block::make(result);
 }
