@@ -77,6 +77,7 @@ protected:
   virtual void visit(const SideEffect*);
   virtual void visit(const PackTaskArgs*);
   virtual void visit(const Return*);
+  virtual void visit(const UnpackTensorData*);
 
   std::ostream &stream;
   int indent;

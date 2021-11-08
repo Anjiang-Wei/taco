@@ -75,6 +75,7 @@ enum class IRNodeType {
   PackTaskArgs,
   FieldAccess,
   Return,
+  UnpackTensorData,
 };
 
 enum class TensorProperty {
@@ -93,6 +94,9 @@ enum class TensorProperty {
   ValuesWriteAccessor,
   ValuesReductionAccessor,
   DenseLevelRun,
+  // TODO (rohany): Not sure if I need a read or write accessor distinction here. I probably will
+  //  need a write accessor, but I doubt a reduction accessor will be necessary.
+  IndicesAccessor,
 };
 
 /** Base class for backend IR */
@@ -860,11 +864,21 @@ struct GetProperty : public ExprNode<GetProperty> {
   int index = 0;
   std::string name;
 
+  // Struct containing a pack of data used when property == IndicesAccessor.
+  struct AccessorArgs {
+    int dim;
+    Datatype elemType;
+    Expr field;
+    const GetProperty* regionAccessing;
+  };
+  AccessorArgs accessorArgs;
+
   static Expr make(Expr tensor, TensorProperty property, int mode=0);
   // This constructor is used for accessing indices and parents of indices.
   static Expr make(Expr tensor, TensorProperty property, int mode,
                    int index, std::string name);
   static Expr makeDenseLevelRun(Expr tensor, int index);
+  static Expr makeIndicesAccessor(Expr tensor, std::string nameBase, int mode, int index, AccessorArgs args);
   
   static const IRNodeType _type_info = IRNodeType::GetProperty;
 };
@@ -879,6 +893,14 @@ struct PackTaskArgs : public StmtNode<PackTaskArgs> {
   static Stmt make(Expr var, int forTaskID, std::vector<Expr> prefixVars, std::vector<Expr> prefixExprs);
 
   static const IRNodeType _type_info = IRNodeType::PackTaskArgs;
+};
+
+struct UnpackTensorData : public StmtNode<UnpackTensorData> {
+  std::vector<ir::Expr> regions;
+
+  static Stmt make(std::vector<ir::Expr> regions);
+
+  static const IRNodeType _type_info = IRNodeType ::UnpackTensorData;
 };
 
 struct Return : public StmtNode<Return> {

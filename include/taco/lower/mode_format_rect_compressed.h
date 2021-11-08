@@ -48,6 +48,7 @@ protected:
     CRD_PARENT,
   };
   ir::Expr getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const;
+  ir::Expr getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg) const;
 
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;

@@ -84,11 +84,10 @@ Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runti
   return mapRegion(ctx, runtime, subreg, fid);
 }
 
-LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition) {
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition) {
   std::map<DomainPoint, Domain> domains;
-  auto toCopyIndexPartition = toCopy.get_index_partition();
-  auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopyIndexPartition);
-  auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopyIndexPartition);
+  auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopy);
+  auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopy);
   switch (colorSpace.get_dim()) {
 #define BLOCK(DIM) \
     case DIM:      \
@@ -110,4 +109,8 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition t
   auto toPartitionIndexSpace = toPartition.get_index_space();
   auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName);
   return runtime->get_logical_partition(ctx, toPartition, indexPart);
+}
+
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition) {
+  return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition);
 }

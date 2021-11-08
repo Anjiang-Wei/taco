@@ -57,16 +57,19 @@ ModeFunction RectCompressedModeFormat::posIterBounds(ir::Expr parentPos, Mode mo
   auto pack = mode.getModePack();
   // TODO (rohany): It seems like we might need to avoid just accessing the final element
   //  in the region if that isn't part of our partition.
-  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(this->getRegion(pack, POS), parentPos), "lo", false, Int64);
-  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(this->getRegion(pack, POS), parentPos), "hi", false, Int64), 1);
+  auto posRegAcc = this->getAccessor(pack, POS);
+  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(posRegAcc, parentPos), "lo", false, Int64);
+  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posRegAcc, parentPos), "hi", false, Int64), 1);
   return ModeFunction(ir::Stmt(), {pBegin, pEnd});
 }
 
 ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const {
   taco_iassert(mode.getPackLocation() == 0);
 
-  auto idxArray = this->getRegion(mode.getModePack(), CRD);
-  ir::Expr stride = (int)mode.getModePack().getNumModes();
+  auto pack = mode.getModePack();
+  auto idxArray = this->getAccessor(pack, CRD);
+  taco_iassert(pack.getNumModes() == 1);
+  ir::Expr stride = (int)pack.getNumModes();
   ir::Expr idx = ir::Load::make(idxArray, ir::Mul::make(pos, stride));
   return ModeFunction(ir::Stmt(), {idx, true});
 }
@@ -258,7 +261,16 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
     },
     Auto
   );
-  auto createCrdPart = ir::VarDecl::make(crdPart, createCrdPartCall);
+  auto getCrdLogicalPartCall = ir::Call::make(
+    "runtime->get_logical_partition",
+    {
+      ir::ctx,
+      this->getRegion(pack, CRD_PARENT),
+      createCrdPartCall,
+    },
+    Auto
+  );
+  auto createCrdPart = ir::VarDecl::make(crdPart, getCrdLogicalPartCall);
   // The partition to pass down to children is the coloring of the crd array.
   return ModeFunction(ir::Block::make({createPosPart, createCrdPart}), {posPart, crdPart, crdPart});
 }
@@ -277,6 +289,32 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
 
 ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
   return pack.getArray(int(reg));
+}
+
+ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
+  auto tensor = pack.getTensor();
+  auto posReg = this->getRegion(pack, POS).as<ir::GetProperty>();
+  auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
+  taco_iassert(posReg);
+  taco_iassert(crdReg);
+  std::vector<ir::Expr> accessors(2);
+  // TODO (rohany): Do the entries in the pos and crd arrays need to be int64's?
+  // TODO (rohany): The dimensionality of the pos region will need to be changed here.
+  accessors[POS] = ir::GetProperty::makeIndicesAccessor(pack.getTensor(), posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
+    .dim = 1,
+    .elemType = Int32,
+    .field = fidRect1,
+    .regionAccessing = posReg,
+  });
+  // The CRD array will always have dimensionality = 1.
+  accessors[CRD] = ir::GetProperty::makeIndicesAccessor(pack.getTensor(), crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs {
+    .dim = 1,
+    .elemType = Int32,
+    .field = fidCoord,
+    .regionAccessing = crdReg,
+  });
+
+  return accessors[reg];
 }
 
 // TODO (rohany): This probably has to be changed for the same reasons as below.

@@ -82,6 +82,9 @@ public:
   /// Returns arrays shared by tensor modes.
   ir::Expr getArray(size_t i) const;
 
+  // Return the tensor used to construct the ModePack.
+  ir::Expr getTensor() const;
+
 private:
   struct Content;
   std::shared_ptr<Content> content;

@@ -478,7 +478,8 @@ protected:
       std::map<TensorVar, ir::Expr> partitionings,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> tensorsAccessed,
-      int taskID
+      int taskID,
+      ir::Stmt& unpackTensorData
   );
 
   // lowerSerialTaskLoop lowers a loop of serial task launches.
@@ -633,17 +634,29 @@ private:
   // when the LegionLoweringKind is COMPUTE_ONLY.
   std::map<TensorVar, ir::Expr> computeOnlyPartitions;
 
-  // TODO (rohany): Not sure where is the best place to put this class.
-  //  I'm also not sure if it's better to do this analysis as part of the
-  //  analysis done by the lowerer, or to have a "multi-mode" ModeFormat.
+  // DenseFormatRuns constructs metadata about all of the runs of dense
+  // formats in a tensor.
   struct DenseFormatRuns {
-    DenseFormatRuns(const Transfer& t, Iterators& iterators);
+    DenseFormatRuns(const Access& a, const Iterators& iterators);
     struct DenseRun {
       std::vector<int> modes;
       std::vector<int> levels;
     };
     std::vector<DenseRun> runs;
   };
+
+  // ValuesAnalyzer maintains information about the dimensionality of the
+  // values array of each tensor, as well as information about how to access it.
+  struct ValuesAnalyzer {
+    void addAccess(const Access& access, const Iterators& iterators);
+    int getValuesDim(const TensorVar& tv) const;
+    ir::Expr getAccessPoint(const Access& access, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) const;
+
+    // Member variables.
+    std::map<TensorVar, int> valuesDims;
+    // valuesAccess maintains a map
+    std::map<Access, std::vector<IndexVar>> valuesAccess;
+  } valuesAnalyzer;
 
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.

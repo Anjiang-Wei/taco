@@ -93,6 +93,11 @@ public:
         ss << "AccessorReduce" << printType(op->type, false) << op->mode;
         return ss.str();
       }
+      case TensorProperty::IndicesAccessor: {
+        std::stringstream ss;
+        ss << "AccessorRO" << printType(op->accessorArgs.elemType, false) << op->accessorArgs.dim;
+        return ss.str();
+      }
       default:
         taco_iassert(false);
         return "";

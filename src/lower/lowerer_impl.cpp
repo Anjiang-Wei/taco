@@ -778,6 +778,17 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }
 
+  // Analyze each of the accesses to find out the dimensions of the values components of each tensor.
+  match(stmt, std::function<void(const AccessNode*)>([&](const AccessNode* node) {
+    Access acc(node);
+    this->valuesAnalyzer.addAccess(acc, this->iterators);
+  }), std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node) {
+    this->valuesAnalyzer.addAccess(node->lhs, this->iterators);
+  }));
+  std::cout << util::join(this->valuesAnalyzer.valuesDims) << std::endl;
+  std::cout << util::join(this->valuesAnalyzer.valuesAccess) << std::endl;
+
+
   // If we're going to compute only, create partition variables for each of the tensors that
   // hold onto their LogicalPartitions. This is similar to the code for generating code that
   // computes onto a partition.
@@ -1776,6 +1787,9 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
   // on the first future provided to the task. It is set only if
   // this behavior is needed.
   Stmt serializeOnPriorHeader;
+
+  Stmt unpackTensorData;
+
   auto isTask = forall.isDistributed() || (forall.getTransfers().size() > 0);
   auto taskID = -1;
   std::vector<ir::Stmt> transfers, partitionStmts, partitionForComputeStmts;
@@ -1930,7 +1944,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // Lower the appropriate kind of task call depending on whether the forall
     // is distributed.
     if (forall.isDistributed()) {
-      util::append(transfers, this->lowerIndexLaunch(forall, domain, partitionings, tensorLogicalPartitions, tensorsAccessedByTask, taskID));
+      util::append(transfers, this->lowerIndexLaunch(forall, domain, partitionings, tensorLogicalPartitions, tensorsAccessedByTask, taskID, unpackTensorData));
     } else {
       // Lower a serial loop of task launches.
       util::append(transfers, this->lowerSerialTaskLoop(forall, domain, domainIter, pointT, partitionings, tensorsAccessedByTask, taskID));
@@ -1940,7 +1954,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
   // If this forall is supposed to be replaced with a call to a leaf kernel,
   // do so and don't emit the surrounding loop and recovery statements.
   if (util::contains(this->calls, forall.getIndexVar())) {
-    return Block::make({serializeOnPriorHeader, declarePartitionBounds, this->calls[forall.getIndexVar()]->replaceValidStmt(
+    return Block::make({unpackTensorData, serializeOnPriorHeader, declarePartitionBounds, this->calls[forall.getIndexVar()]->replaceValidStmt(
         forall,
         this->provGraph,
         this->tensorVars,
@@ -1958,7 +1972,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     returnReduction = ir::Return::make(this->scalarReductionResult);
   }
 
-  body = Block::make({serializeOnPriorHeader, recoveryStmt, declarePartitionBounds, body, returnReduction});
+  body = Block::make({unpackTensorData, serializeOnPriorHeader, recoveryStmt, declarePartitionBounds, body, returnReduction});
 
   Stmt posAppend = generateAppendPositions(appenders);
 
@@ -4167,7 +4181,7 @@ Expr LowererImpl::generateValueLocExpr(Access access) const {
   }
   // If using legion, return the PointT<...> accessor.
   if (this->legion) {
-    return this->pointAccessVars.at(access.getTensorVar());
+    return this->valuesAnalyzer.getAccessPoint(access, this->indexVarToExprMap);
   }
 
   Iterator it = getIterators(access).back();
@@ -4567,24 +4581,21 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
     //  dense runs, and on the first run only. We'll leave it up to later to figure out how to implement
     //  partitioning a run that nested in other tensors.
 
-    auto runs = DenseFormatRuns(t, this->iterators);
+    auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
     taco_iassert(runs.runs.size() > 0);
     // Assume that we're partitioning the first run.
     auto run = runs.runs[0];
     // TODO (rohany): Rename these variables later.
     // The point we're making matches the dimensionality of the run.
     auto tensorDim = run.modes.size();
-    std::cout << "TensorDim: " << tensorDim << std::endl;
     auto txPoint = Point(tensorDim);
     auto txRect = Rect(tensorDim);
     // We need to only partition the modes that are part of the run.
     auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
     auto tbounds = this->derivedBounds[forall.getIndexVar()][tv];
     std::vector<Expr> los, his;
-    for (size_t i = 0; i < run.modes.size(); i++) {
-      auto modeIdx = run.modes[i];
+    for (auto modeIdx : run.modes) {
       los.push_back(tbounds[modeIdx][0]);
-      his.push_back(tbounds[modeIdx][1]);
       auto partUpper = ir::Load::make(ir::MethodCall::make(domains[tv], "hi", {}, false, Int64), int(modeIdx));
       auto upper = ir::Min::make(tbounds[modeIdx][1], partUpper);
       his.push_back(upper);
@@ -4722,7 +4733,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
 
     // We'll do the initial partition of the first dense run.
     // TODO (rohany): Figure out how to take partitions of not the first dense run too.
-    auto runs = DenseFormatRuns(t, this->iterators);
+    auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
     taco_iassert(runs.runs.size() > 0);
     auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
     // Partition the dense run using the coloring.
@@ -4798,10 +4809,13 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     std::map<TensorVar, Expr> partitionings,
     std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
     std::set<TensorVar> tensorsAccessed,
-    int taskID
+    int taskID,
+    Stmt& unpackTensorData
 ) {
   std::vector<ir::Stmt> result;
   std::vector<Stmt> itlStmts;
+
+  std::vector<ir::Expr> packedTensorData;
 
   // Construct the region requirements for each tensor argument.
   std::vector<Expr> regionReqs;
@@ -4873,6 +4887,9 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         auto req = ir::makeConstructor(RegionRequirement, regionReqArgs);
         req = ir::MethodCall::make(req, "add_field", {regions[i].field}, false /* deref */, Auto);
         regionReqs.push_back(req);
+
+        // Remember the order in which we are packing regions.
+        packedTensorData.push_back(regions[i].region);
       }
     }
 
@@ -4903,6 +4920,9 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     req = ir::makeConstructor(RegionRequirement, regionReqArgs);
     req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
     regionReqs.push_back(req);
+
+    // Remember the order in which we are packing regions.
+    packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
 
     // TODO (rohany): Add all the optimizations below about virtual mapping etc.
     continue;
@@ -5110,6 +5130,9 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     itlStmts.push_back(ir::Return::make(call));
   }
 
+  // Set the returned unpackTensorData.
+  unpackTensorData = ir::UnpackTensorData::make(packedTensorData);
+
   result.push_back(ir::Block::make(itlStmts));
   return result;
 }
@@ -5244,12 +5267,12 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
   return result;
 }
 
-LowererImpl::DenseFormatRuns::DenseFormatRuns(const Transfer& t, Iterators& iterators) {
+LowererImpl::DenseFormatRuns::DenseFormatRuns(const Access& a, const Iterators& iterators) {
   bool inDenseRun = false;
-  auto tv = t.getAccess().getTensorVar();
+  auto tv = a.getTensorVar();
   auto format = tv.getFormat();
   for (int level = 0; level < tv.getOrder(); level++) {
-    ModeAccess acc(t.getAccess(), level + 1);
+    ModeAccess acc(a, level + 1);
     auto modeNum = format.getModeOrdering()[level];
     auto iter = iterators.levelIterator(acc);
     if (iter.isDense()) {
@@ -5266,6 +5289,98 @@ LowererImpl::DenseFormatRuns::DenseFormatRuns(const Transfer& t, Iterators& iter
       inDenseRun = false;
     }
   }
+}
+
+void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterators &iterators) {
+  // TODO (rohany): Implement.
+
+  // TODO (rohany): What do we want to know / how do we want to organize it.
+  //  * Information about each tensorvar -- the dimensionality of the values
+  //    array. That can be stored in a map<tensorvar, {info}>.
+  //  * Information about how to actually access the values array, this is specific
+  //    to each access, as the access point depends on the variables in the access.
+
+  auto tv = access.getTensorVar();
+  DenseFormatRuns runs(access, iterators);
+
+  // Figure out the dimensionality of the values array.
+  if (!util::contains(this->valuesDims, tv)) {
+    // If there aren't any dense runs in the tensor, then the values array can
+    // only be one-dimensional.
+    if (runs.runs.empty()) {
+      this->valuesDims[tv] = 1;
+    } else {
+      // Get the last run.
+      auto lastRun = runs.runs.back();
+      // TODO (rohany): It might be good to add some of this logic into the DenseFormatRun
+      //  object itself, as this might be useful when doing multi-dimensional sparse levels too.
+      // If the last run contains the final level of the tensor, then the values
+      // array has dimensionality equal to that of the dense run. Otherwise,
+      // there are sparse levels in between the dense run and the values array,
+      // so the values array is one-dimensional.
+      if (util::contains(lastRun.levels, tv.getOrder() - 1)) {
+        // If the dense run contains level zero, the resulting dimensionality
+        // is the number of levels in the run. Otherwise, it has 1 extra dimension
+        // for the hook dimension in from the parent level.
+        if (util::contains(lastRun.levels, 0)) {
+          this->valuesDims[tv] = lastRun.levels.size();
+        } else {
+          this->valuesDims[tv] = lastRun.levels.size() + 1;
+        }
+      } else {
+        this->valuesDims[tv] = 1;
+      }
+    }
+  }
+
+  if (!util::contains(this->valuesAccess, access)) {
+    // If there aren't any dense runs in the tensor, then we use the index
+    // variable corresponding to the last level in the tensor.
+    if (runs.runs.empty()) {
+      ModeAccess acc(access, tv.getOrder());
+      auto lastLevel = iterators.levelIterator(acc);
+      this->valuesAccess[access] = {lastLevel.getIndexVar()};
+    } else {
+      // Get the last run.
+      auto lastRun = runs.runs.back();
+      // This logic mirrors the logic above for constructing the
+      // dimensionality of the values array.
+      if (util::contains(lastRun.levels, tv.getOrder() - 1)) {
+        std::vector<int> levels;
+        if (util::contains(lastRun.levels, 0)) {
+          levels = lastRun.levels;
+        } else {
+          // TODO (rohany): This case is a bit suss.
+          levels.push_back(lastRun.levels.front() - 1);
+          util::append(levels, lastRun.levels);
+        }
+        // Get the index variables for each level in the run.
+        std::vector<IndexVar> targetVars;
+        for (auto level : levels) {
+          ModeAccess acc(access, level + 1);
+          auto iter = iterators.levelIterator(acc);
+          targetVars.push_back(iter.getIndexVar());
+        }
+        this->valuesAccess[access] = targetVars;
+      } else {
+        ModeAccess acc(access, tv.getOrder());
+        auto lastLevel = iterators.levelIterator(acc);
+        this->valuesAccess[access] = {lastLevel.getIndexVar()};
+      }
+    }
+  }
+}
+
+int LowererImpl::ValuesAnalyzer::getValuesDim(const TensorVar &tv) const {
+  return this->valuesDims.at(tv);
+}
+
+ir::Expr LowererImpl::ValuesAnalyzer::getAccessPoint(const Access& access, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) const {
+  taco_iassert(this->valuesAccess.at(access).size() == size_t(this->valuesDims.at(access.getTensorVar())));
+  std::function<ir::Expr(IndexVar)> getExpr = [&](IndexVar v) { return indexVarToExprMap.at(v); };
+  auto pointArgs = util::map(this->valuesAccess.at(access), getExpr);
+  auto pointTy = Point(pointArgs.size());
+  return ir::makeConstructor(pointTy, pointArgs);
 }
 
 }

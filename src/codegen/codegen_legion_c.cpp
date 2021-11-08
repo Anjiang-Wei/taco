@@ -152,6 +152,10 @@ void CodegenLegionC::visit(const PackTaskArgs *node) {
   out << "TaskArgument " << node->var << " = TaskArgument(&" << tempVar << ", sizeof(" << stname << "));\n";
 }
 
+// This is a no-op because we pull this IR-node out and handle it specially when constructing
+// the header of a task.
+void CodegenLegionC::visit(const UnpackTensorData*) {}
+
 void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
   this->stmt = stmt;
   // Collect all of the individual functions that we need to generate code for.
@@ -247,13 +251,26 @@ void CodegenLegionC::visit(const Function* func) {
   varMap = varFinder.varMap;
   localVars = varFinder.localVars;
 
+  // Find the first unpackTensorData IR node. If this is a task, it will be the
+  // first Stmt in the task.
+  // Find the unpackTensorData IR node in the task. There must be one.
+  struct UnpackTensorDataFinder : public IRVisitor {
+    void visit(const UnpackTensorData* op) {
+      if (data == nullptr) {
+        data = op;
+      }
+    }
+    const UnpackTensorData* data = nullptr;
+  } unpackTensorDataFinder;
+  func->body.accept(&unpackTensorDataFinder);
+
   // For tasks, unpack the regions.
   if (func->name.find("task") != std::string::npos) {
-    auto parentFunc = this->funcToParentFunc[func];
-    for (size_t i = 0; i < this->regionArgs[parentFunc].size(); i++) {
+    taco_iassert(unpackTensorDataFinder.data);
+    for (size_t i = 0; i < unpackTensorDataFinder.data->regions.size(); i++) {
       doIndent();
-      auto t = this->regionArgs[parentFunc][i];
-      out << "PhysicalRegion " << t << " = regions[" << i << "];\n";
+      auto reg = unpackTensorDataFinder.data->regions[i];
+      out << "PhysicalRegion " << reg << " = regions[" << i << "];\n";
     }
     out << "\n";
   }
@@ -283,19 +300,23 @@ void CodegenLegionC::visit(const Function* func) {
     out << "\n";
   }
 
-  // TODO (rohany): Hack.
   // TODO (rohany): Hacky way to tell that this function was a task.
+  // Remove certain declarations from the head of tasks. In particular, we'll remove dimension
+  // sizes, since we'll pass those down through task arguments, and we'll also drop the regions
+  // themselves as we have a separate procedure for declaring them.
   if (func->name.find("task") != std::string::npos) {
+    std::set<const Expr> regionArgs;
+    regionArgs.insert(unpackTensorDataFinder.data->regions.begin(), unpackTensorDataFinder.data->regions.end());
     std::vector<Expr> toRemove;
-    for (auto it : varFinder.varDecls) {
+    for (const auto& it : varFinder.varDecls) {
       if (isa<GetProperty>(it.first)) {
         auto g = it.first.as<GetProperty>();
-        if (g->property == TensorProperty::Dimension) {
+        if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first)) {
           toRemove.push_back(g);
         }
       }
     }
-    for (auto it : toRemove) {
+    for (const auto& it : toRemove) {
       varFinder.varDecls.erase(it);
     }
   }

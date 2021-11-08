@@ -4,9 +4,11 @@
 #include "legion.h"
 #include "mappers/default_mapper.h"
 
-// Field used by the generated TACO code.
+// Fields used by the generated TACO code.
 enum TensorFields {
-  FID_VAL
+  FID_VAL,
+  FID_RECT_1,
+  FID_COORD,
 };
 const int TACO_TASK_BASE_ID = 10000;
 const int TACO_SHARD_BASE_ID = 1000;
@@ -62,6 +64,7 @@ Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtim
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid);
 
 // Copy a partition onto a region with the same index space.
+Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition);
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::LogicalRegion toPartition);
 
 #endif // TACO_LEGION_INCLUDES_H

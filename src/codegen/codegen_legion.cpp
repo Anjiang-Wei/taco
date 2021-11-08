@@ -10,6 +10,7 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   std::stringstream ret;
   std::string tp;
   auto tensor = op->tensor.as<Var>();
+  auto values = ir::GetProperty::make(ir::Expr(tensor), TensorProperty::Values);
   ret << "  ";
   if (op->property == TensorProperty::Dimension) {
 //    tp = "int";
@@ -21,23 +22,31 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
     tp = "auto";
     ret << tp << " " << varname << " = get_index_space(" << tensor->name << ");\n";
   } else if (op->property == TensorProperty::ValuesReadAccessor) {
-    ret << accessorType(op) << " " << varname << "(" << tensor->name << ", FID_VAL);\n";
+    // We can't just use the tensor's name when constructing the value accessors, as for child
+    // tasks the value array is not just the tensor's name.
+    ret << accessorType(op) << " " << varname << "(" << values << ", FID_VAL);\n";
   } else if (op->property == TensorProperty::ValuesWriteAccessor) {
-    ret << accessorType(op) << " " << varname << "(" << tensor->name
+    ret << accessorType(op) << " " << varname << "(" << values
         << ", FID_VAL);\n";
   } else if (op->property == TensorProperty::ValuesReductionAccessor) {
-    ret << accessorType(op) << " " << varname << "(" << tensor->name
+    ret << accessorType(op) << " " << varname << "(" << values
         << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
   } else if (op->property == TensorProperty::DenseLevelRun) {
     ret << "auto " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
   } else if (op->property == TensorProperty::Values) {
-    ret << "auto " << varname << " = " << tensor->name << "->values;\n";
+    ret << "auto " << varname << " = " << tensor->name << "->vals;\n";
   } else if (op->property == TensorProperty::ValuesParent) {
-    ret << "auto " << varname << " = " << tensor->name << "->valuesParent;\n";
+    ret << "auto " << varname << " = " << tensor->name << "->valsParent;\n";
   } else if (op->property == TensorProperty::Indices) {
     ret << "auto " << varname << " = " << tensor->name << "->indices[" << op->mode << "][" << op->index << "];\n";
   } else if (op->property == TensorProperty::IndicesParents) {
-    ret << "auto " << varname << " = " << tensor->name << "->indicesParents[" << op->mode << "][" << op->index << "];\n";
+    ret << "auto " << varname << " = " << tensor->name << "->indicesParents[" << op->mode << "][" << op->index
+        << "];\n";
+  } else if (op->property == TensorProperty::IndicesAccessor) {
+    auto fid = op->accessorArgs.field.as<ir::Symbol>()->name;
+    auto regionAccessing = op->accessorArgs.regionAccessing;
+    // TODO (rohany): Do I need to use the varmap here?
+    ret << accessorType(op) << " " << varname << "(" << ir::Expr(regionAccessing) << ", " << fid << ");\n";
   } else {
     return CodeGen::unpackTensorProperty(varname, op, is_output_prop);
   }

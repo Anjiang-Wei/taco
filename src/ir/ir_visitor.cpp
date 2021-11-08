@@ -266,6 +266,12 @@ void IRVisitor::visit(const PackTaskArgs* p) {
   p->var.accept(this);
 }
 
+void IRVisitor::visit(const UnpackTensorData* op) {
+  for (auto it : op->regions) {
+    it.accept(this);
+  }
+}
+
 void IRVisitor::visit(const Print* op) {
   for (auto e: op->params)
     e.accept(this);

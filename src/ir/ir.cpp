@@ -929,6 +929,18 @@ Expr GetProperty::makeDenseLevelRun(Expr tensor, int index) {
   return gp;
 }
 
+Expr GetProperty::makeIndicesAccessor(Expr tensor, std::string nameBase, int mode, int index, AccessorArgs args) {
+  GetProperty* gp = new GetProperty;
+  gp->tensor = tensor;
+  gp->property = TensorProperty::IndicesAccessor;
+  gp->mode = mode;
+  gp->index = index;
+  gp->name = nameBase + "_accessor";
+  gp->type = Auto;
+  gp->accessorArgs = args;
+  return gp;
+}
+
 // Sort
 Stmt Sort::make(std::vector<Expr> args) {
   Sort* sort = new Sort;
@@ -944,6 +956,16 @@ Stmt PackTaskArgs::make(Expr var, int forTaskID, std::vector<Expr> prefixVars, s
   pa->prefixExprs = prefixExprs;
   taco_iassert(prefixVars.size() == prefixExprs.size());
   return pa;
+}
+
+Stmt UnpackTensorData::make(std::vector<ir::Expr> regions) {
+  UnpackTensorData* utd = new UnpackTensorData;
+  // Assert that all of the regions are GetProperty objects.
+  for (const auto& it : regions) {
+    taco_iassert(it.as<GetProperty>());
+  }
+  utd->regions = regions;
+  return utd;
 }
 
 // GetProperty
@@ -985,6 +1007,9 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
     case TensorProperty::DenseLevelRun:
       taco_ierror << "Must provide index for the DenseLevelRun property";
       break;
+    case TensorProperty::IndicesAccessor:
+      taco_ierror << "Use specialized method for creating indices accessors";
+      break;
     case TensorProperty::Values:
       gp->name = tensorVar->name + "_vals";
       break;
@@ -1001,15 +1026,15 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
       break;
     case TensorProperty::ValuesReadAccessor:
       gp->type = tensor.type();
-      gp->name = tensorVar->name + "_vals";
+      gp->name = tensorVar->name + "_vals_ro_accessor";
       break;
     case TensorProperty::ValuesWriteAccessor:
       gp->type = tensor.type();
-      gp->name = tensorVar->name + "_vals";
+      gp->name = tensorVar->name + "_vals_rw_accessor";
       break;
     case TensorProperty::ValuesReductionAccessor:
       gp->type = tensor.type();
-      gp->name = tensorVar->name + "_vals";
+      gp->name = tensorVar->name + "_vals_red_accessor";
       break;
   }
   
@@ -1125,6 +1150,8 @@ template<> void StmtNode<PackTaskArgs>::accept(IRVisitorStrict *v)
 const { v->visit((const PackTaskArgs*)this); }
 template<> void StmtNode<Return>::accept(IRVisitorStrict *v)
 const { v->visit((const Return*)this); }
+template<> void StmtNode<UnpackTensorData>::accept(IRVisitorStrict *v)
+const { v->visit((const UnpackTensorData*)this); }
 
 // printing methods
 std::ostream& operator<<(std::ostream& os, const Stmt& stmt) {

@@ -306,6 +306,20 @@ void IRPrinter::visit(const PackTaskArgs* op) {
   stream << " = packed args for task: " << op->forTaskID << ";" << endl;
 }
 
+void IRPrinter::visit(const UnpackTensorData* op) {
+  doIndent();
+  stream << "packed tensor data: ";
+  bool first = true;
+  for (auto it : op->regions) {
+    if (!first) {
+      stream << ", ";
+    }
+    it.accept(this);
+    first = false;
+  }
+  stream << ";" << endl;
+}
+
 void IRPrinter::visit(const IfThenElse* op) {
   taco_iassert(op->cond.defined());
   taco_iassert(op->then.defined());
