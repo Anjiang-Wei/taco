@@ -775,9 +775,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
   // Analyze each of the accesses to find out the dimensions of the values components of each tensor.
   match(stmt, std::function<void(const AccessNode*)>([&](const AccessNode* node) {
     Access acc(node);
-    this->valuesAnalyzer.addAccess(acc, this->iterators);
+    this->valuesAnalyzer.addAccess(acc, this->iterators, this->indexVarToExprMap);
   }), std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node) {
-    this->valuesAnalyzer.addAccess(node->lhs, this->iterators);
+    this->valuesAnalyzer.addAccess(node->lhs, this->iterators, this->indexVarToExprMap);
   }));
 
   // If we're going to compute only, create partition variables for each of the tensors that
@@ -4124,7 +4124,7 @@ Expr LowererImpl::generateValueLocExpr(Access access) const {
   }
   // If using legion, return the PointT<...> accessor.
   if (this->legion) {
-    return this->valuesAnalyzer.getAccessPoint(access, this->indexVarToExprMap);
+    return this->valuesAnalyzer.getAccessPoint(access);
   }
 
   Iterator it = getIterators(access).back();
@@ -5234,7 +5234,7 @@ LowererImpl::DenseFormatRuns::DenseFormatRuns(const Access& a, const Iterators& 
   }
 }
 
-void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterators &iterators) {
+void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterators &iterators, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) {
   // TODO (rohany): Implement.
 
   // TODO (rohany): What do we want to know / how do we want to organize it.
@@ -5279,36 +5279,39 @@ void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterator
   if (!util::contains(this->valuesAccess, access)) {
     // If there aren't any dense runs in the tensor, then we use the index
     // variable corresponding to the last level in the tensor.
+    auto getIter = [&](int level) {
+      ModeAccess acc(access, level);
+      return iterators.levelIterator(acc);
+    };
+
     if (runs.runs.empty()) {
-      ModeAccess acc(access, tv.getOrder());
-      auto lastLevel = iterators.levelIterator(acc);
-      this->valuesAccess[access] = {lastLevel.getIndexVar()};
+      // Accesses from a sparse level need to use the posVar().
+      this->valuesAccess[access] = {getIter(tv.getOrder()).getPosVar()};
     } else {
       // Get the last run.
       auto lastRun = runs.runs.back();
       // This logic mirrors the logic above for constructing the
       // dimensionality of the values array.
       if (util::contains(lastRun.levels, tv.getOrder() - 1)) {
-        std::vector<int> levels;
-        if (util::contains(lastRun.levels, 0)) {
-          levels = lastRun.levels;
-        } else {
-          // TODO (rohany): This case is a bit suss.
-          levels.push_back(lastRun.levels.front() - 1);
-          util::append(levels, lastRun.levels);
-        }
         // Get the index variables for each level in the run.
-        std::vector<IndexVar> targetVars;
-        for (auto level : levels) {
-          ModeAccess acc(access, level + 1);
-          auto iter = iterators.levelIterator(acc);
-          targetVars.push_back(iter.getIndexVar());
+        std::vector<ir::Expr> targetVars;
+        if (!util::contains(lastRun.levels, 0)) {
+          // TODO (rohany): This case is a bit suss.
+          // Get the position of the level before this dense run if the run
+          // doesn't start from the root of the tensor. We do .front() because
+          // we want the level before .front(), but levels are 1-indexed when
+          // asking for the corresponding iterator.
+          targetVars.push_back(getIter(lastRun.levels.front()).getPosVar());
+        }
+
+        // Add the locator variables for each of the remaining dimensions in the run.
+        for (auto level : lastRun.levels) {
+          targetVars.push_back(indexVarToExprMap.at(getIter(level + 1).getIndexVar()));
         }
         this->valuesAccess[access] = targetVars;
       } else {
-        ModeAccess acc(access, tv.getOrder());
-        auto lastLevel = iterators.levelIterator(acc);
-        this->valuesAccess[access] = {lastLevel.getIndexVar()};
+        // Accesses from a sparse level need to use the posVar().
+        this->valuesAccess[access] = {getIter(tv.getOrder()).getPosVar()};
       }
     }
   }
@@ -5318,10 +5321,9 @@ int LowererImpl::ValuesAnalyzer::getValuesDim(const TensorVar &tv) const {
   return this->valuesDims.at(tv);
 }
 
-ir::Expr LowererImpl::ValuesAnalyzer::getAccessPoint(const Access& access, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) const {
+ir::Expr LowererImpl::ValuesAnalyzer::getAccessPoint(const Access& access) const {
   taco_iassert(this->valuesAccess.at(access).size() == size_t(this->valuesDims.at(access.getTensorVar())));
-  std::function<ir::Expr(IndexVar)> getExpr = [&](IndexVar v) { return indexVarToExprMap.at(v); };
-  auto pointArgs = util::map(this->valuesAccess.at(access), getExpr);
+  auto pointArgs = this->valuesAccess.at(access);
   auto pointTy = Point(pointArgs.size());
   return ir::makeConstructor(pointTy, pointArgs);
 }

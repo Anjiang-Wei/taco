@@ -1512,9 +1512,9 @@ TEST(distributed, nesting) {
 
 TEST(distributed, legionSpMV) {
   int dim = 100;
-  Tensor<int> a("a", {dim}, Format{Dense});
-  Tensor<int> B("B", {dim, dim}, Format{Dense, LgSparse});
-  Tensor<int> c("c", {dim}, Format{Dense});
+  Tensor<double> a("a", {dim}, Format{Dense});
+  Tensor<double> B("B", {dim, dim}, Format{Dense, LgSparse});
+  Tensor<double> c("c", {dim}, Format{Dense});
 
   IndexVar i("i"), j("j"), io("io"), ii("ii");
   a(i) = B(i, j) * c(j);
@@ -1528,6 +1528,12 @@ TEST(distributed, legionSpMV) {
   auto lowered = lowerLegion(stmt, "computeLegion");
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
+  {
+    ofstream f("../legion/SpMV/taco-generated.cpp");
+    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(lowered);
+    f.close();
+  }
 }
 
 TEST(distributed, legionPackCOOtoCSR) {

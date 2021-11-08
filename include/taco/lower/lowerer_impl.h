@@ -645,14 +645,14 @@ private:
   // ValuesAnalyzer maintains information about the dimensionality of the
   // values array of each tensor, as well as information about how to access it.
   struct ValuesAnalyzer {
-    void addAccess(const Access& access, const Iterators& iterators);
+    void addAccess(const Access& access, const Iterators& iterators, const std::map<IndexVar, ir::Expr>& indexVarToExprMap);
     int getValuesDim(const TensorVar& tv) const;
-    ir::Expr getAccessPoint(const Access& access, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) const;
+    ir::Expr getAccessPoint(const Access& access) const;
 
     // Member variables.
     std::map<TensorVar, int> valuesDims;
     // valuesAccess maintains a map
-    std::map<Access, std::vector<IndexVar>> valuesAccess;
+    std::map<Access, std::vector<ir::Expr>> valuesAccess;
   } valuesAnalyzer;
 
   // Some common Legion expressions and types. Symbols that are needed outside of

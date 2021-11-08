@@ -93,18 +93,17 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toC
     case DIM:      \
       {            \
         for (PointInDomainIterator<DIM> itr(colorSpace); itr(); itr++) { \
-          auto subreg = runtime->get_logical_subregion_by_color(ctx, toCopy, DomainPoint(*itr)); \
-          auto domain = runtime->get_index_space_domain(ctx, subreg.get_index_space());          \
+          auto subspace = runtime->get_index_subspace(ctx, toCopy, DomainPoint(*itr)); \
+          auto domain = runtime->get_index_space_domain(ctx, subspace);          \
           domains[*itr] = domain;                                        \
         }          \
         break;     \
-      }            \
+      }
     LEGION_FOREACH_N(BLOCK)
 #undef BLOCK
     default:
       assert(false);
   }
-  // TODO (rohany): This code should definitely be reachable, but my editor thinks that it isnt...
   // TODO (rohany): Is there a way to get the kind (i.e. disjoint, aliased etc) of the existing partition?
   auto toPartitionIndexSpace = toPartition.get_index_space();
   auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName);
