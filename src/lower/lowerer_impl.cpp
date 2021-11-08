@@ -779,9 +779,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
   }), std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node) {
     this->valuesAnalyzer.addAccess(node->lhs, this->iterators);
   }));
-  std::cout << util::join(this->valuesAnalyzer.valuesDims) << std::endl;
-  std::cout << util::join(this->valuesAnalyzer.valuesAccess) << std::endl;
-
 
   // If we're going to compute only, create partition variables for each of the tensors that
   // hold onto their LogicalPartitions. This is similar to the code for generating code that
@@ -3234,16 +3231,16 @@ Expr LowererImpl::getCapacityVar(Expr tensor) const {
 ir::Expr LowererImpl::getValuesArray(TensorVar var) const
 {
   if (this->legion) {
+    auto valuesDim = this->valuesAnalyzer.getValuesDim(var);
     // TODO (rohany): Handle temporary arrays at some point.
-    // TODO (rohany): Handle reduction accessors at some point.
     // TODO (rohany): Hackingly including the size as the mode here.
     if (util::contains(this->resultTensors, var)) {
       if (this->performingLegionReduction) {
-        return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReductionAccessor, var.getOrder());
+        return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReductionAccessor, valuesDim);
       }
-      return GetProperty::make(getTensorVar(var), TensorProperty::ValuesWriteAccessor, var.getOrder());
+      return GetProperty::make(getTensorVar(var), TensorProperty::ValuesWriteAccessor, valuesDim);
     } else {
-      return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReadAccessor, var.getOrder());
+      return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReadAccessor, valuesDim);
     }
   } else {
     return (util::contains(temporaryArrays, var))

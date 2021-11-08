@@ -114,6 +114,23 @@ string CodeGen::printType(Datatype type, bool is_ptr) {
   return "";
 }
 
+string CodeGen::printTypeInName(Datatype type, bool is_ptr) {
+  auto raw = printType(type, is_ptr);
+  std::stringstream result;
+  for (auto c : raw) {
+    switch (c) {
+      case '<':
+      case '>':
+        result << '_';
+        break;
+      default:
+        result << c;
+        break;
+    }
+  }
+  return result.str();
+}
+
 string CodeGen::printCAlloc(string pointer, string size) {
   return pointer + " = malloc(" + size + ");";
 }

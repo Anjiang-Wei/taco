@@ -143,6 +143,9 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
         case TensorProperty::ValuesReductionAccessor:
           this->accessors.insert(AccessorInfo{op->property, op->mode, op->type});
           break;
+        case TensorProperty::IndicesAccessor:
+          this->accessors.insert(AccessorInfo{op->property, op->accessorArgs.dim, op->accessorArgs.elemType});
+          break;
         default:
           return;
       }
@@ -170,7 +173,7 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
       }
       out << "typedef FieldAccessor<" << priv << "," << printType(info.typ, false) << ","
           << info.dims << ",coord_t,Realm::AffineAccessor<" << printType(info.typ, false) << ","
-          << info.dims << ",coord_t>> Accessor" << suffix << printType(info.typ, false) << info.dims << ";\n";
+          << info.dims << ",coord_t>> Accessor" << suffix << printTypeInName(info.typ, false) << info.dims << ";\n";
     }
   }
   out << "\n";

@@ -40,6 +40,9 @@ protected:
   std::string printFree(std::string pointer);
 
   std::string printType(Datatype type, bool is_ptr);
+  // printTypeInName does the same thing as printType, but sanitizes the output
+  // so that the type can appear in a name. For example, T1<T2> -> T1_T2.
+  std::string printTypeInName(Datatype type, bool is_ptr);
   std::string printContextDeclAndInit(std::map<Expr, std::string, ExprCompare> varMap,
                                           std::vector<Expr> localVars, int labels,
                                           std::string funcName);

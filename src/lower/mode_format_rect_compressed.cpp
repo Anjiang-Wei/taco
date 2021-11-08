@@ -302,7 +302,7 @@ ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_RE
   // TODO (rohany): The dimensionality of the pos region will need to be changed here.
   accessors[POS] = ir::GetProperty::makeIndicesAccessor(pack.getTensor(), posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
     .dim = 1,
-    .elemType = Int32,
+    .elemType = Rect(1),
     .field = fidRect1,
     .regionAccessing = posReg,
   });

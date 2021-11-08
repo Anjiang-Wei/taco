@@ -95,7 +95,7 @@ public:
       }
       case TensorProperty::IndicesAccessor: {
         std::stringstream ss;
-        ss << "AccessorRO" << printType(op->accessorArgs.elemType, false) << op->accessorArgs.dim;
+        ss << "AccessorRO" << printTypeInName(op->accessorArgs.elemType, false) << op->accessorArgs.dim;
         return ss.str();
       }
       default:
