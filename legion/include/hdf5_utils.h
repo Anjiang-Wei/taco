@@ -1,11 +1,11 @@
 #ifndef TACO_LEGION_HDF5_UTILS_H
 #define TACO_LEGION_HDF5_UTILS_H
 #include <hdf5.h>
-// #include "hdf5.h"
 #include <string>
 #include <vector>
 
 #include "legion.h"
+#include "legion_tensor.h"
 
 // Constants for coordinate list HDF5 storage.
 const char* const COODimsField = "dims";
@@ -39,5 +39,14 @@ void getCoordListHDF5Meta(std::string filename, size_t& order, size_t& nnz);
 Legion::PhysicalRegion attachHDF5(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
                                   std::map<Legion::FieldID, const char *> fieldMap, std::string filename,
                                   Legion::LegionFileMode mode = LEGION_FILE_READ_ONLY);
+
+// Load a COO tensor from a HDF5 file into a LegionTensor. The COO HDF5 tensor
+// must have been created by the tns_to_hdf5 utility.
+LegionTensor loadCOOFromHDF5(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
+                             Legion::FieldID coordField, size_t coordSize, Legion::FieldID valsField, size_t valsSize);
+
+// Registration function that must be called during initialization if loadCOOFromHDF5 is desired to be used.
+void registerHDF5UtilTasks();
+
 
 #endif // TACO_LEGION_HDF5_UTILS_H

@@ -113,6 +113,9 @@ add_app_folder(matvec-adapt)
 
 add_cuda_folder(cuda-test)
 
+# Sparse codes.
+add_app_folder(spmv)
+
 # Add a variety of tests for the generated code.
 
 # Tests for cannon.
@@ -151,16 +154,16 @@ target_link_libraries(hier-test Legion::Legion)
 
 # Add some hand written codes here.
 if(Legion_USE_CUDA)
-    cuda_add_executable(spmv SpMV/handwritten.cpp SpMV/handwritten.cu ${LG_EXTRA_SOURCES})
-    include_directories(spmv PRIVATE ${HDF5_INCLUDE_DIRS})
-    target_link_libraries(spmv Legion::Legion ${HDF5_LIBRARIES})
-    target_compile_options(spmv PRIVATE ${OpenMP_CXX_FLAGS})
-    target_compile_definitions(spmv PUBLIC TACO_USE_CUDA)
+    cuda_add_executable(handwritten-spmv handwritten-spmv/handwritten.cpp handwritten-spmv/handwritten.cu ${LG_EXTRA_SOURCES})
+    include_directories(handwritten-spmv PRIVATE ${HDF5_INCLUDE_DIRS})
+    target_link_libraries(handwritten-spmv Legion::Legion ${HDF5_LIBRARIES})
+    target_compile_options(handwritten-spmv PRIVATE ${OpenMP_CXX_FLAGS})
+    target_compile_definitions(handwritten-spmv PUBLIC TACO_USE_CUDA)
 else()
-    add_executable(spmv SpMV/handwritten.cpp ${LG_EXTRA_SOURCES})
-    include_directories(spmv PRIVATE ${HDF5_INCLUDE_DIRS})
-    target_link_libraries(spmv Legion::Legion ${HDF5_LIBRARIES})
-    target_compile_options(spmv PRIVATE ${OpenMP_CXX_FLAGS})
+    add_executable(handwritten-spmv handwritten-spmv/handwritten.cpp ${LG_EXTRA_SOURCES})
+    include_directories(handwritten-spmv PRIVATE ${HDF5_INCLUDE_DIRS})
+    target_link_libraries(handwritten-spmv Legion::Legion ${HDF5_LIBRARIES})
+    target_compile_options(handwritten-spmv PRIVATE ${OpenMP_CXX_FLAGS})
 endif()
 
 # Utility to preload tns files into hdf5 files for easier ingestion.

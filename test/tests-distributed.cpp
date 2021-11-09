@@ -1529,7 +1529,7 @@ TEST(distributed, legionSpMV) {
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
   {
-    ofstream f("../legion/SpMV/taco-generated.cpp");
+    ofstream f("../legion/spmv/taco-generated.cpp");
     auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
     codegen->compile(lowered);
     f.close();
