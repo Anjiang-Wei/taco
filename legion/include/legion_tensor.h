@@ -45,6 +45,23 @@ struct LegionTensor {
   //  part of the pack, which the compiler does.
 };
 
+// LegionTensorPartition is a representation of a partition of a LegionTensor that is
+// specific to the execution of a kernel. A LegionTensorPartition should be associated
+// with a LegionTensor for full access to metadata about the tensor. This means that
+// a LegionTensorPartition is not a standalone object.
+struct LegionTensorPartition {
+  // Partitions of the indices of a tensor.
+  std::vector<std::vector<Legion::LogicalPartition>> indicesPartitions;
+
+  // Partitions of the vals array of a tensor.
+  Legion::LogicalPartition valsPartition;
+
+  // Partitions of the dense format runs in the tensor. Note that these partitions
+  // are IndexPartitions instead of LogicalPartitions as the dense format runs are
+  // not associated with a particular region.
+  std::vector<Legion::IndexPartition> denseLevelRunPartitions;
+};
+
 // LegionTensorLevelFormat is an enum used to perform introspection on LegionTensor
 // objects to understand the construction of the components within it.
 enum LegionTensorLevelFormat {
