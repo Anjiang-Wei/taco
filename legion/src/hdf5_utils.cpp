@@ -163,7 +163,7 @@ void attachCOORegionsTask(const Task* task, const std::vector<PhysicalRegion>& r
   runtime->get_field_space_fields(ctx, regions[0].get_logical_region().get_field_space(), fieldsAccessor);
   fieldMaps[0] = {{fieldsAccessor.front(), COODimsField}};
   for (size_t i = 1; i < numRegs - 1; i++) {
-    fieldMaps[i - 1] = {{fieldsAccessor.front(), COOCoordsFields[i - 1]}};
+    fieldMaps[i] = {{fieldsAccessor.front(), COOCoordsFields[i - 1]}};
   }
   runtime->get_field_space_fields(ctx, regions[numRegs - 1].get_logical_region().get_field_space(), fieldsAccessor);
   fieldMaps[numRegs - 1] = {{fieldsAccessor.front(), COOValsField}};

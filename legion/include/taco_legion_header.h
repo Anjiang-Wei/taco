@@ -28,8 +28,17 @@ void registerPlacementShardingFunctor(Legion::Context ctx, Legion::Runtime* runt
 
 // TODO (rohany): These might need to be templated on the dimension of the region.
 // Functions for performing allocations on a region.
+// TODO (rohany): Do these need to all take in parents and target regions?
+// Allocate the entirety of a region with a given parent.
+Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid);
+// Allocate a subregion from a region of the given size, i.e. [0, size).
 Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, size_t size, Legion::FieldID fid);
+// Allocate a subregion from a region of a given size extended from an old size.
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid);
+
+// TODO (rohany): This probably needs to be templated.
+// getSubRegion returns the LogicalRegion corresponding to the subregion of region with bounds.
+Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::Rect<1> bounds);
 
 // Copy a partition onto a region with the same index space.
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition);
