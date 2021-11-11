@@ -4956,7 +4956,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
             if (this->legionLoweringKind == COMPUTE_ONLY) {
               // If we're in COMPUTE_ONLY, then we've already created all the partitions
               // that we need. So, we need to look up the partition with the right identifier.
-              if (this->definedIndexVarsExpanded.size() == 0) {
+              if (this->definedIndexVarsExpanded.empty()) {
                 // If we're at the top level, then we need to look in the pack for this partition.
                 auto partField = this->getTopLevelTensorPartition(tv);
                 auto indicesPartitions = ir::FieldAccess::make(partField, "indicesPartitions", false /* isDeref */, Auto);

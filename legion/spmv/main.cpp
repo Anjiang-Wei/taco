@@ -124,19 +124,13 @@ void packCOOtoCSR(Context ctx, Runtime* runtime, LegionTensor& a, LegionTensor& 
   int64_t csa2 = 0;
   for (int64_t pa20 = 0; pa20 < 10; pa20++) {
     int64_t numElemsa2 = a2_pos[pa20].hi;
-    // TODO (rohany): Note that we can't lower this into a compound addition, due to a Realm
-    //  typing limitation.
     a2_pos[pa20].lo = a2_pos[pa20].lo + csa2;
     a2_pos[pa20].hi = a2_pos[pa20].hi + csa2;
-    // TODO (rohany): I don't think the current format code generates the addition here, instead
-    //  it generates an assignment which isn't correct.
     csa2 += numElemsa2 + 1;
   }
 
 
   // Do some final cleanup on the LegionTensors here.
-  a.order = b.order;
-  a.dims = b.dims;
   // TODO (rohany): This pos subregion doesn't need to be updated, as it's full?
   // TODO (rohany): How do we know what the final dimension size of the region is? It seems like we need
   //  a separate accumulator for it.

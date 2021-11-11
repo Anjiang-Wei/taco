@@ -230,10 +230,12 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
 
   ir::Expr numElems = ir::Var::make("numElems" + mode.getName(), Int64);
   ir::Stmt getNumElems = ir::VarDecl::make(numElems, hi);
-  // Increment lo and hi by the accumulator.
-  auto setLo = ir::Assign::make(lo, ir::Add::make(lo, csVar));
-  auto setHi = ir::Assign::make(hi, ir::Add::make(hi, csVar));
-  auto incCs = ir::Assign::make(csVar, ir::Add::make(numElems, 1));
+  // Increment lo and hi by the accumulator. Note that we have to set this order
+  // appropriately so that the lowering infrastructure doesn't turn this into
+  // a compound add as the Realm type system doesn't allow Point<N> += operations.
+  auto setLo = ir::Assign::make(lo, ir::Add::make(csVar, lo));
+  auto setHi = ir::Assign::make(hi, ir::Add::make(csVar, hi));
+  auto incCs = ir::Assign::make(csVar, ir::Add::make(csVar, ir::Add::make(numElems, 1)));
   auto body = ir::Block::make({getNumElems, setLo, setHi, incCs});
   auto finalize = ir::For::make(pVar, 0, szPrev, 1, body);
   return ir::Block::make({initCs, finalize});
