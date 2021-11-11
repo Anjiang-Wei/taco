@@ -23,7 +23,6 @@ std::ostream& operator<<(std::ostream& o, const Transfer& t) {
   return o;
 }
 
-
 GridPlacement::AxisMatch Face(int face) {
   return GridPlacement::AxisMatch::makeFace(face);
 }

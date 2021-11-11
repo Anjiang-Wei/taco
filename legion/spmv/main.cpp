@@ -8,7 +8,11 @@ using namespace Legion;
 typedef double valType;
 
 void registerTacoTasks();
-void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c);
+
+// Forward declarations for partitioning and computation.
+struct partitionPackForcomputeLegion;
+partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c);
+void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack);
 
 // Packing function from COO to CSR.
 // TODO (rohany): This is handwritten right now, but in the near future it should be a function that
@@ -188,8 +192,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   packCOOtoCSR(ctx, runtime, A, coo);
 
+  // Partition the tensors.
+  auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x);
   // TODO (rohany): Benchmark this computation.
-  computeLegion(ctx, runtime, &y, &A, &x);
+  computeLegion(ctx, runtime, &y, &A, &x, pack);
 
   if (dump) {
     auto yreg = legionMalloc(ctx, runtime, y.vals, y.valsParent, FID_VAL);
@@ -200,6 +206,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     std::cout << std::endl;
     runtime->unmap_region(ctx, yreg);
   }
+
+  // Delete the partition pack.
+  delete pack;
 }
 
 int TID_TOP_LEVEL = 420;

@@ -78,6 +78,7 @@ protected:
   virtual void visit(const PackTaskArgs* op);
   virtual void visit(const Return* op);
   virtual void visit(const UnpackTensorData* op);
+  virtual void visit(const DeclareStruct* op);
 };
 
 }}

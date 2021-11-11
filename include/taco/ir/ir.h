@@ -76,6 +76,7 @@ enum class IRNodeType {
   FieldAccess,
   Return,
   UnpackTensorData,
+  DeclareStruct,
 };
 
 enum class TensorProperty {
@@ -869,7 +870,7 @@ struct GetProperty : public ExprNode<GetProperty> {
     int dim;
     Datatype elemType;
     Expr field;
-    const GetProperty* regionAccessing;
+    ir::Expr regionAccessing;
   };
   AccessorArgs accessorArgs;
 
@@ -900,7 +901,17 @@ struct UnpackTensorData : public StmtNode<UnpackTensorData> {
 
   static Stmt make(std::vector<ir::Expr> regions);
 
-  static const IRNodeType _type_info = IRNodeType ::UnpackTensorData;
+  static const IRNodeType _type_info = IRNodeType::UnpackTensorData;
+};
+
+struct DeclareStruct : public StmtNode<DeclareStruct> {
+  std::vector<std::string> fields;
+  std::vector<Datatype> fieldTypes;
+  std::string name;
+
+  static Stmt make(std::string name, std::vector<std::string> fields, std::vector<Datatype> fieldTypes);
+
+  static const IRNodeType _type_info = IRNodeType::DeclareStruct;
 };
 
 struct Return : public StmtNode<Return> {

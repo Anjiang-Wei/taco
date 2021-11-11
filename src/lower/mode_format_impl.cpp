@@ -296,11 +296,11 @@ ModeFunction ModeFormatImpl::getCreateInitialPartition(Mode mode) const {
   return ModeFunction();
 }
 
-ModeFunction ModeFormatImpl::getPartitionFromParent(ir::Expr parentPartition, Mode mode) const {
+ModeFunction ModeFormatImpl::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr) const {
   return ModeFunction();
 }
 
-ModeFunction ModeFormatImpl::getPartitionFromChild(ir::Expr childPartition, Mode mode) const {
+ModeFunction ModeFormatImpl::getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr) const {
   return ModeFunction();
 }
 

@@ -1525,7 +1525,7 @@ TEST(distributed, legionSpMV) {
                .communicate(c(j), io)
                ;
 
-  auto lowered = lowerLegion(stmt, "computeLegion");
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion");
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
   {

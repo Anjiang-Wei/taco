@@ -274,8 +274,8 @@ public:
   // The idea here is that given an IndexPartition of an object, the resulting
   // ModeFunction computes a partition of each array in the mode, and returns
   // the partition to use to partition the lower levels of the tree.
-  virtual ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode) const;
-  virtual ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode) const;
+  virtual ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const;
+  virtual ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr partitionColor) const;
 
   // TODO (rohany): It seems like we'll also want a "getAccessors" method that complements
   //  the getArrays method to maintain accessor variables for each of the arrays in the format.

@@ -462,6 +462,7 @@ protected:
       ir::Expr domain,
       std::map<TensorVar, ir::Expr>& partitionings,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
+      std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
       std::set<TensorVar> fullyReplicatedTensors,
       std::vector<ir::Expr> colorings,
       const std::vector<IndexVar>& distIvars
@@ -496,6 +497,7 @@ private:
   bool assemble;
   bool compute;
   bool legion = false;
+  std::string funcName;
 
   std::set<TensorVar> needCompute;
 
@@ -628,8 +630,47 @@ private:
   };
   LegionLoweringKind legionLoweringKind;
   // computeOnlyPartitions holds onto a partition argument for each tensor
-  // when the LegionLoweringKind is COMPUTE_ONLY.
+  // when the LegionLoweringKind is COMPUTE_ONLY. These partition arguments
+  // are the top level partition for each tensor. All sub-partitions are
+  // indexed through the iteration space point identifier scheme.
   std::map<TensorVar, ir::Expr> computeOnlyPartitions;
+  // topLevelPartitionPack is a struct containing fields of partitions for each
+  // tensor that is partitioned at the top level of the computation. It is used
+  // when the LegionLoweringKind is COMPUTE_ONLY, as this argument should be
+  // passed in as a parameter.
+  ir::Expr topLevelPartitionPack;
+  ir::Expr getTopLevelTensorPartition(TensorVar& t) {
+    // TODO (rohany): I should probably extract the naming of the field into a helper
+    //  method so that the logic is centralized.
+    return ir::FieldAccess::make(topLevelPartitionPack, t.getName() + "Partition", true /* isDeref */, Auto);
+  }
+  Datatype getTopLevelTensorPartitionPackType() {
+    // Copy the name.
+    auto name = this->funcName;
+    // TODO (rohany): This is just a hack to get things to work out.
+    // Strip off partitionFor from the front of the name, if it exists.
+    auto pos = name.find("partitionFor");
+    if (pos != std::string::npos) {
+      name.erase(pos, std::string("partitionFor").size());
+    }
+    return Datatype("partitionPackFor" + name);
+  }
+
+  // Maintain a set of all of the defined index variables. Note that we cannot use
+  // the existing definedIndexVarsOrdered because it does not expand the distributed fused
+  // index variables out into their component variables.
+  std::vector<IndexVar> definedIndexVarsExpanded;
+  std::vector<ir::Expr> iterationSpacePointIdentifiers;
+  void pushIterationSpacePointIdentifier() {
+    auto len = definedIndexVarsExpanded.size();
+    std::stringstream ss;
+    ss << "pointID" << len;
+    auto var = ir::Var::make(ss.str(), Int64);
+    this->iterationSpacePointIdentifiers.push_back(var);
+  }
+  ir::Expr getIterationSpacePointIdentifier() {
+    return this->iterationSpacePointIdentifiers[this->definedIndexVarsExpanded.size() - 1];
+  }
 
   // DenseFormatRuns constructs metadata about all of the runs of dense
   // formats in a tensor.

@@ -320,6 +320,12 @@ void IRPrinter::visit(const UnpackTensorData* op) {
   stream << ";" << endl;
 }
 
+void IRPrinter::visit(const DeclareStruct* op) {
+  doIndent();
+  stream << "declaring struct with fields and names: " << util::join(op->fields) << " " << util::join(op->fieldTypes)
+         << std::endl;
+}
+
 void IRPrinter::visit(const IfThenElse* op) {
   taco_iassert(op->cond.defined());
   taco_iassert(op->then.defined());

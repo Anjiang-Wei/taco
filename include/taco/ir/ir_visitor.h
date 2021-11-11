@@ -58,6 +58,7 @@ struct PackTaskArgs;
 struct FieldAccess;
 struct Return;
 struct UnpackTensorData;
+struct DeclareStruct;
 
 /// Extend this class to visit every node in the IR.
 class IRVisitorStrict {
@@ -118,6 +119,7 @@ public:
   virtual void visit(const PackTaskArgs*) = 0;
   virtual void visit(const Return*) = 0;
   virtual void visit(const UnpackTensorData*) = 0;
+  virtual void visit(const DeclareStruct*) = 0;
 };
 
 
@@ -181,6 +183,7 @@ public:
   virtual void visit(const PackTaskArgs*);
   virtual void visit(const Return*);
   virtual void visit(const UnpackTensorData*);
+  virtual void visit(const DeclareStruct*);
 };
 
 }}

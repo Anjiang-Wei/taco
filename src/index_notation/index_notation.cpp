@@ -1990,6 +1990,10 @@ bool Forall::isDistributed() const {
   return distributedParallelUnit(this->getParallelUnit());
 }
 
+bool Forall::isTask() const {
+  return this->isDistributed() || (!this->getTransfers().empty());
+}
+
 const Transfers& Forall::getTransfers() const {
   return getNode(*this)->transfers;
 }
