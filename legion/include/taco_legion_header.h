@@ -44,4 +44,63 @@ Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition);
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::LogicalRegion toPartition);
 
+
+// A helper widget to treat LogicalRegions and PhysicalRegions the same.
+struct RegionWrapper {
+  Legion::PhysicalRegion physReg;
+  Legion::LogicalRegion logReg;
+  enum RegionKind {
+    PHYSICAL,
+    LOGICAL,
+  } regionKind;
+
+  RegionWrapper(Legion::LogicalRegion logReg) : logReg(logReg), regionKind(LOGICAL) {}
+  RegionWrapper(Legion::PhysicalRegion physReg) : physReg(physReg), regionKind(PHYSICAL) {}
+  Legion::IndexSpace get_index_space() {
+    switch (this->regionKind) {
+      case PHYSICAL:
+        return this->physReg.get_logical_region().get_index_space();
+      case LOGICAL:
+        return this->logReg.get_index_space();
+      default:
+        assert(false);
+    }
+  }
+
+  // We purposely don't make these `explicit` so that we don't have to generate code
+  // that performs the desired casts. For now, the overload resolution has been enough.
+  operator Legion::PhysicalRegion() {
+    // If we aren't a physical region yet, then return an invalid PhysicalRegion
+    // to be explicit that we are sending invalid data.
+    if (this->regionKind == LOGICAL) {
+      return Legion::PhysicalRegion();
+    }
+    return this->physReg;
+  }
+  operator Legion::LogicalRegion() {
+    // If we're a PhysicalRegion, then we can easily return the corresponding LogicalRegion.
+    if (this->regionKind == PHYSICAL) {
+      return this->physReg.get_logical_region();
+    }
+    return this->logReg;
+  }
+};
+
+// Templated helper functions to potentially create accessors. These allow us to generate
+// accessors when we don't have valid PhysicalRegions without running into problems.
+template<typename T>
+T createAccessor(Legion::PhysicalRegion& r, Legion::FieldID fid) {
+  if (r.is_valid()) {
+    return T(r, fid);
+  }
+  return T();
+}
+template<typename T>
+T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid) {
+  if (r.is_valid()) {
+    return T(r, fid);
+  }
+  return T();
+}
+
 #endif // TACO_LEGION_INCLUDES_H

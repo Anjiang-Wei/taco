@@ -69,7 +69,7 @@ PhysicalRegion attachHDF5(Context ctx, Runtime *runtime, LogicalRegion region, s
   return runtime->attach_external_resource(ctx, al);
 }
 
-LegionTensor loadCOOFromHDF5(Context ctx, Runtime* runtime, std::string& filename, FieldID coordField, size_t coordSize, FieldID valsField, size_t valsSize) {
+LegionTensor loadCOOFromHDF5(Context ctx, Runtime* runtime, std::string& filename, FieldID rectFieldID, FieldID coordField, size_t coordSize, FieldID valsField, size_t valsSize) {
   size_t order, nnz;
   getCoordListHDF5Meta(filename, order, nnz);
 
@@ -141,11 +141,38 @@ LegionTensor loadCOOFromHDF5(Context ctx, Runtime* runtime, std::string& filenam
     coordRegions.push_back({regions[i + 1]});
   }
 
+  // The first level of a COO tensor is actually a compressed level, so we need a pos
+  // and crd region set for it. The pos region has size 1.
+  auto posIndexSpace = runtime->create_index_space(ctx, Rect<1>(0, 0));
+  auto posFspace = runtime->create_field_space(ctx);
+  {
+    FieldAllocator fa = runtime->create_field_allocator(ctx, posFspace);
+    fa.allocate_field(sizeof(Rect<1>), rectFieldID);
+  }
+  auto posReg = runtime->create_logical_region(ctx, posIndexSpace, posFspace);
+  {
+    auto preg = runtime->map_region(ctx, RegionRequirement(posReg, WRITE_ONLY, EXCLUSIVE, posReg).add_field(rectFieldID));
+    FieldAccessor<WRITE_ONLY,Rect<1>,1,coord_t, Realm::AffineAccessor<Rect<1>, 1, coord_t>> acc(preg, rectFieldID);
+    acc[0] = Rect<1>(0, nnz - 1);
+    runtime->unmap_region(ctx, preg);
+  }
+
+  // Now, make the set of indices and indicesParents.
+  std::vector<std::vector<LogicalRegion>> indices(order), indicesParents(order);
+  // Construct the first compressed level.
+  indices[0].push_back(posReg); indicesParents[0].push_back(posReg);
+  indices[0].push_back(regions[1]); indicesParents[0].push_back(regions[1]);
+  // Now construct the remaining COO levels.
+  for (size_t i = 1; i < order; i++) {
+    indices[i].push_back(regions[i + 1]);
+    indicesParents[i].push_back(regions[i + 1]);
+  }
+
   return LegionTensor {
     .order = int32_t(order),
     .dims = dims,
-    .indices = coordRegions,
-    .indicesParents = coordRegions,
+    .indices = indices,
+    .indicesParents = indicesParents,
     .vals = regions.back(),
     .valsParent = regions.back(),
     .denseLevelRuns = {},

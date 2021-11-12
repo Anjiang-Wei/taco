@@ -10,6 +10,7 @@
 #include "taco/lower/mode_format_compressed.h"
 #include "taco/lower/mode_format_singleton.h"
 #include "taco/lower/mode_format_rect_compressed.h"
+#include "taco/lower/mode_format_lg_singleton.h"
 
 #include "taco/error.h"
 #include "taco/util/strings.h"
@@ -374,6 +375,7 @@ ModeFormat ModeFormat::Singleton(std::make_shared<SingletonModeFormat>());
 // Predefined formats for Legion.
 ModeFormat ModeFormat::LgRectCompressed(std::make_shared<RectCompressedModeFormat>());
 ModeFormat ModeFormat::LgSparse = ModeFormat::LgRectCompressed;
+ModeFormat ModeFormat::LgSingleton(std::make_shared<LgSingletonModeFormat>());
 
 ModeFormat ModeFormat::dense = ModeFormat::Dense;
 ModeFormat ModeFormat::compressed = ModeFormat::Compressed;
@@ -385,6 +387,7 @@ const ModeFormat Compressed = ModeFormat::Compressed;
 const ModeFormat Sparse = ModeFormat::Compressed;
 const ModeFormat Singleton = ModeFormat::Singleton;
 const ModeFormat LgSparse = ModeFormat::LgSparse;
+const ModeFormat LgSingleton = ModeFormat::LgSingleton;
 
 const ModeFormat dense = ModeFormat::Dense;
 const ModeFormat compressed = ModeFormat::Compressed;
@@ -418,6 +421,33 @@ const Format COO(int order, bool isUnique, bool isOrdered, bool isAoS,
   }
   return modeOrdering.empty() 
          ? Format(modeTypes) 
+         : Format(modeTypes, modeOrdering);
+}
+
+// A Legion variant of the COO format that uses the Legion compressed and
+// singleton formats.
+const Format LgCOO(int order, bool isUnique, bool isOrdered, bool isAoS,
+                 const std::vector<int>& modeOrdering) {
+  taco_uassert(order > 0);
+  taco_uassert(modeOrdering.empty() || modeOrdering.size() == (size_t)order);
+  taco_iassert(!isAoS);  // TODO: support array-of-structs COO
+
+  ModeFormat::Property ordered = isOrdered ? ModeFormat::ORDERED :
+                                 ModeFormat::NOT_ORDERED;
+
+  std::vector<ModeFormatPack> modeTypes;
+  modeTypes.push_back(LgSparse({ordered, (order == 1 && isUnique)
+                                           ? ModeFormat::UNIQUE
+                                           : ModeFormat::NOT_UNIQUE}));
+  if (order > 1) {
+    for (int i = 1; i < order - 1; ++i) {
+      modeTypes.push_back(LgSingleton({ordered, ModeFormat::NOT_UNIQUE}));
+    }
+    modeTypes.push_back(LgSingleton({ordered, isUnique ? ModeFormat::UNIQUE :
+                                            ModeFormat::NOT_UNIQUE}));
+  }
+  return modeOrdering.empty()
+         ? Format(modeTypes)
          : Format(modeTypes, modeOrdering);
 }
 

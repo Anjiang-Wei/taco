@@ -66,6 +66,8 @@ struct ModeRegion {
   ir::Expr region;
   ir::Expr regionParent;
   ir::Expr field;
+  ir::Expr accessorRO;
+  ir::Expr accessorRW;
 };
 
 std::ostream& operator<<(std::ostream&, const AttrQueryResult&);
@@ -289,8 +291,8 @@ public:
   /// Returns arrays associated with a tensor mode
   virtual std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const = 0;
 
-  // getRegions is an analagous function to getArrays that returns all of the Regions used
-  // by a particular mode, as well as the parent of each region.  Next, the regions returned
+  // getRegions is an analogous function to getArrays that returns all of the Regions used
+  // by a particular mode, as well as the parent of each region. Next, the regions returned
   // from getRegions must be returned in the same order as the partitions in the ModeFunctions
   // returned from getPartitionFrom{Parent,Child}.
   virtual std::vector<ModeRegion> getRegions(ir::Expr tensor, int level) const;

@@ -401,6 +401,14 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }
 
+  // Analyze each of the accesses to find out the dimensions of the values components of each tensor.
+  match(stmt, std::function<void(const AccessNode*)>([&](const AccessNode* node) {
+    Access acc(node);
+    this->valuesAnalyzer.addAccess(acc, this->iterators, this->indexVarToExprMap);
+  }), std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node) {
+    this->valuesAnalyzer.addAccess(node->lhs, this->iterators, this->indexVarToExprMap);
+  }));
+
   // If we're computing on a partition, then make variables for the partitions, and add
   // them to the function inputs.
   std::vector<TensorVar> computingOn;
@@ -775,14 +783,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }
 
-  // Analyze each of the accesses to find out the dimensions of the values components of each tensor.
-  match(stmt, std::function<void(const AccessNode*)>([&](const AccessNode* node) {
-    Access acc(node);
-    this->valuesAnalyzer.addAccess(acc, this->iterators, this->indexVarToExprMap);
-  }), std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node) {
-    this->valuesAnalyzer.addAccess(node->lhs, this->iterators, this->indexVarToExprMap);
-  }));
-
   // If we're going to COMPUTE_ONLY, create the top level partition pack.
   if (this->legionLoweringKind == COMPUTE_ONLY) {
     this->topLevelPartitionPack = ir::Var::make("partitionPack", this->getTopLevelTensorPartitionPackType(), true /* is_ptr */);
@@ -842,6 +842,105 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
   // Post-process result modes and allocate memory for values if necessary
   Stmt finalizeResults = finalizeResultArrays(resultAccesses);
+
+  std::vector<ir::Stmt> mallocRhsRegions;
+  if (this->legion) {
+    // If we aren't launching any tasks, then we are doing all computation
+    // in the driver function. In this case, we need to actually allocate
+    // all regions on the RHS so that we have physical regions to read from.
+    // We also need to check that the function is actually accessing data
+    // (for example partitioning code only isn't going to use accessors
+    // on the regions).
+    struct TaskFinder : public IRVisitor {
+      void visit(const For *node) {
+        this->hasTasks |= node->isTask;
+        node->contents.accept(this);
+      }
+      void visit(const GetProperty* node) {
+        switch (node->property) {
+          case TensorProperty::ValuesReductionAccessor:
+          case TensorProperty::ValuesReadAccessor:
+          case TensorProperty::ValuesWriteAccessor:
+          case TensorProperty::IndicesAccessor:
+            this->accessesData = true;
+          default:
+            break;
+        }
+      }
+      bool hasTasks = false;
+      bool accessesData = false;
+    };
+    TaskFinder taskFinder; body.accept(&taskFinder);
+    if (!taskFinder.hasTasks && taskFinder.accessesData) {
+      // Malloc all RHS regions.
+      for (auto tv : arguments) {
+        for (int level = 0; level < tv.getOrder(); level++) {
+          Iterator iter;
+          for (auto levelIter : this->iterators.levelIterators()) {
+            if (levelIter.first.getAccess().getTensorVar() == tv && levelIter.first.getModePos() == size_t(level + 1)) {
+              // TODO (rohany): We don't have a back map from tensors to accesses,
+              //  so just work around that here by looping over all the iterators and
+              //  finding one that works for us.
+              taco_iassert(!iter.defined());
+              iter = levelIter.second;
+            }
+          }
+          // For each region, directly malloc it and update the accessor. Note that we
+          // call legionMalloc directly so that we get access to the overload the directly
+          // allocates a subregion.
+          for (auto reg : iter.getRegions()) {
+            // Malloc the region.
+            auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, reg.region, reg.regionParent, reg.field}, Auto);
+            mallocRhsRegions.push_back(ir::Assign::make(reg.region, alloc));
+            // Update the accessor.
+            mallocRhsRegions.push_back(ir::Assign::make(reg.accessorRO, ir::makeCreateAccessor(reg.accessorRO, reg.region, reg.field)));
+          }
+        }
+        // Do the same thing for the values.
+        auto values = ir::GetProperty::make(getTensorVar(tv), TensorProperty::Values);
+        auto valuesParent = ir::GetProperty::make(getTensorVar(tv), TensorProperty::ValuesParent);
+        auto valuesAcc = this->getValuesArray(tv);
+        auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal}, Auto);
+        mallocRhsRegions.push_back(ir::Assign::make(values, alloc));
+        mallocRhsRegions.push_back(ir::Assign::make(valuesAcc, ir::makeCreateAccessor(valuesAcc, values, fidVal)));
+      }
+    }
+  }
+  // We also need to clean up after ourselves if we malloc or realloc any regions.
+  std::vector<ir::Stmt> unmapAllocedRegions;
+  if (this->legion) {
+    struct legionAllocFinder : public IRVisitor {
+      void visit(const Assign* node) {
+        auto call = node->rhs.as<Call>();
+        auto gp = node->lhs.as<GetProperty>();
+        if (call && gp && (call->func == "legionMalloc" || call->func == "legionRealloc")) {
+          auto key = std::tuple<Expr,TensorProperty,int,int,std::string>(gp->tensor, gp->property, gp->mode, gp->index, gp->name);
+          this->allocations.insert(key);
+        }
+      }
+      void visit(const Allocate* node) {
+        if (node->pack.logicalRegion.defined()) {
+          auto gp = node->var.as<GetProperty>();
+          taco_iassert(gp);
+          auto key = std::tuple<Expr,TensorProperty,int,int,std::string>(gp->tensor, gp->property, gp->mode, gp->index, gp->name);
+          this->allocations.insert(key);
+        }
+      }
+      std::set<std::tuple<ir::Expr, ir::TensorProperty, int, int, std::string>> allocations;
+    } allocFinder;
+
+    // We'll visit the loop body as well as the set of statements that we manually malloced.
+    initializeResults.accept(&allocFinder);
+    body.accept(&allocFinder);
+    ir::Block::make(mallocRhsRegions).accept(&allocFinder);
+
+    // Now, emit unmap operations for each of the GetProperties that we saw were allocated.
+    for (auto key : allocFinder.allocations) {
+      auto gp = ir::GetProperty::make(std::get<0>(key), std::get<1>(key), std::get<2>(key), std::get<3>(key), std::get<4>(key));
+      unmapAllocedRegions.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, gp}, Auto)));
+    }
+  }
+
 
   // Collect an add any parameter variables to the function's inputs.
   struct ParameterFinder : public IRVisitor {
@@ -909,11 +1008,16 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
   // Create function
   return Function::make(name, resultsIR, util::combine(argumentsIR, pfinder.vars),
-                        Block::blanks(Block::make(header),
+                        Block::blanks(
+                                      // TODO (rohany): Does this need to go before or after the header?
+                                      Block::make(mallocRhsRegions),
+                                      Block::make(header),
                                       initializeResults,
                                       topLevelTransfers,
                                       body,
                                       finalizeResults,
+                                      // TODO (rohany): Does this need to go before or after the footer?
+                                      ir::Block::make(unmapAllocedRegions),
                                       Block::make(footer)), returnType);
 }
 
@@ -3469,6 +3573,7 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
 
     Expr tensor = getTensorVar(write.getTensorVar());
     Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
+    Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
     bool clearValuesAllocation = false;
 
     Expr parentSize = 1;
@@ -3510,7 +3615,11 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
                          ? DEFAULT_ALLOC_SIZE : parentSize;
         initArrays.push_back(VarDecl::make(capacityVar, allocSize));
         if (this->legion) {
-          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesArr, fidVal));
+          // Allocate a new values array, and update the accessor.
+          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, fidVal));
+          auto valsAcc = this->getValuesArray(write.getTensorVar());
+          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {valuesArr, fidVal}, Auto);
+          initArrays.push_back(ir::Assign::make(valsAcc, newValsAcc));
         } else {
           initArrays.push_back(Allocate::make(valuesArr, capacityVar, false /* is_realloc */, Expr() /* old_elements */,
                                               clearValuesAllocation));
@@ -3594,11 +3703,21 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
       // Writes into a windowed iterator require the allocation to be cleared.
       clearValuesAllocation |= (iterator.isWindowed() || iterator.hasIndexSet());
     }
+    // Set the values array to the subregion of the values.
+    // TODO (rohany): There are definitely cases where we don't need to do this, but I'm not
+    //  worried about them yet.
+    Expr tensor = getTensorVar(write.getTensorVar());
+    Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
+    Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
+    if (this->legion) {
+      auto field = ir::FieldAccess::make(this->tensorVars[write.getTensorVar()], "vals", true /* isDeref*/, Auto);
+      auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, valuesParent,
+                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(parentSize, 1)})}, Auto);
+      result.push_back(ir::Assign::make(field, subreg));
+    }
 
     if (!generateComputeCode()) {
       // Allocate memory for values array after assembly if not also computing
-      Expr tensor = getTensorVar(write.getTensorVar());
-      Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
       if (this->legion) {
         result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, fidVal));
       } else {
@@ -3655,6 +3774,7 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
   for (auto& write : writes) {
     Expr tensor = getTensorVar(write.getTensorVar());
     Expr values = GetProperty::make(tensor, TensorProperty::Values);
+    Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
 
     vector<Iterator> iterators = getIteratorsFrom(var, getIterators(write));
 
@@ -3708,8 +3828,9 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
         Expr capacityVar = getCapacityVar(tensor);
         Expr size = simplify(ir::Mul::make(resultParentPosNext, stride));
         if (this->legion) {
-          // TODO (rohany): Include management around physical regions and accessors.
-          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, size, values, fidVal));
+          auto valsAcc = this->getValuesArray(write.getTensorVar());
+          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, size, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
         } else {
           result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
         }
@@ -3746,13 +3867,25 @@ Stmt LowererImpl::resizeAndInitValues(const std::vector<Iterator>& appenders,
     }
 
     Expr tensor = appender.getTensor();
+    // Get the tensorVar from a reverse map lookup.
+    TensorVar tv;
+    for (auto it : this->tensorVars) {
+      if (it.second == tensor) {
+        tv = it.first;
+        break;
+      }
+    }
+    taco_iassert(tv.defined());
     Expr values = GetProperty::make(tensor, TensorProperty::Values);
+    Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
     Expr capacity = getCapacityVar(appender.getTensor());
     Expr pos = appender.getIteratorVar();
 
     if (generateAssembleCode()) {
       if (this->legion) {
-        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, values, fidVal));
+        auto valsAcc = this->getValuesArray(tv);
+        auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
+        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
       } else {
         result.push_back(doubleSizeIfFull(values, capacity, pos));
       }

@@ -88,33 +88,63 @@ std::vector<ir::Expr> RectCompressedModeFormat::getArrays(ir::Expr tensor, int m
 std::vector<ModeRegion> RectCompressedModeFormat::getRegions(ir::Expr tensor, int level) const {
   // TODO (rohany): getArrays does not the mode argument, so we omit it here.
   auto arrays = this->getArrays(tensor, 0, level);
+  auto posReg = arrays[POS].as<ir::GetProperty>();
+  auto crdReg = arrays[CRD].as<ir::GetProperty>();
+
+  // Set up our accessors too.
+  auto makePosAcc = [&](ir::RegionPrivilege priv) {
+    // TODO (rohany): Do the entries in the pos and crd arrays need to be int64's?
+    // TODO (rohany): The dimensionality of the pos region will need to be changed here.
+    return ir::GetProperty::makeIndicesAccessor(tensor, posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
+        .dim = 1,
+        .elemType = Rect(1),
+        .field = fidRect1,
+        .regionAccessing = posReg,
+        .priv = priv,
+    });
+  };
+  auto makeCrdAcc = [&](ir::RegionPrivilege priv) {
+    // The CRD array will always have dimensionality = 1.
+    return ir::GetProperty::makeIndicesAccessor(tensor, crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs {
+        .dim = 1,
+        .elemType = Int32,
+        .field = fidCoord,
+        .regionAccessing = crdReg,
+        .priv = priv,
+    });
+  };
+
   return {
-      ModeRegion{.region = arrays[POS], .regionParent = arrays[POS_PARENT], .field = fidRect1},
-      ModeRegion{.region = arrays[CRD], .regionParent = arrays[CRD_PARENT], .field = fidCoord},
+      ModeRegion{.region = arrays[POS], .regionParent = arrays[POS_PARENT], .field = fidRect1, .accessorRO = makePosAcc(
+          ir::RO), .accessorRW = makePosAcc(ir::RW)},
+      ModeRegion{.region = arrays[CRD], .regionParent = arrays[CRD_PARENT], .field = fidCoord, .accessorRO = makeCrdAcc(
+          ir::RO), .accessorRW = makeCrdAcc(ir::RW)},
   };
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const {
   taco_iassert(mode.getPackLocation() == 0);
+  auto pack = mode.getModePack();
 
-  auto idxArray = this->getRegion(mode.getModePack(), CRD);
-  auto idxArrayParent = this->getRegion(mode.getModePack(), CRD_PARENT);
+  auto idxArray = this->getRegion(pack, CRD);
+  auto idxArrayParent = this->getRegion(pack, CRD_PARENT);
+  auto idxArrayAcc = this->getAccessor(pack, CRD, ir::RW);
   ir::Expr stride = (int)mode.getModePack().getNumModes();
-  ir::Stmt storeIdx = ir::Store::make(idxArray, ir::Mul::make(pos, stride), coord);
+  ir::Stmt storeIdx = ir::Store::make(idxArrayAcc, ir::Mul::make(pos, stride), coord);
 
-  if (mode.getModePack().getNumModes() > 1) {
+  if (pack.getNumModes() > 1) {
     return storeIdx;
   }
 
-  // TODO (rohany): Remove this hard coded field.
-  // TODO (rohany): Add management around physical regions.
-  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, ir::Symbol::make("FID_COORD"));
+  auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
+  auto newCrdAcc = ir::makeCreateAccessor(crdAcc, idxArray, fidCoord);
+  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc));
   return ir::Block::make({maybeResizeIdx, storeIdx});
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendEdges(ir::Expr parentPos, ir::Expr posBegin, ir::Expr posEnd,
                                                   Mode mode) const {
-  auto posArray = this->getRegion(mode.getModePack(), POS);
+  auto posArray = this->getAccessor(mode.getModePack(), POS, ir::RW);
   ModeFormat parentModeType = mode.getParentModeType();
   auto lo = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "lo", false /* deref */, Int64);
   auto hi = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "hi", false /* deref */, Int64);
@@ -143,19 +173,22 @@ ir::Expr RectCompressedModeFormat::getSize(ir::Expr szPrev, Mode mode) const {
 
 ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::Expr pPrevEnd,
                                                       Mode mode) const {
+  auto pack = mode.getModePack();
   if (isa<ir::Literal>(pPrevBegin)) {
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
     return ir::Stmt();
   }
 
-  auto posArray = this->getRegion(mode.getModePack(), POS);
-  auto posArrayParent = this->getRegion(mode.getModePack(), POS_PARENT);
+  auto posArray = this->getRegion(pack, POS);
+  auto posArrayParent = this->getRegion(pack, POS_PARENT);
   ir::Expr posCapacity = this->getPosCapacity(mode);
   ModeFormat parentModeType = mode.getParentModeType();
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
     // TODO (rohany): Don't make a symbol here.
     // TODO (rohany): Management around physical/logical regions.
-    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, ir::Symbol::make("FID_RECT_1"));
+    auto posAcc = this->getAccessor(pack, POS, ir::RW);
+    auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
+    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, ir::Symbol::make("FID_RECT_1"), ir::Assign::make(posAcc, newPosAcc));
   }
 
   // Initialize all of the spots in the pos array.
@@ -167,7 +200,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::E
   auto initPos = ir::For::make(pVar, lb, ub, 1, store);
   // TODO (rohany): Don't make a symbol here.
   // TODO (rohany): Management around physical/logical regions.
-  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, ir::Symbol::make("FID_RECT_1"));
+  auto posAcc = this->getAccessor(pack, POS, ir::RW);
+  auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
+  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, ir::Symbol::make("FID_RECT_1"), ir::Assign::make(posAcc, newPosAcc));
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -187,16 +222,23 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     posCapacity = getPosCapacity(mode);
     initStmts.push_back(ir::VarDecl::make(posCapacity, initCapacity));
   }
-  // TODO (rohany): I need to have separate management of the physical and logical regions.
+
+  // TODO (rohany): We don't need to malloc a particular size here, as we know this region
+  //  is already built to be the correct size. However, having this be more general will
+  //  help us out a bit in the longer run where this might not be true.
   initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1));
+  // Reinitialize the accessor for the new physical region. We need a RW accessor here.
+  auto posAcc = this->getAccessor(pack, POS, ir::RW);
+  auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
+  initStmts.push_back(ir::Assign::make(posAcc, newPosAcc));
   // Start off each component in the position array as <0, 0>.
-  initStmts.push_back(ir::Store::make(posArray, 0, ir::makeConstructor(Rect(1), {0, 0})));
+  initStmts.push_back(ir::Store::make(posAcc, 0, ir::makeConstructor(Rect(1), {0, 0})));
 
   if (mode.getParentModeType().defined() &&
       !mode.getParentModeType().hasAppend() && !szPrevIsZero) {
     ir::Expr pVar = ir::Var::make("p" + mode.getName(), Int());
     // Start off each component in the position array as <0, 0>.
-    ir::Stmt storePos = ir::Store::make(posArray, pVar, ir::makeConstructor(Rect(1), {0, 0}));
+    ir::Stmt storePos = ir::Store::make(posAcc, pVar, ir::makeConstructor(Rect(1), {0, 0}));
     initStmts.push_back(ir::For::make(pVar, 1, initCapacity, 1, storePos));
   }
 
@@ -207,22 +249,28 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
     // TODO (rohany): I need to have separate management of the physical and logical regions.
     initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord));
+    // Reinitialize the CRD RW accessor.
+    auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
+    auto newCrdAcc = ir::makeCreateAccessor(crdAcc, crdArray, fidCoord);
+    initStmts.push_back(ir::Assign::make(crdAcc, newCrdAcc));
   }
 
   return ir::Block::make(initStmts);
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::Expr sz, Mode mode) const {
+  auto pack = mode.getModePack();
   ModeFormat parentModeType = mode.getParentModeType();
   if ((isa<ir::Literal>(szPrev) && to<ir::Literal>(szPrev)->equalsScalar(1)) ||
       !parentModeType.defined() || parentModeType.hasAppend()) {
+    // TODO (rohany): I think that we also need to do subregion casts here?
     return ir::Stmt();
   }
 
   ir::Expr csVar = ir::Var::make("cs" + mode.getName(), Int64);
   ir::Stmt initCs = ir::VarDecl::make(csVar, 0);
 
-  auto pos = this->getRegion(mode.getModePack(), POS);
+  auto pos = this->getAccessor(pack, POS, ir::RW);
   ir::Expr pVar = ir::Var::make("p" + mode.getName(), Int64);
 
   auto lo = ir::FieldAccess::make(ir::Load::make(pos, pVar), "lo", false /* deref */, Int64);
@@ -238,7 +286,20 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   auto incCs = ir::Assign::make(csVar, ir::Add::make(csVar, ir::Add::make(numElems, 1)));
   auto body = ir::Block::make({getNumElems, setLo, setHi, incCs});
   auto finalize = ir::For::make(pVar, 0, szPrev, 1, body);
-  return ir::Block::make({initCs, finalize});
+
+  // Now, we need to cast the regions back to subregions of the tightest possible size.
+  // TODO (rohany): We don't need to do this for pos right now, as pos regions should all
+  //  have the right size.
+  // TODO (rohany): It's definitely weird here to have to directly access the LegionTensor.
+
+  auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
+  auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
+  auto levelLoad = ir::Load::make(field, crdReg->mode);
+  auto idxLoad = ir::Load::make(levelLoad, crdReg->index);
+  auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, CRD_PARENT),
+                                                ir::makeConstructor(Rect(1), {0, ir::Sub::make(sz, 1)})}, Auto);
+  auto setSubReg = ir::Assign::make(idxLoad, subreg);
+  return ir::Block::make({initCs, finalize, setSubReg});
 }
 
 ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const {
@@ -301,30 +362,18 @@ ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGI
   return pack.getArray(int(reg));
 }
 
-ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
+ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg, ir::RegionPrivilege priv) const {
   auto tensor = pack.getTensor();
-  auto posReg = this->getRegion(pack, POS).as<ir::GetProperty>();
-  auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
-  taco_iassert(posReg);
-  taco_iassert(crdReg);
-  std::vector<ir::Expr> accessors(2);
-  // TODO (rohany): Do the entries in the pos and crd arrays need to be int64's?
-  // TODO (rohany): The dimensionality of the pos region will need to be changed here.
-  accessors[POS] = ir::GetProperty::makeIndicesAccessor(pack.getTensor(), posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
-    .dim = 1,
-    .elemType = Rect(1),
-    .field = fidRect1,
-    .regionAccessing = posReg,
-  });
-  // The CRD array will always have dimensionality = 1.
-  accessors[CRD] = ir::GetProperty::makeIndicesAccessor(pack.getTensor(), crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs {
-    .dim = 1,
-    .elemType = Int32,
-    .field = fidCoord,
-    .regionAccessing = crdReg,
-  });
-
-  return accessors[reg];
+  auto region = this->getRegions(tensor, pack.getLevel())[reg];
+  switch (priv) {
+    case ir::RO:
+      return region.accessorRO;
+    case ir::RW:
+      return region.accessorRW;
+    default:
+      taco_iassert(false);
+      return ir::Expr();
+  }
 }
 
 // TODO (rohany): This probably has to be changed for the same reasons as below.

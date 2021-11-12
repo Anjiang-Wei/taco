@@ -43,7 +43,8 @@ Legion::PhysicalRegion attachHDF5(Legion::Context ctx, Legion::Runtime *runtime,
 // Load a COO tensor from a HDF5 file into a LegionTensor. The COO HDF5 tensor
 // must have been created by the tns_to_hdf5 utility.
 LegionTensor loadCOOFromHDF5(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
-                             Legion::FieldID coordField, size_t coordSize, Legion::FieldID valsField, size_t valsSize);
+                             Legion::FieldID rectFieldID, Legion::FieldID coordField, size_t coordSize,
+                             Legion::FieldID valsField, size_t valsSize);
 
 // Registration function that must be called during initialization if loadCOOFromHDF5 is desired to be used.
 void registerHDF5UtilTasks();
