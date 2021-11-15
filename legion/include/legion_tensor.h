@@ -67,6 +67,7 @@ struct LegionTensorPartition {
 enum LegionTensorLevelFormat {
   Dense,
   Sparse,
+  Singleton,
 };
 
 // Utility method to create a dense tensor with the given dimensions.

@@ -3,6 +3,7 @@
 #include "hdf5_utils.h"
 #include "realm/cmdline.h"
 #include "mappers/default_mapper.h"
+#include "legion_utils.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -37,16 +38,32 @@ void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& loc
 // Forward declarations for partitioning and computation.
 void packLegion(Context ctx, Runtime* runtime, LegionTensor* BCSR, LegionTensor* BCOO);
 struct partitionPackForcomputeLegion;
-partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c);
-void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack);
+partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
+void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces);
 void registerTacoTasks();
+
+const int TID_INIT_X = 420;
+void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  typedef FieldAccessor<WRITE_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorD;
+  auto x = regions[0];
+  auto dom = runtime->get_index_space_domain(x.get_logical_region().get_index_space());
+  AccessorD xAcc(x, FID_VAL);
+  #pragma omp parallel for schedule(static)
+  for (size_t i = dom.lo()[0]; i < size_t(dom.hi()[0]); i++) {
+    xAcc[i] = i;
+  }
+}
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string cooFileName;
   bool dump = false;
+  int n = 10, pieces = 4, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-coofile", cooFileName);
   parser.add_option_bool("-dump", dump);
+  parser.add_option_int("-n", n);
+  parser.add_option_int("-pieces", pieces);
+  parser.add_option_int("-warmup", warmup);
   auto args = Runtime::get_input_args();
   assert(parser.parse_command_line(args.argc, args.argv));
   assert(!cooFileName.empty());
@@ -60,15 +77,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, x.vals, x.valsParent, FID_VAL, valType(1));
 
   // Initialize x.
-  // TODO (rohany): Extract this into a task so that it can be reused.
+  auto xEqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
+  auto xEqPart = runtime->create_equal_partition(ctx, x.vals.get_index_space(), xEqPartIspace);
+  auto xEqLPart = runtime->get_logical_partition(ctx, x.vals, xEqPart);
   {
-    typedef FieldAccessor<WRITE_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorD;
-    auto x_phys = legionMalloc(ctx, runtime, x.vals, x.valsParent, FID_VAL);
-    AccessorD xAcc(x_phys, FID_VAL);
-    for (size_t i = 0; i < size_t(x.dims[0]); i++) {
-      xAcc[i] = i;
-    }
-    runtime->unmap_region(ctx, x_phys);
+    IndexTaskLauncher launcher(TID_INIT_X, runtime->get_index_space_domain(xEqPartIspace), TaskArgument(), ArgumentMap());
+    launcher.add_region_requirement(RegionRequirement(xEqLPart, 0, WRITE_ONLY, EXCLUSIVE, x.valsParent).add_field(FID_VAL));
+    runtime->execute_index_space(ctx, launcher);
   }
 
   // Pack the COO matrix into A.
@@ -80,9 +95,28 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   packLegion(ctx, runtime, &A, &coo);
 
   // Partition the tensors.
-  auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x);
-  // TODO (rohany): Benchmark this computation.
-  computeLegion(ctx, runtime, &y, &A, &x, pack);
+  auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x, pieces);
+
+  // TODO (rohany): Do some warmup iterations.
+
+  size_t time;
+  // Do some warmup iterations.
+  benchmarkAsyncCall(ctx, runtime, time, [&]() {
+    for (int i = 0; i < warmup; i++) {
+      computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
+    }
+  });
+
+  // Timed iterations.
+  benchmarkAsyncCall(ctx, runtime, time, [&]() {
+    for (int i = 0; i < n; i++) {
+      if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
+      computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
+    }
+  });
+
+  auto avgTime = double(time) / double(n);
+  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
     auto yreg = legionMalloc(ctx, runtime, y.vals, y.valsParent, FID_VAL);
@@ -98,7 +132,6 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   delete pack;
 }
 
-int TID_TOP_LEVEL = 420;
 int main(int argc, char** argv) {
   Runtime::set_top_level_task_id(TID_TOP_LEVEL);
   {
@@ -106,6 +139,16 @@ int main(int argc, char** argv) {
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_replicable();
     Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_INIT_X, "initXCPU");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<initX>(registrar, "initX");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_INIT_X, "initXOMP");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<initX>(registrar, "initX");
   }
   registerHDF5UtilTasks();
   registerTacoTasks();

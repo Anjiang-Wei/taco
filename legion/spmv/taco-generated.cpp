@@ -18,6 +18,7 @@ struct task_1Args {
   int32_t B1_dimension;
   int32_t a1_dimension;
   int32_t c1_dimension;
+  int32_t pieces;
 };
 
 void packLegion(Context ctx, Runtime* runtime, LegionTensor* BCSR, LegionTensor* BCOO) {
@@ -119,7 +120,7 @@ void packLegion(Context ctx, Runtime* runtime, LegionTensor* BCSR, LegionTensor*
   runtime->unmap_region(ctx, BCOO_vals);
 }
 
-partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c) {
+partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   int B1_dimension = B->dims[0];
@@ -132,7 +133,7 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   IndexSpace c_dense_run_0 = c->denseLevelRuns[0];
 
   Point<1> lowerBound = Point<1>(0);
-  Point<1> upperBound = Point<1>(3);
+  Point<1> upperBound = Point<1>((pieces - 1));
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   auto BDomain = runtime->get_index_space_domain(ctx, B_dense_run_0);
@@ -143,15 +144,15 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int32_t io = (*itr)[0];
-    Point<1> BStart = Point<1>((io * ((B1_dimension + 3) / 4)));
-    Point<1> BEnd = Point<1>(TACO_MIN((io * ((B1_dimension + 3) / 4) + ((B1_dimension + 3) / 4 - 1)), BDomain.hi()[0]));
+    Point<1> BStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces) + 0 / pieces));
+    Point<1> BEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), BDomain.hi()[0]));
     Rect<1> BRect = Rect<1>(BStart, BEnd);
     if (!BDomain.contains(BRect.lo) || !BDomain.contains(BRect.hi)) {
       BRect = BRect.make_empty();
     }
     BColoring[(*itr)] = BRect;
-    Point<1> aStart = Point<1>((io * ((B1_dimension + 3) / 4)));
-    Point<1> aEnd = Point<1>(TACO_MIN((io * ((B1_dimension + 3) / 4) + ((B1_dimension + 3) / 4 - 1)), aDomain.hi()[0]));
+    Point<1> aStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces) + 0 / pieces));
+    Point<1> aEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), aDomain.hi()[0]));
     Rect<1> aRect = Rect<1>(aStart, aEnd);
     if (!aDomain.contains(aRect.lo) || !aDomain.contains(aRect.hi)) {
       aRect = aRect.make_empty();
@@ -197,6 +198,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t B1_dimension = args->B1_dimension;
   int32_t a1_dimension = args->a1_dimension;
   int32_t c1_dimension = args->c1_dimension;
+  int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
@@ -204,12 +206,13 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  for (int32_t ii = 0; ii < ((B1_dimension + 3) / 4); ii++) {
-    int32_t i = io * ((B1_dimension + 3) / 4) + ii;
+  #pragma omp parallel for schedule(static)
+  for (int32_t ii = 0 / pieces; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
+    int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
     if (i >= B1_dimension)
       continue;
 
-    if (i >= (io + 1) * ((B1_dimension + 3) / 4))
+    if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces - 0 / pieces))
       continue;
 
     for (int32_t jB = B2_pos_accessor[i].lo; jB < (B2_pos_accessor[i].hi + 1); jB++) {
@@ -219,7 +222,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack) {
+void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
   int a1_dimension = a->dims[0];
   auto a_vals_parent = a->valsParent;
   int B1_dimension = B->dims[0];
@@ -231,13 +234,14 @@ void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor*
   auto c_vals_parent = c->valsParent;
 
   Point<1> lowerBound = Point<1>(0);
-  Point<1> upperBound = Point<1>(3);
+  Point<1> upperBound = Point<1>((pieces - 1));
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   task_1Args taskArgsRaw;
   taskArgsRaw.B1_dimension = B1_dimension;
   taskArgsRaw.a1_dimension = a1_dimension;
   taskArgsRaw.c1_dimension = c1_dimension;
+  taskArgsRaw.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, a_vals_parent).add_field(FID_VAL));
@@ -245,8 +249,7 @@ void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor*
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(c_vals, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
-  auto fm = runtime->execute_index_space(ctx, launcher);
-  fm.wait_all_results();
+  runtime->execute_index_space(ctx, launcher);
 
 }
 void registerTacoTasks() {

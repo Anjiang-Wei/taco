@@ -1525,13 +1525,16 @@ TEST(distributed, legionSpMV) {
 
   // Perform the actual computation.
   a(i) = B(i, j) * c(j);
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   auto stmt = a.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, 4)
+               .distribute({i}, {io}, {ii}, pieces)
+               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
                .communicate(B(i, j), io)
                .communicate(a(i), io)
                .communicate(c(j), io)
                ;
-  auto lowerCompute = lowerLegionSeparatePartitionCompute(stmt, "computeLegion");
+  std::cout << stmt << std::endl;
+  auto lowerCompute = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   auto lowered = ir::Block::make(lowerPack, lowerCompute);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
