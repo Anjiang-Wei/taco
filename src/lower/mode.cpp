@@ -99,6 +99,7 @@ std::ostream& operator<<(std::ostream& os, const Mode& mode) {
 // class ModePack
 struct ModePack::Content {
   size_t numModes = 0;
+  int level;
   vector<ir::Expr> arrays;
   ir::Expr tensor;
 };
@@ -111,6 +112,7 @@ ModePack::ModePack(size_t numModes, ModeFormat modeType, ir::Expr tensor,
   content->numModes = numModes;
   content->arrays = modeType.impl->getArrays(tensor, mode, level);
   content->tensor = tensor;
+  content->level = level;
 }
 
 size_t ModePack::getNumModes() const {
@@ -123,6 +125,10 @@ ir::Expr ModePack::getArray(size_t i) const {
 
 ir::Expr ModePack::getTensor() const {
   return content->tensor;
+}
+
+int ModePack::getLevel() const {
+  return content->level;
 }
 
 }

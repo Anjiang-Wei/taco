@@ -98,6 +98,29 @@ protected:
 //      return;
 //    }
 
+    // For certain TensorProperties, we need to ensure that we emit
+    // also collect the properties that they depend on.
+    switch (op->property) {
+      case TensorProperty::ValuesWriteAccessor:
+      case TensorProperty::ValuesReadAccessor:
+      case TensorProperty::ValuesReductionAccessor: {
+        // If we have a values accessor, then the values array for this
+        // tensor needs to be included as well.
+        auto values = ir::GetProperty::make(op->tensor, TensorProperty::Values);
+        values.accept(this);
+        break;
+      }
+      case TensorProperty::IndicesAccessor: {
+        // Similar logic holds for an index accessor. However, we don't
+        // need to make another property here since we are carrying around
+        // the property that we are referencing.
+        op->accessorArgs.regionAccessing.accept(this);
+        break;
+      }
+      default:
+        break;
+    }
+
     if (varMap.count(op) == 0) {
       auto key =
           std::tuple<Expr,TensorProperty,int,int>(op->tensor,op->property,

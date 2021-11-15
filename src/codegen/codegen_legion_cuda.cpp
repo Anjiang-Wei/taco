@@ -537,7 +537,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
 
     for (auto arg : this->regionArgs[this->funcToParentFunc[func]]) {
       auto op = taf.gps[arg];
-      auto param = ir::Var::make(op->name, Datatype(accessorType(op)));
+      auto param = ir::Var::make(op->name, Datatype(accessorTypeString(op)));
       addParam(std::make_pair(getVarName(param), param));
     }
 

@@ -50,6 +50,8 @@ struct TensorStorage::Content {
         modeTypes[i] = taco_mode_sparse;
       } else if (modeType.getName() == LgSparse.getName()) {
         modeTypes[i] = taco_mode_lg_sparse;
+      } else if (modeType.getName() == LgSingleton.getName()) {
+        modeTypes[i] = taco_mode_lg_sparse;
       } else {
         taco_not_supported_yet;
       }

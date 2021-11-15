@@ -516,6 +516,71 @@ Expr getIndexSpace(Expr e) {
   return ir::Call::make("get_index_space", {e}, Auto);
 }
 
+std::ostream& operator<<(std::ostream& os, const RegionPrivilege& rp) {
+  switch (rp) {
+    case RO:
+      os << "RO"; break;
+    case RW:
+      os << "RW"; break;
+    default:
+      taco_iassert(false);
+  }
+  return os;
+}
+
+std::string accessorTypeString(ir::Expr expr) {
+  auto op = expr.as<GetProperty>();
+  taco_iassert(op != nullptr);
+
+  auto sanitize = [](Datatype typ) {
+    auto raw = util::toString(typ);
+    std::stringstream result;
+    for (auto c : raw) {
+      switch (c) {
+        case '<':
+        case '>':
+          result << '_';
+          break;
+        default:
+          result << c;
+          break;
+      }
+    }
+    return result.str();
+  };
+
+  switch (op->property) {
+    case TensorProperty::ValuesReadAccessor: {
+      std::stringstream ss;
+      ss << "AccessorRO" << op->type << op->mode;
+      return ss.str();
+    }
+    case TensorProperty::ValuesWriteAccessor: {
+      std::stringstream ss;
+      ss << "AccessorRW" << op->type << op->mode;
+      return ss.str();
+    }
+    case TensorProperty::ValuesReductionAccessor: {
+      std::stringstream ss;
+      ss << "AccessorReduce" << op->type << op->mode;
+      return ss.str();
+    }
+    case TensorProperty::IndicesAccessor: {
+      std::stringstream ss;
+      ss << "Accessor" << op->accessorArgs.priv << sanitize(op->accessorArgs.elemType) << op->accessorArgs.dim;
+      return ss.str();
+    }
+    default:
+      taco_iassert(false);
+      return "";
+  }
+}
+
+Expr makeCreateAccessor(ir::Expr acc, ir::Expr physReg, ir::Expr field) {
+  return ir::Call::make("createAccessor<" + accessorTypeString(acc) + ">", {physReg, field}, Auto);
+}
+
+
 Expr MethodCall::make(Expr var, const std::string &func, const std::vector<Expr> &args, bool deref, Datatype type) {
   MethodCall *call = new MethodCall;
   call->type = type;

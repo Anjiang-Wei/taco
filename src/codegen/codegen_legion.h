@@ -25,6 +25,8 @@ public:
     TensorProperty prop;
     int dims;
     Datatype typ;
+    // This is only set for GetProperty::IndicesAccessors.
+    RegionPrivilege priv;
 
     friend bool operator<(const AccessorInfo& a, const AccessorInfo& b) {
       if (a.prop < b.prop) {
@@ -34,6 +36,9 @@ public:
         return true;
       }
       if (a.typ < b.typ) {
+        return true;
+      }
+      if (a.priv < b.priv) {
         return true;
       }
       return false;
@@ -74,34 +79,6 @@ public:
     }
     taco_ierror;
     return Datatype();
-  }
-
-  std::string accessorType(const GetProperty* op) {
-    switch (op->property) {
-      case TensorProperty::ValuesReadAccessor: {
-        std::stringstream ss;
-        ss << "AccessorRO" << printType(op->type, false) << op->mode;
-        return ss.str();
-      }
-      case TensorProperty::ValuesWriteAccessor: {
-        std::stringstream ss;
-        ss << "AccessorRW" << printType(op->type, false) << op->mode;
-        return ss.str();
-      }
-      case TensorProperty::ValuesReductionAccessor: {
-        std::stringstream ss;
-        ss << "AccessorReduce" << printType(op->type, false) << op->mode;
-        return ss.str();
-      }
-      case TensorProperty::IndicesAccessor: {
-        std::stringstream ss;
-        ss << "AccessorRO" << printTypeInName(op->accessorArgs.elemType, false) << op->accessorArgs.dim;
-        return ss.str();
-      }
-      default:
-        taco_iassert(false);
-        return "";
-    }
   }
 
   // Fields for code generation.

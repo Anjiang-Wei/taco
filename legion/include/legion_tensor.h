@@ -133,8 +133,10 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
     fa.allocate_field(sizeof(int32_t), crdField);
   }
 
-  // An "infinitely" sized region will just be a really big one.
-  auto infty = 1 << 30;
+  // An "infinitely" sized region will just be a really big one. I'm not sure how
+  // big we actually need this to be, but 1 << 30 wasn't enough. However, 1 << 63
+  // caused some other problems (bounds check failure) that I don't understand.
+  auto infty = Legion::coord_t(1) << 48;
 
   bool inDenseRun = false;
   std::vector<int> levelsInDenseRun;
@@ -145,7 +147,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
       lo.dim = 1;
       hi.dim = 1;
       lo[0] = 0;
-      hi[0] = infty;
+      hi[0] = infty - 1;
     } else {
       // Otherwise, we were in a dense run. If the first level is contained in the dense run,
       // then the dimensionality of the array is |levelsInDenseRun|. Otherwise, it's
@@ -156,7 +158,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         hi.dim = dim;
         for (size_t i = 0; i < dim; i++) {
           lo[i] = 0;
-          hi[i] = dims[levelsInDenseRun[i]];
+          hi[i] = dims[levelsInDenseRun[i]] - 1;
         }
       } else {
         auto dim = levelsInDenseRun.size() + 1;
@@ -166,7 +168,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         hi[0] = infty;
         for (size_t i = 1; i < dim; i++) {
           lo[i] = 0;
-          hi[i] = dims[levelsInDenseRun[i - 1]];
+          hi[i] = dims[levelsInDenseRun[i - 1]] - 1;
         }
       }
     }

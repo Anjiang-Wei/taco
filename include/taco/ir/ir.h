@@ -521,6 +521,10 @@ Expr getLogicalRegion(Expr e);
 // getIndexSpace is a utility method that wraps an expression
 // in a get_index_space call.
 Expr getIndexSpace(Expr e);
+// accessorTypeString returns a string returning the type of a string
+// for an accessor represented by the input GetProperty.
+std::string accessorTypeString(ir::Expr gp);
+Expr makeCreateAccessor(ir::Expr acc, ir::Expr physReg, ir::Expr field);
 
 struct MethodCall : public ExprNode<MethodCall> {
   Expr var;
@@ -855,6 +859,13 @@ struct SideEffect : public StmtNode<SideEffect> {
   static const IRNodeType _type_info = IRNodeType::SideEffect;
 };
 
+// RegionPrivilege represents the privilege used to access a region.
+enum RegionPrivilege {
+  RO,
+  RW,
+};
+std::ostream &operator<<(std::ostream &os, const RegionPrivilege &);
+
 /** A tensor property.
  * This unpacks one of the properties of a tensor into an Expr.
  */
@@ -871,6 +882,7 @@ struct GetProperty : public ExprNode<GetProperty> {
     Datatype elemType;
     Expr field;
     ir::Expr regionAccessing;
+    RegionPrivilege priv;
   };
   AccessorArgs accessorArgs;
 

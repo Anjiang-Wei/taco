@@ -36,12 +36,10 @@ Stmt doubleSizeIfFull(Expr a, Expr size, Expr needed) {
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 
-// TODO (rohany): This will probably need to do some management around accessors etc, or it
-//  will need to be pulled into the more specific mode formats.
-Stmt lgDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr oldPhysicalReg, Expr fieldID) {
-  auto realloc = ir::makeLegionRealloc(reg, Mul::make(size, 2), reg, oldPhysicalReg, fieldID);
+Stmt lgDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor) {
+  auto realloc = ir::makeLegionRealloc(reg, Mul::make(size, 2), parentReg, oldPhysicalReg, fieldID);
   auto resize = Assign::make(size, Mul::make(size, 2));
-  auto ifBody = Block::make({realloc, resize});
+  auto ifBody = Block::make({realloc, updateAccessor, resize});
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 
@@ -55,13 +53,13 @@ Stmt atLeastDoubleSizeIfFull(Expr a, Expr size, Expr needed) {
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 
-Stmt lgAtLeastDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr oldPhysicalReg, Expr fieldID) {
+Stmt lgAtLeastDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor) {
   Expr newSizeVar = Var::make(util::toString(reg) + "_new_size", Int());
   Expr newSize = Max::make(Mul::make(size, 2), Add::make(needed, 1));
   Stmt computeNewSize = VarDecl::make(newSizeVar, newSize);
-  Stmt realloc = makeLegionRealloc(reg, newSizeVar, reg, oldPhysicalReg, fieldID);
+  Stmt realloc = makeLegionRealloc(reg, newSizeVar, parentReg, oldPhysicalReg, fieldID);
   Stmt updateSize = Assign::make(size, newSizeVar);
-  Stmt ifBody = Block::make({computeNewSize, realloc, updateSize});
+  Stmt ifBody = Block::make({computeNewSize, realloc, updateAccessor, updateSize});
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 

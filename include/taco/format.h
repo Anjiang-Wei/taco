@@ -97,6 +97,7 @@ public:
   // Legion ModeFormats.
   static ModeFormat LgRectCompressed;
   static ModeFormat LgSparse;
+  static ModeFormat LgSingleton;
 
   /// Properties of a mode format
   enum Property {
@@ -193,6 +194,7 @@ extern const ModeFormat Compressed;
 extern const ModeFormat Sparse;
 extern const ModeFormat Singleton;
 extern const ModeFormat LgSparse;
+extern const ModeFormat LgSingleton;
 
 extern const ModeFormat dense;
 extern const ModeFormat compressed;
@@ -206,6 +208,8 @@ extern const Format DCSC;
 
 const Format COO(int order, bool isUnique = true, bool isOrdered = true, 
                  bool isAoS = false, const std::vector<int>& modeOrdering = {});
+const Format LgCOO(int order, bool isUnique = true, bool isOrdered = true,
+                   bool isAoS = false, const std::vector<int>& modeOrdering = {});
 /// @}
 
 /// True if all modes are dense.

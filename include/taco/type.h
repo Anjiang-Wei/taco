@@ -124,6 +124,8 @@ extern Datatype RegionRequirement;
 // Runtime types for tensors and partitions;
 extern Datatype LegionTensor;
 extern Datatype LegionTensorPartition;
+// A helper widget type to treat LogicalRegion and PhysicalRegion objects the same.
+extern Datatype RegionWrapper;
 // An n-dimensional point.
 Datatype Point(int n);
 // An n-dimensional rectangle.

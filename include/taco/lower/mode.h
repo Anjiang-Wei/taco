@@ -85,6 +85,9 @@ public:
   // Return the tensor used to construct the ModePack.
   ir::Expr getTensor() const;
 
+  // Return the level that the ModePack corresponds to.
+  int getLevel() const;
+
 private:
   struct Content;
   std::shared_ptr<Content> content;

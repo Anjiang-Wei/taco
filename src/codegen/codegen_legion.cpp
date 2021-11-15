@@ -21,31 +21,27 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   } else if (op->property == TensorProperty::IndexSpace) {
     tp = "auto";
     ret << tp << " " << varname << " = get_index_space(" << tensor->name << ");\n";
-  } else if (op->property == TensorProperty::ValuesReadAccessor) {
+  } else if (op->property == TensorProperty::ValuesReadAccessor || op->property == TensorProperty::ValuesWriteAccessor) {
     // We can't just use the tensor's name when constructing the value accessors, as for child
     // tasks the value array is not just the tensor's name.
-    ret << accessorType(op) << " " << varname << "(" << values << ", FID_VAL);\n";
-  } else if (op->property == TensorProperty::ValuesWriteAccessor) {
-    ret << accessorType(op) << " " << varname << "(" << values
-        << ", FID_VAL);\n";
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL);\n";
   } else if (op->property == TensorProperty::ValuesReductionAccessor) {
-    ret << accessorType(op) << " " << varname << "(" << values
-        << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
   } else if (op->property == TensorProperty::DenseLevelRun) {
-    ret << "auto " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
+    ret << "IndexSpace " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
   } else if (op->property == TensorProperty::Values) {
-    ret << "auto " << varname << " = " << tensor->name << "->vals;\n";
+    ret << "RegionWrapper " << varname << " = " << tensor->name << "->vals;\n";
   } else if (op->property == TensorProperty::ValuesParent) {
     ret << "auto " << varname << " = " << tensor->name << "->valsParent;\n";
   } else if (op->property == TensorProperty::Indices) {
-    ret << "auto " << varname << " = " << tensor->name << "->indices[" << op->mode << "][" << op->index << "];\n";
+    ret << "RegionWrapper " << varname << " = " << tensor->name << "->indices[" << op->mode << "][" << op->index << "];\n";
   } else if (op->property == TensorProperty::IndicesParents) {
     ret << "auto " << varname << " = " << tensor->name << "->indicesParents[" << op->mode << "][" << op->index
         << "];\n";
   } else if (op->property == TensorProperty::IndicesAccessor) {
     auto fid = op->accessorArgs.field.as<ir::Symbol>()->name;
     auto regionAccessing = op->accessorArgs.regionAccessing;
-    ret << accessorType(op) << " " << varname << "(" << regionAccessing << ", " << fid << ");\n";
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << regionAccessing << ", " << fid << ");\n";
   } else {
     return CodeGen::unpackTensorProperty(varname, op, is_output_prop);
   }
@@ -143,7 +139,7 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
           this->accessors.insert(AccessorInfo{op->property, op->mode, op->type});
           break;
         case TensorProperty::IndicesAccessor:
-          this->accessors.insert(AccessorInfo{op->property, op->accessorArgs.dim, op->accessorArgs.elemType});
+          this->accessors.insert(AccessorInfo{op->property, op->accessorArgs.dim, op->accessorArgs.elemType, op->accessorArgs.priv});
           break;
         default:
           return;
@@ -163,7 +159,7 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
           << "," << info.dims << ",coord_t>> AccessorReduce" << printType(info.typ, false) << info.dims << ";\n";
     } else {
       std::string priv, suffix;
-      if (info.prop == TensorProperty::ValuesWriteAccessor) {
+      if (info.prop == TensorProperty::ValuesWriteAccessor || info.priv == RW) {
         priv = "READ_WRITE";
         suffix = "RW";
       } else {

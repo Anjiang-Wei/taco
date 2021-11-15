@@ -65,7 +65,9 @@ Legion::PhysicalRegion mapRegion(Context ctx, Runtime* runtime, LogicalRegion re
   //  we can assume that the region is going to be written to?
   RegionRequirement req(region, READ_WRITE, EXCLUSIVE, parent, Mapping::DefaultMapper::EXACT_REGION);
   req.add_field(fid);
-  return runtime->map_region(ctx, req);
+  auto result = runtime->map_region(ctx, req);
+  result.wait_until_valid();
+  return result;
 }
 
 Legion::PhysicalRegion legionMalloc(Context ctx, Runtime* runtime, LogicalRegion region, size_t size, FieldID fid) {
@@ -85,7 +87,7 @@ Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runti
   runtime->unmap_region(ctx, old);
   // Just get between the old size and the new size to avoid having to copy the old data.
   auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(oldBounds.bounds.hi[0] + 1, newSize - 1));
-  return mapRegion(ctx, runtime, subreg, region,  fid);
+  return mapRegion(ctx, runtime, subreg, region, fid);
 }
 
 LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition) {

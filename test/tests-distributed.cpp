@@ -1515,8 +1515,15 @@ TEST(distributed, legionSpMV) {
   Tensor<double> a("a", {dim}, Format{Dense});
   Tensor<double> B("B", {dim, dim}, Format{Dense, LgSparse});
   Tensor<double> c("c", {dim}, Format{Dense});
+  Tensor<double> BCSR("BCSR", {dim, dim}, Format{Dense, LgSparse});
+  Tensor<double> BCOO("BCOO", {dim, dim}, LgCOO(2));
 
   IndexVar i("i"), j("j"), io("io"), ii("ii");
+  // Also generate code for packing B.
+  BCSR(i, j) = BCOO(i, j);
+  auto lowerPack = lowerLegionAssemble(BCSR.getAssignment().concretize(), "packLegion", true, true);
+
+  // Perform the actual computation.
   a(i) = B(i, j) * c(j);
   auto stmt = a.getAssignment().concretize()
                .distribute({i}, {io}, {ii}, 4)
@@ -1524,8 +1531,8 @@ TEST(distributed, legionSpMV) {
                .communicate(a(i), io)
                .communicate(c(j), io)
                ;
-
-  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion");
+  auto lowerCompute = lowerLegionSeparatePartitionCompute(stmt, "computeLegion");
+  auto lowered = ir::Block::make(lowerPack, lowerCompute);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
   {
@@ -1534,17 +1541,4 @@ TEST(distributed, legionSpMV) {
     codegen->compile(lowered);
     f.close();
   }
-}
-
-TEST(distributed, legionPackCOOtoCSR) {
-  int dim = 10;
-  Tensor<int> a("a", {dim, dim}, Format{Dense, LgSparse});
-//  Tensor<int> a("a", {dim, dim}, Format{Dense, Dense});
-  Tensor<int> b("b", {dim, dim}, COO(2));
-  IndexVar i("i"), j("j");
-  a(i, j) = b(i, j);
-  auto stmt = a.getAssignment().concretize();
-  auto lowered = lowerLegionAssemble(stmt, "computeLegion", false, true);
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
 }
