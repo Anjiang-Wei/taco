@@ -36,7 +36,6 @@ void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& loc
 }
 
 // Forward declarations for partitioning and computation.
-void packLegion(Context ctx, Runtime* runtime, LegionTensor* BCSR, LegionTensor* BCOO);
 struct partitionPackForcomputeLegion;
 partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
 void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces);
@@ -55,26 +54,24 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
 }
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  std::string cooFileName;
+  std::string csrFileName;
   bool dump = false;
   int n = 10, pieces = 4, warmup = 5;
   Realm::CommandLineParser parser;
-  parser.add_option_string("-coofile", cooFileName);
+  parser.add_option_string("-csr", csrFileName);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   auto args = Runtime::get_input_args();
   assert(parser.parse_command_line(args.argc, args.argv));
-  assert(!cooFileName.empty());
+  assert(!csrFileName.empty());
 
-  // Read in our COO matrix.
-  auto coo = loadCOOFromHDF5(ctx, runtime, cooFileName, FID_RECT_1, FID_COORD, sizeof(int32_t), FID_VAL, sizeof(valType));
+  auto A = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
 
-  auto y = createDenseTensor<1, valType>(ctx, runtime, {10}, FID_VAL);
-  auto x = createDenseTensor<1, valType>(ctx, runtime, {10}, FID_VAL);
+  auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
+  auto x = createDenseTensor<1, valType>(ctx, runtime, {A.dims[1]}, FID_VAL);
   runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0));
-  runtime->fill_field(ctx, x.vals, x.valsParent, FID_VAL, valType(1));
 
   // Initialize x.
   auto xEqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
@@ -86,18 +83,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     runtime->execute_index_space(ctx, launcher);
   }
 
-  // Pack the COO matrix into A.
-  // TODO (rohany): In the future, I think I want this to a be two step process where we
-  //  preprocess the COO file into an HDF5 file that describes exactly the CSR tensor. Then,
-  //  to actually run the program we read in the CSR version of the tensor.
-  auto A = createSparseTensorForPack<valType>(ctx, runtime, {Dense, Sparse}, {10, 10}, FID_RECT_1, FID_COORD, FID_VAL);
-
-  packLegion(ctx, runtime, &A, &coo);
-
   // Partition the tensors.
   auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x, pieces);
-
-  // TODO (rohany): Do some warmup iterations.
 
   size_t time;
   // Do some warmup iterations.

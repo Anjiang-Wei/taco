@@ -170,3 +170,8 @@ endif()
 add_executable(tensor_to_hdf5 fileio/tensor_to_hdf5.cpp ${LG_EXTRA_SOURCES})
 target_link_libraries(tensor_to_hdf5 Legion::Legion ${HDF5_LIBRARIES})
 include_directories(tensor_to_hdf5 PRIVATE ${HDF5_INCLUDE_DIRS})
+
+# Utility to convert COO tensors into desired formats.
+add_executable(format-converter format-converter/main.cpp format-converter/taco-generated.cpp ${LG_SOURCES})
+target_link_libraries(format-converter Legion::Legion ${HDF5_LIBRARIES})
+include_directories(format-converter PRIVATE ${HDF5_INCLUDE_DIRS})

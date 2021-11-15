@@ -1515,15 +1515,9 @@ TEST(distributed, legionSpMV) {
   Tensor<double> a("a", {dim}, Format{Dense});
   Tensor<double> B("B", {dim, dim}, Format{Dense, LgSparse});
   Tensor<double> c("c", {dim}, Format{Dense});
-  Tensor<double> BCSR("BCSR", {dim, dim}, Format{Dense, LgSparse});
-  Tensor<double> BCOO("BCOO", {dim, dim}, LgCOO(2));
-
-  IndexVar i("i"), j("j"), io("io"), ii("ii");
-  // Also generate code for packing B.
-  BCSR(i, j) = BCOO(i, j);
-  auto lowerPack = lowerLegionAssemble(BCSR.getAssignment().concretize(), "packLegion", true, true);
 
   // Perform the actual computation.
+  IndexVar i("i"), j("j"), io("io"), ii("ii");
   a(i) = B(i, j) * c(j);
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   auto stmt = a.getAssignment().concretize()
@@ -1534,14 +1528,48 @@ TEST(distributed, legionSpMV) {
                .communicate(c(j), io)
                ;
   std::cout << stmt << std::endl;
-  auto lowerCompute = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
-  auto lowered = ir::Block::make(lowerPack, lowerCompute);
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
   {
     ofstream f("../legion/spmv/taco-generated.cpp");
     auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
     codegen->compile(lowered);
+    f.close();
+  }
+}
+
+TEST(distributed, legionFormatConverterLib) {
+  int dim = 100;
+
+  std::vector<ir::Stmt> converters;
+  auto addConverter = [&](Format f, std::string formatName) {
+    auto order = f.getOrder();
+    std::vector<int> dims(order, dim);
+    Tensor<double> TCOO("TCOO", dims, LgCOO(order));
+    Tensor<double> T("T", dims, f);
+    // Some index variables for use.
+    std::vector<IndexVar> vars = {IndexVar("i"), IndexVar("j"), IndexVar("k"), IndexVar("l"), IndexVar("m"), IndexVar("n")};
+    std::vector<IndexVar> accessVars;
+    for (int i = 0; i < order; i++) {
+      accessVars.push_back(vars[i]);
+    }
+    auto lhs = Access(T.getTensorVar(), accessVars);
+    auto rhs = Access(TCOO.getTensorVar(), accessVars);
+    auto op = Assignment(lhs, rhs);
+    auto name = "packLegionCOOTo" + formatName;
+    auto lowerPack = lowerLegionAssemble(op.concretize(), name, true, true);
+    converters.push_back(lowerPack);
+  };
+
+  // Register all converters.
+  addConverter(Format{Dense, LgSparse}, "CSR");
+
+  // Dump them all to the output.
+  {
+    ofstream f("../legion/format-converter/taco-generated.cpp");
+    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(ir::Block::make(converters));
     f.close();
   }
 }

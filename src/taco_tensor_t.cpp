@@ -51,6 +51,7 @@ taco_tensor_t* init_taco_tensor_t(int32_t order, int32_t csize,
       case taco_mode_lg_sparse:
         // We don't support doing anything for Legion sparse levels when using TACO as a
         // C++ library. Handle the case here to silence warnings.
+        t->indices[i] = (uint8_t **) alloc_mem(2 * sizeof(uint8_t **));
         break;
     }
   }
