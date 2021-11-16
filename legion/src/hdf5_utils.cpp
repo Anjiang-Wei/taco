@@ -2,6 +2,8 @@
 #include "hdf5_utils.h"
 #include "task_ids.h"
 #include "legion_tensor.h"
+#include "string_utils.h"
+#include "taco_legion_header.h"
 
 using namespace Legion;
 
@@ -33,6 +35,7 @@ void generateCoordListHDF5(std::string filename, size_t order, size_t nnz) {
     createDataset(COOCoordsFields[i], H5T_NATIVE_INT32_g, coordSpaceID);
   }
   // Create a dataset for the values.
+  // TODO (rohany): This needs to be templated over the type.
   createDataset(COOValsField, H5T_IEEE_F64LE_g, coordSpaceID);
   // Create a dataset for the dimensions.
   createDataset(COODimsField, H5T_NATIVE_INT32_g, dimensionsDataspaceID);
@@ -216,6 +219,445 @@ void attachCOORegionsTask(const Task* task, const std::vector<PhysicalRegion>& r
   for (auto& reg : logRegs) {
     runtime->destroy_logical_region(ctx, reg);
   }
+}
+
+// getTensorLevelFormatName returns a const char* that must be `delete`ed after use.
+const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, int idx) {
+  auto toCharStar = [](std::string&& s) {
+    char* tmp = new char [s.size() + 1];
+    std::strcpy(tmp, s.c_str());
+    return tmp;
+  };
+  switch (format) {
+    case Dense:
+      // We shouldn't be trying to get the tensor names from a Dense level.
+      assert(false);
+    case Sparse: {
+      // The name depends on what the value of idx is.
+      std::stringstream nameSS;
+      nameSS << (idx == 0 ? "pos" : "crd") << "_" << mode;
+      return toCharStar(nameSS.str());
+    }
+    case Singleton: {
+      assert(idx == 0);
+      std::stringstream nameSS;
+      nameSS << "crd_" << mode;
+      return toCharStar(nameSS.str());
+    }
+    default:
+      assert(false);
+  }
+}
+
+// createHDF5RectType returns a tuple of {Point, Rect} HDF5 types.
+template<int DIM>
+std::pair<hid_t, hid_t> createHDF5RectType() {
+  // First create a type for Point<T>'s.
+  auto pointTy = H5Tcreate(H5T_COMPOUND, sizeof(Point<DIM>));
+  // Add all coordinates in the point.
+  auto offset = 0;
+  for (int i = 0; i < DIM; i++) {
+    std::string fname = "coord" + toString(i);
+    assert(H5Tinsert(pointTy, fname.c_str(), offset, H5T_NATIVE_INT64_g) >= 0);
+    offset += sizeof(long long);
+  }
+
+  // Now add lo and hi to the Rect type.
+  auto rectTy = H5Tcreate(H5T_COMPOUND, sizeof(Rect<DIM>));
+  std::string rectLo = "lo";
+  std::string rectHi = "hi";
+  offset = 0;
+  assert(H5Tinsert(rectTy, rectLo.c_str(), offset, pointTy) >= 0);
+  offset += sizeof(Point<DIM>);
+  assert(H5Tinsert(rectTy, rectHi.c_str(), offset, pointTy) >= 0);
+
+  return std::make_pair(pointTy, rectTy);
+}
+
+// ResourceCollector is a helper widget to perform automatic collection of various
+// objects used in the lifetime of loading and dumping LegionTensors to HDF5.
+struct ResourceCollector {
+  ~ResourceCollector() {
+    for (auto c : chars) { delete c; }
+    for (auto id : HDFdatasets) { H5Dclose(id); }
+    for (auto id : HDFdataspaces) { H5Sclose(id); }
+    for (auto id : HDFfiles) { H5Fclose(id); }
+  }
+  void add(const char* c) { this->chars.push_back(c); }
+  void addHDFfile(hid_t id) { assert(id >= 0); this->HDFfiles.push_back(id); }
+  void addHDFdataspace(hid_t id) { assert(id >= 0); this->HDFdataspaces.push_back(id); }
+  void addHDFdataset(hid_t id) { assert(id >= 0); this->HDFdatasets.push_back(id); }
+
+  std::vector<const char*> chars;
+  std::vector<hid_t> HDFdataspaces;
+  std::vector<hid_t> HDFdatasets;
+  std::vector<hid_t> HDFfiles;
+};
+
+void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t,
+                                std::vector<LegionTensorLevelFormat> format, std::string &filename) {
+  // Declare HDF5 types.
+  hid_t pointTy, rectTy;
+  std::tie(pointTy, rectTy) = createHDF5RectType<1>();
+
+  // First, we must create the HDF5 file with all the right datasets and data spaces.
+  {
+    ResourceCollector col;
+
+    // Open up the HDF5 file.
+    hid_t fileID = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    col.addHDFfile(fileID);
+
+    // Add the dimensions to the HDF5 file.
+    hsize_t dimsDim[1];
+    dimsDim[0] = format.size();
+    auto dimsDataspace = H5Screate_simple(1, dimsDim, NULL);
+    col.addHDFdataspace(dimsDataspace);
+    auto dimsDataset = H5Dcreate2(fileID, LegionTensorDimsField, H5T_NATIVE_INT32_g, dimsDataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    col.addHDFdataset(dimsDataset);
+
+    for (size_t i = 0; i < format.size(); i++) {
+      switch (format[i]) {
+        case Dense: {
+          // We don't need to do anything to serialize a dense level.
+          break;
+        }
+        case Sparse: {
+          // Sparse levels are where most of the work is getting done.
+          // Create a dataspace for the pos array.
+          // TODO (rohany): Handle when we have multi-dimensional pos arrays.
+          auto posDom = runtime->get_index_space_domain(ctx, t.indices[i][0].get_index_space());
+          assert(posDom.dim == 1);
+          hsize_t dims[1];
+          dims[0] = posDom.hi()[0] + 1;
+          hid_t posDataspaceID = H5Screate_simple(1, dims, NULL);
+          col.addHDFdataspace(posDataspaceID);
+          // Now create a dataset in this dataspace.
+          auto posName = getTensorLevelFormatName(format[i], i, 0);
+          col.add(posName);
+          hid_t posDataset = H5Dcreate2(fileID, posName, rectTy, posDataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          col.addHDFdataset(posDataset);
+
+          // Do the same for the crd array.
+          auto crdDom = runtime->get_index_space_domain(ctx, t.indices[i][1].get_index_space());
+          assert(crdDom.dim == 1);
+          dims[0] = crdDom.hi()[0] + 1;
+          auto crdName = getTensorLevelFormatName(format[i], i, 1);
+          col.add(crdName);
+          hid_t crdDataspaceID = H5Screate_simple(1, dims, NULL);
+          col.addHDFdataspace(crdDataspaceID);
+          // TODO (rohany): Should the crd region hold int32's or int64s?
+          hid_t crdDataset = H5Dcreate2(fileID, crdName, H5T_NATIVE_INT32_g, crdDataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          col.addHDFdataset(crdDataset);
+
+          break;
+        }
+        case Singleton: {
+          // TODO (rohany): Support this case. I'm a bit lazy and don't want to consider
+          //  it right now since I won't actually be doing parallel computations on COO matrices.
+        }
+        default:
+          assert(false);
+      }
+    }
+
+    auto valsDom = runtime->get_index_space_domain(ctx, t.vals.get_index_space());
+    // TODO (rohany): Handle multi-dimensional values arrays.
+    assert(valsDom.dim == 1);
+    hsize_t dims[1];
+    dims[0] = valsDom.hi()[0] + 1;
+    auto valsDataSpace = H5Screate_simple(1, dims, NULL);
+    col.addHDFdataspace(valsDataSpace);
+    // TODO (rohany): Template this dataset creation on the value type.
+    auto valDataset = H5Dcreate2(fileID, LegionTensorValsField, H5T_IEEE_F64LE_g, valsDataSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    col.addHDFdataset(valDataset);
+  }
+
+  // Next, we actually have to attach regions to the HDF5 file.
+
+  // Create and map a region for the dimensions array, then attach it to the HDF5 file.
+  {
+    auto ispace = runtime->create_index_space(ctx, Rect<1>(0, t.order - 1));
+    auto fspace = runtime->create_field_space(ctx);
+    auto alloc = runtime->create_field_allocator(ctx, fspace);
+    alloc.allocate_field(sizeof(int32_t), FID_COORD);
+    auto dims = runtime->create_logical_region(ctx, ispace, fspace);
+    runtime->fill_field(ctx, dims, dims, FID_COORD, int32_t(0));
+    auto dimsCopy = runtime->create_logical_region(ctx, ispace, fspace);
+    {
+      auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
+      FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
+      for (int i = 0; i < t.order; i++) {
+        acc[i] = t.dims[i];
+      }
+      runtime->unmap_region(ctx, dimsMem);
+    }
+    auto dimsDisk = attachHDF5(ctx, runtime, dimsCopy, {{FID_COORD, LegionTensorDimsField}}, filename, LEGION_FILE_READ_WRITE);
+    {
+      CopyLauncher cl;
+      cl.add_copy_requirements(RegionRequirement(dims, READ_ONLY, EXCLUSIVE, dims),
+                               RegionRequirement(dimsCopy, WRITE_DISCARD, EXCLUSIVE, dimsCopy));
+      cl.add_src_field(0, FID_COORD); cl.add_dst_field(0, FID_COORD);
+      runtime->issue_copy_operation(ctx, cl);
+    }
+    runtime->detach_external_resource(ctx, dimsDisk).wait();
+    runtime->destroy_logical_region(ctx, dims);
+    runtime->destroy_logical_region(ctx, dimsCopy);
+  }
+
+  {
+    ResourceCollector col;
+    for (size_t i = 0; i < format.size(); i++) {
+      switch (format[i]) {
+        case Dense:
+          // There's nothing to do for dense arrays.
+          break;
+        case Sparse: {
+          // Create a new region for the pos and crd regions, and attach the HDF5 file to each.
+          auto pos = t.indices[i][0];
+          auto posParent = t.indicesParents[i][0];
+          auto crd = t.indices[i][1];
+          auto crdParent = t.indicesParents[i][1];
+          auto posName = getTensorLevelFormatName(format[i], i, 0);
+          auto crdName = getTensorLevelFormatName(format[i], i, 1);
+          col.add(posName); col.add(crdName);
+
+          auto posCopy = runtime->create_logical_region(ctx, pos.get_index_space(), pos.get_field_space());
+          // TODO (rohany): Does it make sense to allow for direct access to the fields here?
+          auto posDisk = attachHDF5(ctx, runtime, posCopy, {{FID_RECT_1, posName}}, filename, LEGION_FILE_READ_WRITE);
+          {
+            CopyLauncher cl;
+            cl.add_copy_requirements(RegionRequirement(pos, READ_ONLY, EXCLUSIVE, posParent),
+                                     RegionRequirement(posCopy, WRITE_DISCARD, EXCLUSIVE, posCopy));
+            cl.add_src_field(0, FID_RECT_1); cl.add_dst_field(0, FID_RECT_1);
+            runtime->issue_copy_operation(ctx, cl);
+            runtime->detach_external_resource(ctx, posDisk).wait();
+          }
+
+          auto crdCopy = runtime->create_logical_region(ctx, crd.get_index_space(), crd.get_field_space());
+          auto crdDisk = attachHDF5(ctx, runtime, crdCopy, {{FID_COORD, crdName}}, filename, LEGION_FILE_READ_WRITE);
+          {
+            CopyLauncher cl;
+            cl.add_copy_requirements(RegionRequirement(crd, READ_ONLY, EXCLUSIVE, crdParent),
+                                     RegionRequirement(crdCopy, WRITE_DISCARD, EXCLUSIVE, crdCopy));
+            cl.add_src_field(0, FID_COORD); cl.add_dst_field(0, FID_COORD);
+            runtime->issue_copy_operation(ctx, cl);
+            runtime->detach_external_resource(ctx, crdDisk).wait();
+          }
+
+          runtime->destroy_logical_region(ctx, posCopy);
+          runtime->destroy_logical_region(ctx, crdCopy);
+          break;
+        }
+        case Singleton:
+          // TODO (rohany): Support singleton.
+          assert(false);
+        default:
+          assert(false);
+      }
+    }
+
+    // Dump out the values array.
+    auto valsCopy = runtime->create_logical_region(ctx, t.vals.get_index_space(), t.vals.get_field_space());
+    auto valsDisk = attachHDF5(ctx, runtime, valsCopy, {{FID_VAL, LegionTensorValsField}}, filename, LEGION_FILE_READ_WRITE);
+    {
+      CopyLauncher cl;
+      cl.add_copy_requirements(RegionRequirement(t.vals, READ_ONLY, EXCLUSIVE, t.valsParent),
+                               RegionRequirement(valsCopy, WRITE_DISCARD, EXCLUSIVE, valsCopy));
+      cl.add_src_field(0, FID_VAL); cl.add_dst_field(0, FID_VAL);
+      runtime->issue_copy_operation(ctx, cl);
+      runtime->detach_external_resource(ctx, valsDisk).wait();
+    }
+    runtime->destroy_logical_region(ctx, valsCopy);
+  }
+
+  // Final cleanup operations.
+  H5Tclose(pointTy);
+  H5Tclose(rectTy);
+}
+
+LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
+                                          std::vector<LegionTensorLevelFormat> format) {
+  hid_t pointTy, rectTy;
+  std::tie(pointTy, rectTy) = createHDF5RectType<1>();
+
+  ResourceCollector col;
+
+  // Initialize the result tensor.
+  LegionTensor result = LegionTensor {
+    .order = int(format.size()),
+    .dims = std::vector<int>(format.size()),
+    .indices = std::vector<std::vector<LogicalRegion>>(format.size()),
+    .indicesParents = std::vector<std::vector<LogicalRegion>>(format.size()),
+  };
+
+  auto rectSpace = runtime->create_field_space(ctx);
+  {
+    auto fa = runtime->create_field_allocator(ctx, rectSpace);
+    fa.allocate_field(sizeof(Rect<1>), FID_RECT_1);
+  }
+  auto coordSpace = runtime->create_field_space(ctx);
+  {
+    auto fa = runtime->create_field_allocator(ctx, coordSpace);
+    // TODO (rohany): Should the coord region be int64_t's?
+    fa.allocate_field(sizeof(int32_t), FID_COORD);
+  }
+  auto valSpace = runtime->create_field_space(ctx);
+  {
+    auto fa = runtime->create_field_allocator(ctx, valSpace);
+    fa.allocate_field(sizeof(double), FID_VAL);
+  }
+
+  auto getDatasetBounds = [&](const char* dataSetName, int dim) {
+    auto f = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    auto dset = H5Dopen1(f, dataSetName);
+    auto dspace = H5Dget_space(dset);
+    std::vector<hsize_t> dims(dim);
+    H5Sget_simple_extent_dims(dspace, dims.data(), NULL);
+    DomainPoint lo, hi;
+    lo.dim = dim;
+    hi.dim = dim;
+    for (int i = 0; i < dim; i++) {
+      lo[i] = 0;
+      hi[i] = dims[i] - 1;
+    }
+    H5Sclose(dspace);
+    H5Dclose(dset);
+    H5Fclose(f);
+    return Domain(lo, hi);
+  };
+
+  // Load the dimensions region.
+  {
+    auto dimsISpace = runtime->create_index_space(ctx, Rect<1>(0, format.size() - 1));
+    auto dims = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
+    auto dimsCopy = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
+    auto dimsDisk = attachHDF5(ctx, runtime, dimsCopy, {{FID_COORD, LegionTensorDimsField}}, filename);
+
+    {
+      CopyLauncher cl;
+      cl.add_copy_requirements(RegionRequirement(dimsCopy, READ_ONLY, EXCLUSIVE, dimsCopy),
+                               RegionRequirement(dims, WRITE_ONLY, EXCLUSIVE, dims));
+      cl.add_src_field(0, FID_COORD); cl.add_dst_field(0, FID_COORD);
+      runtime->issue_copy_operation(ctx, cl);
+    }
+    runtime->detach_external_resource(ctx, dimsDisk).wait();
+
+    // Now copy the values into the dims vector in the output.
+    {
+      auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
+      FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
+      for (int i = 0; i < result.order; i++) {
+        result.dims[i] = acc[i];
+      }
+      runtime->unmap_region(ctx, dimsMem);
+    }
+    runtime->destroy_logical_region(ctx, dimsCopy);
+    runtime->destroy_logical_region(ctx, dims);
+  }
+
+  // Loop through the level formats to query for the expected data sizes and shapes.
+
+  // dimensionality is a counter that manages the runs of dense formats to understand
+  // what dimension each tensor level has.
+  int dimensionality = 0;
+  for (size_t i = 0; i < format.size(); i++) {
+    switch (format[i]) {
+      case Dense: {
+        // We don't have to do anything for dense levels except increment the
+        // dimensionality counter.
+        dimensionality++;
+        break;
+      }
+      case Sparse: {
+        auto posName = getTensorLevelFormatName(format[i], i, 0);
+        auto crdName = getTensorLevelFormatName(format[i], i, 1);
+        col.add(posName); col.add(crdName);
+
+        // Get the expected bounds of each region.
+        auto posBounds = getDatasetBounds(posName, dimensionality);
+        auto crdBounds = getDatasetBounds(crdName, 1);
+        auto posIspace = runtime->create_index_space(ctx, posBounds);
+        auto crdIspace = runtime->create_index_space(ctx, crdBounds);
+
+        // If we were in a dense run, then we need to append the dense run.
+        if (dimensionality >= 1 && format[i - 1] == Dense) {
+          result.denseLevelRuns.push_back(posIspace);
+        }
+
+        // TODO (rohany): I'm not sure that I need to launch a task here. Let's try and start
+        //  with doing everything in the individual levels.
+        // Create target regions as well as regions to attach to the instances.
+        auto posReg = runtime->create_logical_region(ctx, posIspace, rectSpace);
+        auto posRegCopy = runtime->create_logical_region(ctx, posIspace, rectSpace);
+        auto crdReg = runtime->create_logical_region(ctx, crdIspace, coordSpace);
+        auto crdRegCopy = runtime->create_logical_region(ctx, crdIspace, coordSpace);
+
+        // Record these regions in the output.
+        result.indices[i].push_back(posReg); result.indicesParents[i].push_back(posReg);
+        result.indices[i].push_back(crdReg); result.indicesParents[i].push_back(crdReg);
+
+        auto posRegDisk = attachHDF5(ctx, runtime, posRegCopy, {{FID_RECT_1, posName}}, filename);
+        auto crdRegDisk = attachHDF5(ctx, runtime, crdRegCopy, {{FID_COORD, crdName}}, filename);
+
+        {
+          CopyLauncher cl;
+          cl.add_copy_requirements(RegionRequirement(posRegCopy, READ_ONLY, EXCLUSIVE, posRegCopy),
+                                   RegionRequirement(posReg, WRITE_ONLY, EXCLUSIVE, posReg));
+          cl.add_copy_requirements(RegionRequirement(crdRegCopy, READ_ONLY, EXCLUSIVE, crdRegCopy),
+                                   RegionRequirement(crdReg, WRITE_ONLY, EXCLUSIVE, crdReg));
+          cl.add_src_field(0, FID_RECT_1); cl.add_dst_field(0, FID_RECT_1);
+          cl.add_src_field(1, FID_COORD); cl.add_dst_field(1, FID_COORD);
+          runtime->issue_copy_operation(ctx, cl);
+        }
+
+        // Clean up after ourselves.
+        runtime->detach_external_resource(ctx, posRegDisk).wait();
+        runtime->detach_external_resource(ctx, crdRegDisk).wait();
+        runtime->destroy_logical_region(ctx, posRegCopy);
+        runtime->destroy_logical_region(ctx, crdRegCopy);
+
+        // We reset dimensionality back to 1 for sparse levels. This allows us to cleanly
+        // encode the fact that we need one more dimension for dense levels after a sparse level.
+        dimensionality = 1;
+        break;
+      }
+      case Singleton:
+        // TODO (rohany): Support singleton.
+        assert(false);
+      default:
+        assert(false);
+    }
+  }
+
+  // Perform similar logic as in the sparse case to load the values.
+  auto valsBounds = getDatasetBounds(LegionTensorValsField, dimensionality);
+  auto valsIspace = runtime->create_index_space(ctx, valsBounds);
+  auto vals = runtime->create_logical_region(ctx, valsIspace, valSpace);
+  auto valsCopy = runtime->create_logical_region(ctx, valsIspace, valSpace);
+  result.vals = vals;
+  result.valsParent = vals;
+
+  if (dimensionality >= 1 && format[format.size() - 1] == Dense) {
+    result.denseLevelRuns.push_back(valsIspace);
+  }
+
+  auto valsDisk = attachHDF5(ctx, runtime, valsCopy, {{FID_VAL, LegionTensorValsField}}, filename);
+  {
+    CopyLauncher cl;
+    cl.add_copy_requirements(RegionRequirement(valsCopy, READ_ONLY, EXCLUSIVE, valsCopy),
+                             RegionRequirement(vals, WRITE_ONLY, EXCLUSIVE, vals));
+    cl.add_src_field(0, FID_VAL); cl.add_dst_field(0, FID_VAL);
+    runtime->issue_copy_operation(ctx, cl);
+  }
+  runtime->detach_external_resource(ctx, valsDisk).wait();
+  runtime->destroy_logical_region(ctx, valsCopy);
+
+  // Final cleanup operations.
+  H5Tclose(pointTy);
+  H5Tclose(rectTy);
+
+  return result;
 }
 
 // This needs to be called in whatever main functions want to use HDF5 utility functions.

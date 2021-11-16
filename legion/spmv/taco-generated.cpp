@@ -3,11 +3,9 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 using namespace Legion;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
-typedef FieldAccessor<READ_WRITE,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorRWint32_t1;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
-typedef FieldAccessor<READ_WRITE,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRWRect_1_1;
 
 struct partitionPackForcomputeLegion {
   LegionTensorPartition aPartition;
@@ -20,105 +18,6 @@ struct task_1Args {
   int32_t c1_dimension;
   int32_t pieces;
 };
-
-void packLegion(Context ctx, Runtime* runtime, LegionTensor* BCSR, LegionTensor* BCOO) {
-  int BCSR1_dimension = BCSR->dims[0];
-  RegionWrapper BCSR2_pos = BCSR->indices[1][0];
-  RegionWrapper BCSR2_crd = BCSR->indices[1][1];
-  auto BCSR2_pos_parent = BCSR->indicesParents[1][0];
-  auto BCSR2_crd_parent = BCSR->indicesParents[1][1];
-  RegionWrapper BCSR_vals = BCSR->vals;
-  auto BCSR_vals_parent = BCSR->valsParent;
-  auto BCSR_vals_rw_accessor = createAccessor<AccessorRWdouble1>(BCSR_vals, FID_VAL);
-  auto BCSR2_pos_accessor = createAccessor<AccessorRWRect_1_1>(BCSR2_pos, FID_RECT_1);
-  auto BCSR2_crd_accessor = createAccessor<AccessorRWint32_t1>(BCSR2_crd, FID_COORD);
-  RegionWrapper BCOO1_pos = BCOO->indices[0][0];
-  RegionWrapper BCOO1_crd = BCOO->indices[0][1];
-  RegionWrapper BCOO2_crd = BCOO->indices[1][0];
-  auto BCOO1_pos_parent = BCOO->indicesParents[0][0];
-  auto BCOO1_crd_parent = BCOO->indicesParents[0][1];
-  auto BCOO2_crd_parent = BCOO->indicesParents[1][0];
-  RegionWrapper BCOO_vals = BCOO->vals;
-  auto BCOO_vals_parent = BCOO->valsParent;
-  auto BCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(BCOO_vals, FID_VAL);
-  auto BCOO1_pos_accessor = createAccessor<AccessorRORect_1_1>(BCOO1_pos, FID_RECT_1);
-  auto BCOO1_crd_accessor = createAccessor<AccessorROint32_t1>(BCOO1_crd, FID_COORD);
-  auto BCOO2_crd_accessor = createAccessor<AccessorROint32_t1>(BCOO2_crd, FID_COORD);
-
-  BCOO1_pos = legionMalloc(ctx, runtime, BCOO1_pos, BCOO1_pos_parent, FID_RECT_1);
-  BCOO1_pos_accessor = createAccessor<AccessorRORect_1_1>(BCOO1_pos, FID_RECT_1);
-  BCOO1_crd = legionMalloc(ctx, runtime, BCOO1_crd, BCOO1_crd_parent, FID_COORD);
-  BCOO1_crd_accessor = createAccessor<AccessorROint32_t1>(BCOO1_crd, FID_COORD);
-  BCOO2_crd = legionMalloc(ctx, runtime, BCOO2_crd, BCOO2_crd_parent, FID_COORD);
-  BCOO2_crd_accessor = createAccessor<AccessorROint32_t1>(BCOO2_crd, FID_COORD);
-  BCOO_vals = legionMalloc(ctx, runtime, BCOO_vals, BCOO_vals_parent, FID_VAL);
-  BCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(BCOO_vals, FID_VAL);
-
-  BCSR2_pos = legionMalloc(ctx, runtime, BCSR2_pos_parent, BCSR1_dimension, FID_RECT_1);
-  BCSR2_pos_accessor = createAccessor<AccessorRWRect_1_1>(BCSR2_pos, FID_RECT_1);
-  BCSR2_pos_accessor[0] = Rect<1>(0, 0);
-  for (int32_t pBCSR2 = 1; pBCSR2 < BCSR1_dimension; pBCSR2++) {
-    BCSR2_pos_accessor[pBCSR2] = Rect<1>(0, 0);
-  }
-  int32_t BCSR2_crd_size = 1048576;
-  BCSR2_crd = legionMalloc(ctx, runtime, BCSR2_crd_parent, BCSR2_crd_size, FID_COORD);
-  BCSR2_crd_accessor = createAccessor<AccessorRWint32_t1>(BCSR2_crd, FID_COORD);
-  int32_t jBCSR = 0;
-  int32_t BCSR_capacity = 1048576;
-  BCSR_vals = legionMalloc(ctx, runtime, BCSR_vals_parent, BCSR_capacity, FID_VAL);
-  BCSR_vals_rw_accessor = createAccessor<AccessorRWdouble1>(BCSR_vals, FID_VAL);
-
-  int32_t iBCOO = BCOO1_pos_accessor[0].lo;
-  int32_t pBCOO1_end = BCOO1_pos_accessor[0].hi + 1;
-
-  while (iBCOO < pBCOO1_end) {
-    int32_t i = BCOO1_crd_accessor[iBCOO];
-    int32_t BCOO1_segend = iBCOO + 1;
-    while (BCOO1_segend < pBCOO1_end && BCOO1_crd_accessor[BCOO1_segend] == i) {
-      BCOO1_segend++;
-    }
-    int32_t pBCSR2_begin = jBCSR;
-
-    for (int32_t jBCOO = iBCOO; jBCOO < BCOO1_segend; jBCOO++) {
-      int32_t j = BCOO2_crd_accessor[jBCOO];
-      if (BCSR_capacity <= jBCSR) {
-        BCSR_vals = legionRealloc(ctx, runtime, BCSR_vals_parent, BCSR_vals, BCSR_capacity * 2, FID_VAL);
-        BCSR_vals_rw_accessor = createAccessor<AccessorRWdouble1>(BCSR_vals, FID_VAL);
-        BCSR_capacity *= 2;
-      }
-      BCSR_vals_rw_accessor[Point<1>(jBCSR)] = BCOO_vals_ro_accessor[Point<1>(jBCOO)];
-      if (BCSR2_crd_size <= jBCSR) {
-        BCSR2_crd = legionRealloc(ctx, runtime, BCSR2_crd_parent, BCSR2_crd, BCSR2_crd_size * 2, FID_COORD);
-        BCSR2_crd_accessor = createAccessor<AccessorRWint32_t1>(BCSR2_crd, FID_COORD);
-        BCSR2_crd_size *= 2;
-      }
-      BCSR2_crd_accessor[jBCSR] = j;
-      jBCSR++;
-    }
-
-    BCSR2_pos_accessor[i].hi = (jBCSR - pBCSR2_begin) - 1;
-    iBCOO = BCOO1_segend;
-  }
-
-  int64_t csBCSR2 = 0;
-  for (int64_t pBCSR20 = 0; pBCSR20 < BCSR1_dimension; pBCSR20++) {
-    int64_t numElemsBCSR2 = BCSR2_pos_accessor[pBCSR20].hi;
-    BCSR2_pos_accessor[pBCSR20].lo = csBCSR2 + BCSR2_pos_accessor[pBCSR20].lo;
-    BCSR2_pos_accessor[pBCSR20].hi = csBCSR2 + BCSR2_pos_accessor[pBCSR20].hi;
-    csBCSR2 += numElemsBCSR2 + 1;
-  }
-  BCSR->indices[1][1] = getSubRegion(ctx, runtime, BCSR2_crd_parent, Rect<1>(0, (jBCSR - 1)));
-
-  BCSR->vals = getSubRegion(ctx, runtime, BCSR_vals_parent, Rect<1>(0, (jBCSR - 1)));
-
-  runtime->unmap_region(ctx, BCSR2_pos);
-  runtime->unmap_region(ctx, BCSR2_crd);
-  runtime->unmap_region(ctx, BCSR_vals);
-  runtime->unmap_region(ctx, BCOO1_pos);
-  runtime->unmap_region(ctx, BCOO1_crd);
-  runtime->unmap_region(ctx, BCOO2_crd);
-  runtime->unmap_region(ctx, BCOO_vals);
-}
 
 partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;

@@ -46,8 +46,23 @@ LegionTensor loadCOOFromHDF5(Legion::Context ctx, Legion::Runtime *runtime, std:
                              Legion::FieldID rectFieldID, Legion::FieldID coordField, size_t coordSize,
                              Legion::FieldID valsField, size_t valsSize);
 
-// Registration function that must be called during initialization if loadCOOFromHDF5 is desired to be used.
-void registerHDF5UtilTasks();
+// Constants for general tensor in HDF5 format storage.
+const char* const LegionTensorDimsField = "dims";
+const char* const LegionTensorValsField = "vals";
 
+// TODO (rohany): Template this over the value type?
+void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t,
+                                std::vector<LegionTensorLevelFormat> format, std::string &filename);
+// TODO (rohany): Template this over the value type?
+LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
+                                          std::vector<LegionTensorLevelFormat> format);
+
+
+
+
+
+
+// Registration function that must be called during initialization if any hdf5_utils task are to be used.
+void registerHDF5UtilTasks();
 
 #endif // TACO_LEGION_HDF5_UTILS_H
