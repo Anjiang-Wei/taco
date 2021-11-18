@@ -1539,6 +1539,29 @@ TEST(distributed, legionSpMV) {
   }
 }
 
+TEST(distributed, legionSpTTV) {
+  int dim = 100;
+  Tensor<double> A("a", {dim, dim}, Format{Dense, Dense});
+  // TODO (rohany): This will be a good test for multi-dimensional pos arrays,
+  //  as well as multi-dimensional compute distributions.
+  Tensor<double> B("B", {dim, dim, dim}, Format{Dense, LgSparse, LgSparse});
+  Tensor<double> c("c", {dim}, Format{Dense});
+
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k");
+  A(i, j) = B(i, j, k) * c(k);
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  auto stmt = A.getAssignment().concretize()
+               .distribute({i}, {io}, {ii}, pieces)
+               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+               .communicate(B(i, j, k), io)
+               .communicate(A(i, j), io)
+               .communicate(c(k), io)
+  ;
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
+  codegen->compile(lowered);
+}
+
 TEST(distributed, legionFormatConverterLib) {
   int dim = 100;
 
@@ -1564,6 +1587,7 @@ TEST(distributed, legionFormatConverterLib) {
 
   // Register all converters.
   addConverter(Format{Dense, LgSparse}, "CSR");
+  addConverter(Format{Dense, LgSparse, LgSparse}, "DSS");
 
   // Dump them all to the output.
   {
