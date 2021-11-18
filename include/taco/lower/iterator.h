@@ -69,6 +69,9 @@ public:
 
   // Special case to identify Dense mode formats.
   bool isDense() const;
+  // Special case to also identify LgSparse formats. We use this to
+  // perform introspection for breaking the "level per level" approach of TACO.
+  bool isLgSparse() const;
 
   /// Properties of level being iterated.
   bool isFull() const;
@@ -142,8 +145,10 @@ public:
   
   /// Return code for level functions that implement coordinate position  
   /// iteration.
+  // TODO (rohany): Delete this function, keeping it right now to hack on things.
   ModeFunction posBounds(const ir::Expr& parentPos) const;
-  ModeFunction posAccess(const ir::Expr& pos, 
+  ModeFunction posBounds(const std::vector<ir::Expr>& parentPositions) const;
+  ModeFunction posAccess(const ir::Expr& pos,
                          const std::vector<ir::Expr>& coords) const;
   
   /// Returns code for level function that implements locate capability.
@@ -161,8 +166,7 @@ public:
   
   /// Return code for level functions that implement append capabilitiy.
   ir::Stmt getAppendCoord(const ir::Expr& p, const ir::Expr& i) const; 
-  ir::Stmt getAppendEdges(const ir::Expr& pPrev, const ir::Expr& pBegin, 
-      const ir::Expr& pEnd) const;
+  ir::Stmt getAppendEdges(const std::vector<ir::Expr>& parentPositions, const ir::Expr& pBegin, const ir::Expr& pEnd) const;
   ir::Expr getSize(const ir::Expr& szPrev) const;
   ir::Stmt getAppendInitEdges(const ir::Expr& pPrevBegin, 
       const ir::Expr& pPrevEnd) const;

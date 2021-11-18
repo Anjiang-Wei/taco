@@ -151,7 +151,9 @@ public:
   /// The position iteration capability's iterator function computes a range
   /// [result[0], result[1]) of positions to iterate over.
   /// `pos_iter_bounds(p_{k−1}) -> begin_{k}, end_{k}`
-  virtual ModeFunction posIterBounds(ir::Expr parentPos, Mode mode) const;
+  /// The interface provides a list of parentPositions in case several parent positions
+  /// are needed to access the bounds of the position iteration.
+  virtual ModeFunction posIterBounds(std::vector<ir::Expr> parentPositions, Mode mode) const;
 
   /// The position iteration capability's access function maps a position
   /// iterator variable to a coordinate (result[0]) and reports if a coordinate
@@ -193,8 +195,10 @@ public:
   virtual ir::Stmt
   getAppendCoord(ir::Expr p, ir::Expr i, Mode mode) const;
 
+  // Similarly to posIterBounds, this function also takes a vector of parent
+  // positions in case the level format needs them.
   virtual ir::Stmt
-  getAppendEdges(ir::Expr pPrev, ir::Expr pBegin, ir::Expr pEnd,
+  getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr pBegin, ir::Expr pEnd,
                  Mode mode) const;
 
   virtual ir::Expr getSize(ir::Expr parentSize, Mode mode) const;

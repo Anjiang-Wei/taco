@@ -1,4 +1,5 @@
 #include "test.h"
+#include "taco/format.h"
 #include "taco/tensor.h"
 #include "taco/index_notation/index_notation.h"
 #include "taco/index_notation/distribution.h"
@@ -1513,7 +1514,7 @@ TEST(distributed, nesting) {
 TEST(distributed, legionSpMV) {
   int dim = 100;
   Tensor<double> a("a", {dim}, Format{Dense});
-  Tensor<double> B("B", {dim, dim}, Format{Dense, LgSparse});
+  Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
   Tensor<double> c("c", {dim}, Format{Dense});
 
   // Perform the actual computation.
@@ -1541,25 +1542,55 @@ TEST(distributed, legionSpMV) {
 
 TEST(distributed, legionSpTTV) {
   int dim = 100;
-  Tensor<double> A("a", {dim, dim}, Format{Dense, Dense});
-  // TODO (rohany): This will be a good test for multi-dimensional pos arrays,
-  //  as well as multi-dimensional compute distributions.
-  Tensor<double> B("B", {dim, dim, dim}, Format{Dense, LgSparse, LgSparse});
-  Tensor<double> c("c", {dim}, Format{Dense});
 
-  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k");
-  A(i, j) = B(i, j, k) * c(k);
-  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  auto stmt = A.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, pieces)
-               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-               .communicate(B(i, j, k), io)
-               .communicate(A(i, j), io)
-               .communicate(c(k), io)
-  ;
-  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  auto gx = ir::Var::make("gx", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  auto gy = ir::Var::make("gy", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f");
+  std::vector<ir::Stmt> stmts;
+  auto add = [&](Format f, std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched) {
+    Tensor<double> A("a", {dim, dim}, Format{Dense, Dense});
+    Tensor<double> B("B", {dim, dim, dim}, f);
+    Tensor<double> c("c", {dim}, Format{Dense});
+    A(i, j) = B(i, j, k) * c(k);
+    auto stmt = sched(A.getAssignment().concretize(), A, B, c);
+    stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+  };
+
+  add(LgFormat({Dense, LgSparse, LgSparse}), "DSS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    return stmt
+           .distribute({i}, {io}, {ii}, {gx})
+           .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+           .communicate(B(i, j, k), io)
+           .communicate(A(i, j), io)
+           .communicate(c(k), io)
+           ;
+  });
+  add(LgFormat({Dense, Dense, LgSparse}), "DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    return stmt
+           .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
+           .fuse(ii, ji, f)
+           .parallelize(f, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+           .communicate(B(i, j, k), jo)
+           .communicate(A(i, j), jo)
+           .communicate(c(k), jo)
+           ;
+    //  // A simpler schedule to start debugging things if they go wrong.
+    //  auto stmt = A.getAssignment().concretize()
+    //      .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
+    //      .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+    //      .communicate(B(i, j, k), jo)
+    //      .communicate(A(i, j), jo)
+    //      .communicate(c(k), jo)
+    //      ;
+  });
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
+  codegen->compile(ir::Block::make(stmts));
+  {
+    ofstream f("../legion/spttv/taco-generated.cpp");
+    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(ir::Block::make(stmts));
+    f.close();
+  }
 }
 
 TEST(distributed, legionFormatConverterLib) {
@@ -1586,8 +1617,9 @@ TEST(distributed, legionFormatConverterLib) {
   };
 
   // Register all converters.
-  addConverter(Format{Dense, LgSparse}, "CSR");
-  addConverter(Format{Dense, LgSparse, LgSparse}, "DSS");
+  addConverter(LgFormat({Dense, LgSparse}), "CSR");
+  addConverter(LgFormat({Dense, LgSparse, LgSparse}), "DSS");
+  addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS");
 
   // Dump them all to the output.
   {

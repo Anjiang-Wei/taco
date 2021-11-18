@@ -186,7 +186,7 @@ ModeFunction ModeFormatImpl::coordBounds(ir::Expr parentPos,
   return ModeFunction();
 }
 
-ModeFunction ModeFormatImpl::posIterBounds(ir::Expr parentPos, Mode mode) const {
+ModeFunction ModeFormatImpl::posIterBounds(std::vector<ir::Expr> parentPositions, Mode mode) const {
   return ModeFunction();
 }
 
@@ -231,7 +231,7 @@ Stmt ModeFormatImpl::getAppendCoord(Expr p, Expr i,
   return Stmt();
 }
 
-Stmt ModeFormatImpl::getAppendEdges(Expr pPrev, Expr pBegin,
+Stmt ModeFormatImpl::getAppendEdges(std::vector<Expr> parentPositions, Expr pBegin,
     Expr pEnd, Mode mode) const {
   return Stmt();
 }

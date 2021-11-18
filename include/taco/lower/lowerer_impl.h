@@ -696,6 +696,10 @@ private:
     std::map<Access, std::vector<ir::Expr>> valuesAccess;
   } valuesAnalyzer;
 
+  // getAllNeededParentPositions get all of the position variables needed for multi-dimensional
+  // access into an iterator.
+  std::vector<ir::Expr> getAllNeededParentPositions(Iterator& iter);
+
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.
   static inline ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");

@@ -114,7 +114,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces - 0 / pieces))
       continue;
 
-    for (int32_t jB = B2_pos_accessor[i].lo; jB < (B2_pos_accessor[i].hi + 1); jB++) {
+    for (int32_t jB = B2_pos_accessor[Point<1>(i)].lo; jB < (B2_pos_accessor[Point<1>(i)].hi + 1); jB++) {
       int32_t j = B2_crd_accessor[jB];
       a_vals_rw_accessor[Point<1>(i)] = a_vals_rw_accessor[Point<1>(i)] + B_vals_ro_accessor[Point<1>(jB)] * c_vals_ro_accessor[Point<1>(j)];
     }

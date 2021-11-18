@@ -2340,6 +2340,7 @@ Stmt LowererImpl::lowerForallPosition(Forall forall, Iterator iterator,
   Stmt boundsCompute;
   Expr startBound, endBound;
   Expr parentPos = iterator.getParent().getPosVar();
+  auto parentPositions = this->getAllNeededParentPositions(iterator);
   if (!provGraph.isUnderived(iterator.getIndexVar())) {
     vector<Expr> bounds = provGraph.deriveIterBounds(iterator.getIndexVar(), definedIndexVarsOrdered, underivedBounds, indexVarToExprMap, iterators);
     startBound = bounds[0];
@@ -2347,7 +2348,7 @@ Stmt LowererImpl::lowerForallPosition(Forall forall, Iterator iterator,
   }
   else if (iterator.getParent().isRoot() || iterator.getParent().isUnique()) {
     // E.g. a compressed mode without duplicates
-    ModeFunction bounds = iterator.posBounds(parentPos);
+    ModeFunction bounds = iterator.posBounds(parentPositions);
     boundsCompute = bounds.compute();
     startBound = bounds[0];
     endBound = bounds[1];
@@ -2366,6 +2367,9 @@ Stmt LowererImpl::lowerForallPosition(Forall forall, Iterator iterator,
   } else {
     taco_iassert(iterator.isOrdered() && iterator.getParent().isOrdered());
     taco_iassert(iterator.isCompact() && iterator.getParent().isCompact());
+    // TODO (rohany): I'm not sure what is happening in this case, but I'm not really considering
+    //  tensor formats that have duplicates etc.
+    taco_iassert(parentPositions.size() == 1);
 
     // E.g. a compressed mode with duplicates. Apply iterator chaining
     Expr parentSegend = iterator.getParent().getSegendVar();
@@ -4046,10 +4050,11 @@ Stmt LowererImpl::codeToInitializeIteratorVar(Iterator iterator, vector<Iterator
   Expr iterVar = iterator.getIteratorVar();
   Expr endVar = iterator.getEndVar();
   if (iterator.hasPosIter()) {
-    Expr parentPos = iterator.getParent().getPosVar();
+    auto parentPositions = this->getAllNeededParentPositions(iterator);
+    auto parentPos = parentPositions.back();
     if (iterator.getParent().isRoot() || iterator.getParent().isUnique()) {
       // E.g. a compressed mode without duplicates
-      ModeFunction bounds = iterator.posBounds(parentPos);
+      ModeFunction bounds = iterator.posBounds(parentPositions);
       result.push_back(bounds.compute());
       // if has a coordinate ranger then need to binary search
       if (any(rangers,
@@ -4367,8 +4372,8 @@ Stmt LowererImpl::generateAppendPositions(vector<Iterator> appenders) {
         return appender.getPosVar();
       }(appender);
       Expr beginPos = appender.getBeginVar();
-      Expr parentPos = appender.getParent().getPosVar();
-      result.push_back(appender.getAppendEdges(parentPos, beginPos, pos));
+      auto parentPositions = this->getAllNeededParentPositions(appender);
+      result.push_back(appender.getAppendEdges(parentPositions, beginPos, pos));
     }
   }
   return result.empty() ? Stmt() : Block::make(result);
@@ -5676,6 +5681,43 @@ ir::Expr LowererImpl::ValuesAnalyzer::getAccessPoint(const Access& access) const
   auto pointArgs = this->valuesAccess.at(access);
   auto pointTy = Point(pointArgs.size());
   return ir::makeConstructor(pointTy, pointArgs);
+}
+
+std::vector<ir::Expr> LowererImpl::getAllNeededParentPositions(Iterator &iter) {
+  taco_iassert(iter.hasPosIter());
+  // If we aren't an LgSparse level, then we only need the parent position. Also if we are the root
+  // iterator or our parent is the root iterator then we should short circuit as well.
+  if (!iter.isLgSparse() || iter.isRoot() || (iter.getParent().isRoot())) {
+    return {iter.getParent().getPosVar()};
+  }
+  // If we are an LgSparse level, the pos level has dimensionality equal to
+  // the number of Dense levels above us, +1 if we run into a level that isn't Dense.
+  std::vector<ir::Expr> positions;
+  auto curIter = iter;
+  while (!curIter.isRoot()) {
+    auto parent = curIter.getParent();
+    // We don't want to include the root iterator's contribution here.
+    if (!parent.isRoot()) {
+      Expr pos;
+      if (parent.isDense()) {
+        // If the parent is dense, we just want that iterator's index variable's current value.
+        pos = this->indexVarToExprMap[parent.getIndexVar()];
+      } else {
+        // Otherwise, we want the actual computed position.
+        pos = parent.getPosVar();
+      }
+      positions.push_back(pos);
+    }
+    if (!parent.isDense()) {
+      break;
+    }
+    curIter = parent;
+  }
+  if (positions.size() == 0) {
+    taco_iassert(false);
+  }
+  auto rev = util::reverse(positions);
+  return {rev.begin(), rev.end()};
 }
 
 }

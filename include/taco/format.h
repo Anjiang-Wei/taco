@@ -160,13 +160,17 @@ public:
   friend bool operator!=(const ModeFormat&, const ModeFormat&);
   friend std::ostream& operator<<(std::ostream&, const ModeFormat&);
 
+  template <typename T>
+  bool is() {
+    return std::dynamic_pointer_cast<const T>(this->impl) != nullptr;
+  }
+
 private:
   std::shared_ptr<const ModeFormatImpl> impl;
 
   friend class ModePack;
   friend class Iterator;
 };
-
 
 class ModeFormatPack {
 public:
@@ -210,6 +214,11 @@ const Format COO(int order, bool isUnique = true, bool isOrdered = true,
                  bool isAoS = false, const std::vector<int>& modeOrdering = {});
 const Format LgCOO(int order, bool isUnique = true, bool isOrdered = true,
                    bool isAoS = false, const std::vector<int>& modeOrdering = {});
+
+// LgFormat is a wrapper to construct formats that inserts extra information in each ModeFormat
+// that is needed as there are now some dependencies between level formats.
+Format LgFormat(std::vector<ModeFormat> formats);
+
 /// @}
 
 /// True if all modes are dense.

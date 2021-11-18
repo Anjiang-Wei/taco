@@ -50,5 +50,4 @@ toString(const T &val) {
   return sstream.str();
 }
 
-
 #endif // TACO_LEGION_STRINGS_H

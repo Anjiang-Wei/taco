@@ -8,6 +8,7 @@
 #include "taco/storage/array.h"
 #include "taco/util/strings.h"
 #include "taco/lower/mode_format_impl.h"
+#include "taco/lower/mode_format_rect_compressed.h"
 
 using namespace std;
 using namespace taco::ir;
@@ -184,6 +185,11 @@ bool Iterator::isDense() const {
   return getMode().defined() && getMode().getModeFormat() == ModeFormat::Dense;
 }
 
+bool Iterator::isLgSparse() const {
+  taco_iassert(defined());
+  return getMode().defined() && getMode().getModeFormat().is<RectCompressedModeFormat>();
+}
+
 bool Iterator::isFull() const {
   taco_iassert(defined());
   if (isDimensionIterator()) return !content->beginVar.defined() && !content->endVar.defined();
@@ -286,7 +292,12 @@ ModeFunction Iterator::coordAccess(const std::vector<ir::Expr>& coords) const {
 
 ModeFunction Iterator::posBounds(const ir::Expr& parentPos) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->posIterBounds(parentPos, getMode());
+  return getMode().getModeFormat().impl->posIterBounds({parentPos}, getMode());
+}
+
+ModeFunction Iterator::posBounds(const std::vector<ir::Expr>& parentPositions) const {
+  taco_iassert(defined() && content->mode.defined());
+  return getMode().getModeFormat().impl->posIterBounds(parentPositions, getMode());
 }
 
 ModeFunction Iterator::posAccess(const ir::Expr& pos, 
@@ -334,11 +345,10 @@ Stmt Iterator::getAppendCoord(const Expr& p, const Expr& i) const {
   return content->mode.getModeFormat().impl->getAppendCoord(p, i, content->mode);
 }
 
-Stmt Iterator::getAppendEdges(const Expr& pPrev, const Expr& pBegin, 
+Stmt Iterator::getAppendEdges(const std::vector<Expr>& parentPositions, const Expr& pBegin,
                               const Expr& pEnd) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getAppendEdges(pPrev, pBegin, pEnd,
-                                                      getMode());
+  return getMode().getModeFormat().impl->getAppendEdges(parentPositions, pBegin, pEnd, getMode());
 }
 
 Expr Iterator::getSize(const ir::Expr& szPrev) const {

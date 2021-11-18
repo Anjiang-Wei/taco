@@ -17,7 +17,7 @@ public:
 
   ModeFormat copy(std::vector<ModeFormat::Property> properties) const override;
 
-  ModeFunction posIterBounds(ir::Expr parentPos, Mode mode) const override;
+  ModeFunction posIterBounds(std::vector<ir::Expr> parentPositions, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords,
                              Mode mode) const override;
   
