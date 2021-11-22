@@ -77,8 +77,10 @@ std::vector<AttrQuery> CompressedModeFormat::attrQueries(
   return {AttrQuery(groupBy, {AttrQuery::Attr(std::make_tuple("nnz", AttrQuery::COUNT, aggregatedCoords))})};
 }
 
-ModeFunction CompressedModeFormat::posIterBounds(Expr parentPos, 
+ModeFunction CompressedModeFormat::posIterBounds(std::vector<Expr> parentPositions,
                                                  Mode mode) const {
+  assert(parentPositions.size() == 1);
+  auto parentPos = parentPositions[0];
   Expr pbegin = Load::make(getPosArray(mode.getModePack()), parentPos);
   Expr pend = Load::make(getPosArray(mode.getModePack()),
                          ir::Add::make(parentPos, 1));
@@ -119,8 +121,10 @@ Stmt CompressedModeFormat::getAppendCoord(Expr p, Expr i, Mode mode) const {
   return Block::make({maybeResizeIdx, storeIdx});
 }
 
-Stmt CompressedModeFormat::getAppendEdges(Expr pPrev, Expr pBegin, Expr pEnd, 
+Stmt CompressedModeFormat::getAppendEdges(std::vector<Expr> parentPositions, Expr pBegin, Expr pEnd,
                                           Mode mode) const {
+  taco_iassert(parentPositions.size() == 1);
+  auto pPrev = parentPositions[0];
   Expr posArray = getPosArray(mode.getModePack());
   ModeFormat parentModeType = mode.getParentModeType();
   Expr edges = (!parentModeType.defined() || parentModeType.hasAppend())

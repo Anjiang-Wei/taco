@@ -21,7 +21,7 @@ public:
   attrQueries(std::vector<IndexVar> parentCoords, 
               std::vector<IndexVar> childCoords) const override;
 
-  ModeFunction posIterBounds(ir::Expr parentPos, Mode mode) const override;
+  ModeFunction posIterBounds(std::vector<ir::Expr> parentPositions, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords,
                                      Mode mode) const override;
 
@@ -29,7 +29,7 @@ public:
   
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, 
                           Mode mode) const override;
-  ir::Stmt getAppendEdges(ir::Expr parentPos, ir::Expr posBegin, 
+  ir::Stmt getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin,
                           ir::Expr posEnd, Mode mode) const override;
   ir::Expr getSize(ir::Expr parentSize, Mode mode) const override;
   ir::Stmt getAppendInitEdges(ir::Expr parentPosBegin, 

@@ -16,18 +16,19 @@ public:
   using ModeFormatImpl::getInsertCoord;
 
   RectCompressedModeFormat();
+  RectCompressedModeFormat(int posDim);
   RectCompressedModeFormat(bool isFull, bool isOrdered,
-                           bool isUnique, bool isZeroless, long long allocSize = LG_DEFAULT_ALLOC_SIZE);
+                           bool isUnique, bool isZeroless, int posDim, long long allocSize = LG_DEFAULT_ALLOC_SIZE);
 
   ModeFormat copy(std::vector<ModeFormat::Property> properties) const override;
 
   // Similarly to the compressed level, this format supports position iterate.
-  ModeFunction posIterBounds(ir::Expr parentPos, Mode mode) const override;
+  ModeFunction posIterBounds(std::vector<ir::Expr> parentPos, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const override;
 
   // Definitions for insertion into a tensor level.
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const override;
-  ir::Stmt getAppendEdges(ir::Expr parentPos, ir::Expr posBegin, ir::Expr posEnd, Mode mode) const override;
+  ir::Stmt getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin, ir::Expr posEnd, Mode mode) const override;
   ir::Expr getSize(ir::Expr szPrev, Mode mode) const override;
   ir::Stmt getAppendInitEdges(ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
@@ -40,7 +41,6 @@ public:
   std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const override;
   std::vector<ModeRegion> getRegions(ir::Expr tensor, int level) const override;
 protected:
-  // TODO (rohany): I could also maybe use this to manage accessors into the regions?
   enum RECT_COMPRESSED_REGIONS {
     POS = 0,
     CRD,
@@ -52,10 +52,12 @@ protected:
 
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;
+  ir::Expr packToPoint(const std::vector<ir::Expr>& args) const;
 
   static inline ir::Expr fidRect1 = ir::Symbol::make("FID_RECT_1");
   static inline ir::Expr fidCoord = ir::Symbol::make("FID_COORD");
   const long long allocSize;
+  int posDim = -1;
 };
 
 }

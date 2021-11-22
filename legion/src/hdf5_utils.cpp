@@ -325,12 +325,12 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
         case Sparse: {
           // Sparse levels are where most of the work is getting done.
           // Create a dataspace for the pos array.
-          // TODO (rohany): Handle when we have multi-dimensional pos arrays.
           auto posDom = runtime->get_index_space_domain(ctx, t.indices[i][0].get_index_space());
-          assert(posDom.dim == 1);
-          hsize_t dims[1];
-          dims[0] = posDom.hi()[0] + 1;
-          hid_t posDataspaceID = H5Screate_simple(1, dims, NULL);
+          std::vector<hsize_t> dims(posDom.dim);
+          for (int dim = 0; dim < posDom.dim; dim++) {
+            dims[dim] = posDom.hi()[dim] + 1;
+          }
+          hid_t posDataspaceID = H5Screate_simple(posDom.dim, dims.data(), NULL);
           col.addHDFdataspace(posDataspaceID);
           // Now create a dataset in this dataspace.
           auto posName = getTensorLevelFormatName(format[i], i, 0);
@@ -341,10 +341,11 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           // Do the same for the crd array.
           auto crdDom = runtime->get_index_space_domain(ctx, t.indices[i][1].get_index_space());
           assert(crdDom.dim == 1);
-          dims[0] = crdDom.hi()[0] + 1;
+          hsize_t crdDims[1];
+          crdDims[0] = crdDom.hi()[0] + 1;
           auto crdName = getTensorLevelFormatName(format[i], i, 1);
           col.add(crdName);
-          hid_t crdDataspaceID = H5Screate_simple(1, dims, NULL);
+          hid_t crdDataspaceID = H5Screate_simple(1, crdDims, NULL);
           col.addHDFdataspace(crdDataspaceID);
           // TODO (rohany): Should the crd region hold int32's or int64s?
           hid_t crdDataset = H5Dcreate2(fileID, crdName, H5T_NATIVE_INT32_g, crdDataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -355,18 +356,20 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
         case Singleton: {
           // TODO (rohany): Support this case. I'm a bit lazy and don't want to consider
           //  it right now since I won't actually be doing parallel computations on COO matrices.
+          assert(false);
         }
         default:
           assert(false);
       }
     }
 
+    // Dump out the values region.
     auto valsDom = runtime->get_index_space_domain(ctx, t.vals.get_index_space());
-    // TODO (rohany): Handle multi-dimensional values arrays.
-    assert(valsDom.dim == 1);
-    hsize_t dims[1];
-    dims[0] = valsDom.hi()[0] + 1;
-    auto valsDataSpace = H5Screate_simple(1, dims, NULL);
+    std::vector<hsize_t> dims(valsDom.dim);
+    for (int dim = 0; dim < valsDom.dim; dim++) {
+      dims[dim] = valsDom.hi()[dim] + 1;
+    }
+    auto valsDataSpace = H5Screate_simple(valsDom.dim, dims.data(), NULL);
     col.addHDFdataspace(valsDataSpace);
     // TODO (rohany): Template this dataset creation on the value type.
     auto valDataset = H5Dcreate2(fileID, LegionTensorValsField, H5T_IEEE_F64LE_g, valsDataSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);

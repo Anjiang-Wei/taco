@@ -4,6 +4,7 @@
 #include "realm/cmdline.h"
 #include "mappers/default_mapper.h"
 #include "legion_utils.h"
+#include "legion_string_utils.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -106,13 +107,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
-    auto yreg = legionMalloc(ctx, runtime, y.vals, y.valsParent, FID_VAL);
-    FieldAccessor<READ_WRITE,valType,1,coord_t, Realm::AffineAccessor<valType, 1, coord_t>> yrw(yreg, FID_VAL);
-    for (int i = 0; i < y.dims[0]; i++) {
-      std::cout << yrw[i] << " ";
-    }
-    std::cout << std::endl;
-    runtime->unmap_region(ctx, yreg);
+    printLegionTensor<valType>(ctx, runtime, y, {Dense});
   }
 
   // Delete the partition pack.

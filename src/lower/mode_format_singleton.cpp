@@ -64,8 +64,10 @@ ModeFormat SingletonModeFormat::copy(
   return ModeFormat(singletonVariant);
 }
 
-ModeFunction SingletonModeFormat::posIterBounds(Expr parentPos, 
+ModeFunction SingletonModeFormat::posIterBounds(std::vector<Expr> parentPositions,
                                                 Mode mode) const {
+  taco_iassert(parentPositions.size() == 1);
+  auto parentPos = parentPositions[0];
   return ModeFunction(Stmt(), {parentPos, ir::Add::make(parentPos, 1)});
 }
 

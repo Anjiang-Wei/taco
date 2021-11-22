@@ -730,6 +730,11 @@ Distribute::Distribute(std::vector<IndexVar> original, std::vector<IndexVar> dis
 IndexStmt Distribute::apply(IndexStmt stmt, std::string* reason) const {
   INIT_REASON(reason);
 
+  // Sanity check some user-provided input sizes.
+  taco_iassert(this->content->original.size() == this->content->distVars.size());
+  taco_iassert(this->content->original.size() == this->content->innerVars.size());
+  taco_iassert(this->content->original.size() == size_t(this->content->grid.getDim()));
+
   ProvenanceGraph pg(stmt);
 
   OutputRaceStrategy raceStrategy = OutputRaceStrategy::NoRaces;

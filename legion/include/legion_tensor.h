@@ -238,5 +238,4 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
   return result;
 }
 
-
 #endif //TACO_LEGION_TENSOR_H

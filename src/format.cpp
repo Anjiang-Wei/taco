@@ -407,7 +407,7 @@ const Format COO(int order, bool isUnique, bool isOrdered, bool isAoS,
   
   ModeFormat::Property ordered = isOrdered ? ModeFormat::ORDERED : 
                                  ModeFormat::NOT_ORDERED;
-  
+
   std::vector<ModeFormatPack> modeTypes;
   modeTypes.push_back(Compressed({ordered, (order == 1 && isUnique) 
                                            ? ModeFormat::UNIQUE 
@@ -432,11 +432,15 @@ const Format LgCOO(int order, bool isUnique, bool isOrdered, bool isAoS,
   taco_uassert(modeOrdering.empty() || modeOrdering.size() == (size_t)order);
   taco_iassert(!isAoS);  // TODO: support array-of-structs COO
 
+  taco_iassert(isUnique);
+  taco_iassert(isOrdered);
+
   ModeFormat::Property ordered = isOrdered ? ModeFormat::ORDERED :
                                  ModeFormat::NOT_ORDERED;
 
   std::vector<ModeFormatPack> modeTypes;
-  modeTypes.push_back(LgSparse({ordered, (order == 1 && isUnique)
+  auto lgSparse = ModeFormat(std::make_shared<RectCompressedModeFormat>(1 /* posDim */));
+  modeTypes.push_back(lgSparse({ordered, (order == 1 && isUnique)
                                            ? ModeFormat::UNIQUE
                                            : ModeFormat::NOT_UNIQUE}));
   if (order > 1) {
@@ -449,6 +453,27 @@ const Format LgCOO(int order, bool isUnique, bool isOrdered, bool isAoS,
   return modeOrdering.empty()
          ? Format(modeTypes)
          : Format(modeTypes, modeOrdering);
+}
+
+Format LgFormat(std::vector<ModeFormat> formats) {
+  int denseRunLength = 0;
+  std::vector<ModeFormatPack> resultFormats;
+  for (auto modeFormat : formats) {
+    if (modeFormat == ModeFormat::Dense) {
+      resultFormats.push_back(modeFormat);
+      denseRunLength++;
+    } else if (modeFormat.is<RectCompressedModeFormat>()) {
+      // Use the dense run length to construct the dimensionality of our sparse level's
+      // position region.
+      auto posDim = (denseRunLength == 0) ? 1 : denseRunLength;
+      resultFormats.push_back(ModeFormat(std::make_shared<RectCompressedModeFormat>(posDim)));
+      // The sparse level ends the dense run.
+      denseRunLength = 1;
+    } else {
+      taco_iassert(false) << "Only Dense and LgSparse formats currently supported";
+    }
+  }
+  return Format{resultFormats};
 }
 
 bool isDense(const Format& format) {
