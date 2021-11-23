@@ -282,6 +282,12 @@ public:
    */
   Iterator levelIterator(ModeAccess) const;
 
+  /**
+   * Retrieve a level iterator corresponding to the given TensorVar. This method
+   * only works when each TensorVar appears once in an IndexStmt.
+   */
+  Iterator levelIterator(TensorVar& tv, int level) const;
+
   std::map<ModeAccess,Iterator> levelIterators() const;
 
   /**

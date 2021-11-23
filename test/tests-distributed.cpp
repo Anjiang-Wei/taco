@@ -1593,6 +1593,40 @@ TEST(distributed, legionSpTTV) {
   }
 }
 
+TEST(distributed, legionSpMM) {
+  int dim = 100;
+
+  auto gx = ir::Var::make("gx", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  auto gy = ir::Var::make("gy", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  Tensor<double> A("A", {dim, dim}, Format{Dense, Dense});
+  Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> C("C", {dim, dim}, Format{Dense, Dense});
+
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f");
+  A(i, j) = B(i, k) * C(k, j);
+  auto stmt = A.getAssignment().concretize()
+               .distribute({i}, {io}, {ii}, Grid(gx))
+               .divide(j, jo, ji, gx)
+               .reorder({jo, ii, ji})
+               .communicate(A(i, j), io)
+               .communicate(B(i, k), io)
+               .communicate(C(k, j), jo)
+               // .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
+               // .communicate(A(i, j), jo)
+               // .communicate(B(i, k), jo)
+               // .communicate(C(k, j), jo)
+               ;
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
+  codegen->compile(lowered);
+  {
+    ofstream f("../legion/spmm/taco-generated.cpp");
+    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(lowered);
+    f.close();
+  }
+}
+
 TEST(distributed, legionFormatConverterLib) {
   int dim = 100;
 
