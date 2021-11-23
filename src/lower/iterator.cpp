@@ -680,6 +680,18 @@ Iterator Iterators::levelIterator(ModeAccess modeAccess) const
   return content->levelIterators.at(modeAccess);
 }
 
+Iterator Iterators::levelIterator(TensorVar& tv, int level) const {
+  taco_iassert(content != nullptr);
+  Iterator iter;
+  for (auto levelIter : this->levelIterators()) {
+    if (levelIter.first.getAccess().getTensorVar() == tv && levelIter.first.getModePos() == size_t(level)) {
+      taco_iassert(!iter.defined());
+      iter = levelIter.second;
+    }
+  }
+  return iter;
+}
+
 std::map<ModeAccess,Iterator> Iterators::levelIterators() const
 {
   return content->levelIterators;

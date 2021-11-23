@@ -490,8 +490,11 @@ protected:
       ir::Expr domainIter,
       Datatype pointT,
       std::map<TensorVar, ir::Expr> partitionings,
+      std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> tensorsAccessed,
-      int taskID);
+      int taskID,
+      ir::Stmt& unpackTensorData
+  );
 
 private:
   bool assemble;
