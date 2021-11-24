@@ -479,6 +479,23 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
   H5Tclose(rectTy);
 }
 
+// Corresponds to TOD_ATTACH_DIM_REGION.
+void attachDimRegionTask(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  std::string filename((char*)task->args, task->arglen);
+  std::map<FieldID, const char*> fieldMap({{FID_COORD, LegionTensorDimsField}});
+  auto dims = regions[0].get_logical_region();
+  auto dimsCopy = runtime->create_logical_region(ctx, dims.get_index_space(), dims.get_field_space());
+  auto dimsPhys = attachHDF5(ctx, runtime, dimsCopy, fieldMap, filename);
+  CopyLauncher cl;
+  cl.add_copy_requirements(
+      RegionRequirement(dimsCopy, READ_ONLY, EXCLUSIVE, dimsCopy).add_field(FID_COORD),
+      RegionRequirement(dims, READ_WRITE, EXCLUSIVE, dims).add_field(FID_COORD)
+  );
+  runtime->issue_copy_operation(ctx, cl);
+  runtime->detach_external_resource(ctx, dimsPhys).wait();
+  runtime->destroy_logical_region(ctx, dimsCopy);
+}
+
 LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
                                           std::vector<LegionTensorLevelFormat> format) {
   hid_t pointTy, rectTy;
@@ -534,18 +551,9 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
   {
     auto dimsISpace = runtime->create_index_space(ctx, Rect<1>(0, format.size() - 1));
     auto dims = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
-    auto dimsCopy = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
-    auto dimsDisk = attachHDF5(ctx, runtime, dimsCopy, {{FID_COORD, LegionTensorDimsField}}, filename);
-
-    {
-      CopyLauncher cl;
-      cl.add_copy_requirements(RegionRequirement(dimsCopy, READ_ONLY, EXCLUSIVE, dimsCopy),
-                               RegionRequirement(dims, WRITE_ONLY, EXCLUSIVE, dims));
-      cl.add_src_field(0, FID_COORD); cl.add_dst_field(0, FID_COORD);
-      runtime->issue_copy_operation(ctx, cl);
-    }
-    runtime->detach_external_resource(ctx, dimsDisk).wait();
-
+    TaskLauncher launcher(TID_ATTACH_DIM_REGION, TaskArgument(filename.c_str(), filename.length()));
+    launcher.add_region_requirement(RegionRequirement(dims, READ_WRITE, EXCLUSIVE, dims, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_COORD));
+    runtime->execute_task(ctx, launcher).wait();
     // Now copy the values into the dims vector in the output.
     {
       auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
@@ -555,8 +563,6 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
       }
       runtime->unmap_region(ctx, dimsMem);
     }
-    runtime->destroy_logical_region(ctx, dimsCopy);
-    runtime->destroy_logical_region(ctx, dims);
   }
 
   // Loop through the level formats to query for the expected data sizes and shapes.
@@ -669,5 +675,10 @@ void registerHDF5UtilTasks() {
     TaskVariantRegistrar registrar(TID_ATTACH_COO_REGIONS, "attachCOORegions");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     Runtime::preregister_task_variant<attachCOORegionsTask>(registrar, "attachCOORegions");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_ATTACH_DIM_REGION, "attachDimRegion");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<attachDimRegionTask>(registrar, "attachDimRegion");
   }
 }
