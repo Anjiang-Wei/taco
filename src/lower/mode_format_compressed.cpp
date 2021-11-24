@@ -79,7 +79,7 @@ std::vector<AttrQuery> CompressedModeFormat::attrQueries(
 
 ModeFunction CompressedModeFormat::posIterBounds(std::vector<Expr> parentPositions,
                                                  Mode mode) const {
-  assert(parentPositions.size() == 1);
+  taco_iassert(parentPositions.size() == 1);
   auto parentPos = parentPositions[0];
   Expr pbegin = Load::make(getPosArray(mode.getModePack()), parentPos);
   Expr pend = Load::make(getPosArray(mode.getModePack()),

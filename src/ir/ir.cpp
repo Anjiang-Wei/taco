@@ -263,7 +263,7 @@ Expr Var::make(std::string name, Datatype type,
 
 Expr Symbol::make(std::string name) {
   Symbol* s = new Symbol;
-  s->type = Auto;
+  s->type = Datatype(Datatype::CppType);
   s->name = name;
   return s;
 }

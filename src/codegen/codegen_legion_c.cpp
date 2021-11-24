@@ -334,7 +334,7 @@ void CodegenLegionC::visit(const Function* func) {
   // themselves as we have a separate procedure for declaring them. We'll also drop region parents,
   // since those are recovered through the same process as regions themselves.
   if (func->name.find("task") != std::string::npos) {
-    std::set<const Expr> regionArgs;
+    std::set<Expr> regionArgs;
     regionArgs.insert(unpackTensorDataFinder.data->regions.begin(), unpackTensorDataFinder.data->regions.end());
     std::vector<Expr> toRemove;
     for (const auto& it : varFinder.varDecls) {

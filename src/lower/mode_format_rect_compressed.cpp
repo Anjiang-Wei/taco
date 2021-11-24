@@ -149,7 +149,7 @@ ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, 
 
 ir::Stmt RectCompressedModeFormat::getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin, ir::Expr posEnd,
                                                   Mode mode) const {
-  assert(parentPositions.size() == size_t(this->posDim));
+  taco_iassert(parentPositions.size() == size_t(this->posDim));
   auto parentPos = this->packToPoint(parentPositions);
   auto posArray = this->getAccessor(mode.getModePack(), POS, ir::RW);
   ModeFormat parentModeType = mode.getParentModeType();
