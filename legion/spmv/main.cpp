@@ -86,24 +86,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   // Partition the tensors.
   auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x, pieces);
-
-  size_t time;
-  // Do some warmup iterations.
-  benchmarkAsyncCall(ctx, runtime, time, [&]() {
-    for (int i = 0; i < warmup; i++) {
-      computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
-    }
+  // Benchmark the computation.
+  auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
+    if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
+    computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
   });
-
-  // Timed iterations.
-  benchmarkAsyncCall(ctx, runtime, time, [&]() {
-    for (int i = 0; i < n; i++) {
-      if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
-      computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
-    }
-  });
-
-  auto avgTime = double(time) / double(n);
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {

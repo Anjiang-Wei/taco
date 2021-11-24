@@ -910,8 +910,9 @@ struct PackTaskArgs : public StmtNode<PackTaskArgs> {
 
 struct UnpackTensorData : public StmtNode<UnpackTensorData> {
   std::vector<ir::Expr> regions;
+  std::vector<ir::Expr> regionParents;
 
-  static Stmt make(std::vector<ir::Expr> regions);
+  static Stmt make(std::vector<ir::Expr> regions, std::vector<ir::Expr> regionParents);
 
   static const IRNodeType _type_info = IRNodeType::UnpackTensorData;
 };

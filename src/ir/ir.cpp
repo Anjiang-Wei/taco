@@ -1023,13 +1023,18 @@ Stmt PackTaskArgs::make(Expr var, int forTaskID, std::vector<Expr> prefixVars, s
   return pa;
 }
 
-Stmt UnpackTensorData::make(std::vector<ir::Expr> regions) {
+Stmt UnpackTensorData::make(std::vector<ir::Expr> regions, std::vector<ir::Expr> regionParents) {
   UnpackTensorData* utd = new UnpackTensorData;
   // Assert that all of the regions are GetProperty objects.
   for (const auto& it : regions) {
     taco_iassert(it.as<GetProperty>());
   }
+  for (const auto& it : regionParents) {
+    taco_iassert(it.as<GetProperty>());
+  }
   utd->regions = regions;
+  utd->regionParents = regionParents;
+  taco_iassert(regions.size() == regionParents.size());
   return utd;
 }
 

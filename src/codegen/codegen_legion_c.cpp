@@ -296,6 +296,9 @@ void CodegenLegionC::visit(const Function* func) {
       doIndent();
       auto reg = unpackTensorDataFinder.data->regions[i];
       out << "PhysicalRegion " << reg << " = regions[" << i << "];\n";
+      doIndent();
+      auto regParent = unpackTensorDataFinder.data->regionParents[i];
+      out << "LogicalRegion " << regParent << " = regions[" << i << "].get_logical_region();\n";
     }
     out << "\n";
   }
@@ -328,7 +331,8 @@ void CodegenLegionC::visit(const Function* func) {
   // TODO (rohany): Hacky way to tell that this function was a task.
   // Remove certain declarations from the head of tasks. In particular, we'll remove dimension
   // sizes, since we'll pass those down through task arguments, and we'll also drop the regions
-  // themselves as we have a separate procedure for declaring them.
+  // themselves as we have a separate procedure for declaring them. We'll also drop region parents,
+  // since those are recovered through the same process as regions themselves.
   if (func->name.find("task") != std::string::npos) {
     std::set<const Expr> regionArgs;
     regionArgs.insert(unpackTensorDataFinder.data->regions.begin(), unpackTensorDataFinder.data->regions.end());
@@ -336,7 +340,9 @@ void CodegenLegionC::visit(const Function* func) {
     for (const auto& it : varFinder.varDecls) {
       if (isa<GetProperty>(it.first)) {
         auto g = it.first.as<GetProperty>();
-        if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first)) {
+        if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first) ||
+            g->property == TensorProperty::ValuesParent || g->property == TensorProperty::IndicesParents ||
+            g->property == TensorProperty::DenseLevelRun) {
           toRemove.push_back(g);
         }
       }
