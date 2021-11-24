@@ -263,8 +263,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   auto posDom = ir::Var::make("pDom" + mode.getName(), domainTy);
   auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false /* deref */, Auto);
   auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
-  auto getPosDom = ir::makeConstructor(domainTy, {getDomain});
-  initStmts.push_back(ir::VarDecl::make(posDom, getPosDom));
+  initStmts.push_back(ir::VarDecl::make(posDom, getDomain));
 
   // Start off each component in the position array as <0, -1>, an empty rectangle
   auto zeros = std::vector<ir::Expr>(this->posDim, 0);
