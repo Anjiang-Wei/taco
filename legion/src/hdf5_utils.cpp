@@ -1,9 +1,11 @@
+#include <cstring>
 #include <default_mapper.h>
 #include "hdf5_utils.h"
 #include "task_ids.h"
 #include "legion_tensor.h"
 #include "string_utils.h"
 #include "taco_legion_header.h"
+#include "legion/legion_utilities.h"
 
 using namespace Legion;
 
@@ -479,22 +481,49 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
   H5Tclose(rectTy);
 }
 
-// Corresponds to TOD_ATTACH_DIM_REGION.
-void attachDimRegionTask(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  std::string filename((char*)task->args, task->arglen);
-  std::map<FieldID, const char*> fieldMap({{FID_COORD, LegionTensorDimsField}});
-  auto dims = regions[0].get_logical_region();
-  auto dimsCopy = runtime->create_logical_region(ctx, dims.get_index_space(), dims.get_field_space());
-  auto dimsPhys = attachHDF5(ctx, runtime, dimsCopy, fieldMap, filename);
-  CopyLauncher cl;
-  cl.add_copy_requirements(
-      RegionRequirement(dimsCopy, READ_ONLY, EXCLUSIVE, dimsCopy).add_field(FID_COORD),
-      RegionRequirement(dims, READ_WRITE, EXCLUSIVE, dims).add_field(FID_COORD)
-  );
-  runtime->issue_copy_operation(ctx, cl);
-  runtime->detach_external_resource(ctx, dimsPhys).wait();
-  runtime->destroy_logical_region(ctx, dimsCopy);
-}
+// Corresponds to TID_ATTACH_SPECIFIC_REGION.
+struct AttachSpecificRegion {
+  void run(Context ctx, Runtime* runtime, std::string& filename, LogicalRegion reg, FieldID fid, std::string fieldName) {
+    Serializer ser;
+    ser.serialize(filename);
+    ser.serialize(fieldName);
+    ser.serialize(fid);
+    TaskLauncher launcher(AttachSpecificRegion::taskID, TaskArgument(ser.get_buffer(), ser.get_used_bytes()));
+    launcher.add_region_requirement(RegionRequirement(reg, READ_WRITE, EXCLUSIVE, reg, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(fid));
+    runtime->execute_task(ctx, launcher).wait();
+  }
+
+  static void task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+    // Unpack data from our task arguments.
+    std::string filename, fieldName;
+    FieldID fid;
+    size_t strLen;
+    Deserializer derez(task->args, task->arglen);
+    derez.deserialize(filename);
+    derez.deserialize(fieldName);
+    derez.deserialize(fid);
+
+    std::map<FieldID, const char*> fieldMap({{fid, fieldName.c_str()}});
+    auto reg = regions[0].get_logical_region();
+    auto copy = runtime->create_logical_region(ctx, reg.get_index_space(), reg.get_field_space());
+    auto regPhys = attachHDF5(ctx, runtime, copy, fieldMap, filename);
+    CopyLauncher cl;
+    cl.add_copy_requirements(
+        RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fid),
+        RegionRequirement(reg, READ_WRITE, EXCLUSIVE, reg).add_field(fid)
+    );
+    runtime->issue_copy_operation(ctx, cl);
+    runtime->detach_external_resource(ctx, regPhys).wait();
+    runtime->destroy_logical_region(ctx, copy);
+  }
+
+  static const int taskID = TID_ATTACH_SPECIFIC_REGION;
+  static void registerTask() {
+    TaskVariantRegistrar registrar(AttachSpecificRegion::taskID, "attachDimRegion");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<AttachSpecificRegion::task>(registrar, "attachSpecificRegion");
+  }
+};
 
 LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
                                           std::vector<LegionTensorLevelFormat> format) {
@@ -551,9 +580,7 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
   {
     auto dimsISpace = runtime->create_index_space(ctx, Rect<1>(0, format.size() - 1));
     auto dims = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
-    TaskLauncher launcher(TID_ATTACH_DIM_REGION, TaskArgument(filename.c_str(), filename.length()));
-    launcher.add_region_requirement(RegionRequirement(dims, READ_WRITE, EXCLUSIVE, dims, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_COORD));
-    runtime->execute_task(ctx, launcher).wait();
+    AttachSpecificRegion().run(ctx, runtime, filename, dims, FID_COORD, LegionTensorDimsField);
     // Now copy the values into the dims vector in the output.
     {
       auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
@@ -594,37 +621,16 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
           result.denseLevelRuns.push_back(posIspace);
         }
 
-        // TODO (rohany): I'm not sure that I need to launch a task here. Let's try and start
-        //  with doing everything in the individual levels.
         // Create target regions as well as regions to attach to the instances.
         auto posReg = runtime->create_logical_region(ctx, posIspace, rectSpace);
-        auto posRegCopy = runtime->create_logical_region(ctx, posIspace, rectSpace);
         auto crdReg = runtime->create_logical_region(ctx, crdIspace, coordSpace);
-        auto crdRegCopy = runtime->create_logical_region(ctx, crdIspace, coordSpace);
-
         // Record these regions in the output.
         result.indices[i].push_back(posReg); result.indicesParents[i].push_back(posReg);
         result.indices[i].push_back(crdReg); result.indicesParents[i].push_back(crdReg);
 
-        auto posRegDisk = attachHDF5(ctx, runtime, posRegCopy, {{FID_RECT_1, posName}}, filename);
-        auto crdRegDisk = attachHDF5(ctx, runtime, crdRegCopy, {{FID_COORD, crdName}}, filename);
-
-        {
-          CopyLauncher cl;
-          cl.add_copy_requirements(RegionRequirement(posRegCopy, READ_ONLY, EXCLUSIVE, posRegCopy),
-                                   RegionRequirement(posReg, WRITE_ONLY, EXCLUSIVE, posReg));
-          cl.add_copy_requirements(RegionRequirement(crdRegCopy, READ_ONLY, EXCLUSIVE, crdRegCopy),
-                                   RegionRequirement(crdReg, WRITE_ONLY, EXCLUSIVE, crdReg));
-          cl.add_src_field(0, FID_RECT_1); cl.add_dst_field(0, FID_RECT_1);
-          cl.add_src_field(1, FID_COORD); cl.add_dst_field(1, FID_COORD);
-          runtime->issue_copy_operation(ctx, cl);
-        }
-
-        // Clean up after ourselves.
-        runtime->detach_external_resource(ctx, posRegDisk).wait();
-        runtime->detach_external_resource(ctx, crdRegDisk).wait();
-        runtime->destroy_logical_region(ctx, posRegCopy);
-        runtime->destroy_logical_region(ctx, crdRegCopy);
+        // Attach data to the regions.
+        AttachSpecificRegion().run(ctx, runtime, filename, posReg, FID_RECT_1, posName);
+        AttachSpecificRegion().run(ctx, runtime, filename, crdReg, FID_COORD, crdName);
 
         // We reset dimensionality back to 1 for sparse levels. This allows us to cleanly
         // encode the fact that we need one more dimension for dense levels after a sparse level.
@@ -643,24 +649,13 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
   auto valsBounds = getDatasetBounds(LegionTensorValsField, dimensionality);
   auto valsIspace = runtime->create_index_space(ctx, valsBounds);
   auto vals = runtime->create_logical_region(ctx, valsIspace, valSpace);
-  auto valsCopy = runtime->create_logical_region(ctx, valsIspace, valSpace);
   result.vals = vals;
   result.valsParent = vals;
 
   if (dimensionality >= 1 && format[format.size() - 1] == Dense) {
     result.denseLevelRuns.push_back(valsIspace);
   }
-
-  auto valsDisk = attachHDF5(ctx, runtime, valsCopy, {{FID_VAL, LegionTensorValsField}}, filename);
-  {
-    CopyLauncher cl;
-    cl.add_copy_requirements(RegionRequirement(valsCopy, READ_ONLY, EXCLUSIVE, valsCopy),
-                             RegionRequirement(vals, WRITE_ONLY, EXCLUSIVE, vals));
-    cl.add_src_field(0, FID_VAL); cl.add_dst_field(0, FID_VAL);
-    runtime->issue_copy_operation(ctx, cl);
-  }
-  runtime->detach_external_resource(ctx, valsDisk).wait();
-  runtime->destroy_logical_region(ctx, valsCopy);
+  AttachSpecificRegion().run(ctx, runtime, filename, vals, FID_VAL, LegionTensorValsField);
 
   // Final cleanup operations.
   H5Tclose(pointTy);
@@ -676,9 +671,5 @@ void registerHDF5UtilTasks() {
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     Runtime::preregister_task_variant<attachCOORegionsTask>(registrar, "attachCOORegions");
   }
-  {
-    TaskVariantRegistrar registrar(TID_ATTACH_DIM_REGION, "attachDimRegion");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
-    Runtime::preregister_task_variant<attachDimRegionTask>(registrar, "attachDimRegion");
-  }
+  AttachSpecificRegion::registerTask();
 }
