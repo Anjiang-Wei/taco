@@ -485,8 +485,10 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
 struct AttachSpecificRegion {
   void run(Context ctx, Runtime* runtime, std::string& filename, LogicalRegion reg, FieldID fid, std::string fieldName) {
     Serializer ser;
-    ser.serialize(filename);
-    ser.serialize(fieldName);
+    ser.serialize(filename.length());
+    ser.serialize(filename.data(), filename.length());
+    ser.serialize(fieldName.length());
+    ser.serialize(fieldName.data(), fieldName.length());
     ser.serialize(fid);
     TaskLauncher launcher(AttachSpecificRegion::taskID, TaskArgument(ser.get_buffer(), ser.get_used_bytes()));
     launcher.add_region_requirement(RegionRequirement(reg, READ_WRITE, EXCLUSIVE, reg, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(fid));
@@ -499,8 +501,10 @@ struct AttachSpecificRegion {
     FieldID fid;
     size_t strLen;
     Deserializer derez(task->args, task->arglen);
-    derez.deserialize(filename);
-    derez.deserialize(fieldName);
+    derez.deserialize(strLen); filename.resize(strLen);
+    derez.deserialize(filename.data(), strLen);
+    derez.deserialize(strLen); fieldName.resize(strLen);
+    derez.deserialize(fieldName.data(), strLen);
     derez.deserialize(fid);
 
     std::map<FieldID, const char*> fieldMap({{fid, fieldName.c_str()}});
