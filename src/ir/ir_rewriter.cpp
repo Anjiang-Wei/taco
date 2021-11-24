@@ -566,7 +566,7 @@ void IRRewriter::visit(const PackTaskArgs* op) {
 }
 
 void IRRewriter::visit(const UnpackTensorData* op) {
-  std::vector<ir::Expr> regions;
+  std::vector<ir::Expr> regions, regionParents;
   bool rewritten = false;
   for (auto& it : op->regions) {
     auto rw = rewrite(it);
@@ -575,8 +575,15 @@ void IRRewriter::visit(const UnpackTensorData* op) {
       rewritten = true;
     }
   }
+  for (auto& it : op->regionParents) {
+    auto rw = rewrite(it);
+    regionParents.push_back(rw);
+    if (rw != it) {
+      rewritten = true;
+    }
+  }
   if (rewritten) {
-    stmt = ir::UnpackTensorData::make(regions);
+    stmt = ir::UnpackTensorData::make(regions, regionParents);
   } else {
     stmt = op;
   }

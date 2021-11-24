@@ -46,6 +46,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
   runtime->fill_field(ctx, c.vals, c.valsParent, FID_VAL, valType(1));
 
+  // Partition the computation.
   partitionPackForcomputeLegionDDS* ddsPart;
   partitionPackForcomputeLegionDSS* dssPart;
   if (bDenseDims == 1) {
@@ -54,32 +55,15 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     ddsPart = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &c, gx, gy);
   }
 
-  auto compute = [&]() {
+  // Run the benchmark.
+  auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
+    if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (bDenseDims == 1) {
       computeLegionDSS(ctx, runtime, &A, &B, &c, dssPart, gx);
     } else {
       computeLegionDDS(ctx, runtime, &A, &B, &c, ddsPart, gx, gy);
     }
-  };
-
-  size_t time;
-  // TODO (rohany): Extract this utility out into a timer function "run with warmup".
-  // Do some warmup iterations.
-  benchmarkAsyncCall(ctx, runtime, time, [&]() {
-    for (int i = 0; i < warmup; i++) {
-      compute();
-    }
   });
-
-  // Timed iterations.
-  benchmarkAsyncCall(ctx, runtime, time, [&]() {
-    for (int i = 0; i < n; i++) {
-      if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); };
-      compute();
-    }
-  });
-
-  auto avgTime = double(time) / double(n);
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {

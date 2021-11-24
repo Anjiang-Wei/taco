@@ -6,6 +6,11 @@
 // TODO (rohany): We might have to add a mirrored "physical tensor" that has all of this stuff
 //  pulled out as the physical one when in a child task.
 // LegionTensor is a representation of a taco_tensor_t for the Legion backend.
+// IMPORTANT: There must be no duplicate IndexSpace's within a LegionTensor. Specifically,
+//  no IndexSpace may appear twice within a LegionTensor (as a Region's IndexSpace or within
+//  a denseLevelRun. This is so that the partitioning color marking operators in generated
+//  code do not attempt to create multiple partitions of the same index space with the same
+//  color value. Future work in improving code generation may lift this restriction.
 struct LegionTensor {
   // TODO (rohany): I want to maybe turn this into a class or at least remove the default
   //  construct for it.
@@ -80,6 +85,10 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
     hi[i] = dims[i] - 1;
   }
   auto ispace = runtime->create_index_space(ctx, Legion::Domain(lo, hi));
+  // Importantly, we make a copy of the ispace here so that the DenseFormatRun
+  // is not an index space of any regions in the tensor. The reasoning for this
+  // is detailed in the LegionTensor struct.
+  auto ispaceCopy = runtime->create_index_space(ctx, Legion::Domain(lo, hi));
   auto fspace = runtime->create_field_space(ctx);
   Legion::FieldAllocator fa = runtime->create_field_allocator(ctx, fspace);
   fa.allocate_field(sizeof(T), valsField);
@@ -93,7 +102,7 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
     .indicesParents = {},
     .vals = reg,
     .valsParent = reg,
-    .denseLevelRuns = {reg.get_index_space()},
+    .denseLevelRuns = {ispaceCopy},
   };
 }
 

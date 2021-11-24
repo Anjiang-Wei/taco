@@ -57,6 +57,29 @@ void benchmarkAsyncCall(Legion::Context ctx, Legion::Runtime* runtime, size_t& t
   time = size_t((end.get<double>() - start.get<double>()) * 1e3);
 }
 
+double benchmarkAsyncCallWithWarmup(Legion::Context ctx, Legion::Runtime* runtime, int warmup, int numIter, std::function<void(void)> f) {
+  // Run warump iterations.
+  {
+    auto start = runtime->get_current_time(ctx);
+    for (int i = 0; i < warmup; i++) {
+      f();
+    }
+    runtime->issue_execution_fence(ctx);
+    auto end = runtime->get_current_time(ctx);
+    start.get<double>(); end.get<double>();
+  }
+  {
+    auto start = runtime->get_current_time(ctx);
+    for (int i = 0; i < numIter; i++) {
+      f();
+    }
+    runtime->issue_execution_fence(ctx);
+    auto end = runtime->get_current_time(ctx);
+    auto ms = size_t((end.get<double>() - start.get<double>()) * 1e3);
+    return double(ms) / double(numIter);
+  }
+}
+
 size_t getGEMMFLOPCount(size_t M, size_t N, size_t K) {
   return M * N * (2 * K - 1);
 }

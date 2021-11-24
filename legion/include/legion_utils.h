@@ -33,6 +33,8 @@ void benchmark(Legion::Context ctx, Legion::Runtime* runtime, std::vector<size_t
 // Variant of benchmark that uses Legion's async timing infrastructure.
 void benchmarkAsyncCall(Legion::Context ctx, Legion::Runtime* runtime, std::vector<size_t>& times, std::function<void(void)> f);
 void benchmarkAsyncCall(Legion::Context ctx, Legion::Runtime* runtime, size_t& times, std::function<void(void)> f);
+// Returns the average time to execute f in ms.
+double benchmarkAsyncCallWithWarmup(Legion::Context ctx, Legion::Runtime* runtime, int warmup, int numIter, std::function<void(void)> f);
 
 // Utility function to get the number of flops performed by various
 // tensor and matrix operations.

@@ -270,6 +270,9 @@ void IRVisitor::visit(const UnpackTensorData* op) {
   for (auto it : op->regions) {
     it.accept(this);
   }
+  for (auto it : op->regionParents) {
+    it.accept(this);
+  }
 }
 
 void IRVisitor::visit(const DeclareStruct* op) {

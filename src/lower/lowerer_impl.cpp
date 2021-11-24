@@ -1220,6 +1220,9 @@ Stmt LowererImpl::lowerForall(Forall forall)
     inParallelLoopDepth++;
   }
 
+  // Record that we might have some fresh locators that need to be recovered.
+  std::vector<Iterator> freshLocateIterators;
+
   // Recover any available parents that were not recoverable previously
   vector<Stmt> recoverySteps;
   for (const IndexVar& varToRecover : provGraph.newlyRecoverableParents(forall.getIndexVar(), definedIndexVars)) {
@@ -1249,17 +1252,13 @@ Stmt LowererImpl::lowerForall(Forall forall)
     // the accessors for those locator variables as part of the recovery process.
     // This is necessary after a fuse transformation, for example: If we fuse
     // two index variables (i, j) into f, then after we've generated the loop for
-    // f, all locate accessors for i and j are now available for use.
-    std::vector<Iterator> itersForVar;
+    // f, all locate accessors for i and j are now available for use. So, remember
+    // that we have some new locate iterators that should be recovered.
     for (auto& iters : iterators.levelIterators()) {
-      // Collect all level iterators that have locate and iterate over
-      // the recovered index variable.
       if (iters.second.getIndexVar() == varToRecover && iters.second.hasLocate()) {
-        itersForVar.push_back(iters.second);
+        freshLocateIterators.push_back(iters.second);
       }
     }
-    // Finally, declare all of the collected iterators' position access variables.
-    recoverySteps.push_back(this->declLocatePosVars(itersForVar));
 
     // place underived guard
     std::vector<ir::Expr> iterBounds = provGraph.deriveIterBounds(varToRecover, definedIndexVarsOrdered, underivedBounds, indexVarToExprMap, iterators);
@@ -1415,7 +1414,15 @@ Stmt LowererImpl::lowerForall(Forall forall)
     }
     // Emit dimension coordinate iteration loop
     else if (iterator.isDimensionIterator()) {
-      loops = lowerForallDimension(forall, point.locators(),
+      // A proper fix to #355. Adding information that those locate iterators are now ready is the
+      // correct way to recover them, rather than blindly duplicating the emitted locators.
+      auto locatorsCopy = std::vector<Iterator>(point.locators());
+      for (auto it : freshLocateIterators) {
+        if (!util::contains(locatorsCopy, it)) {
+          locatorsCopy.push_back(it);
+        }
+      }
+      loops = lowerForallDimension(forall, locatorsCopy,
                                    inserters, appenders, reducedAccesses, recoveryStmt);
     }
     // Emit position iteration loop
@@ -2815,14 +2822,19 @@ Stmt LowererImpl::lowerForallBody(Expr coordinate, IndexStmt stmt,
                                   const set<Access>& reducedAccesses) {
   Stmt initVals = resizeAndInitValues(appenders, reducedAccesses);
 
-  // Inserter positions
-  Stmt declInserterPosVars = declLocatePosVars(inserters);
-
-  // Locate positions
-  Stmt declLocatorPosVars = declLocatePosVars(locators);
+  // There can be overlaps between the inserters and locators, which results in
+  // duplicate emitting of variable declarations. We'll fix that here.
+  std::vector<Iterator> itersWithLocators;
+  for (auto it : inserters) {
+    if (!util::contains(itersWithLocators, it)) { itersWithLocators.push_back(it); }
+  }
+  for (auto it : locators) {
+    if (!util::contains(itersWithLocators, it)) { itersWithLocators.push_back(it); }
+  }
+  auto declPosVars = declLocatePosVars(itersWithLocators);
 
   if (captureNextLocatePos) {
-    capturedLocatePos = Block::make(declInserterPosVars, declLocatorPosVars);
+    capturedLocatePos = declPosVars;
     captureNextLocatePos = false;
   }
 
@@ -2835,8 +2847,7 @@ Stmt LowererImpl::lowerForallBody(Expr coordinate, IndexStmt stmt,
   // TODO: Emit code to insert coordinates
 
   return Block::make(initVals,
-                     declInserterPosVars,
-                     declLocatorPosVars,
+                     declPosVars,
                      body,
                      appendCoords);
 }
@@ -4841,32 +4852,6 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     auto& t = forall.getTransfers()[idx];
     auto& tv = t.getAccess().getTensorVar();
 
-    // TODO (rohany): Hacking.
-
-    // TODO (rohany): This code does not crash when run, it is just included after a lengthy
-    //  debugging process around overloaded equality operators.
-//    Expr currentLevelPartition = 0;
-//    for (int level = 0; level < tv.getOrder(); level++) {
-//      ModeAccess acc(t.getAccess(), level + 1);
-//      auto iter = this->iterators.levelIterator(acc);
-//      std::cout << acc << " " << iter.isDense() << std::endl;
-//      auto backMap = this->iterators.modeAccess(iter);
-//      taco_iassert(acc == backMap);
-//      auto part = iter.getPartitionFromParent(currentLevelPartition);
-////      if (part.defined()) {
-////        result.push_back(part.compute());
-////      }
-//    }
-
-//    auto runs = DenseFormatRuns(t, this->iterators);
-//    std::cout << tv << ":" << std::endl;
-//    for (auto run : runs.runs) {
-//      std::cout << util::join(run.modes) << std::endl;
-//      std::cout << util::join(run.levels) << std::endl;
-//    }
-//
-    // TODO (rohany): End hacking.
-
     // Skip fully replicated tensors.
     if (util::contains(fullyReplicatedTensors, tv)) {
       continue;
@@ -4964,8 +4949,9 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       return args;
     };
 
-    auto partcall = ir::Call::make("runtime->create_index_partition",
-                                   maybeAddPartColor({ctx, denseRunIndexSpace, domain, coloring, partKind}), Auto);
+    // We don't need to mark the index partitions of the denseRuns with colors, since
+    // we aren't going to actually look up the denseLevelRun partitions directly.
+    auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, Auto);
     result.push_back(ir::VarDecl::make(part, partcall));
     // Using this initial partition, partition the rest of the tensor.
     Expr currentLevelPartition = part;
@@ -4990,7 +4976,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     auto partitionVals = ir::Call::make(
         "copyPartition",
         maybeAddPartColor(
-            {ctx, runtime, currentLevelPartition, ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values)}),
+            {ctx, runtime, currentLevelPartition, getLogicalRegion(ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values))}),
         Auto
     );
     auto valsPart = ir::Var::make(tv.getName() + "_vals_partition", Auto);
@@ -5039,6 +5025,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   std::vector<Stmt> itlStmts;
 
   std::vector<ir::Expr> packedTensorData;
+  std::vector<ir::Expr> packedTensorDataParents;
 
   // Construct the region requirements for each tensor argument.
   std::vector<Expr> regionReqs;
@@ -5103,7 +5090,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
           };
         } else {
           regionReqArgs = {
-            regions[i].region,
+            getLogicalRegion(regions[i].region),
             priv.first,
             priv.second,
             regions[i].regionParent,
@@ -5115,6 +5102,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
 
         // Remember the order in which we are packing regions.
         packedTensorData.push_back(regions[i].region);
+        packedTensorDataParents.push_back(regions[i].regionParent);
       }
     }
 
@@ -5150,7 +5138,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
       };
     } else {
       regionReqArgs = {
-        ir::GetProperty::make(tvIR, TensorProperty::Values),
+        getLogicalRegion(ir::GetProperty::make(tvIR, TensorProperty::Values)),
         priv.first,
         priv.second,
         ir::GetProperty::make(tvIR, TensorProperty::ValuesParent),
@@ -5162,6 +5150,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
 
     // Remember the order in which we are packing regions.
     packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
+    packedTensorDataParents.push_back(ir::GetProperty::make(tvIR, TensorProperty::ValuesParent));
 
     // TODO (rohany): Add all the optimizations below about virtual mapping, leaf tasks etc.
     continue;
@@ -5375,7 +5364,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   }
 
   // Set the returned unpackTensorData.
-  unpackTensorData = ir::UnpackTensorData::make(packedTensorData);
+  unpackTensorData = ir::UnpackTensorData::make(packedTensorData, packedTensorDataParents);
 
   result.push_back(ir::Block::make(itlStmts));
   return result;
@@ -5400,7 +5389,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
   // Create a loop that launches instances of the task.
   std::vector<Stmt> taskCallStmts;
   taskCallStmts.push_back(ir::VarDecl::make(point, ir::Deref::make(domainIter, pointT)));
-  std::vector<ir::Expr> packedTensorData;
+  std::vector<ir::Expr> packedTensorData, packedTensorDataParents;
 
   // Construct the region requirements for each tensor.
   std::vector<Expr> regionReqs;
@@ -5458,14 +5447,14 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
           // Use the logical partition to get the target subregion.
           auto subreg = ir::Call::make("runtime->get_logical_subregion_by_color", {ctx, logicalPart, point}, Auto);
           regionReqArgs = {
-            subreg,
+            getLogicalRegion(subreg),
             priv.first,
             priv.second,
             regions[i].regionParent,
           };
         } else {
           regionReqArgs = {
-            regions[i].region,
+            getLogicalRegion(regions[i].region),
             priv.first,
             priv.second,
             regions[i].regionParent,
@@ -5477,6 +5466,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
 
         // Remember the order in which we are packing regions.
         packedTensorData.push_back(regions[i].region);
+        packedTensorDataParents.push_back(regions[i].regionParent);
       }
     }
 
@@ -5504,14 +5494,14 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
       auto subreg = ir::Call::make("runtime->get_logical_subregion_by_color", {ctx, valsPartition, point}, Auto);
       // Now add the region requirement for the values.
       regionReqArgs = {
-          subreg,
+          getLogicalRegion(subreg),
           priv.first,
           priv.second,
           valsParent,
       };
     } else {
       regionReqArgs = {
-          ir::GetProperty::make(tvIR, TensorProperty::Values),
+          getLogicalRegion(ir::GetProperty::make(tvIR, TensorProperty::Values)),
           priv.first,
           priv.second,
           ir::GetProperty::make(tvIR, TensorProperty::ValuesParent),
@@ -5524,6 +5514,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
 
     // Remember the order in which we are packing regions.
     packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
+    packedTensorDataParents.push_back(ir::GetProperty::make(tvIR, TensorProperty::ValuesParent));
 
     // End region requirement construction for sparse tensors.
     continue;
@@ -5661,7 +5652,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
   );
 
   // Set the returned unpackTensorData.
-  unpackTensorData = ir::UnpackTensorData::make(packedTensorData);
+  unpackTensorData = ir::UnpackTensorData::make(packedTensorData, packedTensorDataParents);
 
   result.push_back(tcallLoop);
   return result;

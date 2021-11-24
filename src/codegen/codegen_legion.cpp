@@ -324,7 +324,7 @@ void CodegenLegion::analyzeAndCreateTasks(std::ostream& out) {
 
       // We don't want to visit the variables within GetProperty objects.
       void visit(const GetProperty* g) {
-        if (g->property == TensorProperty::Dimension) {
+        if (g->property == TensorProperty::Dimension || g->property == TensorProperty::DenseLevelRun) {
           if (this->usedVars.size() == 0) {
             this->usedVars.push_back({});
           }

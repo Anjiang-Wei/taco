@@ -6,9 +6,11 @@ using namespace Legion;
 
 IndexSpace get_index_space(PhysicalRegion r) { return r.get_logical_region().get_index_space(); }
 IndexSpace get_index_space(LogicalRegion r) { return r.get_index_space(); }
+IndexSpace get_index_space(RegionWrapper r) { return r.get_index_space(); }
 
 LogicalRegion get_logical_region(PhysicalRegion r) { return r.get_logical_region(); }
 LogicalRegion get_logical_region(LogicalRegion r) { return r; }
+LogicalRegion get_logical_region(RegionWrapper r) { return LogicalRegion(r); }
 
 IndexPartition get_index_partition(IndexPartition i) { return i; }
 IndexPartition get_index_partition(LogicalPartition l) { return l.get_index_partition(); }
@@ -90,7 +92,7 @@ Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runti
   return mapRegion(ctx, runtime, subreg, region, fid);
 }
 
-LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition) {
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition, Color color) {
   std::map<DomainPoint, Domain> domains;
   auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopy);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopy);
@@ -112,10 +114,10 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toC
   }
   // TODO (rohany): Is there a way to get the kind (i.e. disjoint, aliased etc) of the existing partition?
   auto toPartitionIndexSpace = toPartition.get_index_space();
-  auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName);
+  auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName, color);
   return runtime->get_logical_partition(ctx, toPartition, indexPart);
 }
 
-LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition) {
-  return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition);
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition, Color color) {
+  return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition, color);
 }

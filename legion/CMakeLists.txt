@@ -116,6 +116,7 @@ add_cuda_folder(cuda-test)
 # Sparse codes.
 add_app_folder(spmv)
 add_app_folder(spttv)
+add_app_folder(spmm)
 
 # Add a variety of tests for the generated code.
 
