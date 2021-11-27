@@ -408,6 +408,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
   auto pack = mode.getModePack();
   // Partition the pos region in the same way that the parent is partitioned,
   // as there is a pos entry for each of the entries in the parent.
+  // TODO (rohany): Handle formats like {Sparse, Dense}.
   // TODO (rohany): Add these variables to the mode.
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
   auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyPartition", maybeAddColor(
@@ -431,7 +432,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
     "runtime->get_logical_partition",
     {
       ir::ctx,
-      this->getRegion(pack, CRD_PARENT),
+      this->getRegion(pack, CRD),
       createCrdPartCall,
     },
     Auto
@@ -441,16 +442,55 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
   return ModeFunction(ir::Block::make({createPosPart, createCrdPart}), {posPart, crdPart, crdPart});
 }
 
-ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr) const {
-  // Here, we have a partition of the level below us. To go back up
-  // from a child partition, we first partition the crd array, and then
-  // use that to create a dependent partition of the pos array.
+ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr partitionColor) const {
+  auto maybeAddColor = [&](std::vector<ir::Expr> args) {
+    if (!partitionColor.defined()) {
+      return args;
+    }
+    args.push_back(partitionColor);
+    return args;
+  };
+  auto pack = mode.getModePack();
+  // Here, we have a partition of the level below us. There is an entry in
+  // the level below us for each entry in the crd array, so we can copy
+  // that partition to make the partition of crd.
   auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
-  auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("copyChildPartition", {childPartition}, Auto));
+  auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("copyPartition", maybeAddColor(
+      {ir::ctx, ir::runtime, childPartition, this->getRegion(pack, CRD)}), Auto));
+  // Now, using this partition of crd, create a dependent partition of the pos array.
+  // There are some interesting things going on to create the backwards partition of
+  // the pos array from the crd array. First, we use create_partition_by_image_range
+  // to find the backpointers from each crd entry into the containing pos entry.
+  // However, this isn't enough. Only the pos entries that are non-empty will be contained
+  // in one of these dependent partitions, meaning that we won't be able to scan past the
+  // empty pos entries that denote empty rectangles. To remedy this, we exploit the fact
+  // that the crd array is sorted by increasing coordinate position. Therefore, if we know
+  // that two pos entries i and j are in a partition, then all entries between i and j must
+  // also be in the partition (this intuition extends to multiple dimensions). So, we can
+  // "densify" the sparse partition computed via create_partition_by_image_range to get
+  // the final partition of the pos region.
+  // TODO (rohany): Handle formats like {Sparse, Dense}.
+  auto posSparsePart = ir::Var::make("posSparsePart" + mode.getName(), IndexPartition);
+  auto createPosSparsePart = ir::Call::make(
+    "runtime->create_partition_by_preimage_range",
+    {
+      ir::ctx,
+      crdPart,
+      this->getRegion(pack, POS),
+      this->getRegion(pack, POS_PARENT),
+      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdPart}, Auto)
+    },
+    Auto
+  );
+  auto definedPosSparsePart = ir::VarDecl::make(posSparsePart, createPosSparsePart);
+  auto posIndexPart = ir::Var::make("posIndexPart" + mode.getName(), IndexPartition);
+  auto createPosIndexPart = ir::VarDecl::make(posIndexPart, ir::Call::make("densifyPartition", maybeAddColor(
+      {ir::ctx, ir::runtime, ir::getIndexSpace(this->getRegion(pack, POS)), posSparsePart}), Auto));
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
-  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("create_partition_by_preimage_range", {crdPart}, Auto));
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("runtime->get_logical_partition",
+                                                                 {ir::ctx, this->getRegion(pack, POS_PARENT)}, Auto));
   // The resulting partition is a partition of the pos array.
-  return ModeFunction(ir::Block::make({createCrdPart, createPosPart}), {posPart, crdPart, posPart});
+  return ModeFunction(ir::Block::make(createCrdPart, definedPosSparsePart, createPosIndexPart, createPosPart), {posPart, crdPart, posPart});
 }
 
 ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {

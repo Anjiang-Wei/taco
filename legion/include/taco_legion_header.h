@@ -87,6 +87,11 @@ Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::LogicalRegion toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
 
+// densifyPartition creates a partition where the domain of each subregion in part is converted
+// to the bounding box of the partition. This function is currently only implemented for
+// 1-dimensional color spaces.
+Legion::IndexPartition densifyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexSpace ispace, Legion::IndexPartition part, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+
 // Templated helper functions to potentially create accessors. These allow us to generate
 // accessors when we don't have valid PhysicalRegions without running into problems.
 template<typename T>

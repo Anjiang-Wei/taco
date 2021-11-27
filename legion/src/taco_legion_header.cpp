@@ -121,3 +121,18 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toC
 LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition, Color color) {
   return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition, color);
 }
+
+IndexPartition densifyPartition(Context ctx, Runtime* runtime, IndexSpace ispace, IndexPartition part, Color color) {
+  DomainPointColoring coloring;
+  auto colorSpace = runtime->get_index_partition_color_space_name(ctx, part);
+  auto colorSpaceDom = runtime->get_index_space_domain(ctx, colorSpace);
+  assert(colorSpace.get_dim() == 1);
+  for (PointInDomainIterator<1> itr(colorSpaceDom); itr(); itr++) {
+    auto subreg = runtime->get_index_subspace(ctx, part, Color(*itr));
+    auto subDom = runtime->get_index_space_domain(ctx, subreg);
+    // TODO (rohany): Do I need to cast this into a DomainT and call tighten? Or will the domains
+    //  computed by create_partition_by_preimage_range already be tightened?
+    coloring[*itr] = {subDom.lo(), subDom.hi()};
+  }
+  return runtime->create_partition_by_domain(ctx, ispace, coloring, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
+}
