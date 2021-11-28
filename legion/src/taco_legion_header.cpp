@@ -136,3 +136,52 @@ IndexPartition densifyPartition(Context ctx, Runtime* runtime, IndexSpace ispace
   }
   return runtime->create_partition_by_domain(ctx, ispace, coloring, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
+
+AffineProjection::AffineProjection(std::vector<int> projs) : projs(projs), outputDim(0) {
+  for (auto it : this->projs) {
+    if (it != AffineProjection::BOT) {
+      this->outputDim++;
+    }
+  }
+}
+
+int AffineProjection::dim() const {
+  return int(this->projs.size());
+}
+
+int AffineProjection::outDim() const {
+  return this->outputDim;
+}
+
+int AffineProjection::operator[] (size_t i) const {
+  assert(i >= 0 && int(i) < this->dim());
+  return this->projs[i];
+}
+
+Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *runtime, Legion::IndexPartition part,
+                                               Legion::IndexSpace ispace, Color color) {
+  DomainPointColoring col;
+  auto colorSpace = runtime->get_index_partition_color_space(ctx, part);
+  auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, part);
+  assert(colorSpace.get_dim() == 1);
+  for (PointInDomainIterator<1> itr(colorSpace); itr(); itr++) {
+    auto subspace = runtime->get_index_subspace(ctx, part, Color(*itr));
+    auto subspaceDom = runtime->get_index_space_domain(ctx, subspace);
+    assert(subspaceDom.dense());
+    auto projected = Domain(this->apply(subspaceDom.lo()), this->apply(subspaceDom.hi()));
+    col[*itr] = projected;
+  }
+  return runtime->create_partition_by_domain(ctx, ispace, col, colorSpaceName, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
+}
+
+Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point) {
+  assert(point.get_dim() == this->dim());
+  DomainPoint res;
+  res.dim = this->outDim();
+  for (int i = 0; i < this->dim(); i++) {
+    auto mapTo = this->operator[](i);
+    if (mapTo == AffineProjection::BOT) { continue; }
+    res[mapTo] = point[i];
+  }
+  return res;
+}

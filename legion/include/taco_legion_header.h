@@ -109,4 +109,30 @@ T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid) {
   return T();
 }
 
+// Affine project represents a projection between two dense index space partitions
+// as a function f that maps indices in one index space to indices in another.
+class AffineProjection {
+public:
+  // Create an AffineProjection from a vector of indices, where the projs[i]
+  // is mapped location for index i.
+  AffineProjection(std::vector<int> projs);
+  template <typename... Projs>
+  AffineProjection(const Projs&... projs) : AffineProjection({projs...}) {}
+  // Get the input and output dimension sizes of the projection.
+  int dim() const;
+  int outDim() const;
+  // Access the mapped index of this projection.
+  int operator[](size_t i) const;
+  // Apply the projection to an index partition.
+  Legion::IndexPartition apply(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition part, Legion::IndexSpace ispace, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+  // Apply the projection to a domain point.
+  Legion::DomainPoint apply(Legion::DomainPoint point);
+  // Value to represent the \bot value of projection, i.e. an index
+  // that does not map to other indices.
+  const static int BOT = -1;
+private:
+  std::vector<int> projs;
+  int outputDim;
+};
+
 #endif // TACO_LEGION_INCLUDES_H
