@@ -12,6 +12,7 @@
 #include "taco/util/scopedset.h"
 #include "taco/util/uncopyable.h"
 #include "taco/ir_tags.h"
+#include "taco/ir/ir_rewriter.h"
 
 namespace taco {
 
@@ -460,7 +461,6 @@ protected:
   std::vector<ir::Stmt> createIndexPartitions(
       Forall forall,
       ir::Expr domain,
-      std::map<TensorVar, ir::Expr>& partitionings,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
       std::set<TensorVar> fullyReplicatedTensors,
@@ -476,7 +476,6 @@ protected:
   std::vector<ir::Stmt> lowerIndexLaunch(
       Forall forall,
       ir::Expr domain,
-      std::map<TensorVar, ir::Expr> partitionings,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> tensorsAccessed,
       int taskID,
@@ -489,7 +488,6 @@ protected:
       ir::Expr domain,
       ir::Expr domainIter,
       Datatype pointT,
-      std::map<TensorVar, ir::Expr> partitionings,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::set<TensorVar> tensorsAccessed,
       int taskID,
@@ -581,6 +579,9 @@ private:
 
   /// Visitor methods can add code to emit it to the function header.
   std::vector<ir::Stmt> header;
+  // taskHeader is similar to header, but is emitted at the header of
+  // the current task.
+  std::vector<ir::Stmt> taskHeader;
 
   /// Visitor methods can add code to emit it to the function footer.
   std::vector<ir::Stmt> footer;
@@ -591,6 +592,8 @@ private:
   friend class Visitor;
   std::shared_ptr<Visitor> visitor;
 
+  // presentIvars is a set of all index variables that are present in a CIN expression.
+  std::set<IndexVar> presentIvars;
   std::map<IndexVar, std::map<TensorVar, std::vector<std::vector<ir::Expr>>>> derivedBounds;
   IndexVar curDistVar;
   std::map<IndexVar, std::set<IndexVar>> varsInScope;
@@ -702,6 +705,44 @@ private:
   // getAllNeededParentPositions get all of the position variables needed for multi-dimensional
   // access into an iterator.
   std::vector<ir::Expr> getAllNeededParentPositions(Iterator& iter);
+
+  // construct an AffineProjection between the bottom-up partition of the top dense
+  // level pack of `from` to the fully-dense level pack of `to`. It returns an empty
+  // Expr (i.e. !ret.defined()) when the `to` is not partitioned by `from`.
+  ir::Expr constructAffineProjection(Access& from, Access& to);
+
+  // tensorVarToAccess contains a mapping between TensorVar's to the access in
+  // which they appear in the statement. We require that each tensor is used once
+  // in a statement right now, so we only populate this map when this->legion = true.
+  std::map<TensorVar, Access> tensorVarToAccess;
+
+  // BoundsInferenceExprRewriter rewrites an expression by replacing Var's corresponding
+  // to IndexVariable's with their upper and lower bounds, if those variables are not
+  // current defined.
+  struct BoundsInferenceExprRewriter : public ir::IRRewriter {
+    BoundsInferenceExprRewriter(ProvenanceGraph &pg, Iterators &iterators,
+                                std::map<IndexVar, std::vector<ir::Expr>> &underivedBounds,
+                                std::map<IndexVar, ir::Expr> &indexVarToExprMap,
+                                std::set<IndexVar> &inScopeVars,
+                                std::map<ir::Expr, IndexVar>& exprToIndexVarMap,
+                                std::vector<IndexVar>& definedIndexVars,
+                                bool lower,
+                                std::set<IndexVar> presentIvars);
+    void visit(const ir::Var* var);
+    void visit(const ir::GetProperty* gp);
+
+    // Fields needed for the rewriter.
+    ProvenanceGraph& pg;
+    Iterators& iterators;
+    std::map<IndexVar, std::vector<ir::Expr>>& underivedBounds;
+    std::map<IndexVar, ir::Expr>& indexVarToExprMap;
+    std::vector<IndexVar>& definedIndexVars;
+    std::map<ir::Expr, IndexVar>& exprToIndexVarMap;
+    std::set<IndexVar>& inScopeVars;
+    bool lower;
+    std::set<IndexVar> presentIvars;
+    bool changed = false;
+  };
 
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.

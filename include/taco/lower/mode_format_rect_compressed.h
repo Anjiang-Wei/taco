@@ -40,7 +40,10 @@ public:
 
   std::vector<ir::Expr> getArrays(ir::Expr tensor, int mode, int level) const override;
   std::vector<ModeRegion> getRegions(ir::Expr tensor, int level) const override;
-protected:
+
+  ir::Stmt declareModeVariables(Mode& mode) const;
+
+  // Public methods to get information about regions.
   enum RECT_COMPRESSED_REGIONS {
     POS = 0,
     CRD,
@@ -49,10 +52,13 @@ protected:
   };
   ir::Expr getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const;
   ir::Expr getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg, ir::RegionPrivilege priv = ir::RO) const;
+protected:
 
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;
   ir::Expr packToPoint(const std::vector<ir::Expr>& args) const;
+
+  std::string getModeSizeVarName(Mode& mode) const;
 
   static inline ir::Expr fidRect1 = ir::Symbol::make("FID_RECT_1");
   static inline ir::Expr fidCoord = ir::Symbol::make("FID_COORD");

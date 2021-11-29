@@ -156,16 +156,10 @@ ir::Stmt RectCompressedModeFormat::getAppendEdges(std::vector<ir::Expr> parentPo
   auto lo = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "lo", false /* deref */, Int64);
   auto hi = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "hi", false /* deref */, Int64);
 
-  // We start off all locations in the pos array as empty rectangles <0, -1>,
-  // so we can just write the ranges of the crd array directly into the
-  // current position.
-  auto setLo = ir::Assign::make(lo, posBegin);
-  // End bounds are inclusive.
-  auto setHi = ir::Assign::make(hi, ir::Sub::make(posEnd, 1));
-  return ir::Block::make({setLo, setHi});
-
-  /* TODO (rohany): I'm keeping around the code that does this just in case I
-   * end up being wrong and need to revisit this decision.
+  // We need to keep around the code that performs a scan over empty cells for
+  // position splits -- without the intermediate rectangles filled, we cannot
+  // perform binary searches through the pos array.
+  ir::Stmt setLo, setHi;
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
     setLo = ir::Assign::make(lo, posBegin);
     setHi = ir::Assign::make(hi, ir::Sub::make(posEnd, 1));
@@ -174,13 +168,32 @@ ir::Stmt RectCompressedModeFormat::getAppendEdges(std::vector<ir::Expr> parentPo
     setHi = ir::Assign::make(hi, ir::Sub::make(ir::Sub::make(posEnd, posBegin), 1));
   }
   return ir::Block::make({setLo, setHi});
- */
 }
 
 ir::Expr RectCompressedModeFormat::getSize(ir::Expr szPrev, Mode mode) const {
-  // TODO (rohany): I'm not sure that this is correct. It seems like it should
-  //  either get the current size from the region itself or look at high.
-  return ir::Load::make(this->getRegion(mode.getModePack(), POS), szPrev);
+  auto name = this->getModeSizeVarName(mode);
+  taco_iassert(mode.hasVar(name));
+  return mode.getVar(name);
+}
+
+std::string RectCompressedModeFormat::getModeSizeVarName(Mode& mode) const {
+  return mode.getName() + "Size";
+}
+
+ir::Stmt RectCompressedModeFormat::declareModeVariables(Mode& mode) const {
+  std::vector<ir::Stmt> results;
+
+  auto sizeVarName = this->getModeSizeVarName(mode);
+  if (!mode.hasVar(sizeVarName)) {
+    auto var = ir::Var::make(sizeVarName, Int64);
+    mode.addVar(sizeVarName, var);
+    auto call = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, ir::getIndexSpace(this->getRegion(mode.getModePack(), CRD))}, Auto);
+    auto hi = ir::MethodCall::make(call, "hi", {}, false /* deref */, Int64);
+    auto size = ir::Add::make(ir::Load::make(hi, 0), 1);
+    results.push_back(ir::VarDecl::make(var, size));
+  }
+
+  return ir::Block::make(results);
 }
 
 ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::Expr pPrevEnd,
@@ -315,43 +328,43 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   auto pack = mode.getModePack();
   ModeFormat parentModeType = mode.getParentModeType();
 
-  // We don't need to do any sort of prefix sum to finalize our level because we are
-  // already writing valid bounds into our rectangles and have invalid rectangles as
-  // a default value. So all we need to do is just cast down our regions into the tightest
-  // bounds from their parent regions.
-  // TODO (rohany): It's definitely weird here to have to directly access the LegionTensor.
+  auto getSubregionCasts = [&]() {
+    std::vector<ir::Stmt> result;
+    // TODO (rohany): This isn't correct for variable size multi-dimensional pos arrays.
+    if (this->posDim == 1 && !mode.getParentModeType().is<DenseModeFormat>()) {
+      // We also need to restrict the pos array to a subregion if our parent
+      // region is not dense (i.e. we have a variable size).
+      auto posReg = this->getRegion(pack, POS).as<ir::GetProperty>();
+      auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
+      auto levelLoad = ir::Load::make(field, posReg->mode);
+      auto idxLoad = ir::Load::make(levelLoad, posReg->index);
+      auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, POS_PARENT),
+                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(szPrev, 1)})}, Auto);
+      auto setSubReg = ir::Assign::make(idxLoad, subreg);
+      result.push_back(setSubReg);
+    }
 
-  // TODO (rohany): This isn't correct for variable size multi-dimensional pos arrays.
-  std::vector<ir::Stmt> result;
-  if (this->posDim == 1 && !mode.getParentModeType().is<DenseModeFormat>()) {
-    // We also need to restrict the pos array to a subregion if our parent
-    // region is not dense (i.e. we have a variable size).
-    auto posReg = this->getRegion(pack, POS).as<ir::GetProperty>();
+    auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
     auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
-    auto levelLoad = ir::Load::make(field, posReg->mode);
-    auto idxLoad = ir::Load::make(levelLoad, posReg->index);
-    auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, POS_PARENT),
-                                                  ir::makeConstructor(Rect(1), {0, ir::Sub::make(szPrev, 1)})}, Auto);
+    auto levelLoad = ir::Load::make(field, crdReg->mode);
+    auto idxLoad = ir::Load::make(levelLoad, crdReg->index);
+    auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, CRD_PARENT),
+                                                  ir::makeConstructor(Rect(1), {0, ir::Sub::make(sz, 1)})}, Auto);
     auto setSubReg = ir::Assign::make(idxLoad, subreg);
     result.push_back(setSubReg);
-  }
+    return ir::Block::make(result);
+  };
 
-  auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
-  auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
-  auto levelLoad = ir::Load::make(field, crdReg->mode);
-  auto idxLoad = ir::Load::make(levelLoad, crdReg->index);
-  auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, CRD_PARENT),
-                                                ir::makeConstructor(Rect(1), {0, ir::Sub::make(sz, 1)})}, Auto);
-  auto setSubReg = ir::Assign::make(idxLoad, subreg);
-  result.push_back(setSubReg);
-  return ir::Block::make(result);
-
-  /* TODO (rohany): I'm also skipping this logic, as I don't believe that it is
-   *  needed, but I'm keeping it around in case I'm proven wrong.
+  // If our parent is guaranteed to write into every entry of the pos array, then we are done,
+  // and just need to do subregion cast operations.
   if ((isa<ir::Literal>(szPrev) && to<ir::Literal>(szPrev)->equalsScalar(1)) ||
       !parentModeType.defined() || parentModeType.hasAppend()) {
     return getSubregionCasts();
   }
+
+  // Otherwise, we need to perform a prefix sum to fill in the values of the pos array. We need
+  // this even though we have rectangles so that we can binary search over the pos arrays.
+
   // Get the index space domain of the pos array.
   auto posArray = this->getRegion(pack, POS);
   auto domainTy = Domain(this->posDim);
@@ -394,7 +407,6 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   }
   auto setSubReg = getSubregionCasts();
   return ir::Block::make({setPosDom, initCs, loop, setSubReg});
-  */
 }
 
 ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const {
@@ -455,6 +467,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
   // the level below us for each entry in the crd array, so we can copy
   // that partition to make the partition of crd.
   auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
+  auto crdPartIndexPartition = ir::MethodCall::make(crdPart, "get_index_partition", {}, false /* deref */, IndexPartition);
   auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("copyPartition", maybeAddColor(
       {ir::ctx, ir::runtime, childPartition, this->getRegion(pack, CRD)}), Auto));
   // Now, using this partition of crd, create a dependent partition of the pos array.
@@ -475,10 +488,11 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
     "runtime->create_partition_by_preimage_range",
     {
       ir::ctx,
-      crdPart,
+      crdPartIndexPartition,
       this->getRegion(pack, POS),
       this->getRegion(pack, POS_PARENT),
-      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdPart}, Auto)
+      fidRect1,
+      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdPartIndexPartition}, Auto)
     },
     Auto
   );
@@ -488,7 +502,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
       {ir::ctx, ir::runtime, ir::getIndexSpace(this->getRegion(pack, POS)), posSparsePart}), Auto));
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
   auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("runtime->get_logical_partition",
-                                                                 {ir::ctx, this->getRegion(pack, POS_PARENT)}, Auto));
+                                                                 {ir::ctx, this->getRegion(pack, POS), posIndexPart}, Auto));
   // The resulting partition is a partition of the pos array.
   return ModeFunction(ir::Block::make(createCrdPart, definedPosSparsePart, createPosIndexPart, createPosPart), {posPart, crdPart, posPart});
 }

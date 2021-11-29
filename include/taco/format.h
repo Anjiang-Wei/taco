@@ -164,6 +164,11 @@ public:
   bool is() {
     return std::dynamic_pointer_cast<const T>(this->impl) != nullptr;
   }
+  template <typename T>
+  std::shared_ptr<const T> as() {
+    taco_iassert(this->is<T>());
+    return std::dynamic_pointer_cast<const T>(this->impl);
+  }
 
 private:
   std::shared_ptr<const ModeFormatImpl> impl;

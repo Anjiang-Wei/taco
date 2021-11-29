@@ -342,7 +342,8 @@ void CodegenLegionC::visit(const Function* func) {
         auto g = it.first.as<GetProperty>();
         if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first) ||
             g->property == TensorProperty::ValuesParent || g->property == TensorProperty::IndicesParents ||
-            g->property == TensorProperty::DenseLevelRun) {
+            g->property == TensorProperty::DenseLevelRun || g->property == TensorProperty::Indices ||
+            g->property == TensorProperty::Values) {
           toRemove.push_back(g);
         }
       }

@@ -103,3 +103,27 @@ double getGFLOPS(size_t flopCount, size_t ms) {
 void initCuBLAS(Context ctx, Runtime* runtime) {}
 void initCUDA() {}
 #endif
+
+void launchDummyReadOverPartition(Context ctx, Runtime* runtime, LogicalRegion reg, LogicalPartition part, FieldID fid, Domain launchDim) {
+  IndexTaskLauncher launcher(TID_DUMMY_READ_REGION, launchDim, TaskArgument(), ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, reg).add_field(fid));
+  runtime->execute_index_space(ctx, launcher);
+}
+void dummyReadTask(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {}
+void registerDummyReadTasks() {
+  {
+    TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+    Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
+  }
+}

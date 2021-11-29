@@ -235,6 +235,8 @@ public:
   /// See the corresponding comment in mode_format_impl.h.
   std::vector<ModeRegion> getRegions();
 
+  ir::Stmt declareModeVariables() const;
+
   friend bool operator==(const Iterator&, const Iterator&);
   friend bool operator<(const Iterator&, const Iterator&);
   friend std::ostream& operator<<(std::ostream&, const Iterator&);
