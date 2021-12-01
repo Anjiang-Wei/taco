@@ -126,6 +126,8 @@ extern Datatype LegionTensor;
 extern Datatype LegionTensorPartition;
 // A helper widget type to treat LogicalRegion and PhysicalRegion objects the same.
 extern Datatype RegionWrapper;
+// A helper type to perform affine projections between IndexPartitions.
+extern Datatype AffineProjection;
 // An n-dimensional point.
 Datatype Point(int n);
 // An n-dimensional rectangle.

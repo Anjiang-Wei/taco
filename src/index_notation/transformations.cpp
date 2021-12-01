@@ -758,6 +758,10 @@ IndexStmt Distribute::apply(IndexStmt stmt, std::string* reason) const {
       // We've found a reduction that we're attempting to parallelize over.
       raceStrategy = OutputRaceStrategy::ParallelReduction;
     }
+    // If the forall has a fused position space, then it's probably going to require a reduction as well.
+    if (pg.getParentPosRel(target.getIndexVar()) != nullptr) {
+      raceStrategy = OutputRaceStrategy::ParallelReduction;
+    }
   }
 
   // Initial implementation:

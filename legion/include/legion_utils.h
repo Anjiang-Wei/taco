@@ -57,6 +57,11 @@ T average(std::vector<T> vals) {
   return sum / (T(vals.size()));
 }
 
+// Utility functions that perform a naive dummy read operation over a partition
+// in order to force reduction fills to be executed.
+void launchDummyReadOverPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion reg, Legion::LogicalPartition part, Legion::FieldID fid, Legion::Domain launchDim);
+void registerDummyReadTasks();
+
 // We forward declare these functions. If we are building with CUDA, then
 // the CUDA files define them. Otherwise, the CPP files define them.
 void initCuBLAS(Legion::Context ctx, Legion::Runtime* runtime);

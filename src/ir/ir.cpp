@@ -1001,7 +1001,12 @@ Expr GetProperty::makeIndicesAccessor(Expr tensor, std::string nameBase, int mod
   gp->mode = mode;
   gp->index = index;
   gp->name = nameBase + "_accessor";
-  gp->type = Auto;
+  // TODO (rohany): I'm making accessors not an Auto type anymore, and instead making them
+  //  the type of their element. I don't know if this is going to cause some complications
+  //  in the end, but I'm keeping this here so that we know what has changed. This is important
+  //  to do so that arithmetic operations on the results of accessors are typed correctly.
+  // gp->type = Auto;
+  gp->type = args.elemType;
   gp->accessorArgs = args;
   return gp;
 }
@@ -1251,6 +1256,7 @@ std::ostream& operator<<(std::ostream& os, const Expr& expr) {
 // Definitions of common legion expressions.
 ir::Expr ctx = ir::Symbol::make("ctx");
 ir::Expr runtime = ir::Symbol::make("runtime");
+ir::Expr AffineProjectionBot = ir::Symbol::make("AffineProjection::BOT");
 
 } // namespace ir
 } // namespace taco

@@ -973,6 +973,7 @@ bool isValue(Expr expr, T val) {
 // Common legion expressions and types for use in different places.
 extern ir::Expr ctx;
 extern ir::Expr runtime;
+extern ir::Expr AffineProjectionBot;
 
 }}
 #endif

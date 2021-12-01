@@ -454,7 +454,9 @@ void IRPrinter::visit(const Store* op) {
   stream << "[";
   parentPrecedence = Precedence::TOP;
   op->loc.accept(this);
-  if (op->atomic_parallel_unit == ParallelUnit::LegionReduction) {
+  // If we're writing into a reduction accessor, then we need
+  // to use a different operator.
+  if (op->arr.as<GetProperty>() != nullptr && op->arr.as<GetProperty>()->property == TensorProperty::ValuesReductionAccessor) {
     stream << "] <<= ";
   } else {
     stream << "] = ";

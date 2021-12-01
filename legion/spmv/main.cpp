@@ -37,9 +37,14 @@ void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& loc
 }
 
 // Forward declarations for partitioning and computation.
-struct partitionPackForcomputeLegion;
-partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
-void computeLegion(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces);
+struct partitionPackForcomputeLegionRowSplit;
+partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
+void computeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces);
+
+struct partitionPackForcomputeLegionPosSplit;
+partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
+void computeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces);
+
 void registerTacoTasks();
 
 const int TID_INIT_X = 420;
@@ -56,7 +61,7 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
-  bool dump = false;
+  bool dump = false, pos = false;
   int n = 10, pieces = 4, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
@@ -64,6 +69,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
+  parser.add_option_bool("-pos", pos);
   auto args = Runtime::get_input_args();
   assert(parser.parse_command_line(args.argc, args.argv));
   assert(!csrFileName.empty());
@@ -75,21 +81,38 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0));
 
   // Initialize x.
-  auto xEqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
-  auto xEqPart = runtime->create_equal_partition(ctx, x.vals.get_index_space(), xEqPartIspace);
+  auto eqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
+  auto eqPartDomain = runtime->get_index_space_domain(eqPartIspace);
+  auto xEqPart = runtime->create_equal_partition(ctx, x.vals.get_index_space(), eqPartIspace);
   auto xEqLPart = runtime->get_logical_partition(ctx, x.vals, xEqPart);
   {
-    IndexTaskLauncher launcher(TID_INIT_X, runtime->get_index_space_domain(xEqPartIspace), TaskArgument(), ArgumentMap());
+    IndexTaskLauncher launcher(TID_INIT_X, eqPartDomain, TaskArgument(), ArgumentMap());
     launcher.add_region_requirement(RegionRequirement(xEqLPart, 0, WRITE_ONLY, EXCLUSIVE, x.valsParent).add_field(FID_VAL));
     runtime->execute_index_space(ctx, launcher);
   }
 
+  // Create a partition of y for forcing reductions.
+  auto yEqIndexPart = runtime->create_equal_partition(ctx, y.vals.get_index_space(), eqPartIspace);
+  auto yEqLPart = runtime->get_logical_partition(ctx, y.vals, yEqIndexPart);
+
   // Partition the tensors.
-  auto pack = partitionForcomputeLegion(ctx, runtime, &y, &A, &x, pieces);
+  partitionPackForcomputeLegionPosSplit* posPack = nullptr;
+  partitionPackForcomputeLegionRowSplit* rowPack = nullptr;
+  if (pos) {
+    posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces);
+  } else {
+    rowPack = partitionForcomputeLegionRowSplit(ctx, runtime, &y, &A, &x, pieces);
+  }
+
   // Benchmark the computation.
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
-    computeLegion(ctx, runtime, &y, &A, &x, pack, pieces);
+    if (pos) {
+      computeLegionPosSplit(ctx, runtime, &y, &A, &x, posPack, pieces);
+      launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
+    } else {
+      computeLegionRowSplit(ctx, runtime, &y, &A, &x, rowPack, pieces);
+    }
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
@@ -97,8 +120,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     printLegionTensor<valType>(ctx, runtime, y, {Dense});
   }
 
-  // Delete the partition pack.
-  delete pack;
+  // Delete the partition packs.
+  if (posPack != nullptr) delete posPack;
+  if (rowPack != nullptr) delete rowPack;
 }
 
 int main(int argc, char** argv) {
@@ -121,6 +145,7 @@ int main(int argc, char** argv) {
   }
   registerHDF5UtilTasks();
   registerTacoTasks();
+  registerDummyReadTasks();
   Runtime::add_registration_callback(register_mapper);
   return Runtime::start(argc, argv);
 }

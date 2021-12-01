@@ -438,6 +438,8 @@ Datatype DomainPointColoring = Datatype("DomainPointColoring");
 Datatype RegionRequirement = Datatype("RegionRequirement");
 Datatype LegionTensor = Datatype("LegionTensor");
 Datatype LegionTensorPartition = Datatype("LegionTensorPartition");
+Datatype RegionWrapper = Datatype("RegionWrapper");
+Datatype AffineProjection = Datatype("AffineProjection");
 Datatype Point(int n) {
   return templateGen("Point", n);
 }

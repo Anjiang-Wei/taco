@@ -93,6 +93,15 @@ Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runti
 }
 
 LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition, Color color) {
+  auto indexPart = copyPartition(ctx, runtime, toCopy, toPartition.get_index_space(), color);
+  return runtime->get_logical_partition(ctx, toPartition, indexPart);
+}
+
+LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition, Color color) {
+  return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition, color);
+}
+
+Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::IndexSpace toPartition, Legion::Color color) {
   std::map<DomainPoint, Domain> domains;
   auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopy);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopy);
@@ -113,12 +122,10 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toC
       assert(false);
   }
   // TODO (rohany): Is there a way to get the kind (i.e. disjoint, aliased etc) of the existing partition?
-  auto toPartitionIndexSpace = toPartition.get_index_space();
-  auto indexPart = runtime->create_partition_by_domain(ctx, toPartitionIndexSpace, domains, colorSpaceName, color);
-  return runtime->get_logical_partition(ctx, toPartition, indexPart);
+  return runtime->create_partition_by_domain(ctx, toPartition, domains, colorSpaceName, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
 
-LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition toCopy, LogicalRegion toPartition, Color color) {
+Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::IndexSpace toPartition, Legion::Color color) {
   return copyPartition(ctx, runtime, toCopy.get_index_partition(), toPartition, color);
 }
 
@@ -137,20 +144,14 @@ IndexPartition densifyPartition(Context ctx, Runtime* runtime, IndexSpace ispace
   return runtime->create_partition_by_domain(ctx, ispace, coloring, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
 
-AffineProjection::AffineProjection(std::vector<int> projs) : projs(projs), outputDim(0) {
-  for (auto it : this->projs) {
-    if (it != AffineProjection::BOT) {
-      this->outputDim++;
-    }
-  }
-}
+// We have to include this separate definition out here to make the linker happy, as per
+// https://stackoverflow.com/questions/4891067/weird-undefined-symbols-of-static-constants-inside-a-struct-class.
+const int AffineProjection::BOT = -1;
+
+AffineProjection::AffineProjection(std::vector<int> projs) : projs(projs) {}
 
 int AffineProjection::dim() const {
   return int(this->projs.size());
-}
-
-int AffineProjection::outDim() const {
-  return this->outputDim;
 }
 
 int AffineProjection::operator[] (size_t i) const {
@@ -163,25 +164,43 @@ Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *run
   DomainPointColoring col;
   auto colorSpace = runtime->get_index_partition_color_space(ctx, part);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, part);
+  auto outputDomain = runtime->get_index_space_domain(ctx, ispace);
   assert(colorSpace.get_dim() == 1);
   for (PointInDomainIterator<1> itr(colorSpace); itr(); itr++) {
     auto subspace = runtime->get_index_subspace(ctx, part, Color(*itr));
     auto subspaceDom = runtime->get_index_space_domain(ctx, subspace);
     assert(subspaceDom.dense());
-    auto projected = Domain(this->apply(subspaceDom.lo()), this->apply(subspaceDom.hi()));
+    auto projected = Domain(this->apply(subspaceDom.lo(), outputDomain.lo()), this->apply(subspaceDom.hi(), outputDomain.hi()));
     col[*itr] = projected;
   }
   return runtime->create_partition_by_domain(ctx, ispace, col, colorSpaceName, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
 
-Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point) {
+Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point, Legion::DomainPoint outputBounds) {
   assert(point.get_dim() == this->dim());
-  DomainPoint res;
-  res.dim = this->outDim();
+  DomainPoint res, setMask;
+  res.dim = outputBounds.dim;
+  setMask.dim = outputBounds.dim;
+
+  // Initialize the output mask to all 0's.
+  for (int i = 0; i < setMask.dim; i++) {
+    setMask[i] = 0;
+  }
+
+  // Apply the projection.
   for (int i = 0; i < this->dim(); i++) {
     auto mapTo = this->operator[](i);
     if (mapTo == AffineProjection::BOT) { continue; }
     res[mapTo] = point[i];
+    setMask[mapTo] = 1;
   }
+
+  // For all dimensions that haven't been set, take the bounds.
+  for (int i = 0; i < res.dim; i++) {
+    if (setMask[i] == 0) {
+      res[i] = outputBounds[i];
+    }
+  }
+
   return res;
 }

@@ -86,6 +86,8 @@ Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime
 // Copy a partition onto a region with the same index space.
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::LogicalRegion toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::IndexSpace toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalPartition toCopy, Legion::IndexSpace toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);
 
 // densifyPartition creates a partition where the domain of each subregion in part is converted
 // to the bounding box of the partition. This function is currently only implemented for
@@ -108,6 +110,20 @@ T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid) {
   }
   return T();
 }
+template<typename T>
+T createAccessor(Legion::PhysicalRegion& r, Legion::FieldID fid, Legion::ReductionOpID redop) {
+  if (r.is_valid()) {
+    return T(r, fid, redop);
+  }
+  return T();
+}
+template<typename T>
+T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid, Legion::ReductionOpID redop) {
+  if (r.is_valid()) {
+    return T(r, fid, redop);
+  }
+  return T();
+}
 
 // Affine project represents a projection between two dense index space partitions
 // as a function f that maps indices in one index space to indices in another.
@@ -117,22 +133,49 @@ public:
   // is mapped location for index i.
   AffineProjection(std::vector<int> projs);
   template <typename... Projs>
-  AffineProjection(const Projs&... projs) : AffineProjection({projs...}) {}
+  AffineProjection(const Projs&... projs) : AffineProjection(std::vector<int>{projs...}) {}
   // Get the input and output dimension sizes of the projection.
   int dim() const;
-  int outDim() const;
   // Access the mapped index of this projection.
   int operator[](size_t i) const;
   // Apply the projection to an index partition.
   Legion::IndexPartition apply(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition part, Legion::IndexSpace ispace, Legion::Color color = LEGION_AUTO_GENERATE_ID);
-  // Apply the projection to a domain point.
-  Legion::DomainPoint apply(Legion::DomainPoint point);
+  // Apply the projection to a domain point. outputBounds contains the corresponding
+  // bounds for the output point (i.e. zero, n). It is used when positions in the
+  // output are not specified by the AffineProjection, as in situations where a lower
+  // dimensional space is projected onto a higher dimensional space. For dimensions that
+  // are not specified by the projection, they take the value given by outputBounds at
+  // that dimension.
+  Legion::DomainPoint apply(Legion::DomainPoint point, Legion::DomainPoint outputBounds);
   // Value to represent the \bot value of projection, i.e. an index
   // that does not map to other indices.
-  const static int BOT = -1;
+  const static int BOT;
 private:
   std::vector<int> projs;
-  int outputDim;
 };
+
+// TODO (rohany): Double check these integer types.
+// arrayEnd is inclusive (i.e. we must be able to access posArray[arrayEnd] safely.
+template<typename T>
+int taco_binarySearchBefore(T posArray, int arrayStart, int arrayEnd, int target) {
+  if (posArray[arrayEnd].hi < target) {
+    return arrayEnd;
+  }
+  // The binary search range must be exclusive.
+  int lowerBound = arrayStart; // always <= target
+  int upperBound = arrayEnd + 1; // always > target
+  while (upperBound - lowerBound > 1) {
+    // TOOD (rohany): Does this suffer from overflow?
+    int mid = (upperBound + lowerBound) / 2;
+    auto midRect = posArray[mid];
+    // Contains checks lo <= target <= hi.
+    if (midRect.contains(target)) { return mid; }
+    // Either lo > target or target > hi.
+    else if (target > midRect.hi) { lowerBound = mid; }
+    // At this point, only lo > target.
+    else { upperBound = mid; }
+  }
+  return lowerBound;
+}
 
 #endif // TACO_LEGION_INCLUDES_H

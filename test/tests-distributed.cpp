@@ -1513,29 +1513,51 @@ TEST(distributed, nesting) {
 
 TEST(distributed, legionSpMV) {
   int dim = 100;
-  Tensor<double> a("a", {dim}, Format{Dense});
-  Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
-  Tensor<double> c("c", {dim}, Format{Dense});
 
-  // Perform the actual computation.
-  IndexVar i("i"), j("j"), io("io"), ii("ii");
-  a(i) = B(i, j) * c(j);
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  auto stmt = a.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, pieces)
-               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-               .communicate(B(i, j), io)
-               .communicate(a(i), io)
-               .communicate(c(j), io)
-               ;
-  std::cout << stmt << std::endl;
-  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  // auto chunkSize = ir::Var::make("chunkSize", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  // TODO (rohany): Make it possible for split to also take in an expression.
+  auto chunkSize = 2;
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), f("f"), fpos("fpos"), fposi("fposi"), fposo("fposo"), fposio("fposio"), fposii("fposii");
+  std::vector<ir::Stmt> stmts;
+  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c)> sched) {
+    Tensor<double> a("a", {dim}, Format{Dense});
+    Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
+    Tensor<double> c("c", {dim}, Format{Dense});
+    a(i) = B(i, j) * c(j);
+    auto stmt = sched(a.getAssignment().concretize(), a, B, c);
+    stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + name, false /* waitOnFutureMap */));
+  };
+
+  add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
+    return stmt
+           .distribute({i}, {io}, {ii}, pieces)
+           .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+           .communicate(B(i, j), io)
+           .communicate(a(i), io)
+           .communicate(c(j), io)
+           ;
+  });
+
+  add("PosSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
+    return stmt
+           .fuse(i, j, f)
+           .pos(f, fpos, B(i, j))
+           .distribute({fpos}, {fposo}, {fposi}, pieces)
+           .split(fposi, fposio, fposii, chunkSize)
+           .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+           .communicate(a(i), fposo)
+           .communicate(B(i, j), fposo)
+           .communicate(c(j), fposo)
+           ;
+  });
+
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
+  codegen->compile(ir::Block::make(stmts));
   {
     ofstream f("../legion/spmv/taco-generated.cpp");
     auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(lowered);
+    codegen->compile(ir::Block::make(stmts));
     f.close();
   }
 }
@@ -1543,9 +1565,10 @@ TEST(distributed, legionSpMV) {
 TEST(distributed, legionSpTTV) {
   int dim = 100;
 
+  auto chunkSize = 2;
   auto gx = ir::Var::make("gx", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   auto gy = ir::Var::make("gy", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f");
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ff("ff"), ffpos("ffpos"), ffposo("ffposo"), ffposi("ffposi"), ffposio("ffposio"), ffposii("ffposii");
   std::vector<ir::Stmt> stmts;
   auto add = [&](Format f, std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched) {
     Tensor<double> A("a", {dim, dim}, Format{Dense, Dense});
@@ -1582,6 +1605,20 @@ TEST(distributed, legionSpTTV) {
     //      .communicate(A(i, j), jo)
     //      .communicate(c(k), jo)
     //      ;
+  });
+  add(LgFormat({Dense, LgSparse, LgSparse}), "DSSPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    stmt = stmt
+        .fuse(i, j, f)
+        .fuse(f, k, ff)
+        .pos(ff, ffpos, B(i, j, k))
+        .distribute({ffpos}, {ffposo}, {ffposi}, {gx})
+        .split(ffposi, ffposio, ffposii, chunkSize)
+        .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+        .communicate(B(i, j, k), ffposo)
+        .communicate(A(i, j), ffposo)
+        .communicate(c(k), ffposo)
+        ;
+    return stmt;
   });
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(ir::Block::make(stmts));

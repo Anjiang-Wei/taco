@@ -502,6 +502,14 @@ std::vector<ModeRegion> Iterator::getRegions() {
   return mode.getModeFormat().impl->getRegions(getTensor(), mode.getLevel());
 }
 
+ir::Stmt Iterator::declareModeVariables() const {
+  if (this->content->mode.getModeFormat().is<RectCompressedModeFormat>()) {
+    auto rcmf = this->content->mode.getModeFormat().as<RectCompressedModeFormat>();
+    return rcmf->declareModeVariables(this->content->mode);
+  }
+  return ir::Stmt();
+}
+
 bool operator==(const Iterator& a, const Iterator& b) {
   if (a.isDimensionIterator() && b.isDimensionIterator()) {
     return a.getIndexVar() == b.getIndexVar();

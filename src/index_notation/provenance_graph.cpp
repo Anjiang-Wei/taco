@@ -14,6 +14,7 @@
 #include "taco/index_notation/index_notation_printer.h"
 #include "taco/lower/lower.h"
 #include "taco/lower/mode_format_impl.h"
+#include "taco/lower/mode_format_rect_compressed.h"
 
 #include "taco/util/name_generator.h"
 #include "taco/util/scopedmap.h"
@@ -703,7 +704,12 @@ Iterator PosRelNode::getAccessIterator(Iterators iterators, ProvenanceGraph prov
 }
 
 ir::Expr PosRelNode::getAccessCoordArray(Iterators iterators, ProvenanceGraph provGraph) const {
-  return getAccessIterator(iterators, provGraph).getMode().getModePack().getArray(1);
+  auto iter = getAccessIterator(iterators, provGraph).getMode();
+  if (iter.getModeFormat().is<RectCompressedModeFormat>()) {
+    auto rcmf = iter.getModeFormat().as<RectCompressedModeFormat>();
+    return rcmf->getAccessor(iter.getModePack(), RectCompressedModeFormat::CRD);
+  }
+  return iter.getModePack().getArray(1);
 }
 
 
@@ -1533,7 +1539,9 @@ std::vector<ir::Expr> ProvenanceGraph::deriveIterBounds(IndexVar indexVar, std::
   }
 
   IndexVarRel rel = parentRelMap.at(indexVar);
-  return rel.getNode()->deriveIterBounds(indexVar, parentIterBounds, parentCoordBounds, variableNames, iterators, *this);
+  auto bounds = rel.getNode()->deriveIterBounds(indexVar, parentIterBounds, parentCoordBounds, variableNames, iterators, *this);
+  std::function<ir::Expr(ir::Expr)> simplify = [](ir::Expr e) { return ir::simplify(e); };
+  return util::map(bounds, simplify);
 }
 
 bool ProvenanceGraph::hasCoordBounds(IndexVar indexVar) const {
@@ -1566,6 +1574,20 @@ bool ProvenanceGraph::isPosOfAccess(IndexVar indexVar, Access access) const {
     }
   }
   return false;
+}
+
+const PosRelNode* ProvenanceGraph::getParentPosRel(IndexVar indexVar) const {
+  if (this->isUnderived(indexVar)) return nullptr;
+  if (this->parentRelMap.at(indexVar).getRelType() == POS) {
+    return parentRelMap.at(indexVar).getNode<PosRelNode>();
+  }
+  for (const IndexVar& parent : getParents(indexVar)) {
+    auto res = this->getParentPosRel(parent);
+    if (res != nullptr) {
+      return res;
+    }
+  }
+  return nullptr;
 }
 
 bool ProvenanceGraph::hasPosDescendant(taco::IndexVar indexVar) const {
@@ -1671,7 +1693,7 @@ ir::Expr ProvenanceGraph::recoverVariable(taco::IndexVar indexVar,
     parentCoordBounds[parent] = deriveCoordBounds(definedVarOrder, underivedBounds, childVariables, iterators)[underivedParent];
   }
 
-  return rel.getNode()->recoverVariable(indexVar, childVariables, iterators, parentIterBounds, parentCoordBounds, *this);
+  return ir::simplify(rel.getNode()->recoverVariable(indexVar, childVariables, iterators, parentIterBounds, parentCoordBounds, *this));
 }
 
 ir::Stmt ProvenanceGraph::recoverChild(taco::IndexVar indexVar,

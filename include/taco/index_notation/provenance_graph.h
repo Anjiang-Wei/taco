@@ -464,6 +464,12 @@ public:
   /// does the index variable have an exact bound known at compile-time
   bool hasExactBound(IndexVar indexVar) const;
 
+  // getParentPosRel returns a PosRelNode* if the input index variable
+  // has a PosRelNode as a parent. It returns nullptr otherwise. The
+  // returned pointer is not valid to store in data structures for
+  // later use and has a local lifetime.
+  const PosRelNode* getParentPosRel(IndexVar indexVar) const;
+
   /// Once indexVar is defined what new variables become recoverable
   /// returned in order of recovery (ie if parent being recovered allows its parent to also be recovered then parent comes first)
   std::vector<IndexVar> newlyRecoverableParents(IndexVar indexVar, std::set<IndexVar> previouslyDefined) const;
