@@ -2,11 +2,11 @@
 #include "taco_mapper.h"
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 using namespace Legion;
-typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
-typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
-typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
-typedef ReductionAccessor<SumReduction<double>,true,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReducedouble1;
-typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
+typedef FieldAccessor<READ_ONLY,int32_t,1,int32_t,Realm::AffineAccessor<int32_t,1,int32_t>> AccessorROint32_t1;
+typedef FieldAccessor<READ_ONLY,double,1,int32_t,Realm::AffineAccessor<double,1,int32_t>> AccessorROdouble1;
+typedef FieldAccessor<READ_WRITE,double,1,int32_t,Realm::AffineAccessor<double,1,int32_t>> AccessorRWdouble1;
+typedef ReductionAccessor<SumReduction<double>,true,1,int32_t,Realm::AffineAccessor<double,1,int32_t>> AccessorReducedouble1;
+typedef FieldAccessor<READ_ONLY,Rect<1, int32_t>,1,int32_t,Realm::AffineAccessor<Rect<1, int32_t>,1,int32_t>> AccessorRORect_1__int32_t_1;
 
 struct partitionPackForcomputeLegionRowSplit {
   LegionTensorPartition aPartition;
@@ -120,7 +120,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
-  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
+  auto B2_pos_accessor = createAccessor<AccessorRORect_1__int32_t_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
   int64_t pointID1 = io;
@@ -257,8 +257,12 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto a_vals_red_accessor = createAccessor<AccessorReducedouble1>(a_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
-  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
+  auto B2_pos_accessor = createAccessor<AccessorRORect_1__int32_t_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
+
+  DomainT<1> BValsDomain = DomainT<1>(runtime->get_index_space_domain(ctx, get_index_space(B_vals)));
+  if (BValsDomain.empty())
+    return ;
 
   auto B2PosDomain = DomainT<1>(runtime->get_index_space_domain(ctx, get_index_space(B2_pos))).bounds;
   int32_t pB2_begin = B2PosDomain.lo;

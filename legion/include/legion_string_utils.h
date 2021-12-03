@@ -65,7 +65,7 @@ void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
         auto pos = legionMalloc(ctx, runtime, tensor.indices[i][0], tensor.indicesParents[i][0], FID_RECT_1);
         auto crd = legionMalloc(ctx, runtime, tensor.indices[i][1], tensor.indicesParents[i][1], FID_COORD);
         std::cout << "pos " << i << ":" << std::endl;
-        printPhysicalRegion<Legion::Rect<1>>(ctx, runtime, pos, FID_RECT_1);
+        printPhysicalRegion<PosRect>(ctx, runtime, pos, FID_RECT_1);
         std::cout << "crd " << i << ":" << std::endl;
         printPhysicalRegion<int32_t>(ctx, runtime, crd, FID_COORD);
         runtime->unmap_region(ctx, pos);

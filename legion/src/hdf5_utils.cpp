@@ -152,13 +152,13 @@ LegionTensor loadCOOFromHDF5(Context ctx, Runtime* runtime, std::string& filenam
   auto posFspace = runtime->create_field_space(ctx);
   {
     FieldAllocator fa = runtime->create_field_allocator(ctx, posFspace);
-    fa.allocate_field(sizeof(Rect<1>), rectFieldID);
+    fa.allocate_field(sizeof(PosRect), rectFieldID);
   }
   auto posReg = runtime->create_logical_region(ctx, posIndexSpace, posFspace);
   {
     auto preg = runtime->map_region(ctx, RegionRequirement(posReg, WRITE_ONLY, EXCLUSIVE, posReg).add_field(rectFieldID));
-    FieldAccessor<WRITE_ONLY,Rect<1>,1,coord_t, Realm::AffineAccessor<Rect<1>, 1, coord_t>> acc(preg, rectFieldID);
-    acc[0] = Rect<1>(0, nnz - 1);
+    FieldAccessor<WRITE_ONLY,PosRect,1, int32_t, Realm::AffineAccessor<PosRect, 1, int32_t>> acc(preg, rectFieldID);
+    acc[0] = PosRect(0, nnz - 1);
     runtime->unmap_region(ctx, preg);
   }
 
@@ -251,26 +251,26 @@ const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, i
   }
 }
 
-// createHDF5RectType returns a tuple of {Point, Rect} HDF5 types.
-template<int DIM>
+// createHDF5RectType returns a tuple of {Point, Rect} HDF5 types for position arrays.
 std::pair<hid_t, hid_t> createHDF5RectType() {
   // First create a type for Point<T>'s.
-  auto pointTy = H5Tcreate(H5T_COMPOUND, sizeof(Point<DIM>));
+  auto pointTy = H5Tcreate(H5T_COMPOUND, sizeof(PosPoint));
   // Add all coordinates in the point.
   auto offset = 0;
+  const int DIM = 1;
   for (int i = 0; i < DIM; i++) {
     std::string fname = "coord" + toString(i);
-    assert(H5Tinsert(pointTy, fname.c_str(), offset, H5T_NATIVE_INT64_g) >= 0);
+    assert(H5Tinsert(pointTy, fname.c_str(), offset, H5T_NATIVE_INT32_g) >= 0);
     offset += sizeof(long long);
   }
 
   // Now add lo and hi to the Rect type.
-  auto rectTy = H5Tcreate(H5T_COMPOUND, sizeof(Rect<DIM>));
+  auto rectTy = H5Tcreate(H5T_COMPOUND, sizeof(PosRect));
   std::string rectLo = "lo";
   std::string rectHi = "hi";
   offset = 0;
   assert(H5Tinsert(rectTy, rectLo.c_str(), offset, pointTy) >= 0);
-  offset += sizeof(Point<DIM>);
+  offset += sizeof(PosPoint);
   assert(H5Tinsert(rectTy, rectHi.c_str(), offset, pointTy) >= 0);
 
   return std::make_pair(pointTy, rectTy);
@@ -300,7 +300,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
                                 std::vector<LegionTensorLevelFormat> format, std::string &filename) {
   // Declare HDF5 types.
   hid_t pointTy, rectTy;
-  std::tie(pointTy, rectTy) = createHDF5RectType<1>();
+  std::tie(pointTy, rectTy) = createHDF5RectType();
 
   // First, we must create the HDF5 file with all the right datasets and data spaces.
   {
@@ -382,7 +382,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
 
   // Create and map a region for the dimensions array, then attach it to the HDF5 file.
   {
-    auto ispace = runtime->create_index_space(ctx, Rect<1>(0, t.order - 1));
+    auto ispace = runtime->create_index_space(ctx, Rect<1, int32_t>(0, t.order - 1));
     auto fspace = runtime->create_field_space(ctx);
     auto alloc = runtime->create_field_allocator(ctx, fspace);
     alloc.allocate_field(sizeof(int32_t), FID_COORD);
@@ -495,6 +495,20 @@ struct AttachSpecificRegion {
     runtime->execute_task(ctx, launcher).wait();
   }
 
+  static void performAttach(Context ctx, Runtime* runtime, LogicalRegion reg, FieldID fid, std::string filename, std::string fieldName) {
+    std::map<FieldID, const char*> fieldMap({{fid, fieldName.c_str()}});
+    auto copy = runtime->create_logical_region(ctx, reg.get_index_space(), reg.get_field_space());
+    auto regPhys = attachHDF5(ctx, runtime, copy, fieldMap, filename);
+    CopyLauncher cl;
+    cl.add_copy_requirements(
+        RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fid),
+        RegionRequirement(reg, READ_WRITE, EXCLUSIVE, reg).add_field(fid)
+    );
+    runtime->issue_copy_operation(ctx, cl);
+    runtime->detach_external_resource(ctx, regPhys).wait();
+    runtime->destroy_logical_region(ctx, copy);
+  }
+
   static void task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
     // Unpack data from our task arguments.
     std::string filename, fieldName;
@@ -507,18 +521,7 @@ struct AttachSpecificRegion {
     derez.deserialize(fieldName.data(), strLen);
     derez.deserialize(fid);
 
-    std::map<FieldID, const char*> fieldMap({{fid, fieldName.c_str()}});
-    auto reg = regions[0].get_logical_region();
-    auto copy = runtime->create_logical_region(ctx, reg.get_index_space(), reg.get_field_space());
-    auto regPhys = attachHDF5(ctx, runtime, copy, fieldMap, filename);
-    CopyLauncher cl;
-    cl.add_copy_requirements(
-        RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fid),
-        RegionRequirement(reg, READ_WRITE, EXCLUSIVE, reg).add_field(fid)
-    );
-    runtime->issue_copy_operation(ctx, cl);
-    runtime->detach_external_resource(ctx, regPhys).wait();
-    runtime->destroy_logical_region(ctx, copy);
+    performAttach(ctx, runtime, regions[0].get_logical_region(), fid, filename, fieldName);
   }
 
   static const int taskID = TID_ATTACH_SPECIFIC_REGION;
@@ -532,7 +535,7 @@ struct AttachSpecificRegion {
 LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
                                           std::vector<LegionTensorLevelFormat> format) {
   hid_t pointTy, rectTy;
-  std::tie(pointTy, rectTy) = createHDF5RectType<1>();
+  std::tie(pointTy, rectTy) = createHDF5RectType();
 
   ResourceCollector col;
 
@@ -547,7 +550,7 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
   auto rectSpace = runtime->create_field_space(ctx);
   {
     auto fa = runtime->create_field_allocator(ctx, rectSpace);
-    fa.allocate_field(sizeof(Rect<1>), FID_RECT_1);
+    fa.allocate_field(sizeof(PosRect), FID_RECT_1);
   }
   auto coordSpace = runtime->create_field_space(ctx);
   {
@@ -577,18 +580,20 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
     H5Sclose(dspace);
     H5Dclose(dset);
     H5Fclose(f);
-    return Domain(lo, hi);
+    assert(dim == 1);
+    return Rect<1, int32_t>(0, dims[0] - 1);
+    // return Domain(lo, hi);
   };
 
   // Load the dimensions region.
   {
-    auto dimsISpace = runtime->create_index_space(ctx, Rect<1>(0, format.size() - 1));
+    auto dimsISpace = runtime->create_index_space(ctx, Rect<1, int32_t>(0, format.size() - 1));
     auto dims = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
     AttachSpecificRegion().run(ctx, runtime, filename, dims, FID_COORD, LegionTensorDimsField);
     // Now copy the values into the dims vector in the output.
     {
       auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
-      FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
+      FieldAccessor<READ_WRITE,int32_t,1, int32_t, Realm::AffineAccessor<int32_t, 1, int32_t>> acc(dimsMem, FID_COORD);
       for (int i = 0; i < result.order; i++) {
         result.dims[i] = acc[i];
       }

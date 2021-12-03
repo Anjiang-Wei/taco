@@ -132,6 +132,9 @@ extern Datatype AffineProjection;
 Datatype Point(int n);
 // An n-dimensional rectangle.
 Datatype Rect(int n);
+// An n-dimensional rectangle that uses an int32_t as the
+// coordinate values instead of a legion::coord_t.
+Datatype PosRect(int n);
 // An iterator through an n-dimensional rectangle.
 Datatype PointInDomainIterator(int n);
 // A n-dimensional domain.

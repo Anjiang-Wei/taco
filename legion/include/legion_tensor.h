@@ -3,6 +3,10 @@
 
 #include "legion.h"
 
+// An alias for a Rect<> used to describe pos regions.
+typedef Legion::Rect<1, int> PosRect;
+typedef Legion::Point<1, int> PosPoint;
+
 // TODO (rohany): We might have to add a mirrored "physical tensor" that has all of this stuff
 //  pulled out as the physical one when in a child task.
 // LegionTensor is a representation of a taco_tensor_t for the Legion backend.
@@ -79,16 +83,16 @@ enum LegionTensorLevelFormat {
 template<int DIM, typename T>
 LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, std::vector<int32_t> dims, Legion::FieldID valsField) {
   assert(dims.size() == DIM);
-  Legion::Point<DIM> lo, hi;
+  Legion::Point<DIM, int32_t> lo, hi;
   for (int i = 0; i < DIM; i++) {
     lo[i] = 0;
     hi[i] = dims[i] - 1;
   }
-  auto ispace = runtime->create_index_space(ctx, Legion::Domain(lo, hi));
+  auto ispace = runtime->create_index_space(ctx, Legion::Rect<DIM, int32_t>(lo, hi));
   // Importantly, we make a copy of the ispace here so that the DenseFormatRun
   // is not an index space of any regions in the tensor. The reasoning for this
   // is detailed in the LegionTensor struct.
-  auto ispaceCopy = runtime->create_index_space(ctx, Legion::Domain(lo, hi));
+  auto ispaceCopy = runtime->create_index_space(ctx, Legion::Rect<DIM, int32_t>(lo, hi));
   auto fspace = runtime->create_field_space(ctx);
   Legion::FieldAllocator fa = runtime->create_field_allocator(ctx, fspace);
   fa.allocate_field(sizeof(T), valsField);
@@ -135,7 +139,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
   }
   {
     Legion::FieldAllocator fa = runtime->create_field_allocator(ctx, posFspace);
-    fa.allocate_field(sizeof(Legion::Rect<1>), posField);
+    fa.allocate_field(sizeof(PosRect), posField);
   }
   {
     Legion::FieldAllocator fa = runtime->create_field_allocator(ctx, crdFspace);
@@ -210,7 +214,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         result.indicesParents[level] = {posReg, crdReg};
 
         // Fill the regions as well.
-        runtime->fill_field(ctx, posReg, posReg, posField, Legion::Rect<1>(0, 0));
+        runtime->fill_field(ctx, posReg, posReg, posField, PosRect(0, 0));
         // TODO (rohany): Should crd hold int64_t's?
         runtime->fill_field(ctx, crdReg, crdReg, crdField, int32_t(0));
 

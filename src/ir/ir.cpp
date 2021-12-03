@@ -539,6 +539,8 @@ std::string accessorTypeString(ir::Expr expr) {
       switch (c) {
         case '<':
         case '>':
+        case ',':
+        case ' ':
           result << '_';
           break;
         default:

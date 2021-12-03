@@ -446,6 +446,9 @@ Datatype Point(int n) {
 Datatype Rect(int n) {
   return templateGen("Rect", n);
 }
+Datatype PosRect(int n) {
+  return Datatype("Rect<" + util::toString(n) + ", int32_t>");
+}
 Datatype PointInDomainIterator(int n) {
   return templateGen("PointInDomainIterator", n);
 }

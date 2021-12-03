@@ -49,7 +49,7 @@ void registerTacoTasks();
 
 const int TID_INIT_X = 420;
 void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  typedef FieldAccessor<WRITE_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorD;
+  typedef FieldAccessor<WRITE_ONLY,double,1,int32_t,Realm::AffineAccessor<double,1,int32_t>> AccessorD;
   auto x = regions[0];
   auto dom = runtime->get_index_space_domain(x.get_logical_region().get_index_space());
   AccessorD xAcc(x, FID_VAL);

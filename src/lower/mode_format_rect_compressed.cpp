@@ -102,7 +102,7 @@ std::vector<ModeRegion> RectCompressedModeFormat::getRegions(ir::Expr tensor, in
     // TODO (rohany): Do the entries in the pos and crd arrays need to be int64's?
     return ir::GetProperty::makeIndicesAccessor(tensor, posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
         .dim = posDim,
-        .elemType = Rect(1),
+        .elemType = PosRect(1),
         .field = fidRect1,
         .regionAccessing = posReg,
         .priv = priv,

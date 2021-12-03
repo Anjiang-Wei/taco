@@ -121,6 +121,8 @@ string CodeGen::printTypeInName(Datatype type, bool is_ptr) {
     switch (c) {
       case '<':
       case '>':
+      case ',':
+      case ' ':
         result << '_';
         break;
       default:
