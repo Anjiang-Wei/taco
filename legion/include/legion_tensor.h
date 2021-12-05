@@ -2,6 +2,7 @@
 #define TACO_LEGION_TENSOR_H
 
 #include "legion.h"
+#include "error.h"
 
 // TODO (rohany): We might have to add a mirrored "physical tensor" that has all of this stuff
 //  pulled out as the physical one when in a child task.
@@ -78,7 +79,7 @@ enum LegionTensorLevelFormat {
 // Utility method to create a dense tensor with the given dimensions.
 template<int DIM, typename T>
 LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, std::vector<int32_t> dims, Legion::FieldID valsField) {
-  assert(dims.size() == DIM);
+  taco_iassert(dims.size() == DIM);
   Legion::Point<DIM> lo, hi;
   for (int i = 0; i < DIM; i++) {
     lo[i] = 0;
@@ -117,7 +118,7 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
 template<typename T>
 LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensorLevelFormat> formats, std::vector<int32_t> dims,
                                        Legion::FieldID posField, Legion::FieldID crdField, Legion::FieldID valsField) {
-  assert(dims.size() == formats.size());
+  taco_iassert(dims.size() == formats.size());
   auto result = LegionTensor{};
   result.order = formats.size();
   result.dims = dims;
@@ -225,7 +226,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         break;
       }
       default:
-        assert(false);
+        taco_iassert(false);
     }
   }
 

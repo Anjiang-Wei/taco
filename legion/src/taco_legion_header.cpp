@@ -1,5 +1,6 @@
 #include "taco_legion_header.h"
 #include "shard.h"
+#include "error.h"
 #include <mutex>
 
 using namespace Legion;
@@ -83,7 +84,7 @@ Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtim
 
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid) {
   // Get the bounds on the old region.
-  assert(old.get_logical_region().get_dim() == 1);
+  taco_iassert(old.get_logical_region().get_dim() == 1);
   auto oldBounds = old.get_bounds<1, coord_t>();
   // Unmap the input existing region.
   runtime->unmap_region(ctx, old);
@@ -119,7 +120,7 @@ Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runti
     LEGION_FOREACH_N(BLOCK)
 #undef BLOCK
     default:
-      assert(false);
+      taco_iassert(false);
   }
   // TODO (rohany): Is there a way to get the kind (i.e. disjoint, aliased etc) of the existing partition?
   return runtime->create_partition_by_domain(ctx, toPartition, domains, colorSpaceName, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
@@ -133,7 +134,7 @@ IndexPartition densifyPartition(Context ctx, Runtime* runtime, IndexSpace ispace
   DomainPointColoring coloring;
   auto colorSpace = runtime->get_index_partition_color_space_name(ctx, part);
   auto colorSpaceDom = runtime->get_index_space_domain(ctx, colorSpace);
-  assert(colorSpace.get_dim() == 1);
+  taco_iassert(colorSpace.get_dim() == 1);
   for (PointInDomainIterator<1> itr(colorSpaceDom); itr(); itr++) {
     auto subreg = runtime->get_index_subspace(ctx, part, Color(*itr));
     auto subDom = runtime->get_index_space_domain(ctx, subreg);
@@ -155,7 +156,7 @@ int AffineProjection::dim() const {
 }
 
 int AffineProjection::operator[] (size_t i) const {
-  assert(i >= 0 && int(i) < this->dim());
+  taco_iassert(i >= 0 && int(i) < this->dim());
   return this->projs[i];
 }
 
@@ -165,11 +166,11 @@ Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *run
   auto colorSpace = runtime->get_index_partition_color_space(ctx, part);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, part);
   auto outputDomain = runtime->get_index_space_domain(ctx, ispace);
-  assert(colorSpace.get_dim() == 1);
+  taco_iassert(colorSpace.get_dim() == 1);
   for (PointInDomainIterator<1> itr(colorSpace); itr(); itr++) {
     auto subspace = runtime->get_index_subspace(ctx, part, Color(*itr));
     auto subspaceDom = runtime->get_index_space_domain(ctx, subspace);
-    assert(subspaceDom.dense());
+    taco_iassert(subspaceDom.dense());
     auto projected = Domain(this->apply(subspaceDom.lo(), outputDomain.lo()), this->apply(subspaceDom.hi(), outputDomain.hi()));
     col[*itr] = projected;
   }
@@ -177,7 +178,7 @@ Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *run
 }
 
 Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point, Legion::DomainPoint outputBounds) {
-  assert(point.get_dim() == this->dim());
+  taco_iassert(point.get_dim() == this->dim());
   DomainPoint res, setMask;
   res.dim = outputBounds.dim;
   setMask.dim = outputBounds.dim;

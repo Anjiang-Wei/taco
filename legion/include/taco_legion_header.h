@@ -4,6 +4,7 @@
 #include "legion.h"
 #include "mappers/default_mapper.h"
 #include "legion_tensor.h"
+#include "error.h"
 
 // Fields used by the generated TACO code.
 enum TensorFields {
@@ -32,7 +33,7 @@ struct RegionWrapper {
       case LOGICAL:
         return this->logReg.get_index_space();
       default:
-        assert(false);
+        taco_iassert(false);
     }
   }
 

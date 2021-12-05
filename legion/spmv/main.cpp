@@ -5,6 +5,7 @@
 #include "mappers/default_mapper.h"
 #include "legion_utils.h"
 #include "legion_string_utils.h"
+#include "error.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -71,8 +72,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-warmup", warmup);
   parser.add_option_bool("-pos", pos);
   auto args = Runtime::get_input_args();
-  assert(parser.parse_command_line(args.argc, args.argv));
-  assert(!csrFileName.empty());
+  taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
+  taco_uassert(!csrFileName.empty()) << "Provide a matrix with -csr";
 
   auto A = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
 
