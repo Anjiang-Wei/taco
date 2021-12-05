@@ -380,7 +380,7 @@ static bool setSchedulingCommands(vector<vector<string>> scheduleCommands, parse
 
       IndexVar divide1(i1);
       IndexVar divide2(i2);
-      stmt = stmt.divide(findVar(i), divide1, divide2, divideFactor);
+      stmt = stmt.divide(findVar(i), divide1, divide2, int(divideFactor));
     } else if (command == "precompute") {
       string exprStr, i, iw, name;
       taco_uassert(scheduleCommand.size() == 3 || scheduleCommand.size() == 4)
