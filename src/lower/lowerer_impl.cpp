@@ -1615,13 +1615,11 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
       // and end of the posIteration.
       if (legionSparseLevel) {
         auto posReg = legionSparseLevel->getRegion(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::POS);
-        auto domVar = ir::Var::make(posIteratorLevel.getMode().getName() + "PosDomain", Auto);
+        auto domVar = ir::Var::make(posIteratorLevel.getMode().getName() + "PosDomain", Domain(1));
         auto getDom = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(posReg)}, Auto);
-        auto toDomT = ir::makeConstructor(Domain(1), {getDom});
-        auto toBounds = ir::FieldAccess::make(toDomT, "bounds", false /* deref */, Auto);
-        this->taskHeader.push_back(ir::VarDecl::make(domVar, toBounds));
-        this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getBeginVar(), ir::FieldAccess::make(domVar, "lo", false /* deref */, Int())));
-        this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getEndVar(), ir::FieldAccess::make(domVar, "hi", false /* deref */, Int())));
+        this->taskHeader.push_back(ir::VarDecl::make(domVar, getDom));
+        this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getBeginVar(), ir::FieldAccess::make(domVar, "bounds.lo", false /* deref */, Int())));
+        this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getEndVar(), ir::FieldAccess::make(domVar, "bounds.hi", false /* deref */, Int())));
       } else {
         this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getBeginVar(), ir::Literal::zero(posIteratorLevel.getBeginVar().type())));
         this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getEndVar(), parentSize));
@@ -2575,7 +2573,7 @@ Stmt LowererImpl::lowerForallFusedPosition(Forall forall, Iterator iterator,
     auto posTensor = posRel->getAccess().getTensorVar();
     auto valsReg = ir::GetProperty::make(this->tensorVars[posTensor], ir::TensorProperty::Values);
     auto valsDomain = ir::Var::make(posTensor.getName() + "ValsDomain", Domain(1));
-    this->taskHeader.push_back(ir::VarDecl::make(valsDomain, makeConstructor(Domain(1), {ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(valsReg)}, Auto)})));
+    this->taskHeader.push_back(ir::VarDecl::make(valsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(valsReg)}, Auto)));
     this->taskHeader.push_back(ir::IfThenElse::make(ir::MethodCall::make(valsDomain, "empty", {}, false /* deref */, Bool), ir::Return::make(Expr())));
   }
 

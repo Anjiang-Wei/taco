@@ -371,8 +371,7 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   auto posDom = ir::Var::make("pDom" + mode.getName(), domainTy);
   auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false, Auto);
   auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
-  auto getPosDom = ir::makeConstructor(domainTy, {getDomain});
-  auto setPosDom = ir::VarDecl::make(posDom, getPosDom);
+  auto setPosDom = ir::VarDecl::make(posDom, getDomain);
 
   // We now need to iterate over the full multi-dimensional pos region
   // to perform the prefix sum over the rectangles. We handle doing the
