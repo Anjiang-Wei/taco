@@ -1517,7 +1517,7 @@ TEST(distributed, legionSpMV) {
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   // auto chunkSize = ir::Var::make("chunkSize", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   // TODO (rohany): Make it possible for split to also take in an expression.
-  auto chunkSize = 2;
+  auto chunkSize = 2048;
   IndexVar i("i"), j("j"), io("io"), ii("ii"), f("f"), fpos("fpos"), fposi("fposi"), fposo("fposo"), fposio("fposio"), fposii("fposii");
   std::vector<ir::Stmt> stmts;
   auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c)> sched) {
