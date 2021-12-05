@@ -133,6 +133,12 @@ int main(int argc, char** argv) {
     registrar.set_replicable();
     Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
   }
+  if (TACO_FEATURE_OPENMP) {
+    TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_replicable();
+    Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
+  }
   {
     TaskVariantRegistrar registrar(TID_INIT_X, "initXCPU");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
@@ -143,9 +149,15 @@ int main(int argc, char** argv) {
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     Runtime::preregister_task_variant<initX>(registrar, "initX");
   }
+  {
+    TaskVariantRegistrar registrar(TID_COPY_POS, "copyPos");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<copyPos>(registrar, "copyPos");
+  }
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerDummyReadTasks();
-  Runtime::add_registration_callback(register_mapper);
+  Runtime::add_registration_callback(register_taco_mapper);
+  Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);
 }
