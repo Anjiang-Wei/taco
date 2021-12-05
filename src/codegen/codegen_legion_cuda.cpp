@@ -456,6 +456,7 @@ void CodegenLegionCuda::visit(const Function* func) {
         case TensorProperty::ValuesReadAccessor:
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
+        case TensorProperty::ValuesReductionNonExclusiveAccessor:
           if (varFinder.varDecls.count(it.first) == 0) {
             varFinder.varDecls[it.first] = it.second;
           }
@@ -512,6 +513,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
         case TensorProperty::ValuesReadAccessor:
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
+        case TensorProperty::ValuesReductionNonExclusiveAccessor:
           this->gps[op->tensor] = op;
           break;
         default:
@@ -643,6 +645,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
           case TensorProperty::ValuesReadAccessor:
           case TensorProperty::ValuesWriteAccessor:
           case TensorProperty::ValuesReductionAccessor:
+          case TensorProperty::ValuesReductionNonExclusiveAccessor:
           case TensorProperty::Dimension:
             toRemove.push_back(g);
             break;

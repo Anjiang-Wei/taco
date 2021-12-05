@@ -25,7 +25,7 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
     // We can't just use the tensor's name when constructing the value accessors, as for child
     // tasks the value array is not just the tensor's name.
     ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL);\n";
-  } else if (op->property == TensorProperty::ValuesReductionAccessor) {
+  } else if (op->property == TensorProperty::ValuesReductionAccessor || op->property == TensorProperty::ValuesReductionNonExclusiveAccessor) {
     ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
   } else if (op->property == TensorProperty::DenseLevelRun) {
     ret << "IndexSpace " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
@@ -136,6 +136,7 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
         case TensorProperty::ValuesReadAccessor:
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
+        case TensorProperty::ValuesReductionNonExclusiveAccessor:
           this->accessors.insert(AccessorInfo{op->property, op->mode, op->type});
           break;
         case TensorProperty::IndicesAccessor:
@@ -157,6 +158,10 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
       out << "typedef ReductionAccessor<SumReduction<" << printType(info.typ, false)
           << ">,true," << info.dims << ",coord_t,Realm::AffineAccessor<" << printType(info.typ, false)
           << "," << info.dims << ",coord_t>> AccessorReduce" << printType(info.typ, false) << info.dims << ";\n";
+    } else if (info.prop == TensorProperty::ValuesReductionNonExclusiveAccessor) {
+        out << "typedef ReductionAccessor<SumReduction<" << printType(info.typ, false)
+            << ">,false," << info.dims << ",coord_t,Realm::AffineAccessor<" << printType(info.typ, false)
+            << "," << info.dims << ",coord_t>> AccessorReduceNonExcl" << printType(info.typ, false) << info.dims << ";\n";
     } else {
       std::string priv, suffix;
       if (info.prop == TensorProperty::ValuesWriteAccessor || info.priv == RW) {

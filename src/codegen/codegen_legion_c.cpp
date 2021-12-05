@@ -103,6 +103,7 @@ protected:
     switch (op->property) {
       case TensorProperty::ValuesWriteAccessor:
       case TensorProperty::ValuesReadAccessor:
+      case TensorProperty::ValuesReductionNonExclusiveAccessor:
       case TensorProperty::ValuesReductionAccessor: {
         // If we have a values accessor, then the values array for this
         // tensor needs to be included as well.

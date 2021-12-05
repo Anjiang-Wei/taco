@@ -94,6 +94,7 @@ enum class TensorProperty {
   ValuesReadAccessor,
   ValuesWriteAccessor,
   ValuesReductionAccessor,
+  ValuesReductionNonExclusiveAccessor,
   DenseLevelRun,
   // TODO (rohany): Not sure if I need a read or write accessor distinction here. I probably will
   //  need a write accessor, but I doubt a reduction accessor will be necessary.

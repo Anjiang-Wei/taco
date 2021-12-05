@@ -572,7 +572,8 @@ void CodeGen_C::visit(const Assign* op) {
 }
 
 void CodeGen_C::visit(const Store* op) {
-  if (op->use_atomics) {
+  auto gp = op->arr.as<GetProperty>();
+  if (op->use_atomics && !(gp != nullptr && gp->property == TensorProperty::ValuesReductionNonExclusiveAccessor)) {
     doIndent();
     stream << getAtomicPragma() << endl;
   }

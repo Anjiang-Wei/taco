@@ -456,7 +456,9 @@ void IRPrinter::visit(const Store* op) {
   op->loc.accept(this);
   // If we're writing into a reduction accessor, then we need
   // to use a different operator.
-  if (op->arr.as<GetProperty>() != nullptr && op->arr.as<GetProperty>()->property == TensorProperty::ValuesReductionAccessor) {
+  if (op->arr.as<GetProperty>() != nullptr &&
+      (op->arr.as<GetProperty>()->property == TensorProperty::ValuesReductionAccessor ||
+       op->arr.as<GetProperty>()->property == TensorProperty::ValuesReductionNonExclusiveAccessor)) {
     stream << "] <<= ";
   } else {
     stream << "] = ";

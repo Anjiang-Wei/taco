@@ -565,6 +565,11 @@ std::string accessorTypeString(ir::Expr expr) {
       ss << "AccessorReduce" << op->type << op->mode;
       return ss.str();
     }
+    case TensorProperty::ValuesReductionNonExclusiveAccessor: {
+      std::stringstream ss;
+      ss << "AccessorReduceNonExcl" << op->type << op->mode;
+      return ss.str();
+    }
     case TensorProperty::IndicesAccessor: {
       std::stringstream ss;
       ss << "Accessor" << op->accessorArgs.priv << sanitize(op->accessorArgs.elemType) << op->accessorArgs.dim;
@@ -1118,6 +1123,10 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
     case TensorProperty::ValuesReductionAccessor:
       gp->type = tensor.type();
       gp->name = tensorVar->name + "_vals_red_accessor";
+      break;
+    case TensorProperty::ValuesReductionNonExclusiveAccessor:
+      gp->type = tensor.type();
+      gp->name = tensorVar->name + "_vals_red_accessor_non_excl";
       break;
   }
   

@@ -758,6 +758,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
       }
       void visit(const GetProperty* node) {
         switch (node->property) {
+          case TensorProperty::ValuesReductionNonExclusiveAccessor:
           case TensorProperty::ValuesReductionAccessor:
           case TensorProperty::ValuesReadAccessor:
           case TensorProperty::ValuesWriteAccessor:
@@ -956,7 +957,9 @@ Stmt LowererImpl::lowerAssignment(Assignment assignment)
   }
   // Assignments to tensor variables (non-scalar).
   else {
-    Expr values = getValuesArray(result);
+    // We ask for non-exclusive accessor if we are supposed to do an atomic
+    // assignment.
+    Expr values = getValuesArray(result, !(markAssignsAtomicDepth > 0));
     Expr loc = generateValueLocExpr(assignment.getLhs());
 
     std::vector<Stmt> accessStmts;
@@ -3643,7 +3646,7 @@ Expr LowererImpl::getCapacityVar(Expr tensor) const {
 }
 
 
-ir::Expr LowererImpl::getValuesArray(TensorVar var) const
+ir::Expr LowererImpl::getValuesArray(TensorVar var, bool exclusive) const
 {
   if (this->legion) {
     auto valuesDim = this->valuesAnalyzer.getValuesDim(var);
@@ -3651,7 +3654,11 @@ ir::Expr LowererImpl::getValuesArray(TensorVar var) const
     // TODO (rohany): Hackingly including the size as the mode here.
     if (util::contains(this->resultTensors, var)) {
       if (this->performingLegionReduction) {
-        return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReductionAccessor, valuesDim);
+        if (exclusive) {
+          return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReductionAccessor, valuesDim);
+        } else {
+          return GetProperty::make(getTensorVar(var), TensorProperty::ValuesReductionNonExclusiveAccessor, valuesDim);
+        }
       }
       return GetProperty::make(getTensorVar(var), TensorProperty::ValuesWriteAccessor, valuesDim);
     } else {
@@ -4889,6 +4896,7 @@ std::vector<ir::Stmt> LowererImpl::declareLaunchDomain(ir::Expr domain, Forall f
           case ir::TensorProperty::ValuesReductionAccessor:
           case ir::TensorProperty::ValuesWriteAccessor:
           case ir::TensorProperty::ValuesReadAccessor:
+          case ir::TensorProperty::ValuesReductionNonExclusiveAccessor:
             this->readsVar = true;
             break;
           default:

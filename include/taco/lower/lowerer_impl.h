@@ -252,7 +252,7 @@ protected:
   ir::Expr getCapacityVar(ir::Expr) const;
 
   /// Retrieve the values array of the tensor var.
-  ir::Expr getValuesArray(TensorVar) const;
+  ir::Expr getValuesArray(TensorVar, bool exclusive = true) const;
 
   /// Retrieve the dimension of an index variable (the values it iterates over),
   /// which is encoded as the interval [0, result).
