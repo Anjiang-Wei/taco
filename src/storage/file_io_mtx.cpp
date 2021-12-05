@@ -51,16 +51,17 @@ TensorBase dispatchReadMTX(std::istream& stream, const T& format, bool pack) {
                                        << "Unknown type of MatrixMarket";
   // formats = [coordinate array]
   // field = [real integer complex pattern]
-  taco_uassert(field=="real")          << "MatrixMarket field not available";
+  taco_uassert(field=="real" || field == "pattern")          << "MatrixMarket field not available";
   // symmetry = [general symmetric skew-symmetric Hermitian]
   taco_uassert((symmetry=="general") || (symmetry=="symmetric"))
                                        << "MatrixMarket symmetry not available";
 
   bool symm = (symmetry=="symmetric");
+  bool real = (field == "real");
 
   TensorBase tensor;
   if (formats=="coordinate")
-    tensor = readSparse(stream,format,symm);
+    tensor = readSparse(stream, format, symm, real);
   else if (formats=="array")
     tensor = readDense(stream,format,symm);
   else
@@ -83,7 +84,7 @@ TensorBase readMTX(std::istream& stream, const Format& format, bool pack) {
 
 template <typename T>
 TensorBase dispatchReadSparse(std::istream& stream, const T& format, 
-                              bool symm) {
+                              bool symm, bool real) {
   string line;
   std::getline(stream,line);
 
@@ -109,53 +110,47 @@ TensorBase dispatchReadSparse(std::istream& stream, const T& format,
   if (symm)
     taco_uassert(dimensions.size()==2) << "Symmetry only available for matrix";
 
-  vector<int> coordinates;
-  vector<double> values;
-  coordinates.reserve(nnz*dimensions.size());
-  values.reserve(nnz);
-
-  while (std::getline(stream, line)) {
-    linePtr = (char*)line.data();
-    for (size_t i=0; i < dimensions.size(); i++) {
-      long index = strtol(linePtr, &linePtr, 10);
-      taco_uassert(index <= INT_MAX) << "Index exceeds INT_MAX";
-      coordinates.push_back(static_cast<int>(index));
-    }
-    double val = strtod(linePtr, &linePtr);
-    values.push_back(val);
-  }
-
-  // Create matrix
   TensorBase tensor(type<double>(), dimensions, format);
   if (symm)
     tensor.reserve(2*nnz);
   else
     tensor.reserve(nnz);
 
-  // Insert coordinates
-  std::vector<int> coord;
-  for (size_t i = 0; i < nnz; i++) {
-    coord.clear();
-    for (size_t mode = 0; mode < dimensions.size(); mode++) {
-      coord.push_back(coordinates[i*dimensions.size() + mode] -1);
+  taco_uassert(dimensions.size() == 2);
+
+  std::vector<int> coord(dimensions.size());
+  while (std::getline(stream, line)) {
+    linePtr = (char*)line.data();
+    for (size_t i=0; i < 2; i++) {
+      long index = strtol(linePtr, &linePtr, 10);
+      taco_uassert(index <= INT_MAX) << "Index exceeds INT_MAX";
+      coord[i] = static_cast<int>(index) - 1;
     }
-    tensor.insert(coord, values[i]);
+    double val;
+    if (real) {
+      val = strtod(linePtr, &linePtr);
+    } else {
+      val = 1.0;
+    }
+    tensor.insert(coord, val);
     if (symm && coord.front() != coord.back()) {
-      std::reverse(coord.begin(), coord.end());
-      tensor.insert(coord, values[i]);
+      auto x = coord.front();
+      auto y = coord.back();
+      coord[0] = y;
+      coord[1] = x;
+      tensor.insert(coord, val);
     }
   }
-
   return tensor;
 }
 
 TensorBase readSparse(std::istream& stream, const ModeFormat& modetype, 
-                      bool symm) {
-  return dispatchReadSparse(stream, modetype, symm);
+                      bool symm, bool real) {
+  return dispatchReadSparse(stream, modetype, symm, real);
 }
 
-TensorBase readSparse(std::istream& stream, const Format& format, bool symm) {
-  return dispatchReadSparse(stream, format, symm);
+TensorBase readSparse(std::istream& stream, const Format& format, bool symm, bool real) {
+  return dispatchReadSparse(stream, format, symm, real);
 }
 
 template <typename T>
