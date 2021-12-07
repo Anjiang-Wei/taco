@@ -150,11 +150,6 @@ int main(int argc, char** argv) {
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     Runtime::preregister_task_variant<initX>(registrar, "initX");
   }
-  {
-    TaskVariantRegistrar registrar(TID_COPY_POS, "copyPos");
-    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
-    Runtime::preregister_task_variant<copyPos>(registrar, "copyPos");
-  }
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerDummyReadTasks();
