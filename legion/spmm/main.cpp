@@ -30,7 +30,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
 
-  auto B = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
+  LegionTensor B; ExternalHDF5LegionTensor Bex;
+  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
   // TODO (rohany): What should the value of the j dimension be? A(i, j) = B(i, k) * C(k, j).
   auto jDim = B.dims[1];
   auto A = createDenseTensor<2, valType>(ctx, runtime, {B.dims[0], jDim}, FID_VAL);
@@ -52,6 +53,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   // Delete the partition pack.
   delete pack;
+  Bex.destroy(ctx, runtime);
 }
 
 int main(int argc, char** argv) {

@@ -24,3 +24,13 @@ std::string LegionTensor::toString(Legion::Context ctx, Legion::Runtime *runtime
   out << "Values: " << runtime->get_index_space_domain(ctx, this->vals.get_index_space()) << std::endl;
   return out.str();
 }
+
+void ExternalHDF5LegionTensor::addExternalAllocation(Legion::PhysicalRegion r) {
+  this->attachedRegions.push_back(r);
+}
+
+void ExternalHDF5LegionTensor::destroy(Legion::Context ctx, Legion::Runtime* runtime) {
+  for (auto& r : this->attachedRegions) {
+    runtime->detach_external_resource(ctx, r);
+  }
+}
