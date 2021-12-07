@@ -6,28 +6,29 @@
 #include "string_utils.h"
 #include "taco_legion_header.h"
 #include "legion/legion_utilities.h"
+#include "error.h"
 
 using namespace Legion;
 
 void generateCoordListHDF5(std::string filename, size_t order, size_t nnz) {
   // Open up the HDF5 file.
   hid_t fileID = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  assert(fileID >= 0);
+  taco_iassert(fileID >= 0);
 
   // Create a data space for the dimensions.
   hsize_t dims[1];
   dims[0] = order;
   hid_t dimensionsDataspaceID = H5Screate_simple(1, dims, NULL);
-  assert(dimensionsDataspaceID >= 0);
+  taco_iassert(dimensionsDataspaceID >= 0);
   // Create a data space for the coordinates and values.
   dims[0] = nnz;
   hid_t coordSpaceID = H5Screate_simple(1, dims, NULL);
-  assert(coordSpaceID >= 0);
+  taco_iassert(coordSpaceID >= 0);
 
   std::vector<hid_t> datasets;
   auto createDataset = [&](std::string name, hid_t size, hid_t dataspaceID) {
     hid_t dataset = H5Dcreate2(fileID, name.c_str(), size, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    assert(dataset >= 0);
+    taco_iassert(dataset >= 0);
     datasets.push_back(dataset);
   };
 
@@ -233,7 +234,7 @@ const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, i
   switch (format) {
     case Dense:
       // We shouldn't be trying to get the tensor names from a Dense level.
-      assert(false);
+      taco_iassert(false);
     case Sparse: {
       // The name depends on what the value of idx is.
       std::stringstream nameSS;
@@ -241,13 +242,13 @@ const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, i
       return toCharStar(nameSS.str());
     }
     case Singleton: {
-      assert(idx == 0);
+      taco_iassert(idx == 0);
       std::stringstream nameSS;
       nameSS << "crd_" << mode;
       return toCharStar(nameSS.str());
     }
     default:
-      assert(false);
+      taco_iassert(false);
   }
 }
 
@@ -260,7 +261,7 @@ std::pair<hid_t, hid_t> createHDF5RectType() {
   auto offset = 0;
   for (int i = 0; i < DIM; i++) {
     std::string fname = "coord" + toString(i);
-    assert(H5Tinsert(pointTy, fname.c_str(), offset, H5T_NATIVE_INT64_g) >= 0);
+    taco_iassert(H5Tinsert(pointTy, fname.c_str(), offset, H5T_NATIVE_INT64_g) >= 0);
     offset += sizeof(long long);
   }
 
@@ -269,9 +270,9 @@ std::pair<hid_t, hid_t> createHDF5RectType() {
   std::string rectLo = "lo";
   std::string rectHi = "hi";
   offset = 0;
-  assert(H5Tinsert(rectTy, rectLo.c_str(), offset, pointTy) >= 0);
+  taco_iassert(H5Tinsert(rectTy, rectLo.c_str(), offset, pointTy) >= 0);
   offset += sizeof(Point<DIM>);
-  assert(H5Tinsert(rectTy, rectHi.c_str(), offset, pointTy) >= 0);
+  taco_iassert(H5Tinsert(rectTy, rectHi.c_str(), offset, pointTy) >= 0);
 
   return std::make_pair(pointTy, rectTy);
 }
@@ -286,9 +287,9 @@ struct ResourceCollector {
     for (auto id : HDFfiles) { H5Fclose(id); }
   }
   void add(const char* c) { this->chars.push_back(c); }
-  void addHDFfile(hid_t id) { assert(id >= 0); this->HDFfiles.push_back(id); }
-  void addHDFdataspace(hid_t id) { assert(id >= 0); this->HDFdataspaces.push_back(id); }
-  void addHDFdataset(hid_t id) { assert(id >= 0); this->HDFdatasets.push_back(id); }
+  void addHDFfile(hid_t id) { taco_iassert(id >= 0); this->HDFfiles.push_back(id); }
+  void addHDFdataspace(hid_t id) { taco_iassert(id >= 0); this->HDFdataspaces.push_back(id); }
+  void addHDFdataset(hid_t id) { taco_iassert(id >= 0); this->HDFdatasets.push_back(id); }
 
   std::vector<const char*> chars;
   std::vector<hid_t> HDFdataspaces;
@@ -342,7 +343,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
 
           // Do the same for the crd array.
           auto crdDom = runtime->get_index_space_domain(ctx, t.indices[i][1].get_index_space());
-          assert(crdDom.dim == 1);
+          taco_iassert(crdDom.dim == 1);
           hsize_t crdDims[1];
           crdDims[0] = crdDom.hi()[0] + 1;
           auto crdName = getTensorLevelFormatName(format[i], i, 1);
@@ -358,10 +359,10 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
         case Singleton: {
           // TODO (rohany): Support this case. I'm a bit lazy and don't want to consider
           //  it right now since I won't actually be doing parallel computations on COO matrices.
-          assert(false);
+          taco_iassert(false);
         }
         default:
-          assert(false);
+          taco_iassert(false);
       }
     }
 
@@ -456,9 +457,9 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
         }
         case Singleton:
           // TODO (rohany): Support singleton.
-          assert(false);
+          taco_iassert(false);
         default:
-          assert(false);
+          taco_iassert(false);
       }
     }
 
@@ -643,9 +644,9 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
       }
       case Singleton:
         // TODO (rohany): Support singleton.
-        assert(false);
+        taco_iassert(false);
       default:
-        assert(false);
+        taco_iassert(false);
     }
   }
 

@@ -3,6 +3,7 @@
 #include "legion_string_utils.h"
 #include "hdf5_utils.h"
 #include "realm/cmdline.h"
+#include "error.h"
 
 using namespace Legion;
 
@@ -29,10 +30,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_bool("-roundTrip", roundTrip);
   parser.add_option_bool("-dump", dump);
   auto args = Runtime::get_input_args();
-  assert(parser.parse_command_line(args.argc, args.argv));
-  assert(!cooFile.empty());
-  assert(!outputFormat.empty());
-  assert(!outputFile.empty());
+  taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
+  taco_uassert(!cooFile.empty()) << "provide a file with -coofile";
+  taco_uassert(!outputFormat.empty()) << "provide an output format with -format";
+  taco_uassert(!outputFile.empty()) << "provide an output file with -o";
 
   logApp.info() << "Loading input COO tensor.";
   // Load the input COO tensor.
@@ -48,10 +49,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
       case 's':
         format.push_back(Sparse); break;
       default:
-        assert(false && "invalid sparse input");
+        taco_uassert(false) << "invalid sparse input";
     }
   }
-  assert(int(format.size()) == coo.order);
+  taco_uassert(int(format.size()) == coo.order);
 
   // Create the output tensor.
   auto output = createSparseTensorForPack<double>(ctx, runtime, format, coo.dims, FID_RECT_1, FID_COORD, FID_VAL);
@@ -68,7 +69,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   };
   auto it = converters.find(outputFormat);
   if (it == converters.end()) {
-    assert(false && "unsupported output format kind");
+    taco_uassert(false) << "unsupported output format kind";
   }
   it->second(ctx, runtime, &output, &coo);
 

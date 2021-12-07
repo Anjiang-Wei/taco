@@ -4,6 +4,7 @@
 #include "realm/cmdline.h"
 #include "legion_utils.h"
 #include "legion_string_utils.h"
+#include "error.h"
 
 using namespace Legion;
 typedef double valType;
@@ -36,18 +37,17 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_bool("-dump", dump);
   parser.add_option_bool("-pos", pos);
   auto args = Runtime::get_input_args();
-  assert(parser.parse_command_line(args.argc, args.argv));
-  assert(!input.empty());
-
+  taco_iassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failed.";
+  taco_uassert(!input.empty()) << "Provide input with -tensor.";
   if (pos) {
-    assert(bDenseDims == 1);
+    taco_uassert(bDenseDims == 1) << "If pos, bdd must equal 1";
   }
 
   LegionTensor B;
   if (bDenseDims == 1) {
     B = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Sparse, Sparse});
   } else {
-    assert(bDenseDims == 2);
+    taco_uassert(bDenseDims == 2);
     B = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Dense, Sparse});
   }
   auto A = createDenseTensor<2, valType>(ctx, runtime, {B.dims[0], B.dims[1]}, FID_VAL);

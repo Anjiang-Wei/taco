@@ -5,6 +5,7 @@
 #include "mappers/default_mapper.h"
 #include "legion_utils.h"
 #include "legion_string_utils.h"
+#include "error.h"
 
 using namespace Legion;
 
@@ -26,8 +27,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   auto args = Runtime::get_input_args();
-  assert(parser.parse_command_line(args.argc, args.argv));
-  assert(!csrFileName.empty());
+  taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
+  taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
 
   auto B = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
   // TODO (rohany): What should the value of the j dimension be? A(i, j) = B(i, k) * C(k, j).

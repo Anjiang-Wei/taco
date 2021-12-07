@@ -4,6 +4,7 @@
 #include "legion.h"
 #include "legion_tensor.h"
 #include "taco_legion_header.h"
+#include "error.h"
 
 // Generic function to print out region data. We'll declare this in a header and instantiate
 // a few versions of the function that have pretty output. We have to wrap this in a helper
@@ -21,7 +22,7 @@ void printPhysicalRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::
     case 1: PhysicalRegionPrinter<T, 1>().printPhysicalRegion(ctx, runtime, reg, fid); break;
     case 2: PhysicalRegionPrinter<T, 2>().printPhysicalRegion(ctx, runtime, reg, fid); break;
     default:
-      assert(false);
+      taco_iassert(false);
   }
 }
 
@@ -81,7 +82,7 @@ void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
         break;
       }
       default:
-        assert(false);
+        taco_iassert(false);
         break;
     }
   }

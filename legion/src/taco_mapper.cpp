@@ -1,5 +1,6 @@
 #include "taco_mapper.h"
 #include "mappers/logging_wrapper.h"
+#include "error.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -82,7 +83,7 @@ TACOMapper::TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &mach
     // on a single mapper! Therefore, we need to do this in initialization so that each mapper has
     // this data structure populated.
     if (this->local_gpus.size() > 0) {
-      assert(this->local_cpus.size() == this->local_gpus.size());
+      taco_iassert(this->local_cpus.size() == this->local_gpus.size());
       auto cpu = this->local_cpus.begin();
       auto gpu = this->local_gpus.begin();
       // Construct a mapping between each shard and a GPU.
@@ -159,11 +160,11 @@ void TACOMapper::map_replicate_task(const Legion::Mapping::MapperContext ctx, co
   }
 
   // We should only be mapping the top level task.
-  assert((task.get_depth() == 0) && (task.regions.size() == 0));
-  assert(task.target_proc.kind() == Processor::LOC_PROC);
+  taco_iassert((task.get_depth() == 0) && (task.regions.size() == 0));
+  taco_iassert(task.target_proc.kind() == Processor::LOC_PROC);
   auto targetKind = Processor::LOC_PROC;
   const auto chosen = default_find_preferred_variant(task, ctx, true /* needs tight bound */, true /* cache */, targetKind);
-  assert(chosen.is_replicable);
+  taco_iassert(chosen.is_replicable);
   // Collect all LOC_PROC's to put shards on.
   Legion::Machine::ProcessorQuery cpuQuery(this->machine);
   cpuQuery.only_kind(targetKind);
@@ -230,7 +231,7 @@ Memory TACOMapper::default_policy_select_target_memory(Legion::Mapping::MapperCo
   // If we are supposed to perform NUMA aware allocations
   if (target_proc.kind() == Processor::OMP_PROC && this->numaAwareAllocs) {
     auto it = this->numaDomains.find(target_proc);
-    assert(it != this->numaDomains.end());
+    taco_iassert(it != this->numaDomains.end());
     return it->second;
   } else {
     return DefaultMapper::default_policy_select_target_memory(ctx, target_proc, req, mc);
@@ -273,7 +274,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
   // that are being sharded -- i.e. have depth 1 and are index space launches.
   if (this->multipleShardsPerNode && !this->shardCPUGPUMapping.empty() && task.get_depth() == 1 && task.is_index_space) {
     auto targetProc = this->shardCPUGPUMapping[task.orig_proc];
-    assert(kind == targetProc.kind());
+    taco_iassert(kind == targetProc.kind());
     return std::vector<Processor>{targetProc};
   }
 
@@ -293,7 +294,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
         return this->local_cpus;
       }
       default: {
-        assert(false);
+        taco_iassert(false);
       }
     }
   } else {
@@ -305,7 +306,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
   }
 
   // Keep the compiler happy.
-  assert(false);
+  taco_iassert(false);
   return {};
 }
 
@@ -334,7 +335,7 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
       LEGION_FOREACH_N(BLOCK)
 #undef BLOCK
       default:
-        assert(false);
+        taco_iassert(false);
     }
   } else {
     // Otherwise, we have our own implementation of slice task. The reason for this is
@@ -357,7 +358,7 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
       LEGION_FOREACH_N(BLOCK)
 #undef BLOCK
       default:
-        assert(false);
+        taco_iassert(false);
     }
   }
 }
@@ -366,12 +367,12 @@ void TACOMapper::report_profiling(const MapperContext ctx,
                                   const Task& task,
                                   const TaskProfilingInfo& input) {
   // We should only get profiling responses if we've enabled backpressuring.
-  assert(this->enableBackpressure);
+  taco_iassert(this->enableBackpressure);
   // We should only get profiling responses for tasks that are supposed to be backpressured.
-  assert((task.tag & BACKPRESSURE_TASK) != 0);
+  taco_iassert((task.tag & BACKPRESSURE_TASK) != 0);
   auto prof = input.profiling_responses.get_measurement<ProfilingMeasurements::OperationStatus>();
   // All our tasks should complete successfully.
-  assert(prof->result == Realm::ProfilingMeasurements::OperationStatus::COMPLETED_SUCCESSFULLY);
+  taco_iassert(prof->result == Realm::ProfilingMeasurements::OperationStatus::COMPLETED_SUCCESSFULLY);
   // Clean up after ourselves.
   delete prof;
   // Backpressured tasks are launched in a loop, and are kept on the originating processor.
@@ -387,7 +388,7 @@ void TACOMapper::report_profiling(const MapperContext ctx,
     }
   }
   // Assert that we found a valid event.
-  assert(event.exists());
+  taco_iassert(event.exists());
   // Finally, trigger the event for anyone waiting on it.
   this->runtime->trigger_mapper_event(ctx, event);
 }

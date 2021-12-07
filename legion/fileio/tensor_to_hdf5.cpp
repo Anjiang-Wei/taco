@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include "mappers/default_mapper.h"
+#include "error.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -142,9 +143,9 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   std::stringstream lineStream(line);
   std::string head, type, formats, field, symmetry;
   lineStream >> head >> type >> formats >> field >> symmetry;
-  assert(head == "%%MatrixMarket" && "Unknown header of MatrixMarket");
-  assert(type == "matrix");
-  assert(formats == "coordinate");
+  taco_uassert(head == "%%MatrixMarket" && "Unknown header of MatrixMarket") << "invalid matrix market header";
+  taco_uassert(type == "matrix") << "must have type matrix";
+  taco_uassert(formats == "coordinate") << "must be coordinate";
   enum ValueKind {
     REAL,
     PATTERN,
@@ -155,14 +156,14 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   } else if (field == "pattern") {
     valueKind = PATTERN;
   } else {
-    assert(false && "unknown field");
+    taco_uassert(false) << "unknown field";
   }
   bool symmetric = false;
   if (symmetry == "symmetric") {
     symmetric = true;
   } else if (symmetry == "general") { /* Do nothing. */ }
   else {
-    assert(false && "unknown symmetry");
+    taco_uassert(false) << "unknown symmetry";
   }
 
   // Skip comments at the top of the file
@@ -179,7 +180,7 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   
   char* linePtr = (char*)line.data();
   while (size_t dimension = strtoul(linePtr, &linePtr, 10)) {
-    assert(dimension <= INT_MAX && "Dimension exceeds INT_MAX");
+    taco_uassert(dimension <= INT_MAX) << "Dimension exceeds INT_MAX";
     dimensions.push_back(static_cast<int>(dimension));
   }
   size_t lines = dimensions[dimensions.size()-1];
@@ -197,9 +198,9 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   while (std::getline(file, line)) {
     char* linePtr = (char*)line.data();
     int32_t coordX = strtol(linePtr, &linePtr, 10);
-    assert(coordX <= INT_MAX && "Coordinate in file is larger than INT_MAX");
+    taco_uassert(coordX <= INT_MAX) << "Coordinate in file is larger than INT_MAX";
     int32_t coordY = strtol(linePtr, &linePtr, 10);
-    assert(coordY <= INT_MAX && "Coordinate in file is larger than INT_MAX");
+    taco_uassert(coordY <= INT_MAX) << "Coordinate in file is larger than INT_MAX";
     // .mtx coordinates 1 indexed rather than 0 indexed.
     buf.addCoordinate(0, coordX - 1);
     buf.addCoordinate(1, coordY - 1);
@@ -253,8 +254,7 @@ void* readTNSFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
 
   std::string line;
   if (!std::getline(file, line)) {
-    std::cout << "Expected non-empty tns file." << std::endl;
-    assert(false);
+    taco_uassert(false) << "Expected non-empty tns file.";
   }
 
   std::vector<std::string> toks = split(line, " ", false /* keepDelim */);
@@ -269,7 +269,7 @@ void* readTNSFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
     char* linePtr = (char*)line.data();
     for (size_t i = 0; i < order; i++) {
       int32_t idx = strtol(linePtr, &linePtr, 10);
-      assert(idx <= INT_MAX && "Coordinate in file is larger than INT_MAX");
+      taco_uassert(idx <= INT_MAX) << "Coordinate in file is larger than INT_MAX";
       // .tns coordinates 1 indexed rather than 0 indexed.
       buf.addCoordinate(i, idx - 1);
       // The largest value in each dimension is the size of the dimension.
@@ -402,7 +402,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   parser.add_option_string("-o", hdf5Filename);
   parser.add_option_string("-dump", dumpFile);
   auto args = Runtime::get_input_args();
-  assert(parser.parse_command_line(args.argc, args.argv));
+  taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "parse failed";
 
   if (!dumpFile.empty()) {
     size_t order, nnz;
@@ -438,8 +438,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   }
 
   // At this point, the tns and hdf5 filenames must be defined.
-  assert(!tensorFile.empty());
-  assert(!hdf5Filename.empty());
+  taco_uassert(!tensorFile.empty()) << "provide tensor";
+  taco_uassert(!hdf5Filename.empty()) << "provide output";
 
   // Read in the .tns file into raw data in memory.
   std::vector<int32_t> dimensions;
@@ -451,7 +451,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   } else if (endsWith(tensorFile, ".tns")) {
     buf = readTNSFile(tensorFile, dimensions, nnz);
   } else {
-    assert(false && "Currently only tns and mtx files are supported");
+    taco_uassert(false) << "Currently only tns and mtx files are supported";
   }
   size_t order = dimensions.size();
 
