@@ -24,6 +24,11 @@ public:
     BACKPRESSURE_TASK = (1 << 8),
   };
 
+  // Tunable values handled by the TACO mapper.
+  enum TunableValues {
+    TUNABLE_LOCAL_CPU_MEMS = DEFAULT_TUNABLE_LAST + 1,
+  };
+
   TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &machine, const Legion::Processor &local, const char* name);
 
   void select_sharding_functor(const Legion::Mapping::MapperContext ctx,
@@ -81,6 +86,16 @@ public:
                                  SelectMappingOutput& output) override;
 
   MapperSyncModel get_mapper_sync_model() const override;
+
+  void map_partition(const Legion::Mapping::MapperContext ctx,
+                     const Legion::Partition& partition,
+                     const MapPartitionInput& input,
+                     MapPartitionOutput& output) override;
+
+  void select_tunable_value(const Legion::Mapping::MapperContext ctx,
+                            const Legion::Task& task,
+                            const SelectTunableInput& input,
+                            SelectTunableOutput& output) override;
 
   template<int DIM>
   void decompose_points(const Legion::DomainT<DIM, Legion::coord_t> &point_space,
@@ -173,6 +188,9 @@ private:
   //  serialized onto a processor. If there are multiple different kernels running
   //  that all need to be backpressured then I'm not sure how that will work.
   std::map<Legion::Processor, std::deque<InFlightTask>> backPressureQueue;
+
+  // localCPUMems is a cached value for the tunable call TUNABLE_LOCAL_CPU_MEMS.
+  size_t localCPUMems;
 
   // TODO (rohany): It may end up being necessary that we need to explicitly map
   //  regions for placement tasks. If so, Manolis says the following approach

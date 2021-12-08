@@ -1,11 +1,14 @@
 #include "taco_mapper.h"
 #include "mappers/logging_wrapper.h"
 #include "error.h"
+#include "realm/logging.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
 
 const char* TACOMapperName = "TACOMapper";
+
+Realm::Logger logTacoMapper("tacoMapper");
 
 void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs) {
   // If we're supposed to backpressure task executions, then we need to only
@@ -92,6 +95,17 @@ TACOMapper::TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &mach
       }
     }
   }
+
+  {
+    Machine::MemoryQuery localSysMems(this->machine);
+    localSysMems.local_address_space().only_kind(Memory::SYSTEM_MEM);
+    Machine::MemoryQuery localSocketMems(this->machine);
+    localSocketMems.local_address_space().only_kind(Memory::SOCKET_MEM);
+    // Right now, we prefer socket memories to system memory, and will generally use either
+    // a single CPU memory, or multiple socket memories. So, take the maximum as the number
+    // of local memories to use.
+    this->localCPUMems = std::max(localSysMems.count(), localSocketMems.count());
+  }
 }
 
 void TACOMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
@@ -169,8 +183,6 @@ void TACOMapper::map_replicate_task(const Legion::Mapping::MapperContext ctx, co
   Legion::Machine::ProcessorQuery cpuQuery(this->machine);
   cpuQuery.only_kind(targetKind);
   auto allCPUs = std::vector<Processor>(cpuQuery.begin(), cpuQuery.end());
-  // We also need all of the GPUs so that we can map each shard to its GPU.
-  // const auto remoteGPUs = remote_procs_by_kind(Processor::TOC_PROC);
 
   // Create a shard for each CPU processor.
   output.task_mappings.resize(allCPUs.size());
@@ -478,3 +490,98 @@ Mapper::MapperSyncModel TACOMapper::get_mapper_sync_model() const {
   // Otherwise, we can do whatever the default mapper is doing.
   return DefaultMapper::get_mapper_sync_model();
 }
+
+
+void TACOMapper::map_partition(const MapperContext ctx,
+                               const Partition &partition,
+                               const MapPartitionInput &input,
+                               MapPartitionOutput &output) {
+  // No constraints on mapping partitions.
+  // Copy over all the valid instances, then try to do an acquire on them
+  // and see which instances are no longer valid.
+  output.chosen_instances = input.valid_instances;
+  if (!output.chosen_instances.empty())
+    runtime->acquire_and_filter_instances(ctx, output.chosen_instances);
+  // Now see if we have any fields which we still make space for.
+  std::vector<unsigned> to_erase;
+  std::set<FieldID> missing_fields =
+      partition.requirement.privilege_fields;
+  for (auto it = output.chosen_instances.begin(); it != output.chosen_instances.end(); it++) {
+    if (it->get_location().kind() == Memory::GPU_FB_MEM || it->get_location().kind() == Memory::HDF_MEM) {
+      // These instances are not supported yet (see Legion issue #516).
+      to_erase.push_back(it - output.chosen_instances.begin());
+    } else {
+      it->remove_space_fields(missing_fields);
+      if (missing_fields.empty())
+        break;
+    }
+  }
+  // Erase undesired instances.
+  for (auto it = to_erase.rbegin(); it != to_erase.rend(); it++)
+    output.chosen_instances.erase((*it) + output.chosen_instances.begin());
+  // If we've satisfied all our fields, then we are done.
+  if (missing_fields.empty())
+    return;
+  // Otherwise, let's make an instance for our missing fields.
+  Memory target_memory = default_policy_select_target_memory(ctx,
+                                                             partition.parent_task->current_proc,
+                                                             partition.requirement);
+  bool force_new_instances = false;
+  LayoutConstraintID our_layout_id =
+      default_policy_select_layout_constraints(ctx, target_memory,
+                                               partition.requirement,
+                                               PARTITION_MAPPING,
+                                               true/*needs check*/,
+                                               force_new_instances);
+  LayoutConstraintSet creation_constraints =
+      runtime->find_layout_constraints(ctx, our_layout_id);
+  creation_constraints.add_constraint(
+      FieldConstraint(missing_fields, false/*contig*/, false/*inorder*/));
+  output.chosen_instances.resize(output.chosen_instances.size() + 1);
+  size_t footprint;
+  if (!default_make_instance(ctx, target_memory, creation_constraints,
+                             output.chosen_instances.back(), PARTITION_MAPPING,
+                             force_new_instances, true/*meets*/,
+                             partition.requirement, &footprint)) {
+    // If we failed to make it that is bad.
+    logTacoMapper.error("Default mapper failed allocation of size %zd bytes "
+                        "for region requirement of partition in task %s (UID "
+                        "%lld) in memory " IDFMT " (%s) for processor " IDFMT " (%s). "
+                        "This means the working set of your application is too"
+                        " big for the allotted capacity of the given memory "
+                        "under the default mapper's mapping scheme. You have "
+                        "three choices: ask Realm to allocate more memory, "
+                        "write a custom mapper to better manage working sets, "
+                        "or find a bigger machine.", footprint,
+                        partition.parent_task->get_task_name(),
+                        partition.parent_task->get_unique_id(),
+                        target_memory.id,
+                        Utilities::to_string(target_memory.kind()),
+                        partition.parent_task->current_proc.id,
+                        Utilities::to_string(partition.parent_task->current_proc.kind())
+    );
+    assert(false);
+  }
+}
+
+void TACOMapper::select_tunable_value(const MapperContext ctx,
+                                      const Task& task,
+                                      const SelectTunableInput& input,
+                                      SelectTunableOutput& output) {
+  size_t* result = (size_t*)malloc(sizeof(size_t));
+  output.value = result;
+  output.size = sizeof(result);
+  switch (input.tunable_id) {
+    case TUNABLE_LOCAL_CPU_MEMS: {
+      *result = this->localCPUMems;
+      break;
+    }
+    default: {
+      // In this case, fall back to the default mapper. However, we need to clean
+      // up after ourselves before doing so.
+      free(result);
+      DefaultMapper::select_tunable_value(ctx, task, input, output);
+    }
+  }
+}
+

@@ -43,12 +43,12 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     taco_uassert(bDenseDims == 1) << "If pos, bdd must equal 1";
   }
 
-  LegionTensor B;
+  LegionTensor B; ExternalHDF5LegionTensor Bex;
   if (bDenseDims == 1) {
-    B = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Sparse, Sparse});
+    std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Sparse, Sparse});
   } else {
     taco_uassert(bDenseDims == 2);
-    B = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Dense, Sparse});
+    std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, input, {Dense, Dense, Sparse});
   }
   auto A = createDenseTensor<2, valType>(ctx, runtime, {B.dims[0], B.dims[1]}, FID_VAL);
   auto c = createDenseTensor<1, valType>(ctx, runtime, {B.dims[2]}, FID_VAL);
@@ -94,6 +94,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (dssPosPart != nullptr) delete dssPosPart;
   if (dssPart != nullptr) delete dssPart;
   if (ddsPart != nullptr) delete ddsPart;
+  Bex.destroy(ctx, runtime);
 }
 
 int main(int argc, char** argv) {

@@ -34,11 +34,14 @@ void generateCoordListHDF5(std::string filename, size_t order, size_t nnz);
 // getCoordListHDF5Meta extracts metadata from an HDF5 file created by generateCoordListHDF5.
 void getCoordListHDF5Meta(std::string filename, size_t& order, size_t& nnz);
 
-// Helper to attach a HDF5 file to a logical region. The returned PhysicalRegion
-// must be explicitly deallocated with runtime->detach_external_resource.
-Legion::PhysicalRegion attachHDF5(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
-                                  std::map<Legion::FieldID, const char *> fieldMap, std::string filename,
-                                  Legion::LegionFileMode mode = LEGION_FILE_READ_ONLY);
+// Helpers to attach a HDF5 file to a logical region. The returned PhysicalRegion
+// must be explicitly deallocated with runtime->detach_external_resource. We use
+// separate functions for each as RO operations must be attached in a different manner
+// to play nicely with control replication.
+Legion::PhysicalRegion attachHDF5RW(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
+                                  std::map<Legion::FieldID, const char *> fieldMap, std::string filename);
+Legion::PhysicalRegion attachHDF5RO(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
+                                  std::map<Legion::FieldID, const char *> fieldMap, std::string filename);
 
 // Load a COO tensor from a HDF5 file into a LegionTensor. The COO HDF5 tensor
 // must have been created by the tns_to_hdf5 utility.
@@ -54,8 +57,9 @@ const char* const LegionTensorValsField = "vals";
 void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t,
                                 std::vector<LegionTensorLevelFormat> format, std::string &filename);
 // TODO (rohany): Template this over the value type?
-LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
-                                          std::vector<LegionTensorLevelFormat> format);
+std::pair<LegionTensor, ExternalHDF5LegionTensor>
+loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
+                             std::vector<LegionTensorLevelFormat> format);
 
 
 

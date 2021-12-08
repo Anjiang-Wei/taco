@@ -7,6 +7,7 @@
 #include "taco_legion_header.h"
 #include "legion/legion_utilities.h"
 #include "error.h"
+#include "dummy_read.h"
 
 using namespace Legion;
 
@@ -69,9 +70,16 @@ void getCoordListHDF5Meta(std::string filename, size_t& order, size_t& nnz) {
   H5Fclose(hdf5file);
 }
 
-PhysicalRegion attachHDF5(Context ctx, Runtime *runtime, LogicalRegion region, std::map<FieldID, const char *> fieldMap, std::string filename, Legion::LegionFileMode mode) {
+Legion::PhysicalRegion attachHDF5RW(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
+                                    std::map<Legion::FieldID, const char *> fieldMap, std::string filename) {
   AttachLauncher al(LEGION_EXTERNAL_HDF5_FILE, region, region);
-  al.attach_hdf5(filename.c_str(), fieldMap, mode);
+  al.attach_hdf5(filename.c_str(), fieldMap, LEGION_FILE_READ_WRITE);
+  return runtime->attach_external_resource(ctx, al);
+}
+Legion::PhysicalRegion attachHDF5RO(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region,
+                                    std::map<Legion::FieldID, const char *> fieldMap, std::string filename) {
+  AttachLauncher al(LEGION_EXTERNAL_HDF5_FILE, region, region, false /* restricted */, false /* mapped */);
+  al.attach_hdf5(filename.c_str(), fieldMap, LEGION_FILE_READ_ONLY);
   return runtime->attach_external_resource(ctx, al);
 }
 
@@ -208,7 +216,7 @@ void attachCOORegionsTask(const Task* task, const std::vector<PhysicalRegion>& r
     auto rg = regions[i].get_logical_region();
     auto copy = runtime->create_logical_region(ctx, rg.get_index_space(), rg.get_field_space());
     logRegs.push_back(copy);
-    physRegs.push_back(attachHDF5(ctx, runtime, copy, fieldMaps[i], filename));
+    physRegs.push_back(attachHDF5RO(ctx, runtime, copy, fieldMaps[i], filename));
     cl.add_copy_requirements(
       RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fieldMaps[i].begin()->first),
       RegionRequirement(rg, READ_WRITE, EXCLUSIVE, rg).add_field(fieldMaps[i].begin()->first)
@@ -398,7 +406,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
       }
       runtime->unmap_region(ctx, dimsMem);
     }
-    auto dimsDisk = attachHDF5(ctx, runtime, dimsCopy, {{FID_COORD, LegionTensorDimsField}}, filename, LEGION_FILE_READ_WRITE);
+    auto dimsDisk = attachHDF5RW(ctx, runtime, dimsCopy, {{FID_COORD, LegionTensorDimsField}}, filename);
     {
       CopyLauncher cl;
       cl.add_copy_requirements(RegionRequirement(dims, READ_ONLY, EXCLUSIVE, dims),
@@ -430,7 +438,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
 
           auto posCopy = runtime->create_logical_region(ctx, pos.get_index_space(), pos.get_field_space());
           // TODO (rohany): Does it make sense to allow for direct access to the fields here?
-          auto posDisk = attachHDF5(ctx, runtime, posCopy, {{FID_RECT_1, posName}}, filename, LEGION_FILE_READ_WRITE);
+          auto posDisk = attachHDF5RW(ctx, runtime, posCopy, {{FID_RECT_1, posName}}, filename);
           {
             CopyLauncher cl;
             cl.add_copy_requirements(RegionRequirement(pos, READ_ONLY, EXCLUSIVE, posParent),
@@ -441,7 +449,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           }
 
           auto crdCopy = runtime->create_logical_region(ctx, crd.get_index_space(), crd.get_field_space());
-          auto crdDisk = attachHDF5(ctx, runtime, crdCopy, {{FID_COORD, crdName}}, filename, LEGION_FILE_READ_WRITE);
+          auto crdDisk = attachHDF5RW(ctx, runtime, crdCopy, {{FID_COORD, crdName}}, filename);
           {
             CopyLauncher cl;
             cl.add_copy_requirements(RegionRequirement(crd, READ_ONLY, EXCLUSIVE, crdParent),
@@ -465,7 +473,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
 
     // Dump out the values array.
     auto valsCopy = runtime->create_logical_region(ctx, t.vals.get_index_space(), t.vals.get_field_space());
-    auto valsDisk = attachHDF5(ctx, runtime, valsCopy, {{FID_VAL, LegionTensorValsField}}, filename, LEGION_FILE_READ_WRITE);
+    auto valsDisk = attachHDF5RW(ctx, runtime, valsCopy, {{FID_VAL, LegionTensorValsField}}, filename);
     {
       CopyLauncher cl;
       cl.add_copy_requirements(RegionRequirement(t.vals, READ_ONLY, EXCLUSIVE, t.valsParent),
@@ -511,7 +519,7 @@ struct AttachSpecificRegion {
     std::map<FieldID, const char*> fieldMap({{fid, fieldName.c_str()}});
     auto reg = regions[0].get_logical_region();
     auto copy = runtime->create_logical_region(ctx, reg.get_index_space(), reg.get_field_space());
-    auto regPhys = attachHDF5(ctx, runtime, copy, fieldMap, filename);
+    auto regPhys = attachHDF5RO(ctx, runtime, copy, fieldMap, filename);
     CopyLauncher cl;
     cl.add_copy_requirements(
         RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fid),
@@ -530,12 +538,14 @@ struct AttachSpecificRegion {
   }
 };
 
-LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
-                                          std::vector<LegionTensorLevelFormat> format) {
+std::pair<LegionTensor, ExternalHDF5LegionTensor>
+loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
+                             std::vector<LegionTensorLevelFormat> format) {
   hid_t pointTy, rectTy;
   std::tie(pointTy, rectTy) = createHDF5RectType<1>();
 
   ResourceCollector col;
+  ExternalHDF5LegionTensor ex;
 
   // Initialize the result tensor.
   LegionTensor result = LegionTensor {
@@ -634,8 +644,15 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
         result.indices[i].push_back(crdReg); result.indicesParents[i].push_back(crdReg);
 
         // Attach data to the regions.
-        AttachSpecificRegion().run(ctx, runtime, filename, posReg, FID_RECT_1, posName);
-        AttachSpecificRegion().run(ctx, runtime, filename, crdReg, FID_COORD, crdName);
+        ex.addExternalAllocation(attachHDF5RO(ctx, runtime, posReg, {{FID_RECT_1, posName}}, filename));
+        ex.addExternalAllocation(attachHDF5RO(ctx, runtime, crdReg, {{FID_COORD, crdName}}, filename));
+
+        // Additionally, launch a dummy task to pull this region from disk into equal sizes in
+        // CPU memories across the machine. We additionally mark this operation to allow the
+        // instances to be considered ready for garbage collection (so that the actual instances
+        // used when doing the computation can take over the needed space).
+        launchDummyRead(ctx, runtime, posReg, FID_RECT_1, true /* wait */, true /* untrack */);
+        launchDummyRead(ctx, runtime, crdReg, FID_COORD, true /* wait */, true /* untrack */);
 
         // We reset dimensionality back to 1 for sparse levels. This allows us to cleanly
         // encode the fact that we need one more dimension for dense levels after a sparse level.
@@ -660,13 +677,15 @@ LegionTensor loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *
   if (dimensionality >= 1 && format[format.size() - 1] == Dense) {
     result.denseLevelRuns.push_back(valsIspace);
   }
-  AttachSpecificRegion().run(ctx, runtime, filename, vals, FID_VAL, LegionTensorValsField);
+  ex.addExternalAllocation(attachHDF5RO(ctx, runtime, vals, {{FID_VAL, LegionTensorValsField}}, filename));
+  // Do the same read operation for the values array.
+  launchDummyRead(ctx, runtime, vals, FID_VAL, true /* wait */, true /* untrack */);
 
   // Final cleanup operations.
   H5Tclose(pointTy);
   H5Tclose(rectTy);
 
-  return result;
+  return {result, ex};
 }
 
 // This needs to be called in whatever main functions want to use HDF5 utility functions.
@@ -677,4 +696,6 @@ void registerHDF5UtilTasks() {
     Runtime::preregister_task_variant<attachCOORegionsTask>(registrar, "attachCOORegions");
   }
   AttachSpecificRegion::registerTask();
+  // We're going to use the dummy read tasks here as well.
+  registerDummyReadTasks();
 }

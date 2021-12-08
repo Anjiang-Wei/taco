@@ -68,6 +68,19 @@ struct LegionTensorPartition {
   std::vector<Legion::IndexPartition> denseLevelRunPartitions;
 };
 
+// ExternalHDF5LegionTensor represents metadata corresponding to a LegionTensor
+// loaded from an HDF5 file.
+struct ExternalHDF5LegionTensor {
+  // Add an external allocation to this tensor.
+  void addExternalAllocation(Legion::PhysicalRegion);
+  // Free all resources attached to this tensor.
+  void destroy(Legion::Context, Legion::Runtime*);
+
+  // attachedRegions is a list of regions containing all external allocations of
+  // a LegionTensor.
+  std::vector<Legion::PhysicalRegion> attachedRegions;
+};
+
 // LegionTensorLevelFormat is an enum used to perform introspection on LegionTensor
 // objects to understand the construction of the components within it.
 enum LegionTensorLevelFormat {

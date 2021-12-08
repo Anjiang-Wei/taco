@@ -75,7 +75,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -csr";
 
-  auto A = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
+  LegionTensor A; ExternalHDF5LegionTensor Aex;
+  std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
 
   auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
   auto x = createDenseTensor<1, valType>(ctx, runtime, {A.dims[1]}, FID_VAL);
@@ -124,6 +125,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // Delete the partition packs.
   if (posPack != nullptr) delete posPack;
   if (rowPack != nullptr) delete rowPack;
+  Aex.destroy(ctx, runtime);
 }
 
 int main(int argc, char** argv) {

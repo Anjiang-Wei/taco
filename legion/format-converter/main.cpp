@@ -83,7 +83,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (roundTrip) {
     // Let's try and load it back in to see if it somewhat round-trips.
     auto test = loadLegionTensorFromHDF5File(ctx, runtime, outputFile, format);
-    logApp.info() << test.toString(ctx, runtime);
+    logApp.info() << test.first.toString(ctx, runtime);
+    test.second.destroy(ctx, runtime);
   }
   if (dump) {
     // Dump out the packed tensor to stdout.
