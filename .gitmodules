@@ -7,3 +7,6 @@
 [submodule "legion/OpenBLAS"]
 	path = legion/OpenBLAS
 	url = https://github.com/xianyi/OpenBLAS.git
+[submodule "trilinos/Trilinos"]
+	path = trilinos/Trilinos
+	url = https://github.com/trilinos/Trilinos.git
