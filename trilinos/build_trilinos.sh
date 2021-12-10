@@ -11,3 +11,6 @@ cmake \
 ..
 
 make -j install
+
+# Use when pointing to the installation of Trilinos.
+# cmake ../ -DCMAKE_PREFIX_PATH=./Trilinos/cmake-install/lib/cmake/Trilinos/

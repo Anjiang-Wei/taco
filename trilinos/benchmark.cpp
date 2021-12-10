@@ -3,12 +3,24 @@
 #include <Tpetra_CrsMatrix.hpp>
 #include <MatrixMarket_Tpetra.hpp>
 
+#include <Xpetra_Matrix.hpp>
+#include <Xpetra_CrsMatrix.hpp>
+#include <Xpetra_IO.hpp>
+
 #include <iostream>
 #include <string>
 #include <chrono>
 
 typedef int32_t OrdinalType;
 typedef double ScalarType;
+
+bool endsWith(std::string const &fullString, std::string const &ending) {
+  if (fullString.length() >= ending.length()) {
+    return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+  } else {
+    return false;
+  }
+}
 
 Teuchos::RCP<Teuchos::FancyOStream> getOutputStream(const Teuchos::Comm<int>& comm) {
   using Teuchos::getFancyOStream;
@@ -85,28 +97,15 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // Load the options into a Teuchos::Parameter list
-  Teuchos::ParameterList params;
-  params.set("distribution", distribution);
-  // TODO (rohany): The reader itself should support symmetrizing the matrices?
-  // params.set("symmetrize", symmetrize);
-  // TODO (rohany): Add support for this later once it works.
-  // params.set("binary", binary);
-  // TODO (rohany): Play around with chunk sizes here.
-  params.set("chunkSize", size_t(chunkSize));
-
-  // Load the mtx market file.
-  using mat = Tpetra::CrsMatrix<double>;
-  Teuchos::RCP<mat> A;
-  A = Tpetra::MatrixMarket::Reader<mat>::readSparseFile(filename, comm, params);
-
+  auto isMtxMarket = endsWith(filename, ".mtx");
+  auto xpetraMat = Xpetra::IO<double, int, long long>::Read(filename, Xpetra::UseTpetra, comm, !isMtxMarket);
+  auto matrixWrap = Teuchos::rcp_dynamic_cast<Xpetra::CrsMatrixWrap<double, int, long long>>(xpetraMat);
+  auto xPetraTpetraMat = Teuchos::rcp_dynamic_cast<Xpetra::TpetraCrsMatrix<double, int, long long>>(matrixWrap->getCrsMatrix());
+  auto A = xPetraTpetraMat->getTpetra_CrsMatrixNonConst();
   // Teuchos::FancyOStream foo(Teuchos::rcp(&std::cout, false));
   // A->describe(foo, Teuchos::VERB_EXTREME);
-  // std::cout << "Loaded matrix!" << std::endl;
 
-  // Start doing some spmv nonsense here.
   spmv(comm, A, warmup, niter, out);
-  // End SPMV nonsense.
 
   return 0;
 }
