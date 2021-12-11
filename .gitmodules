@@ -10,3 +10,6 @@
 [submodule "trilinos/Trilinos"]
 	path = trilinos/Trilinos
 	url = https://github.com/trilinos/Trilinos.git
+[submodule "petsc/petsc"]
+	path = petsc/petsc
+	url = https://gitlab.com/petsc/petsc.git
