@@ -19,21 +19,22 @@ void registerTacoTasks();
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
   bool dump = false;
-  int n = 10, pieces = 4, warmup = 5;
+  // The j-dimension if the computation will commonly have a small value
+  // that is divisible by 32, as per Stephen and Chang-wan.
+  int n = 10, pieces = 4, warmup = 5, jDim = 32;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensor", csrFileName);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
+  parser.add_option_int("-jdim", jDim);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
 
   LegionTensor B; ExternalHDF5LegionTensor Bex;
   std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
-  // TODO (rohany): What should the value of the j dimension be? A(i, j) = B(i, k) * C(k, j).
-  auto jDim = B.dims[1];
   auto A = createDenseTensor<2, valType>(ctx, runtime, {B.dims[0], jDim}, FID_VAL);
   auto C = createDenseTensor<2, valType>(ctx, runtime, {B.dims[1], jDim}, FID_VAL);
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
@@ -64,7 +65,15 @@ int main(int argc, char** argv) {
     registrar.set_replicable();
     Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
   }
+  if (TACO_FEATURE_OPENMP) {
+    TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_replicable();
+    Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
+  }
   registerHDF5UtilTasks();
   registerTacoTasks();
+  Runtime::add_registration_callback(register_taco_mapper);
+  Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);
 }
