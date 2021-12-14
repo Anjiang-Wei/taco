@@ -21,7 +21,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   bool dump = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
-  int n = 10, pieces = 4, warmup = 5, jDim = 32;
+  int n = 10, pieces = 0, warmup = 5, jDim = 32;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensor", csrFileName);
   parser.add_option_bool("-dump", dump);
@@ -32,6 +32,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
+
+  // Figure out how many pieces to chop up the data into.
+  if (pieces == 0) {
+    // We want to do a piece for each OpenMP processor.
+    pieces = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+    taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
+  }
 
   LegionTensor B; ExternalHDF5LegionTensor Bex;
   std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});

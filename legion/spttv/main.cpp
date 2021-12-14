@@ -24,7 +24,7 @@ void computeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, Le
 void registerTacoTasks();
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  int bDenseDims = 1, gx = 1, gy = 1, n = 10, warmup = 5;
+  int bDenseDims = 1, gx = 0, gy = 1, n = 10, warmup = 5;
   bool dump = false, pos = false;
   std::string input;
   Realm::CommandLineParser parser;
@@ -41,6 +41,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   taco_uassert(!input.empty()) << "Provide input with -tensor.";
   if (pos) {
     taco_uassert(bDenseDims == 1) << "If pos, bdd must equal 1";
+  }
+
+  // Figure out how many pieces to chop up the data into.
+  if (gx == 0) {
+    // We want to do a piece for each OpenMP processor.
+    gx = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+    taco_uassert(gx != 0) << "Please provide a number of pieces to split into with -gx. Unable to automatically find.";
   }
 
   LegionTensor B; ExternalHDF5LegionTensor Bex;

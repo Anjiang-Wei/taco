@@ -63,7 +63,7 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
   bool dump = false, pos = false;
-  int n = 10, pieces = 4, warmup = 5;
+  int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
   parser.add_option_bool("-dump", dump);
@@ -74,6 +74,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -csr";
+
+  // Figure out how many pieces to chop up the data into.
+  if (pieces == 0) {
+    // We want to do a piece for each OpenMP processor.
+    pieces = runtime->select_tunable_value(ctx, DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+    taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
+  }
 
   LegionTensor A; ExternalHDF5LegionTensor Aex;
   std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
