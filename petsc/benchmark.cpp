@@ -56,7 +56,6 @@ void spmv(Mat A, int warmup, int niter) {
 
 void spmm(Mat B, int warmup, int niter, int jdim) {
   Mat A, C;
-  PetscScalar one = 1.0, zero = 0.0;
   PetscInt i, j = jdim, k;
   MatGetSize(B, &i, &k);
   // Create the other matrices.
@@ -64,19 +63,35 @@ void spmm(Mat B, int warmup, int niter, int jdim) {
   MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, k, j, NULL, &C);
   // Initialize entries in the output.
   MatZeroEntries(A);
-  for (int kk = 0; kk < k; kk++) {
-    for (int jj = 0; jj < j; jj++) {
-      MatSetValue(C, kk, jj, 1, INSERT_VALUES);
-    }
-  }
-  MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY);
-
+  MatSetRandom(C, NULL);
+  // TODO (rohany): We can't do the below here, as that appears to cause an OOM.
+  // for (int kk = 0; kk < k; kk++) {
+  //   for (int jj = 0; jj < j; jj++) {
+  //     MatSetValue(C, kk, jj, 1, INSERT_VALUES);
+  //   }
+  // }
+  // MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY);
+  // MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY);
+  
   // Finally, do the computation.
   auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
     MatMatMult(B, C, MAT_REUSE_MATRIX, PETSC_DEFAULT, &A);
   });
   PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
+
+  // Verification code below.
+  // {
+  //   Vec y;
+  //   VecCreate(PETSC_COMM_WORLD, &y);
+  //   VecSetFromOptions(y);
+  //   VecSetSizes(y, PETSC_DECIDE, i);
+  //   for (int ctr = 0; ctr < j; ctr++) {
+  //     MatGetColumnVector(A, y, ctr);
+  //     PetscReal norm;
+  //     VecNorm(y, NORM_1, &norm);
+  //     PetscPrintf(PETSC_COMM_WORLD, "%lf\n", norm);
+  //   }
+  // }
 }
 
 int main(int argc, char** argv) {

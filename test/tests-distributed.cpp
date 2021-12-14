@@ -1639,19 +1639,19 @@ TEST(distributed, legionSpMM) {
   Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
   Tensor<double> C("C", {dim, dim}, Format{Dense, Dense});
 
-  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f");
+  const int CHUNKSIZE = 2048;
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"), iii("iii");
   A(i, j) = B(i, k) * C(k, j);
   auto stmt = A.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, Grid(gx))
-               .divide(j, jo, ji, gx)
-               .reorder({jo, ii, ji})
-               .communicate(A(i, j), io)
-               .communicate(B(i, k), io)
-               .communicate(C(k, j), jo)
-               // .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
-               // .communicate(A(i, j), jo)
-               // .communicate(B(i, k), jo)
-               // .communicate(C(k, j), jo)
+               .reorder({i, k, j})
+               .fuse(i, k, f)
+               .pos(f, kpos, B(i, k))
+               .distribute({kpos}, {ko}, {ki}, Grid(gx))
+               .split(ki, iio, iii, CHUNKSIZE)
+               .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+               .communicate(A(i, j), ko)
+               .communicate(B(i, k), ko)
+               .communicate(C(k, j), ko)
                ;
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);

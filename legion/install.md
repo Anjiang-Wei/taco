@@ -28,3 +28,5 @@ use the same build command, but prepend it with `HDF5_ROOT=path/to/hdf5/install/
 to tell CMake to use the separate build of HDF5.
 
 Then, use `find_package(Legion)` to use Legion in example codes.
+
+To fully build DISTAL on Lassen, use `HDF5_ROOT=~/hdf5-1.10.1/install/ cmake ../ -DOPENMP=ON -DCMAKE_PREFIX_PATH=../legion/legion/cmake-install/ -DCMAKE_BUILD_TYPE=Release`.
