@@ -1700,3 +1700,48 @@ TEST(distributed, legionFormatConverterLib) {
     f.close();
   }
 }
+
+TEST(distributed, preserveNonZeros) {
+  auto makeDims = [](int n) {
+    return std::vector<int>(n, 5);
+  };
+  auto check = [](Tensor<double> t) {
+    NonZeroAnalyzerResult res;
+    return preservesNonZeroStructure(t.getAssignment().concretize(), res);
+  };
+  IndexVar i, j, k;
+  {
+    Tensor<double> A("A", makeDims(2), LgFormat({Dense, LgSparse}));
+    Tensor<double> B("B", makeDims(3), LgFormat({Dense, LgSparse, LgSparse}));
+    Tensor<double> c("c", makeDims(1), LgFormat({Dense}));
+    A(i, j) = B(i, j, k) * c(k);
+    ASSERT_TRUE(check(A));
+  }
+  {
+    Tensor<double> A("A", makeDims(2), LgFormat({Dense, LgSparse}));
+    Tensor<double> B("B", makeDims(3), LgFormat({Dense, LgSparse, LgSparse}));
+    Tensor<double> c("c", makeDims(1), LgFormat({Dense}));
+    A(i, k) = B(i, j, k) * c(k);
+    ASSERT_FALSE(check(A));
+  }
+  {
+    auto d = LgFormat({Dense, Dense});
+    auto s = LgFormat({Dense, LgSparse});
+    Tensor<double> A("A", makeDims(2), s);
+    Tensor<double> B("B", makeDims(2), s);
+    Tensor<double> C("C", makeDims(2), d);
+    Tensor<double> D("D", makeDims(2), d);
+    A(i, k) = B(i, k) * C(i, j) * D(j, k);
+    ASSERT_TRUE(check(A));
+  }
+  {
+    auto d = LgFormat({Dense, Dense});
+    auto s = LgFormat({Dense, LgSparse});
+    Tensor<double> A("A", makeDims(2), s);
+    Tensor<double> B("B", makeDims(2), s);
+    Tensor<double> C("C", makeDims(2), s);
+    Tensor<double> D("D", makeDims(2), d);
+    A(i, k) = B(i, k) * C(i, j) * D(j, k);
+    ASSERT_FALSE(check(A));
+  }
+}
