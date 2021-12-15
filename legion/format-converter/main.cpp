@@ -77,7 +77,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   logApp.info() << "Dumping output tensor to HDF5 file.";
   // Now, dump the output tensor to an HDF5 file.
-  dumpLegionTensorToHDF5File(ctx, runtime, output, format, outputFile);
+  dumpLegionTensorToHDF5File(ctx, runtime, output, outputFile);
   logApp.info() << "Done!";
 
   if (roundTrip) {

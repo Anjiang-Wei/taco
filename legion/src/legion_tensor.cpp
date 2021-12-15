@@ -4,6 +4,29 @@
 
 using namespace Legion;
 
+LegionTensor::LegionTensor(LegionTensorFormat format, std::vector<int32_t> dims) :
+  order(int(format.size())),
+  dims(dims),
+  indices(std::vector<std::vector<LogicalRegion>>(format.size())),
+  indicesParents(std::vector<std::vector<LogicalRegion>>(format.size())),
+  format(format),
+  indicesEqPartitions(std::vector<std::vector<LogicalPartition>>(format.size()))
+  {}
+
+LegionTensor::LegionTensor(LegionTensorFormat format, int32_t order, std::vector<int32_t> dims,
+                           std::vector<std::vector<Legion::LogicalRegion>> indices,
+                           std::vector<std::vector<Legion::LogicalRegion>> indicesParents, Legion::LogicalRegion vals,
+                           Legion::LogicalRegion valsParent, std::vector<Legion::IndexSpace> denseLevelRuns) :
+    order(order),
+    dims(dims),
+    indices(indices),
+    indicesParents(indicesParents),
+    vals(vals),
+    valsParent(valsParent),
+    denseLevelRuns(denseLevelRuns),
+    format(format),
+    indicesEqPartitions(std::vector<std::vector<LogicalPartition>>(order)) {}
+
 std::string LegionTensor::toString(Legion::Context ctx, Legion::Runtime *runtime) {
   // TODO (rohany): This method does not display information about region parents yet.
   std::stringstream out;

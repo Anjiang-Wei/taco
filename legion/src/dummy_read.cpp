@@ -6,7 +6,7 @@
 
 using namespace Legion;
 
-void launchDummyRead(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion reg, Legion::FieldID fid, bool wait, bool untrack) {
+LogicalPartition launchDummyRead(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion reg, Legion::FieldID fid, bool wait, bool untrack) {
   auto numNodes = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_NODE_COUNT).get<size_t>();
   auto numCPUMemsPerNode = runtime->select_tunable_value(ctx, TACOMapper::TUNABLE_LOCAL_CPU_MEMS).get<size_t>();
   auto numPieces = numNodes * numCPUMemsPerNode;
@@ -14,6 +14,7 @@ void launchDummyRead(Legion::Context ctx, Legion::Runtime* runtime, Legion::Logi
   auto ipart = runtime->create_equal_partition(ctx, reg.get_index_space(), partSpace);
   auto lpart = runtime->get_logical_partition(ctx, reg, ipart);
   launchDummyReadOverPartition(ctx, runtime, reg, lpart, fid, runtime->get_index_space_domain(ctx, partSpace), wait, untrack);
+  return lpart;
 }
 
 void launchDummyReadOverPartition(Context ctx, Runtime* runtime, LogicalRegion reg, LogicalPartition part, FieldID fid, Domain launchDim, bool wait, bool untrack) {

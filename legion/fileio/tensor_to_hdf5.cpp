@@ -414,8 +414,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
     // Attach the regions.
     auto coordFieldIDs = fieldIDs(order);
     auto fieldMap = constructFieldMap(coordFieldIDs);
-    auto pdisk = attachHDF5(ctx, runtime, disk, fieldMap, dumpFile);
-    auto pdiskDim = attachHDF5(ctx, runtime, diskDim, {{FID_DIM, COODimsField}}, dumpFile);
+    auto pdisk = attachHDF5RO(ctx, runtime, disk, fieldMap, dumpFile);
+    auto pdiskDim = attachHDF5RO(ctx, runtime, diskDim, {{FID_DIM, COODimsField}}, dumpFile);
 
     // Launch a task to print out the result. This maps the region
     // into CPU memory for us to access directly.
@@ -486,7 +486,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
 
   // Now, open up and attach the output hdf5 file.
   auto fieldMap = constructFieldMap(coordFieldIDs);
-  auto pdisk = attachHDF5(ctx, runtime, disk, fieldMap, hdf5Filename, LEGION_FILE_READ_WRITE);
+  auto pdisk = attachHDF5RW(ctx, runtime, disk, fieldMap, hdf5Filename);
 
   // Finally, copy the in-memory instance into the disk instance.
   {
@@ -521,7 +521,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
     al.attach_array_aos(dimensions.data(), false /* column_major */, {FID_DIM}, sysmem);
     pmemDim = runtime->attach_external_resource(ctx, al);
   }
-  auto pdiskDim = attachHDF5(ctx, runtime, diskDim, {{FID_DIM, COODimsField}}, hdf5Filename, LEGION_FILE_READ_WRITE);
+  auto pdiskDim = attachHDF5RW(ctx, runtime, diskDim, {{FID_DIM, COODimsField}}, hdf5Filename);
   {
     CopyLauncher cl;
     cl.add_copy_requirements(

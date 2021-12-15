@@ -182,15 +182,23 @@ LegionTensor loadCOOFromHDF5(Context ctx, Runtime* runtime, std::string& filenam
     indicesParents[i].push_back(regions[i + 1]);
   }
 
-  return LegionTensor {
-    .order = int32_t(order),
-    .dims = dims,
-    .indices = indices,
-    .indicesParents = indicesParents,
-    .vals = regions.back(),
-    .valsParent = regions.back(),
-    .denseLevelRuns = {},
-  };
+  LegionTensorFormat format;
+  // COO Tensors are one compressed level and then a bunch of singleton levels.
+  format.push_back(Sparse);
+  for (size_t i = 1; i < order; i++) {
+    format.push_back(Singleton);
+  }
+
+  return LegionTensor(
+    format,
+    order,
+    dims,
+    indices,
+    indicesParents,
+    regions.back() /* vals */,
+    regions.back() /* valsParent */,
+    {} /* denseLevelRuns */
+  );
 }
 
 // Corresponds to TID_ATTACH_COO_REGIONS.
@@ -305,11 +313,11 @@ struct ResourceCollector {
   std::vector<hid_t> HDFfiles;
 };
 
-void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t,
-                                std::vector<LegionTensorLevelFormat> format, std::string &filename) {
+void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t, std::string &filename) {
   // Declare HDF5 types.
   hid_t pointTy, rectTy;
   std::tie(pointTy, rectTy) = createHDF5RectType<1>();
+  auto format = t.format;
 
   // First, we must create the HDF5 file with all the right datasets and data spaces.
   {
@@ -547,14 +555,6 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
   ResourceCollector col;
   ExternalHDF5LegionTensor ex;
 
-  // Initialize the result tensor.
-  LegionTensor result = LegionTensor {
-    .order = int(format.size()),
-    .dims = std::vector<int>(format.size()),
-    .indices = std::vector<std::vector<LogicalRegion>>(format.size()),
-    .indicesParents = std::vector<std::vector<LogicalRegion>>(format.size()),
-  };
-
   auto rectSpace = runtime->create_field_space(ctx);
   {
     auto fa = runtime->create_field_allocator(ctx, rectSpace);
@@ -592,20 +592,23 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
   };
 
   // Load the dimensions region.
+  std::vector<int32_t> dims(format.size());
   {
     auto dimsISpace = runtime->create_index_space(ctx, Rect<1>(0, format.size() - 1));
-    auto dims = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
-    AttachSpecificRegion().run(ctx, runtime, filename, dims, FID_COORD, LegionTensorDimsField);
+    auto dimsReg = runtime->create_logical_region(ctx, dimsISpace, coordSpace);
+    AttachSpecificRegion().run(ctx, runtime, filename, dimsReg, FID_COORD, LegionTensorDimsField);
     // Now copy the values into the dims vector in the output.
     {
-      auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
+      auto dimsMem = legionMalloc(ctx, runtime, dimsReg, dimsReg, FID_COORD);
       FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
-      for (int i = 0; i < result.order; i++) {
-        result.dims[i] = acc[i];
+      for (size_t i = 0; i < format.size(); i++) {
+        dims[i] = acc[i];
       }
       runtime->unmap_region(ctx, dimsMem);
     }
   }
+
+  LegionTensor result(format, dims);
 
   // Loop through the level formats to query for the expected data sizes and shapes.
 
@@ -651,8 +654,8 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
         // CPU memories across the machine. We additionally mark this operation to allow the
         // instances to be considered ready for garbage collection (so that the actual instances
         // used when doing the computation can take over the needed space).
-        launchDummyRead(ctx, runtime, posReg, FID_RECT_1, true /* wait */, true /* untrack */);
-        launchDummyRead(ctx, runtime, crdReg, FID_COORD, true /* wait */, true /* untrack */);
+        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, posReg, FID_RECT_1, true /* wait */, true /* untrack */));
+        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, crdReg, FID_COORD, true /* wait */, true /* untrack */));
 
         // We reset dimensionality back to 1 for sparse levels. This allows us to cleanly
         // encode the fact that we need one more dimension for dense levels after a sparse level.
@@ -679,7 +682,7 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
   }
   ex.addExternalAllocation(attachHDF5RO(ctx, runtime, vals, {{FID_VAL, LegionTensorValsField}}, filename));
   // Do the same read operation for the values array.
-  launchDummyRead(ctx, runtime, vals, FID_VAL, true /* wait */, true /* untrack */);
+  result.valsEqPartition = launchDummyRead(ctx, runtime, vals, FID_VAL, true /* wait */, true /* untrack */);
 
   // Final cleanup operations.
   H5Tclose(pointTy);

@@ -4,8 +4,15 @@
 #include "legion.h"
 #include "error.h"
 
-// TODO (rohany): We might have to add a mirrored "physical tensor" that has all of this stuff
-//  pulled out as the physical one when in a child task.
+// LegionTensorLevelFormat is an enum used to perform introspection on LegionTensor
+// objects to understand the construction of the components within it.
+enum LegionTensorLevelFormat {
+  Dense,
+  Sparse,
+  Singleton,
+};
+typedef std::vector<LegionTensorLevelFormat> LegionTensorFormat;
+
 // LegionTensor is a representation of a taco_tensor_t for the Legion backend.
 // IMPORTANT: There must be no duplicate IndexSpace's within a LegionTensor. Specifically,
 //  no IndexSpace may appear twice within a LegionTensor (as a Region's IndexSpace or within
@@ -13,8 +20,17 @@
 //  code do not attempt to create multiple partitions of the same index space with the same
 //  color value. Future work in improving code generation may lift this restriction.
 struct LegionTensor {
-  // TODO (rohany): I want to maybe turn this into a class or at least remove the default
-  //  construct for it.
+  // Construct an invalid initial LegionTensor.
+  // TODO (rohany): Do I want to have a static invalid initial value?
+  LegionTensor() {};
+  // Construct a blank LegionTensor in a state that other methods can fill
+  // in all of the necessary data structures within it.
+  LegionTensor(LegionTensorFormat format, std::vector<int32_t> dims);
+  // Construct for a LegionTensor that explicitly sets all necessary fields.
+  LegionTensor(LegionTensorFormat format, int32_t order, std::vector<int32_t> dims,
+               std::vector<std::vector<Legion::LogicalRegion>> indices,
+               std::vector<std::vector<Legion::LogicalRegion>> indicesParents, Legion::LogicalRegion vals,
+               Legion::LogicalRegion valsParent, std::vector<Legion::IndexSpace> denseLevelRuns);
 
   // The number of modes the tensor has.
   int32_t order;
@@ -38,17 +54,23 @@ struct LegionTensor {
   // for use in partitioning following levels of the tensor.
   std::vector<Legion::IndexSpace> denseLevelRuns;
 
+  // Maintain at what the format of this tensor is.
+  LegionTensorFormat format;
+
   // toString returns a human-readable string containing the data structure layout of
   // a LegionTensor.
   std::string toString(Legion::Context ctx, Legion::Runtime* runtime);
 
-  // TODO (rohany): Consider adding a validation method on a LegionTensor.
+  // indicesEqPartitions is a cache of LogicalPartition objects associated with
+  // indices regions in a LegionTensor. This is _not_ used by generated code, but
+  // is instead used by runtime and utility codes when filling and copying
+  // to and from regions in a distributed manner. It is to avoid repeatedly creating
+  // many equal partitions and confusing the runtime.
+  std::vector<std::vector<Legion::LogicalPartition>> indicesEqPartitions;
+  // valsEqPartition is the same as indicesEqPartitions but for the vals region.
+  Legion::LogicalPartition valsEqPartition;
 
-  // TODO (rohany): There are some sort of serialization methods here, as well
-  //  as potentially methods to put each region into a region requirement. Actually,
-  //  I don't think that there is a method that can apriori put all of the regions
-  //  into a region requirement as it requires knowing what regions are actually
-  //  part of the pack, which the compiler does.
+  // TODO (rohany): Consider adding a validation method on a LegionTensor.
 };
 
 // LegionTensorPartition is a representation of a partition of a LegionTensor that is
@@ -81,14 +103,6 @@ struct ExternalHDF5LegionTensor {
   std::vector<Legion::PhysicalRegion> attachedRegions;
 };
 
-// LegionTensorLevelFormat is an enum used to perform introspection on LegionTensor
-// objects to understand the construction of the components within it.
-enum LegionTensorLevelFormat {
-  Dense,
-  Sparse,
-  Singleton,
-};
-
 // Utility method to create a dense tensor with the given dimensions.
 template<int DIM, typename T>
 LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, std::vector<int32_t> dims, Legion::FieldID valsField) {
@@ -107,17 +121,13 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
   Legion::FieldAllocator fa = runtime->create_field_allocator(ctx, fspace);
   fa.allocate_field(sizeof(T), valsField);
   auto reg = runtime->create_logical_region(ctx, ispace, fspace);
-  // TODO (rohany): Do I want to issue this fill?
   runtime->fill_field(ctx, reg, reg, valsField, T(0));
-  return LegionTensor {
-    .order = int32_t(dims.size()),
-    .dims = dims,
-    .indices = {},
-    .indicesParents = {},
-    .vals = reg,
-    .valsParent = reg,
-    .denseLevelRuns = {ispaceCopy},
-  };
+
+  LegionTensor result(LegionTensorFormat(DIM, Dense), dims);
+  result.vals = reg;
+  result.valsParent = reg;
+  result.denseLevelRuns = {ispaceCopy};
+  return result;
 }
 
 // createSparseTensorForPack creates an empty sparse tensor that can be used as the target of
@@ -129,15 +139,10 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
 // TODO (rohany): I can't hardcode the fields here because of an import cycle with taco_legion_header.h.
 //  decoupling those header files will allow for hardcoding the fields here.
 template<typename T>
-LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensorLevelFormat> formats, std::vector<int32_t> dims,
+LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* runtime, LegionTensorFormat format, std::vector<int32_t> dims,
                                        Legion::FieldID posField, Legion::FieldID crdField, Legion::FieldID valsField) {
-  taco_iassert(dims.size() == formats.size());
-  auto result = LegionTensor{};
-  result.order = formats.size();
-  result.dims = dims;
-  // Initialize the indices vectors for the tensor.
-  result.indices = std::vector<std::vector<Legion::LogicalRegion>>(result.order);
-  result.indicesParents = std::vector<std::vector<Legion::LogicalRegion>>(result.order);
+  taco_iassert(dims.size() == format.size());
+  LegionTensor result(format, dims);
 
   // Field spaces for the values, pos and crd arrays.
   auto valFspace = runtime->create_field_space(ctx);
@@ -198,9 +203,9 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
     }
   };
 
-  for (size_t level = 0; level < formats.size(); level++) {
-    auto format = formats[level];
-    switch (format) {
+  for (size_t level = 0; level < format.size(); level++) {
+    auto levelFormat = format[level];
+    switch (levelFormat) {
       case Dense: {
         // If we aren't in a dense run already, then start a new run.
         if (!inDenseRun) {

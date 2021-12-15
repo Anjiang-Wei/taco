@@ -54,17 +54,10 @@ const char* const LegionTensorDimsField = "dims";
 const char* const LegionTensorValsField = "vals";
 
 // TODO (rohany): Template this over the value type?
-void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t,
-                                std::vector<LegionTensorLevelFormat> format, std::string &filename);
+void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t, std::string &filename);
 // TODO (rohany): Template this over the value type?
 std::pair<LegionTensor, ExternalHDF5LegionTensor>
-loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename,
-                             std::vector<LegionTensorLevelFormat> format);
-
-
-
-
-
+loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename, LegionTensorFormat format);
 
 // Registration function that must be called during initialization if any hdf5_utils task are to be used.
 void registerHDF5UtilTasks();
