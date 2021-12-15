@@ -177,3 +177,40 @@ include_directories(tensor_to_hdf5 PRIVATE ${HDF5_INCLUDE_DIRS})
 add_executable(format-converter format-converter/main.cpp format-converter/taco-generated.cpp ${LG_SOURCES})
 target_link_libraries(format-converter Legion::Legion ${HDF5_LIBRARIES})
 include_directories(format-converter PRIVATE ${HDF5_INCLUDE_DIRS})
+
+# Sparse tests.
+set(SPARSE_TEST_BINARIES "")
+macro(add_basic_legion_sparse_test binary tag)
+    # TODO (rohany): See what more runtime debug flags I can place here.
+    if (OPENMP)
+        add_test(NAME "legion-sparse-${binary}-${tag}" COMMAND ${binary} -lg:partcheck -lg:safe_mapper -ll:ocpu 1 -ll:othr 1 -ll:csize 5000 ${ARGN})
+    else()
+        add_test(NAME "legion-sparse-${binary}-${tag}" COMMAND ${binary} -lg:partcheck -lg:safe_mapper -ll:cpu 1 -ll:csize 5000 ${ARGN})
+    endif()
+    # Collect all the test binaries that we depend on.
+    list(APPEND SPARSE_TEST_BINARIES "${binary}")
+endmacro()
+add_basic_legion_sparse_test(tensor_to_hdf5 basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.tns -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.hdf5)
+add_basic_legion_sparse_test(tensor_to_hdf5 3-tensor -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.tns -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5)
+add_basic_legion_sparse_test(format-converter basic -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.hdf5 -format ds -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5)
+add_basic_legion_sparse_test(format-converter 3-tensor-dss -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5 -format dss -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5)
+# Make sure that the format-converter tests runs after tensor_to_hdf5.
+set_tests_properties(legion-sparse-format-converter-basic PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-basic")
+set_tests_properties(legion-sparse-format-converter-3-tensor-dss PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-3-tensor")
+
+add_basic_legion_sparse_test(spmv basic -csr ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -pieces 4 -dump)
+add_basic_legion_sparse_test(spmv pos -csr ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -pieces 4 -pos -dump)
+add_basic_legion_sparse_test(spmm basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -pieces 4 -dump)
+# All of the sparse matrix operations depend on the format-converter test.
+set_tests_properties(legion-sparse-spmv-basic PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
+set_tests_properties(legion-sparse-spmv-pos PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
+set_tests_properties(legion-sparse-spmm-basic PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
+
+add_basic_legion_sparse_test(spttv basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -bdd 1 -gx 4 -dump)
+add_basic_legion_sparse_test(spttv pos -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -bdd 1 -gx 4 -pos -dump)
+set_tests_properties(legion-sparse-spttv-basic PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
+set_tests_properties(legion-sparse-spttv-pos PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
+
+
+list(REMOVE_DUPLICATES SPARSE_TEST_BINARIES)
+add_custom_target(test-legion-sparse COMMAND ctest -R legion-sparse DEPENDS ${SPARSE_TEST_BINARIES})
