@@ -55,7 +55,8 @@ struct PhysicalRegionPrinter<T, 2> {
 };
 
 template<typename T>
-void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor& tensor, std::vector<LegionTensorLevelFormat> format) {
+void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor& tensor) {
+  auto format = tensor.format;
   // For each level in the tensor, map the regions and print them.
   for (size_t i = 0; i < format.size(); i++) {
     switch (format[i]) {

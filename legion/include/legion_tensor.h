@@ -266,4 +266,10 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
   return result;
 }
 
+// copyNonZeroStructure copies the non-zero structure of the src tensor into a new
+// tensor, but does not copy the values. This method is intended to be used in the case
+// where the result tensor of a computation has a sparse output with non-zero structure
+// identical to an input tensor's non-zero structure.
+LegionTensor copyNonZeroStructure(Legion::Context ctx, Legion::Runtime* runtime, LegionTensorFormat format, LegionTensor src);
+
 #endif //TACO_LEGION_TENSOR_H

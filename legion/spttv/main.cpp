@@ -5,6 +5,7 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+#include "legion_string_utils.h"
 
 using namespace Legion;
 typedef double valType;
@@ -95,7 +96,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
-    printLegionTensor<valType>(ctx, runtime, A, {Dense, Dense});
+    printLegionTensor<valType>(ctx, runtime, A);
   }
 
   if (dssPosPart != nullptr) delete dssPosPart;

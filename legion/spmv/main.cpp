@@ -126,7 +126,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
-    printLegionTensor<valType>(ctx, runtime, y, {Dense});
+    printLegionTensor<valType>(ctx, runtime, y);
   }
 
   // Delete the partition packs.

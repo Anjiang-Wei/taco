@@ -88,7 +88,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
   if (dump) {
     // Dump out the packed tensor to stdout.
-    printLegionTensor<double>(ctx, runtime, output, format);
+    printLegionTensor<double>(ctx, runtime, output);
   }
 }
 
