@@ -21,6 +21,19 @@ void dump(Vec v) {
   VecView(v, PETSC_VIEWER_STDOUT_WORLD);
 }
 
+void setMatToConstant(Mat mat, PetscScalar c) {
+  PetscInt rStart, rEnd, m, n;
+  MatGetSize(A, &m, &n);
+  MatGetOwnershipRange(mat, &rStart, &rEnd);
+  for (int i = rStart; i < rEnd; i++) {
+    for (int j = 0; j < n; j++) {
+      MatSetValue(mat, i, j, c, INSERT_VALUES);
+    }
+  }
+  MatAssemblyBegin(mat, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(mat, MAT_FINAL_ASSEMBLY);
+}
+
 double benchmarkWithWarmup(int warmup, int numIter, std::function<void(void)> f) {
   PetscLogDouble start, end;
   for (int i = 0; i < warmup; i++) {
@@ -63,15 +76,7 @@ void spmm(Mat B, int warmup, int niter, int jdim) {
   MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, k, j, NULL, &C);
   // Initialize entries in the output.
   MatZeroEntries(A);
-  MatSetRandom(C, NULL);
-  // TODO (rohany): We can't do the below here, as that appears to cause an OOM.
-  // for (int kk = 0; kk < k; kk++) {
-  //   for (int jj = 0; jj < j; jj++) {
-  //     MatSetValue(C, kk, jj, 1, INSERT_VALUES);
-  //   }
-  // }
-  // MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY);
-  // MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY);
+  setMatToConstant(C, 1.0);
   
   // Finally, do the computation.
   auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
