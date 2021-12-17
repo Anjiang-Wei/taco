@@ -887,12 +887,27 @@ struct GetProperty : public ExprNode<GetProperty> {
   };
   AccessorArgs accessorArgs;
 
+  // Hashable is a struct that can be extracted from a GetProperty
+  // in order to store GetProperty objects into maps and sets.
+  struct Hashable {
+    Expr tensor;
+    TensorProperty property;
+    int mode;
+    int index;
+
+    friend bool operator<(const Hashable& a, const Hashable& b);
+    friend bool operator==(const Hashable& a, const Hashable& b);
+    friend bool operator!=(const Hashable& a, const Hashable& b);
+  };
+
   static Expr make(Expr tensor, TensorProperty property, int mode=0);
   // This constructor is used for accessing indices and parents of indices.
   static Expr make(Expr tensor, TensorProperty property, int mode,
                    int index, std::string name);
   static Expr makeDenseLevelRun(Expr tensor, int index);
   static Expr makeIndicesAccessor(Expr tensor, std::string nameBase, int mode, int index, AccessorArgs args);
+
+  Hashable toHashable() const;
   
   static const IRNodeType _type_info = IRNodeType::GetProperty;
 };

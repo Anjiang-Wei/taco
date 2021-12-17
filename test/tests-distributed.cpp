@@ -1566,52 +1566,33 @@ TEST(distributed, legionSpTTV) {
   int dim = 100;
 
   auto chunkSize = 2;
-  auto gx = ir::Var::make("gx", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  auto gy = ir::Var::make("gy", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ff("ff"), ffpos("ffpos"), ffposo("ffposo"), ffposi("ffposi"), ffposio("ffposio"), ffposii("ffposii");
   std::vector<ir::Stmt> stmts;
-  auto add = [&](Format f, std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched) {
-    Tensor<double> A("a", {dim, dim}, Format{Dense, Dense});
-    Tensor<double> B("B", {dim, dim, dim}, f);
+  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched) {
+    Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
+    Tensor<double> B("B", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
     Tensor<double> c("c", {dim}, Format{Dense});
     A(i, j) = B(i, j, k) * c(k);
     auto stmt = sched(A.getAssignment().concretize(), A, B, c);
     stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
   };
 
-  add(LgFormat({Dense, LgSparse, LgSparse}), "DSS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+  add("DSS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
     return stmt
-           .distribute({i}, {io}, {ii}, {gx})
+           .distribute({i}, {io}, {ii}, {pieces})
            .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
            .communicate(B(i, j, k), io)
            .communicate(A(i, j), io)
            .communicate(c(k), io)
            ;
   });
-  add(LgFormat({Dense, Dense, LgSparse}), "DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
-    return stmt
-           .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
-           .fuse(ii, ji, f)
-           .parallelize(f, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-           .communicate(B(i, j, k), jo)
-           .communicate(A(i, j), jo)
-           .communicate(c(k), jo)
-           ;
-    //  // A simpler schedule to start debugging things if they go wrong.
-    //  auto stmt = A.getAssignment().concretize()
-    //      .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
-    //      .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-    //      .communicate(B(i, j, k), jo)
-    //      .communicate(A(i, j), jo)
-    //      .communicate(c(k), jo)
-    //      ;
-  });
-  add(LgFormat({Dense, LgSparse, LgSparse}), "DSSPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+  add("DSSPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
     stmt = stmt
         .fuse(i, j, f)
         .fuse(f, k, ff)
         .pos(ff, ffpos, B(i, j, k))
-        .distribute({ffpos}, {ffposo}, {ffposi}, {gx})
+        .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
         .split(ffposi, ffposio, ffposii, chunkSize)
         .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
         .communicate(B(i, j, k), ffposo)

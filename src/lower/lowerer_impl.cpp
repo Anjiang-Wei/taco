@@ -320,7 +320,15 @@ LowererImpl::lower(IndexStmt stmt, string name,
   // Create variables for keeping track of result values array capacity
   createCapacityVars(resultVars, &capacityVars);
 
-  // Create iterators
+  // Figure out whether we can preserve the non-zero structure
+  // of an input tensor for the result tensor. However, to ensure
+  // that we don't break normal TACO usage, we'll only do this
+  // when Legion lowering is enabled.
+  if (this->legion) {
+    this->preservesNonZeros = preservesNonZeroStructure(stmt, this->nonZeroAnalyzerResult);
+  }
+
+  // Create iterators.
   iterators = Iterators(stmt, tensorVars);
 
   std::vector<ir::Stmt> declareModeVars;
@@ -1099,8 +1107,7 @@ LowererImpl::splitAppenderAndInserters(const vector<Iterator>& results) {
 
     if (result.hasAppend()) {
       appenders.push_back(result);
-    }
-    else {
+    } else {
       taco_iassert(result.hasInsert());
       inserters.push_back(result);
     }
@@ -2058,6 +2065,11 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         partitioningStmts.push_back(ir::VarDecl::make(valsLogicalPart, valsLogicalPartition));
         tensorLogicalPartitions[posTensor][posTensor.getOrder()] = {valsLogicalPart};
 
+        // If we are writing into an output tensor that has the same non-zero structure
+        // as the tensor that we are position iterating over, then we also need to
+        // understand what to use as the initial partition for that tensor.
+        ir::Expr nonZeroInitialPartition = valsLogicalPart;
+
         // Now perform an upward pass through the tensor to partition it.
         ir::Expr currentPart = valsLogicalPart;
         for (int level = posTensor.getOrder() - 1; level >= 0; level--) {
@@ -2069,7 +2081,43 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
             for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
               tensorLogicalPartitions[posTensor][level].push_back(modeFunc[i]);
             }
+            if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar().getOrder() <= level) {
+              nonZeroInitialPartition = currentPart;
+            }
           }
+        }
+
+        // Use the initial partition retrieved from above to partition the result tensor. We'll
+        // use that partition to partition the values region using copyPartition, and then go up
+        // the coordinate tree.
+        if (this->preservesNonZeros) {
+          auto tv = this->nonZeroAnalyzerResult.resultAccess->getTensorVar();
+          auto vals = ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values);
+          auto lPart = ir::Var::make(tv.getName() + "ValsLogicalPart", LogicalPartition);
+          auto createLPart = ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, nonZeroInitialPartition, vals}), LogicalPartition);
+          partitioningStmts.push_back(ir::VarDecl::make(lPart, createLPart));
+          tensorLogicalPartitions[tv][tv.getOrder()] = {lPart};
+          // TODO (rohany): Is there a neat way of deduplicating this code?
+          // Now do an upwards partitioning pass.
+          ir::Expr currentPart = lPart;
+          for (int level = tv.getOrder() - 1; level >= 0; level--) {
+            auto iter = this->iterators.levelIterator(tv, level + 1);
+            auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
+            if (modeFunc.defined()) {
+              partitioningStmts.push_back(modeFunc.compute());
+              currentPart = modeFunc.getResults().back();
+              for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
+                tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
+              }
+            }
+          }
+
+          // TODO (rohany): Again, there's some duplication here...
+          // Also copy the result partition to the first dense run of the result tensor.
+          auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+          auto denseRunPartition = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
+          partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
+          tensorDenseRunPartitions[tv][0] = denseRunPartition;
         }
 
         // TODO (rohany): Not sure how to assert some of the assumptions below.
@@ -2083,7 +2131,12 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
         // Now, use this dense run to create partitions onto the other tensors.
         for (auto tv : this->tensorVarOrdering) {
+          // Skip the tensor who's position space we are iterating over.
           if (tv == posTensor) continue;
+          // Also skip the tensor that shares the same non-zero structure as the input tensor
+          // (the one we are performing a position split over), as we'll partition that in
+          // the same way as the input tensor.
+          if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar() == tv) continue;
           auto tvExpr = this->tensorVars[tv];
           auto tvAccess = this->tensorVarToAccess.at(tv);
           auto projection = this->constructAffineProjection(posAccess, tvAccess);
@@ -2261,23 +2314,33 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     }
     partitionOnlyStmts = transfers;
 
-    // TODO (rohany): This needs to be understood when doing virtual
-    //  mappings of the arrays of tensor components.
     // See which of the regions are accessed by the task body.
-    std::set<TensorVar> tensorsAccessedByTask;
+    std::set<ir::GetProperty::Hashable> regionsAccessedByTask;
     for (auto& it : this->tensorVarOrdering) {
-      if (this->statementAccessesTensor(body, this->tensorVars[it])) {
-        tensorsAccessedByTask.insert(it);
+      auto maybeAddReg = [&](ir::Expr reg) {
+        taco_iassert(reg.as<GetProperty>() != nullptr);
+        if (this->statementAccessesRegion(body, reg)) {
+          regionsAccessedByTask.insert(reg.as<GetProperty>()->toHashable());
+        }
+      };
+      // Check each of the regions that make up the tensor.
+      for (int i = 0; i < it.getOrder(); i++) {
+        auto levelIt = this->iterators.levelIterator(it, i + 1);
+        for (auto reg : levelIt.getRegions()) {
+          maybeAddReg(reg.region);
+        }
       }
+      // Check the values region of the tensor.
+      maybeAddReg(ir::GetProperty::make(this->tensorVars[it], TensorProperty::Values));
     }
 
     // Lower the appropriate kind of task call depending on whether the forall
     // is distributed.
     if (forall.isDistributed()) {
-      util::append(transfers, this->lowerIndexLaunch(forall, domain,tensorLogicalPartitions, tensorsAccessedByTask, taskID, unpackTensorData));
+      util::append(transfers, this->lowerIndexLaunch(forall, domain,tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
     } else {
       // Lower a serial loop of task launches.
-      util::append(transfers, this->lowerSerialTaskLoop(forall, domain, domainIter, pointT,tensorLogicalPartitions, tensorsAccessedByTask, taskID, unpackTensorData));
+      util::append(transfers, this->lowerSerialTaskLoop(forall, domain, domainIter, pointT,tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
     }
 
     // Take the statements currently in the task header that were filled in by recursive calls.
@@ -2584,6 +2647,7 @@ Stmt LowererImpl::lowerForallFusedPosition(Forall forall, Iterator iterator,
   Expr writeResultCond;
   vector<Stmt> loopsToTrackUnderived;
   vector<Stmt> searchForUnderivedStart;
+  std::vector<ir::Stmt> posVarRecoveryStmts;
   std::map<IndexVar, vector<Expr>> coordinateBounds = provGraph.deriveCoordBounds(definedIndexVarsOrdered, underivedBounds, indexVarToExprMap, iterators);
   vector<IndexVar> underivedAncestors = provGraph.getUnderivedAncestors(forall.getIndexVar());
 
@@ -2639,6 +2703,21 @@ Stmt LowererImpl::lowerForallFusedPosition(Forall forall, Iterator iterator,
         posIteratorLevel = posIteratorLevel.getParent();
       }
 
+      // Recover the position variable for the corresponding level in the tensor we are
+      // iterating over.
+      {
+        Iterator currentPosIterator = posIteratorLevel;
+        while (!currentPosIterator.isRoot()) {
+          if (currentPosIterator.getIndexVar() == this->iterators.modeIterator(underivedAncestors[i])) {
+            if (currentPosIterator.hasPosIter()) {
+              posVarRecoveryStmts.push_back(ir::VarDecl::make(currentPosIterator.getPosVar(), posVarUnknown));
+            }
+            break;
+          }
+          currentPosIterator = currentPosIterator.getParent();
+        }
+      }
+
       ModeFunction posBoundsLevel = posIteratorLevel.posBounds(posVarUnknown);
       Expr loopcond;
       if (posIteratorLevel.getMode().getModeFormat().is<RectCompressedModeFormat>()) {
@@ -2689,7 +2768,7 @@ Stmt LowererImpl::lowerForallFusedPosition(Forall forall, Iterator iterator,
     markAssignsAtomicDepth--;
   }
 
-  body = Block::make(recoveryStmt, Block::make(loopsToTrackUnderived), body);
+  body = Block::make(recoveryStmt, Block::make(loopsToTrackUnderived), Block::make(posVarRecoveryStmts), body);
 
   // Code to write results if using temporary and reset temporary
   if (!whereConsumers.empty() && whereConsumers.back().defined()) {
@@ -2995,6 +3074,26 @@ Stmt LowererImpl::lowerForallBody(Expr coordinate, IndexStmt stmt,
                                   vector<Iterator> inserters,
                                   vector<Iterator> appenders,
                                   const set<Access>& reducedAccesses) {
+  // If we're performing the optimization that allows for the non-zero structure
+  // of an input tensor to be maintained in the result tensor, then we need to
+  // do some cleanup here before dealing with appenders and inserters. In particular,
+  // the iterator for the result tensor will be an appender (as it is sparse), but
+  // will not quite be a inserter or locator, as it is tracking the variables from
+  // the input tensor it is aligned with. Therefore, we will just ignore generating
+  // appender related code for the result tensor in this case.
+  Iterator resultNonZeroIter;
+  if (this->preservesNonZeros) {
+    std::vector<Iterator> realAppenders;
+    for (auto &iter : appenders) {
+      if (iter.getTensor() != this->tensorVars[this->nonZeroAnalyzerResult.resultAccess->getTensorVar()]) {
+        realAppenders.push_back(iter);
+      } else {
+        resultNonZeroIter = iter;
+      }
+    }
+    appenders = realAppenders;
+  }
+
   Stmt initVals = resizeAndInitValues(appenders, reducedAccesses);
 
   // There can be overlaps between the inserters and locators, which results in
@@ -3013,6 +3112,15 @@ Stmt LowererImpl::lowerForallBody(Expr coordinate, IndexStmt stmt,
     captureNextLocatePos = false;
   }
 
+  Stmt trackPosVars;
+  if (this->preservesNonZeros && resultNonZeroIter.defined()) {
+    if (resultNonZeroIter.hasPosIter()) {
+      auto tracking = resultNonZeroIter.getTrackingIterator();
+      taco_iassert(tracking.defined());
+      trackPosVars = ir::VarDecl::make(resultNonZeroIter.getPosVar(), tracking.getPosVar());
+    }
+  }
+
   // Code of loop body statement
   Stmt body = lower(stmt);
 
@@ -3023,6 +3131,7 @@ Stmt LowererImpl::lowerForallBody(Expr coordinate, IndexStmt stmt,
 
   return Block::make(initVals,
                      declPosVars,
+                     trackPosVars,
                      body,
                      appendCoords);
 }
@@ -4886,36 +4995,72 @@ std::vector<ir::Stmt> LowererImpl::declareLaunchDomain(ir::Expr domain, Forall f
   return result;
 }
 
-  bool LowererImpl::statementAccessesTensor(ir::Stmt stmt, ir::Expr target) {
-  taco_iassert(target.as<Var>() != nullptr);
-  // AccessFinder finds is the task being lowered accesses the target tensor.
+bool LowererImpl::statementAccessesRegion(ir::Stmt stmt, ir::Expr target) {
+  taco_iassert(target.as<GetProperty>() != nullptr);
+
   struct AccessFinder : public IRVisitor {
-    void visit(const GetProperty* prop) {
-      if (prop->tensor == this->targetVar) {
-        switch (prop->property) {
-          case ir::TensorProperty::ValuesReductionAccessor:
-          case ir::TensorProperty::ValuesWriteAccessor:
-          case ir::TensorProperty::ValuesReadAccessor:
-          case ir::TensorProperty::ValuesReductionNonExclusiveAccessor:
-            this->readsVar = true;
-            break;
-          default:
-            return;
+    void doesTargetMatch(ir::Expr regIR) {
+      auto reg = regIR.as<GetProperty>();
+      if (!reg) return;
+      if (reg->tensor != this->targetGP->tensor) return;
+      // If the target of the load is an accessor of the target
+      // getProperty, then mark that the current task reads the target.
+      switch (this->targetGP->property) {
+        // If the target is a values region, then access into any sort of
+        // accessor of the same tensor is what we are looking for.
+        case TensorProperty::Values: {
+          switch (reg->property) {
+            case ir::TensorProperty::ValuesReductionAccessor:
+            case ir::TensorProperty::ValuesWriteAccessor:
+            case ir::TensorProperty::ValuesReadAccessor:
+            case ir::TensorProperty::ValuesReductionNonExclusiveAccessor:
+              this->readsRegion = true;
+              break;
+            default:
+              return;
+          }
+          break;
         }
+        // If the target is an indices region, then we are looking for an accessor
+        // that accesses the same index and mode as the original property.
+        case TensorProperty::Indices: {
+          if (reg->property == TensorProperty::IndicesAccessor && reg->index == this->targetGP->index &&
+              reg->mode == this->targetGP->mode) {
+            this->readsRegion = true;
+          }
+          break;
+        }
+        default:
+          break;
       }
     }
+
+    void visit(const Load* load) {
+      this->doesTargetMatch(load->arr);
+    }
+
+    void visit(const Store* store) {
+      this->doesTargetMatch(store->arr);
+      store->data.accept(this);
+    }
+
     void visit(const For* node) {
       if (node->isTask) { return; }
       node->contents.accept(this);
-      // TODO (rohany): When considering sparse tensors, we will need to recurse into
-      //  the other parts of the for loop.
+      // We also look into the loop guards because those may access regions.
+      node->start.accept(this);
+      node->end.accept(this);
+      node->increment.accept(this);
     }
-    ir::Expr targetVar;
-    bool readsVar = false;
-  } finder;
-  finder.targetVar = target;
+
+    const GetProperty* targetGP;
+    bool readsRegion = false;
+  };
+
+  AccessFinder finder;
+  finder.targetGP = target.as<GetProperty>();
   stmt.accept(&finder);
-  return finder.readsVar;
+  return finder.readsRegion;
 }
 
 std::vector<ir::Stmt> LowererImpl::declarePartitionBoundsVars(ir::Expr domainIter, TensorVar tensor) {
@@ -5195,7 +5340,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     Forall forall,
     ir::Expr domain,
     std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
-    std::set<TensorVar> tensorsAccessed,
+    std::set<ir::GetProperty::Hashable> regionsAccessed,
     int taskID,
     Stmt& unpackTensorData
 ) {
@@ -5205,6 +5350,14 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   std::vector<ir::Expr> packedTensorData;
   std::vector<ir::Expr> packedTensorDataParents;
 
+  // Small helper routine to append a tag argument.
+  auto maybeAddTag = [](std::vector<ir::Expr> args, ir::Expr tag) {
+    if (tag.defined()) {
+      args.push_back(tag);
+    }
+    return args;
+  };
+
   // Construct the region requirements for each tensor argument.
   std::vector<Expr> regionReqs;
   bool taskReadsAnyVars = false;
@@ -5213,6 +5366,11 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     auto tvIR = this->tensorVars[tv];
     auto priv = this->getPrivilegeForTensor(forall, tv);
     std::vector<Expr> regionReqArgs;
+    // Since we only currently support writing to tensors with the same non-zero
+    // structure as an input, we still are only going to be reading the internal
+    // regions of a tensor, and doing writes only to the values.
+    auto indicesPriv = readOnly;
+    auto indicesAccessMode = exclusive;
 
     // TODO (rohany): It seems like we're going to want to wrap up this stuff into a helper method
     //  that lets us nicely apply a function to each level (+ dense run) in a tensor.
@@ -5231,6 +5389,15 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
       // entire region down to the children.
       ir::Expr req;
       for (size_t i = 0; i < regions.size(); i++) {
+        // If the task being launched doesn't access the target region, then we can
+        // virtually map the region. Or, for placement code, we don't want to virtually
+        // map a region that the leaf placement tasks use.
+        taco_iassert(regions[i].region.as<GetProperty>() != nullptr);
+        ir::Expr tag;
+        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+          tag = virtualMap;
+          taskReadsAnyVars |= true;
+        }
         if (util::contains(tensorLogicalPartitions, tv)) {
           // Logic to select the partition that we should use for the index launch.
           auto getPartition = [&](size_t idx) {
@@ -5262,19 +5429,19 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
           regionReqArgs = {
             getPartition(i),
             0,
-            priv.first,
-            priv.second,
+            indicesPriv,
+            indicesAccessMode,
             getLogicalRegion(regions[i].regionParent),
           };
         } else {
           regionReqArgs = {
             getLogicalRegion(regions[i].region),
-            priv.first,
-            priv.second,
+            indicesPriv,
+            indicesAccessMode,
             regions[i].regionParent,
           };
         }
-        auto req = ir::makeConstructor(RegionRequirement, regionReqArgs);
+        auto req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
         req = ir::MethodCall::make(req, "add_field", {regions[i].field}, false /* deref */, Auto);
         regionReqs.push_back(req);
 
@@ -5286,9 +5453,14 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
 
     ir::Expr req;
     // Perform a similar analysis as above for the values region.
+    auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
+    auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
+    ir::Expr tag;
+    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+      tag = virtualMap;
+      taskReadsAnyVars |= true;
+    }
     if (util::contains(tensorLogicalPartitions, tv)) {
-      auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
-      auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
       ir::Expr valsPartition;
       // The logic to select valsPartition is similar to the logic above to select the partitions
       // for the indices arrays.
@@ -5307,12 +5479,12 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
 
       // Now add the region requirement for the values.
       regionReqArgs = {
-          valsPartition,
-          0,
-          priv.first,
-          priv.second,
-          // TODO (rohany): Should this be region or region parent?
-          valsParent,
+        valsPartition,
+        0,
+        priv.first,
+        priv.second,
+        // TODO (rohany): Should this be region or region parent?
+        valsParent,
       };
     } else {
       regionReqArgs = {
@@ -5322,85 +5494,13 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         ir::GetProperty::make(tvIR, TensorProperty::ValuesParent),
       };
     }
-    req = ir::makeConstructor(RegionRequirement, regionReqArgs);
+    req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
     req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
     regionReqs.push_back(req);
 
     // Remember the order in which we are packing regions.
     packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
     packedTensorDataParents.push_back(ir::GetProperty::make(tvIR, TensorProperty::ValuesParent));
-
-    // TODO (rohany): Add all the optimizations below about virtual mapping, leaf tasks etc.
-    continue;
-
-    // If the tensor is being transferred at this level, then use the
-    // corresponding partition. Otherwise, pass the entire region to
-    // the subtask using the TensorVar.
-    // if (util::contains(partitionings, tv) && this->legionLoweringKind != COMPUTE_ONLY) {
-    //   auto part = ir::Var::make(tv.getName() + "LogicalPartition", LogicalPartition);
-    //   auto call = ir::Call::make("runtime->get_logical_partition", {ctx, getLogicalRegion(tvIR), partitionings.at(tv)}, LogicalPartition);
-    //   itlStmts.push_back(ir::VarDecl::make(part, call));
-    //   regionReqArgs = {
-    //       part,
-    //       0,
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // } else if (util::contains(forall.getComputingOn(), tv)) {
-    //   // If the target TensorVar is the target of a distributeOnto statement, then use
-    //   // the partition passed in as an argument.
-    //   regionReqArgs = {
-    //       this->computingOnPartition[tv],
-    //       0,
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // } else if (util::contains(partitionings, tv) && this->legionLoweringKind == COMPUTE_ONLY) {
-    //   // If we are computing only, then all the partitions have already been made for us, so we can
-    //   // just ask the runtime for the partition that we want.
-    //   ir::Expr part;
-    //   if (this->definedIndexVarsExpanded.size() == 0) {
-    //     assert(util::contains(this->computeOnlyPartitions, tv));
-    //     part = this->computeOnlyPartitions[tv];
-    //   } else {
-    //     part = ir::Call::make("runtime->get_logical_partition_by_color", {ctx, getLogicalRegion(tvIR), this->getIterationSpacePointIdentifier()}, LogicalPartition);
-    //   }
-    //   regionReqArgs = {
-    //       part,
-    //       0,
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // } else {
-    //   // Finally, fall back to just using the region itself.
-    //   regionReqArgs = {
-    //       getLogicalRegion(tvIR),
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // }
-    // auto regReq = ir::Var::make(tv.getName() + "Req", RegionRequirement);
-    // auto makeReq = ir::Call::make(
-    //     RegionRequirement.getName(),
-    //     regionReqArgs,
-    //     RegionRequirement
-    // );
-    // itlStmts.push_back(ir::VarDecl::make(regReq, makeReq));
-    // itlStmts.push_back(ir::SideEffect::make(ir::MethodCall::make(regReq, "add_field", {fidVal}, false, Auto)));
-
-    // // If the task being launched doesn't access the target region, then we can
-    // // virtually map the region. Or, for placement code, we don't want to virtually
-    // // map a region that the leaf placement tasks use.
-    // auto bodyReadsVar = util::contains(tensorsAccessed, it);
-    // if (!bodyReadsVar && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
-    //   itlStmts.push_back(ir::Assign::make(ir::FieldAccess::make(regReq, "tag", false, Auto), virtualMap));
-    // }
-    // taskReadsAnyVars |= bodyReadsVar;
-    // regionReqs.push_back(regReq);
   }
 
   // These args have to be for each of the subtasks.
@@ -5556,7 +5656,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
     ir::Expr domainIter,
     Datatype pointT,
     std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
-    std::set<TensorVar> tensorsAccessed,
+    std::set<ir::GetProperty::Hashable> regionsAccessed,
     int taskID,
     Stmt& unpackTensorData
 ) {
@@ -5569,6 +5669,14 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
   taskCallStmts.push_back(ir::VarDecl::make(point, ir::Deref::make(domainIter, pointT)));
   std::vector<ir::Expr> packedTensorData, packedTensorDataParents;
 
+  // Small helper routine to append a tag argument.
+  auto maybeAddTag = [](std::vector<ir::Expr> args, ir::Expr tag) {
+    if (tag.defined()) {
+      args.push_back(tag);
+    }
+    return args;
+  };
+
   // Construct the region requirements for each tensor.
   std::vector<Expr> regionReqs;
   bool taskReadsAnyVars = false;
@@ -5576,6 +5684,11 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
     auto tv = it;
     auto tvIR = this->tensorVars[tv];
     auto priv = this->getPrivilegeForTensor(forall, tv);
+    // Since we only currently support writing to tensors with the same non-zero
+    // structure as an input, we still are only going to be reading the internal
+    // regions of a tensor, and doing writes only to the values.
+    auto indicesPriv = readOnly;
+    auto indicesAccessMode = exclusive;
     std::vector<Expr> regionReqArgs;
 
     // Begin region requirement construction for sparse tensors.
@@ -5596,6 +5709,16 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
       //  between lowerIndexLaunch and lowerSerialTaskLoop?
       ir::Expr req;
       for (size_t i = 0; i < regions.size(); i++) {
+        // If the task being launched doesn't access the target region, then we can
+        // virtually map the region. Or, for placement code, we don't want to virtually
+        // map a region that the leaf placement tasks use.
+        taco_iassert(regions[i].region.as<GetProperty>() != nullptr);
+        ir::Expr tag;
+        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+          tag = virtualMap;
+          taskReadsAnyVars |= true;
+        }
+
         if (util::contains(tensorLogicalPartitions, tv)) {
           // Logic to select the partition expr we should use for the index launch.
           ir::Expr logicalPart;
@@ -5626,19 +5749,19 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
           auto subreg = ir::Call::make("runtime->get_logical_subregion_by_color", {ctx, logicalPart, point}, Auto);
           regionReqArgs = {
             getLogicalRegion(subreg),
-            priv.first,
-            priv.second,
+            indicesPriv,
+            indicesAccessMode,
             regions[i].regionParent,
           };
         } else {
           regionReqArgs = {
             getLogicalRegion(regions[i].region),
-            priv.first,
-            priv.second,
+            indicesPriv,
+            indicesAccessMode,
             regions[i].regionParent,
           };
         }
-        auto req = ir::makeConstructor(RegionRequirement, regionReqArgs);
+        auto req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
         req = ir::MethodCall::make(req, "add_field", {regions[i].field}, false /* deref */, Auto);
         regionReqs.push_back(req);
 
@@ -5650,9 +5773,14 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
 
     // Do the same analysis for the values.
     ir::Expr req;
+    auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
+    auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
+    auto tag = ir::Expr(0);
+    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+      tag = ir::BitOr::make(tag, virtualMap);
+      taskReadsAnyVars |= true;
+    }
     if (util::contains(tensorLogicalPartitions, tv)) {
-      auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
-      auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
       ir::Expr valsPartition;
       // The logic to select valsPartition is similar to the logic above to select the partitions
       // for the indices arrays.
@@ -5672,115 +5800,26 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
       auto subreg = ir::Call::make("runtime->get_logical_subregion_by_color", {ctx, valsPartition, point}, Auto);
       // Now add the region requirement for the values.
       regionReqArgs = {
-          getLogicalRegion(subreg),
-          priv.first,
-          priv.second,
-          valsParent,
+        getLogicalRegion(subreg),
+        priv.first,
+        priv.second,
+        valsParent,
       };
     } else {
       regionReqArgs = {
-          getLogicalRegion(ir::GetProperty::make(tvIR, TensorProperty::Values)),
-          priv.first,
-          priv.second,
-          ir::GetProperty::make(tvIR, TensorProperty::ValuesParent),
+        getLogicalRegion(ir::GetProperty::make(tvIR, TensorProperty::Values)),
+        priv.first,
+        priv.second,
+        ir::GetProperty::make(tvIR, TensorProperty::ValuesParent),
       };
     }
-
-    req = ir::makeConstructor(RegionRequirement, regionReqArgs);
+    req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
     req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
     regionReqs.push_back(req);
 
     // Remember the order in which we are packing regions.
     packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
     packedTensorDataParents.push_back(ir::GetProperty::make(tvIR, TensorProperty::ValuesParent));
-
-    // End region requirement construction for sparse tensors.
-    continue;
-
-
-    // If the tensor is being transferred at this level, then use the
-    // corresponding partition. Otherwise send the entire region through as
-    // a region requirement using the TensorVar directly.
-    // if (util::contains(partitionings, tv) && this->legionLoweringKind != COMPUTE_ONLY) {
-    //   // Get the subregion that corresponds to this domain point.
-    //   auto call = ir::Call::make(
-    //       "runtime->get_logical_subregion_by_color",
-    //       {
-    //           ctx,
-    //           ir::Call::make(
-    //               "runtime->get_logical_partition",
-    //               {ctx, getLogicalRegion(tvIR), partitionings.at(tv)},
-    //               Auto
-    //           ),
-    //           point
-    //       },
-    //       Auto
-    //   );
-    //   auto subreg = ir::Var::make(tv.getName() + "subReg", Auto);
-    //   taskCallStmts.push_back(ir::VarDecl::make(subreg, call));
-    //   regionReqArgs = {
-    //       subreg,
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // } else if (util::contains(partitionings, tv) && this->legionLoweringKind == COMPUTE_ONLY) {
-    //   ir::Expr part;
-    //   if (this->definedIndexVarsExpanded.size() == 0) {
-    //     assert(util::contains(this->computeOnlyPartitions, tv));
-    //     part = this->computeOnlyPartitions[tv];
-    //   } else {
-    //     part = ir::Call::make(
-    //         "runtime->get_logical_partition_by_color",
-    //         {ctx, getLogicalRegion(tvIR), this->getIterationSpacePointIdentifier()},
-    //         LogicalPartition
-    //     );
-    //   }
-    //   // Get the subregion that corresponds to this domain point.
-    //   auto call = ir::Call::make(
-    //       "runtime->get_logical_subregion_by_color",
-    //       {
-    //           ctx,
-    //           part,
-    //           point
-    //       },
-    //       Auto
-    //   );
-    //   auto subreg = ir::Var::make(tv.getName() + "subReg", Auto);
-    //   taskCallStmts.push_back(ir::VarDecl::make(subreg, call));
-    //   regionReqArgs = {
-    //       subreg,
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR),
-    //   };
-    // } else {
-    //   // Otherwise, pass the entire region through.
-    //   regionReqArgs = {
-    //       getLogicalRegion(tvIR),
-    //       priv.first,
-    //       priv.second,
-    //       getLogicalRegion(tvIR)
-    //   };
-    // }
-
-    // auto regReq = ir::Var::make(tv.getName() + "Req", RegionRequirement);
-    // auto makeReq = ir::Call::make(
-    //     RegionRequirement.getName(),
-    //     regionReqArgs,
-    //     RegionRequirement
-    // );
-    // taskCallStmts.push_back(ir::VarDecl::make(regReq, makeReq));
-    // taskCallStmts.push_back(ir::SideEffect::make(ir::MethodCall::make(regReq, "add_field", {fidVal}, false, Auto)));
-
-    // // If the task being launched doesn't access the target region, then we can
-    // // virtually map the region.
-    // auto bodyReadsVar = util::contains(tensorsAccessed, it);
-    // if (!bodyReadsVar) {
-    //   taskCallStmts.push_back(ir::Assign::make(ir::FieldAccess::make(regReq, "tag", false, Auto), virtualMap));
-    // }
-    // taskReadsAnyVars |= bodyReadsVar;
-    // regionReqs.push_back(regReq);
   }
 
   auto args = ir::Var::make("taskArgs", Auto);
@@ -5861,8 +5900,6 @@ LowererImpl::DenseFormatRuns::DenseFormatRuns(const Access& a, const Iterators& 
 }
 
 void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterators &iterators, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) {
-  // TODO (rohany): Implement.
-
   // TODO (rohany): What do we want to know / how do we want to organize it.
   //  * Information about each tensorvar -- the dimensionality of the values
   //    array. That can be stored in a map<tensorvar, {info}>.

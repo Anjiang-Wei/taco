@@ -438,8 +438,10 @@ protected:
   // declareLaunchDomain declares the index space domain for a distributed task launch.
   std::vector<ir::Stmt> declareLaunchDomain(ir::Expr domain, Forall forall, const std::vector<IndexVar>& distVars);
 
-  // statementAccessesTensor returns true if an ir statement reads or writes a tensor.
-  bool statementAccessesTensor(ir::Stmt stmt, ir::Expr target);
+  // statementAccessesRegion returns true if an ir statement reads or writes
+  // a region component of a tensor. The input expression target must be a
+  // ir::GetProperty.
+  bool statementAccessesRegion(ir::Stmt stmt, ir::Expr target);
 
   // declarePartitionBoundsVars declares partition bounds for a particular value of
   // an iterator through the partition's domain.
@@ -477,7 +479,7 @@ protected:
       Forall forall,
       ir::Expr domain,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
-      std::set<TensorVar> tensorsAccessed,
+      std::set<ir::GetProperty::Hashable> tensorsAccessed,
       int taskID,
       ir::Stmt& unpackTensorData
   );
@@ -489,7 +491,7 @@ protected:
       ir::Expr domainIter,
       Datatype pointT,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
-      std::set<TensorVar> tensorsAccessed,
+      std::set<ir::GetProperty::Hashable> tensorsAccessed,
       int taskID,
       ir::Stmt& unpackTensorData
   );
@@ -743,6 +745,12 @@ private:
     std::set<IndexVar> presentIvars;
     bool changed = false;
   };
+
+  // These two fields maintain information about if the optimization
+  // to write into sparse outputs with the same non-zero structure
+  // as the input tensor is enabled.
+  bool preservesNonZeros = false;
+  NonZeroAnalyzerResult nonZeroAnalyzerResult;
 
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.

@@ -270,6 +270,110 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
 // tensor, but does not copy the values. This method is intended to be used in the case
 // where the result tensor of a computation has a sparse output with non-zero structure
 // identical to an input tensor's non-zero structure.
-LegionTensor copyNonZeroStructure(Legion::Context ctx, Legion::Runtime* runtime, LegionTensorFormat format, LegionTensor src);
+template<typename T>
+LegionTensor copyNonZeroStructure(Legion::Context ctx, Legion::Runtime* runtime, LegionTensorFormat format, LegionTensor src) {
+  using namespace Legion;
+  // Double check that the result format is a prefix of the source format.
+  taco_uassert(format.size() <= src.format.size());
+  std::vector<int32_t> dims;
+  for (size_t i = 0; i < format.size(); i++) {
+    dims.push_back(src.dims[i]);
+    taco_uassert(format[i] == src.format[i]);
+  }
+
+  auto createLogicalPart = [&](LogicalRegion part, IndexSpace domain) {
+    auto ipart = runtime->create_equal_partition(ctx, part.get_index_space(), domain);
+    return runtime->get_logical_partition(ctx, part, ipart);
+  };
+
+  auto getField = [&](LogicalRegion reg) {
+    std::vector<FieldID> fields;
+    runtime->get_field_space_fields(ctx, reg.get_field_space(), fields);
+    taco_uassert(fields.size() == 1);
+    return fields[0];
+  };
+
+  // TODO (rohany): We'll assume for now that once we hit a sparse level,
+  //  we can't run into any more dense levels. This is just an implementation
+  //  limitation because I'm too lazy to implement some of the logic needed
+  //  for sparse-dense style formats.
+
+  bool seenSparse = false;
+  Domain currentValsDomain;
+  LegionTensor result(format, dims);
+  // TODO (rohany): This is probably not correct, but I'll run with it for now.
+  result.denseLevelRuns = src.denseLevelRuns;
+  for (size_t level = 0; level < format.size(); level++) {
+    switch (format[level]) {
+      case Dense: {
+        taco_uassert(!seenSparse) << "currently not supporting sparse-dense formats";
+        break; // Nothing to do here.
+      }
+      case Sparse: {
+        seenSparse = true;
+        // Copy the pos and crd arrays over from the source tensor.
+        auto srcPosReg = src.indices[level][0];
+        auto srcPosParent = src.indicesParents[level][0];
+        auto srcCrdReg = src.indices[level][1];
+        auto srcCrdParent = src.indicesParents[level][1];
+        auto posField = getField(srcPosReg);
+        auto crdField = getField(srcCrdReg);
+        auto posReg = runtime->create_logical_region(ctx, srcPosReg.get_index_space(), srcPosReg.get_field_space());
+        auto crdReg = runtime->create_logical_region(ctx, srcCrdReg.get_index_space(), srcCrdReg.get_field_space());
+
+        // Add the regions to the result tensor.
+        result.indices[level].push_back(posReg);
+        result.indicesParents[level].push_back(posReg);
+        result.indices[level].push_back(crdReg);
+        result.indicesParents[level].push_back(crdReg);
+
+        // Now copy the regions over from the source into the destination.
+        // For simplicity, we'll assert that some partitions of the source tensor
+        // have already been created.
+        taco_uassert(src.indicesEqPartitions[level].size() == 2);
+        auto srcPosPart = src.indicesEqPartitions[level][0];
+        auto srcCrdPart = src.indicesEqPartitions[level][1];
+        taco_uassert(srcPosPart.exists());
+        taco_uassert(srcCrdPart.exists());
+
+        // Create some equal partitions of the destination arrays as well.
+        auto posPart = createLogicalPart(posReg, runtime->get_index_partition_color_space_name(srcPosPart.get_index_partition()));
+        auto crdPart = createLogicalPart(crdReg, runtime->get_index_partition_color_space_name(srcCrdPart.get_index_partition()));
+        result.indicesEqPartitions[level].push_back(posPart);
+        result.indicesEqPartitions[level].push_back(crdPart);
+
+        // Launch an IndexCopy over these partitions.
+        IndexCopyLauncher launcher(runtime->get_index_partition_color_space_name(srcPosPart.get_index_partition()));
+        launcher.add_copy_requirements(
+            RegionRequirement(srcPosPart, 0, READ_ONLY, EXCLUSIVE, srcPosParent).add_field(posField),
+            RegionRequirement(posPart, 0, WRITE_ONLY, EXCLUSIVE, posReg).add_field(posField)
+        );
+        launcher.add_copy_requirements(
+            RegionRequirement(srcCrdPart, 0, READ_ONLY, EXCLUSIVE, srcCrdParent).add_field(crdField),
+            RegionRequirement(crdPart, 0, WRITE_ONLY, EXCLUSIVE, crdReg).add_field(crdField)
+        );
+        runtime->issue_copy_operation(ctx, launcher);
+
+        // Finally, remember that this is the dimensionality of the vals region.
+        currentValsDomain = runtime->get_index_space_domain(srcCrdReg.get_index_space());
+        break;
+      }
+      case Singleton: {
+        taco_iassert(false) << "not handling the Singleton case here yet";
+        break;
+      }
+    }
+  }
+
+  // Perform a similar operation as above but for the values array.
+  // However, we only need to construct the values, not copy anything into them.
+  taco_uassert(currentValsDomain.exists()) << "cannot copy prefix to dense tensor";
+  auto valsIspace = runtime->create_index_space(ctx, currentValsDomain);
+  auto vals = runtime->create_logical_region(ctx, valsIspace, src.vals.get_field_space());
+  result.vals = vals;
+  result.valsParent = vals;
+  runtime->fill_field(ctx, vals, vals, getField(vals), T(0));
+  return result;
+}
 
 #endif //TACO_LEGION_TENSOR_H

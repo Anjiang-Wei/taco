@@ -3464,6 +3464,10 @@ bool preservesNonZeroStructure(IndexStmt stmt, NonZeroAnalyzerResult& res) {
     taco_iassert(!resultAccess);
     resultAccess = std::make_unique<Access>(node->lhs);
   }));
+  // Some expressions don't have assignments, and thus won't have an RHS to consider.
+  if (resultAccess == nullptr) {
+    return false;
+  }
 
   // Now, there can only be one non-dense tensor in the LHS.
   std::vector<Access> sparseRHSTensors;
