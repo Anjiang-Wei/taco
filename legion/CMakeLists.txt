@@ -206,8 +206,8 @@ set_tests_properties(legion-sparse-spmv-basic PROPERTIES DEPENDS "legion-sparse-
 set_tests_properties(legion-sparse-spmv-pos PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
 set_tests_properties(legion-sparse-spmm-basic PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
 
-add_basic_legion_sparse_test(spttv basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -bdd 1 -gx 4 -dump)
-add_basic_legion_sparse_test(spttv pos -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -bdd 1 -gx 4 -pos -dump)
+add_basic_legion_sparse_test(spttv basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -pieces 4 -dump)
+add_basic_legion_sparse_test(spttv pos -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -pieces 4 -pos -dump)
 set_tests_properties(legion-sparse-spttv-basic PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
 set_tests_properties(legion-sparse-spttv-pos PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
 

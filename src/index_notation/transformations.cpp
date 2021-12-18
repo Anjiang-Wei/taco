@@ -493,6 +493,7 @@ IndexStmt Parallelize::apply(IndexStmt stmt, std::string* reason) const {
     set<IndexVar> definedIndexVars;
     set<ParallelUnit> parentParallelUnits;
     std::string reason = "";
+    bool preservesNonZeroOutputStructure = false;
 
     IndexStmt rewriteParallel(IndexStmt stmt) {
       provGraph = ProvenanceGraph(stmt);
@@ -500,6 +501,10 @@ IndexStmt Parallelize::apply(IndexStmt stmt, std::string* reason) const {
       assembledByUngroupedInsert.clear();
       for (const auto& result : getAssembledByUngroupedInsertion(stmt)) {
         assembledByUngroupedInsert.push_back(tensorVars[result]);
+      }
+      {
+        NonZeroAnalyzerResult res;
+        this->preservesNonZeroOutputStructure = preservesNonZeroStructure(stmt, res);
       }
       return rewrite(stmt);
     }
@@ -527,26 +532,29 @@ IndexStmt Parallelize::apply(IndexStmt stmt, std::string* reason) const {
           return;
         }
 
-        // Precondition 2: Every result iterator must have insert capability
-        for (Iterator iterator : lattice.results()) {
-          if (util::contains(assembledByUngroupedInsert, iterator.getTensor())) {
-            for (Iterator it = iterator; !it.isRoot(); it = it.getParent()) {
-              if (it.hasInsertCoord() || !it.isYieldPosPure()) {
-                reason = "Precondition failed: The output tensor does not "
-                         "support parallelized inserts";
-                return;
+        // Precondition 2: Every result iterator must have insert capability,
+        // or the result tensor preserves the same non-zero structure as the input.
+        if (!this->preservesNonZeroOutputStructure) {
+          for (Iterator iterator : lattice.results()) {
+            if (util::contains(assembledByUngroupedInsert, iterator.getTensor())) {
+              for (Iterator it = iterator; !it.isRoot(); it = it.getParent()) {
+                if (it.hasInsertCoord() || !it.isYieldPosPure()) {
+                  reason = "Precondition failed: The output tensor does not "
+                           "support parallelized inserts";
+                  return;
+                }
               }
-            }
-          } else {
-            while (true) {
-              if (!iterator.hasInsert()) {
-                reason = "Precondition failed: The output tensor must allow inserts";
-                return;
+            } else {
+              while (true) {
+                if (!iterator.hasInsert()) {
+                  reason = "Precondition failed: The output tensor must allow inserts";
+                  return;
+                }
+                if (iterator.isLeaf()) {
+                  break;
+                }
+                iterator = iterator.getChild();
               }
-              if (iterator.isLeaf()) {
-                break;
-              }
-              iterator = iterator.getChild();
             }
           }
         }
@@ -736,6 +744,9 @@ IndexStmt Distribute::apply(IndexStmt stmt, std::string* reason) const {
   taco_iassert(this->content->original.size() == size_t(this->content->grid.getDim()));
 
   ProvenanceGraph pg(stmt);
+
+  // TODO (rohany): Make sure that we can either insert into all the tensors
+  //  or it preserves the non-zero structure of the input.
 
   OutputRaceStrategy raceStrategy = OutputRaceStrategy::NoRaces;
   // For each variable being distributed, see if there is a reduction occuring.

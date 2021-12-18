@@ -1016,6 +1016,34 @@ Expr GetProperty::makeIndicesAccessor(Expr tensor, std::string nameBase, int mod
   return gp;
 }
 
+GetProperty::Hashable GetProperty::toHashable() const {
+  return Hashable {
+    .tensor = this->tensor,
+    .property = this->property,
+    .mode = this->mode,
+    .index = this->index,
+  };
+}
+
+bool operator<(const GetProperty::Hashable& a, const GetProperty::Hashable& b) {
+  if (a.tensor != b.tensor) return a.tensor < b.tensor;
+  if (a.property != b.property) return a.property < b.property;
+  if (a.mode != b.mode) return a.mode < b.mode;
+  return a.index < b.index;
+}
+
+bool operator==(const GetProperty::Hashable& a, const GetProperty::Hashable& b) {
+  if (a.tensor != b.tensor) return false;
+  if (a.property != b.property) return false;
+  if (a.mode != b.mode) return false;
+  if (a.index != b.index) return false;
+  return true;
+}
+
+bool operator!=(const GetProperty::Hashable& a, const GetProperty::Hashable& b) {
+  return !(a == b);
+}
+
 // Sort
 Stmt Sort::make(std::vector<Expr> args) {
   Sort* sort = new Sort;
