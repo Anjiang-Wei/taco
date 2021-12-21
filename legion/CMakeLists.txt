@@ -117,6 +117,7 @@ add_cuda_folder(cuda-test)
 add_app_folder(spmv)
 add_app_folder(spttv)
 add_app_folder(spmm)
+add_app_folder(sddmm)
 
 # Add a variety of tests for the generated code.
 
