@@ -118,6 +118,7 @@ add_app_folder(spmv)
 add_app_folder(spttv)
 add_app_folder(spmm)
 add_app_folder(sddmm)
+add_app_folder(spmttkrp)
 
 # Add a variety of tests for the generated code.
 

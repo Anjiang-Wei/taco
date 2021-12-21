@@ -1687,15 +1687,17 @@ TEST(distributed, legionSpMTTKRP) {
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), k("k"), l("l");
   IndexVar io("io"), ii("ii");
-  IndexVar f1("f1"), f2("f2"), fpos("fpos"), fposo("fposo"), fposi("fposi");
+  IndexVar f1("f1"), f2("f2"), fpos("fpos"), fposo("fposo"), fposi("fposi"), fposio("fposio"), fposii("fposii");
   A(i, l) = B(i, j, k) * C(j, l) * D(k, l);
-  // This schedule generates the code found in `leaf_kernels.h`.
+  const int CHUNK_SIZE=2048;
   auto stmt = A.getAssignment().concretize()
                .reorder({i, j, k, l})
                .fuse(j, k, f1)
                .fuse(i, f1, f2)
                .pos(f2, fpos, B(i, j, k))
                .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
+               .split(fposi, fposio, fposii, CHUNK_SIZE)
+               .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
                .communicate(A(i, l), fposo)
                .communicate(B(i, j, k), fposo)
                .communicate(C(j, l), fposo)
@@ -1704,6 +1706,12 @@ TEST(distributed, legionSpMTTKRP) {
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
   codegen->compile(lowered);
+  {
+    ofstream f("../legion/spmttkrp/taco-generated.cpp");
+    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(lowered);
+    f.close();
+  }
 }
 
 TEST(distributed, legionFormatConverterLib) {
