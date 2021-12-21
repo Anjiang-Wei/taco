@@ -61,6 +61,32 @@ void spmv(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsM
   out << "Average time: " << avg << " ms." << std::endl;
 }
 
+void spmm(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsMatrix<double>> B, int warmup, int niter, int kDim, Teuchos::FancyOStream& out) {
+  // TODO (rohany): I'm not sure what the best assignment of Domain and Range maps
+  //  are here for this operation.
+  Tpetra::MultiVector<double> A(B->getDomainMap(), kDim);
+  Tpetra::MultiVector<double> C(B->getRangeMap(), kDim);
+  A.putScalar(0.0);
+  C.putScalar(1.0);
+  
+  // Warmup iterations.
+  for (int i = 0; i < warmup; i++) {
+    B->apply(C, A);
+  }
+  // Timed iterations.
+  auto timer = Teuchos::TimeMonitor::getNewCounter("SpMM");
+  auto start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < niter; i++) {
+    Teuchos::TimeMonitor timeMon(*timer);
+    B->apply(C, A);
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  auto avg = double(ms.count()) / double(niter);
+  Teuchos::TimeMonitor::summarize(comm.ptr(), out);
+  out << "Average time: " << avg << " ms." << std::endl;
+}
+
 int main(int argc, char** argv) {
 
   Tpetra::ScopeGuard tpetraScope (&argc, &argv);
@@ -78,7 +104,7 @@ int main(int argc, char** argv) {
   std::string distribution ="1D";
   cmdp.setOption("distribution", &distribution, "Parallel distribution to use: 1D, 2D, LowerTriangularBlock, MMFile");
 
-  int chunkSize = 1000;
+  int chunkSize = 10000;
   cmdp.setOption("loadChunkSize", &chunkSize, "Number of edges to be read and broadcasted at once");
 
   int warmup = 10;
@@ -86,6 +112,12 @@ int main(int argc, char** argv) {
 
   int niter = 20;
   cmdp.setOption("n", &niter, "Number of timed iterations to run");
+
+  std::string benchKind = "spmv";
+  cmdp.setOption("bench", &benchKind, "Benchmark kind to run. One of {spmv,spmm}.");
+
+  int spmmKDim = 32;
+  cmdp.setOption("spmmkdim", &spmmKDim, "K-dimension value for SpMM benchmark");
 
   if (cmdp.parse(argc, argv) != Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL) {
     std::cout << "Command line parse unsuccessful" << std::endl;
@@ -97,15 +129,29 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  auto isMtxMarket = endsWith(filename, ".mtx");
-  auto xpetraMat = Xpetra::IO<double, int, long long>::Read(filename, Xpetra::UseTpetra, comm, !isMtxMarket);
-  auto matrixWrap = Teuchos::rcp_dynamic_cast<Xpetra::CrsMatrixWrap<double, int, long long>>(xpetraMat);
-  auto xPetraTpetraMat = Teuchos::rcp_dynamic_cast<Xpetra::TpetraCrsMatrix<double, int, long long>>(matrixWrap->getCrsMatrix());
-  auto A = xPetraTpetraMat->getTpetra_CrsMatrixNonConst();
+  // TODO (rohany): Old code attempting to use the under-development Trilinos binary data reader. This is
+  // kind of a waste because the binary reader only supports full matrices...
+  // auto isMtxMarket = endsWith(filename, ".mtx");
+  // auto xpetraMat = Xpetra::IO<double, int, long long>::Read(filename, Xpetra::UseTpetra, comm, !isMtxMarket);
+  // auto matrixWrap = Teuchos::rcp_dynamic_cast<Xpetra::CrsMatrixWrap<double, int, long long>>(xpetraMat);
+  // auto xPetraTpetraMat = Teuchos::rcp_dynamic_cast<Xpetra::TpetraCrsMatrix<double, int, long long>>(matrixWrap->getCrsMatrix());
+  // auto A = xPetraTpetraMat->getTpetra_CrsMatrixNonConst();
+  
+  Teuchos::ParameterList params;
+  params.set("distribution", distribution);
+  params.set("chunkSize", size_t(chunkSize));
+  auto A = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(filename, comm, params);
   // Teuchos::FancyOStream foo(Teuchos::rcp(&std::cout, false));
   // A->describe(foo, Teuchos::VERB_EXTREME);
 
-  spmv(comm, A, warmup, niter, out);
+  if (benchKind == "spmv") {
+    spmv(comm, A, warmup, niter, out);
+  } else if (benchKind == "spmm") {
+    spmm(comm, A, warmup, niter, spmmKDim, out);
+  } else {
+    std::cout << "Invalid benchmark kind" << std::endl;
+    return 1;
+  }
 
   return 0;
 }
