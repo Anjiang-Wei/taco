@@ -1645,6 +1645,61 @@ TEST(distributed, legionSpMM) {
   }
 }
 
+TEST(distributed, legionSDDMM) {
+  int dim = 100;
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> C("C", {dim, dim}, Format{Dense, Dense});
+  Tensor<double> D("D", {dim, dim}, Format{Dense, Dense});
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), kio("kio"), kii("kii");
+  A(i, k) = B(i, k) * C(i, j) * D(j, k);
+  const int CHUNK_SIZE=2048;
+  auto stmt = A.getAssignment().concretize()
+               .fuse(i, k, f)
+               .pos(f, kpos, B(i, k))
+               .distribute({kpos}, {ko}, {ki}, Grid(pieces))
+               .split(ki, kio, kii, CHUNK_SIZE)
+               .parallelize(kio, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+               .communicate(A(i, k), ko)
+               .communicate(B(i, k), ko)
+               .communicate(C(i, j), ko)
+               .communicate(D(j, k), ko)
+               ;
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
+  codegen->compile(lowered);
+}
+
+TEST(distributed, legionSpMTTKRP) {
+  int dim = 1000;
+  Tensor<double> A("A", {dim, dim}, Dense);
+  Tensor<double> B("B", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
+  Tensor<double> C("C", {dim, dim}, Dense);
+  Tensor<double> D("D", {dim, dim}, Dense);
+
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  IndexVar i("i"), j("j"), k("k"), l("l");
+  IndexVar io("io"), ii("ii");
+  IndexVar f1("f1"), f2("f2"), fpos("fpos"), fposo("fposo"), fposi("fposi");
+  A(i, l) = B(i, j, k) * C(j, l) * D(k, l);
+  // This schedule generates the code found in `leaf_kernels.h`.
+  auto stmt = A.getAssignment().concretize()
+               .reorder({i, j, k, l})
+               .fuse(j, k, f1)
+               .fuse(i, f1, f2)
+               .pos(f2, fpos, B(i, j, k))
+               .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
+               .communicate(A(i, l), fposo)
+               .communicate(B(i, j, k), fposo)
+               .communicate(C(j, l), fposo)
+               .communicate(D(k, l), fposo)
+               ;
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
+  codegen->compile(lowered);
+}
+
 TEST(distributed, legionFormatConverterLib) {
   int dim = 100;
 
