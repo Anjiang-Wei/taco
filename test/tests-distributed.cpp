@@ -1515,18 +1515,22 @@ TEST(distributed, legionSpMV) {
   int dim = 100;
 
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  // auto chunkSize = ir::Var::make("chunkSize", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  // TODO (rohany): Make it possible for split to also take in an expression.
   auto chunkSize = 2048;
   IndexVar i("i"), j("j"), io("io"), ii("ii"), f("f"), fpos("fpos"), fposi("fposi"), fposo("fposo"), fposio("fposio"), fposii("fposii");
   std::vector<ir::Stmt> stmts;
-  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c)> sched) {
+  std::vector<ir::Stmt> cudaStmts;
+  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c)> sched, bool cuda = false) {
     Tensor<double> a("a", {dim}, Format{Dense});
     Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
     Tensor<double> c("c", {dim}, Format{Dense});
     a(i) = B(i, j) * c(j);
     auto stmt = sched(a.getAssignment().concretize(), a, B, c);
-    stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + name, false /* waitOnFutureMap */));
+    auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + name, false /* waitOnFutureMap */);
+    if (cuda) {
+      cudaStmts.push_back(lowered);
+    } else {
+      stmts.push_back(lowered);
+    }
   };
 
   add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
@@ -1552,13 +1556,68 @@ TEST(distributed, legionSpMV) {
            ;
   });
 
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(ir::Block::make(stmts));
+  // CUDA schedules. These are set up so that we can use the same
+  // main.cpp file.
+  const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
+  const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
+  IndexVar block("block"), warp("warp"), thread("thread"), thread_nz("thread_nz"), i1("i1"), jpos("jpos"), block_row("block_row"), warp_row("warp_row");
+  add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
+    return stmt
+           .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+           .split(ii, block, block_row, ROWS_PER_TB)
+           .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
+           .pos(j, jpos, B(i, j))
+           .split(jpos, thread_nz, thread, WARP_SIZE)
+           .reorder({block, warp, warp_row, thread, thread_nz})
+           .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+           .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+           // TODO (rohany): We want to use a temporary here, rather than atomics.
+           //  This requires getting workspaces _working_.
+           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+           .communicate(a(i), io)
+           .communicate(B(i, j), io)
+           .communicate(c(j), io)
+           ;
+  }, true /* cuda */);
+  // TODO (rohany): This is a dummy implementation as pos splits likely do
+  //  not work for GPU's right now.
+  add("PosSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
+    return stmt
+        .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+        .split(ii, block, block_row, ROWS_PER_TB)
+        .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
+        .pos(j, jpos, B(i, j))
+        .split(jpos, thread_nz, thread, WARP_SIZE)
+        .reorder({block, warp, warp_row, thread, thread_nz})
+        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+        .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+        // TODO (rohany): We want to use a temporary here, rather than atomics.
+        //  This requires getting workspaces _working_.
+        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+        .communicate(a(i), io)
+        .communicate(B(i, j), io)
+        .communicate(c(j), io)
+        ;
+  }, true /* cuda */);
   {
-    ofstream f("../legion/spmv/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+    auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
     codegen->compile(ir::Block::make(stmts));
-    f.close();
+    {
+      ofstream f("../legion/spmv/taco-generated.cpp");
+      auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
+      codegen->compile(ir::Block::make(stmts));
+      f.close();
+    }
+  }
+  {
+    auto codegen = std::make_shared<ir::CodegenLegionCuda>(std::cout, taco::ir::CodeGen::ImplementationGen);
+    codegen->compile(ir::Block::make(cudaStmts));
+    {
+      ofstream f("../legion/spmv/taco-generated.cu");
+      auto codegen = std::make_shared<ir::CodegenLegionCuda>(f, taco::ir::CodeGen::ImplementationGen);
+      codegen->compile(ir::Block::make(cudaStmts));
+      f.close();
+    }
   }
 }
 

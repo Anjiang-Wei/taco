@@ -572,8 +572,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
         case TensorProperty::ValuesReductionNonExclusiveAccessor:
-        case TensorProperty::IndicesAccessor:
-        case TensorProperty::Dimension: {
+        case TensorProperty::IndicesAccessor: {
           auto hashable = op->toHashable();
           if (!util::contains(this->gps, hashable)) {
             this->gps[hashable] = op;
@@ -603,13 +602,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
 
     for (auto it : gpc.gps) {
       auto op = it.second;
-      Datatype paramTy;
-      if (op->property == TensorProperty::Dimension) {
-        paramTy = op->type;
-      } else {
-        paramTy = Datatype(accessorTypeString(op));
-      }
-      auto param = ir::Var::make(op->name, paramTy);
+      auto param = ir::Var::make(op->name, accessorTypeString(op));
       addParam(std::make_pair(getVarName(param), param));
     }
 
