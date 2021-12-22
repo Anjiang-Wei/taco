@@ -1565,7 +1565,7 @@ TEST(distributed, legionSpMV) {
 TEST(distributed, legionSpTTV) {
   int dim = 100;
 
-  auto chunkSize = 2;
+  auto chunkSize = 2048;
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ff("ff"), ffpos("ffpos"), ffposo("ffposo"), ffposi("ffposi"), ffposio("ffposio"), ffposii("ffposii");
   std::vector<ir::Stmt> stmts;
