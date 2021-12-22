@@ -110,6 +110,30 @@ protected:
   }
 
   virtual void visit(const GetProperty *op) {
+    // For certain TensorProperties, we need to ensure that we emit
+    // also collect the properties that they depend on.
+    switch (op->property) {
+      case TensorProperty::ValuesWriteAccessor:
+      case TensorProperty::ValuesReadAccessor:
+      case TensorProperty::ValuesReductionNonExclusiveAccessor:
+      case TensorProperty::ValuesReductionAccessor: {
+        // If we have a values accessor, then the values array for this
+        // tensor needs to be included as well.
+        auto values = ir::GetProperty::make(op->tensor, TensorProperty::Values);
+        values.accept(this);
+        break;
+      }
+      case TensorProperty::IndicesAccessor: {
+        // Similar logic holds for an index accessor. However, we don't
+        // need to make another property here since we are carrying around
+        // the property that we are referencing.
+        op->accessorArgs.regionAccessing.accept(this);
+        break;
+      }
+      default:
+        break;
+    }
+
     if (varMap.count(op) == 0 && !inBlock) {
       auto key =
           std::tuple<Expr,TensorProperty,int,int>(op->tensor,op->property,
@@ -282,6 +306,12 @@ protected:
 CodegenLegionCuda::CodegenLegionCuda(std::ostream &dest, OutputKind outputKind, bool simplify)
   : CodeGen(dest, false, simplify, CUDA), CodeGen_CUDA(dest, outputKind), CodegenLegion(dest, CUDA) {}
 
+// This is a no-op because we pull this IR-node out and handle it specially when constructing
+// the header of a task.
+void CodegenLegionCuda::visit(const UnpackTensorData*) {}
+// This operation is also a no-op for a similar reason.
+void CodegenLegionCuda::visit(const DeclareStruct*) {}
+
 void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
   stmt = simplifyFunctionBodies(stmt);
   this->stmt = stmt;
@@ -393,13 +423,29 @@ void CodegenLegionCuda::visit(const Function* func) {
   varMap = varFinder.varMap;
   localVars = varFinder.localVars;
 
+  // Find the first unpackTensorData IR node. If this is a task, it will be the
+  // first Stmt in the task.
+  // Find the unpackTensorData IR node in the task. There must be one.
+  struct UnpackTensorDataFinder : public IRVisitor {
+    void visit(const UnpackTensorData* op) {
+      if (data == nullptr) {
+        data = op;
+      }
+    }
+    const UnpackTensorData* data = nullptr;
+  } unpackTensorDataFinder;
+  func->body.accept(&unpackTensorDataFinder);
+
   // For tasks, unpack the regions.
   if (func->name.find("task") != std::string::npos) {
-    auto parentFunc = this->funcToParentFunc[func];
-    for (size_t i = 0; i < this->regionArgs[parentFunc].size(); i++) {
+    taco_iassert(unpackTensorDataFinder.data);
+    for (size_t i = 0; i < unpackTensorDataFinder.data->regions.size(); i++) {
       doIndent();
-      auto t = this->regionArgs[parentFunc][i];
-      out << "PhysicalRegion " << t << " = regions[" << i << "];\n";
+      auto reg = unpackTensorDataFinder.data->regions[i];
+      out << "PhysicalRegion " << reg << " = regions[" << i << "];\n";
+      doIndent();
+      auto regParent = unpackTensorDataFinder.data->regionParents[i];
+      out << "LogicalRegion " << regParent << " = regions[" << i << "].get_logical_region();\n";
     }
     out << "\n";
   }
@@ -415,19 +461,27 @@ void CodegenLegionCuda::visit(const Function* func) {
     }
   }
 
-  // TODO (rohany): Hack.
   // TODO (rohany): Hacky way to tell that this function was a task.
+  // Remove certain declarations from the head of tasks. In particular, we'll remove dimension
+  // sizes, since we'll pass those down through task arguments, and we'll also drop the regions
+  // themselves as we have a separate procedure for declaring them. We'll also drop region parents,
+  // since those are recovered through the same process as regions themselves.
   if (func->name.find("task") != std::string::npos) {
+    std::set<Expr> regionArgs;
+    regionArgs.insert(unpackTensorDataFinder.data->regions.begin(), unpackTensorDataFinder.data->regions.end());
     std::vector<Expr> toRemove;
-    for (auto it : varFinder.varDecls) {
+    for (const auto& it : varFinder.varDecls) {
       if (isa<GetProperty>(it.first)) {
         auto g = it.first.as<GetProperty>();
-        if (g->property == TensorProperty::Dimension) {
+        if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first) ||
+            g->property == TensorProperty::ValuesParent || g->property == TensorProperty::IndicesParents ||
+            g->property == TensorProperty::DenseLevelRun || g->property == TensorProperty::Indices ||
+            g->property == TensorProperty::Values) {
           toRemove.push_back(g);
         }
       }
     }
-    for (auto it : toRemove) {
+    for (const auto& it : toRemove) {
       varFinder.varDecls.erase(it);
     }
   }
@@ -446,7 +500,10 @@ void CodegenLegionCuda::visit(const Function* func) {
     out << "\n";
   }
 
-  // We may have to emit variable declarations for get properties that child kernels use.
+  // We may have to emit variable declarations for get properties
+  // that child kernels use. This extra pass of the FindVars struct
+  // doesn't stop at device function boundaries to extract properties
+  // that those device functions need and can't be created on the device.
   FindVars gpFinder(func->inputs, func->outputs, this);
   func->body.accept(&gpFinder);
   for (auto it : gpFinder.varDecls) {
@@ -457,6 +514,7 @@ void CodegenLegionCuda::visit(const Function* func) {
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
         case TensorProperty::ValuesReductionNonExclusiveAccessor:
+        case TensorProperty::IndicesAccessor:
           if (varFinder.varDecls.count(it.first) == 0) {
             varFinder.varDecls[it.first] = it.second;
           }
@@ -505,25 +563,31 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
   deviceFunctions = deviceFunctionCollector.blockFors;
   deviceFunctionParameters = deviceFunctionCollector.functionParameters;
 
-  // TODO (rohany): I think that we need to explicitly do parameter passing here,
-  //  we know more than the FindVars visitor.
-  struct TensorAccessFinder : public IRVisitor {
+  // GetPropertyCollector collects all properties that a device function
+  // may use to ensure that they are part of the arguments to the call.
+  struct GetPropertyCollector : public IRVisitor {
     void visit(const GetProperty* op) {
       switch (op->property) {
         case TensorProperty::ValuesReadAccessor:
         case TensorProperty::ValuesWriteAccessor:
         case TensorProperty::ValuesReductionAccessor:
         case TensorProperty::ValuesReductionNonExclusiveAccessor:
-          this->gps[op->tensor] = op;
+        case TensorProperty::IndicesAccessor:
+        case TensorProperty::Dimension: {
+          auto hashable = op->toHashable();
+          if (!util::contains(this->gps, hashable)) {
+            this->gps[hashable] = op;
+          }
           break;
+        }
         default:
           return;
       }
     }
-    std::map<Expr, const GetProperty*> gps;
+    std::map<GetProperty::Hashable, const GetProperty*> gps;
   };
-  TensorAccessFinder taf;
-  func->accept(&taf);
+  GetPropertyCollector gpc;
+  func->accept(&gpc);
   for (auto& params : deviceFunctionParameters) {
     // Collect the original set of parameters. We don't want to double count
     // any of the parameters that we manually are adding.
@@ -537,9 +601,15 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
       }
     };
 
-    for (auto arg : this->regionArgs[this->funcToParentFunc[func]]) {
-      auto op = taf.gps[arg];
-      auto param = ir::Var::make(op->name, Datatype(accessorTypeString(op)));
+    for (auto it : gpc.gps) {
+      auto op = it.second;
+      Datatype paramTy;
+      if (op->property == TensorProperty::Dimension) {
+        paramTy = op->type;
+      } else {
+        paramTy = Datatype(accessorTypeString(op));
+      }
+      auto param = ir::Var::make(op->name, paramTy);
       addParam(std::make_pair(getVarName(param), param));
     }
 
@@ -646,6 +716,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
           case TensorProperty::ValuesWriteAccessor:
           case TensorProperty::ValuesReductionAccessor:
           case TensorProperty::ValuesReductionNonExclusiveAccessor:
+          case TensorProperty::IndicesAccessor:
           case TensorProperty::Dimension:
             toRemove.push_back(g);
             break;
@@ -675,9 +746,10 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
     // output body
     print(function);
 
+    // I don't think that we need to do this for the Legion backend.
     // output repack only if we allocated memory
-    if (checkForAlloc(func))
-      out << std::endl << printPack(varFinder.outputProperties, func->outputs);
+    // if (checkForAlloc(func))
+    //   out << std::endl << printPack(varFinder.outputProperties, func->outputs);
     indent--;
     doIndent();
     out << "}\n\n";
@@ -719,6 +791,35 @@ void CodegenLegionCuda::emitHeaders(std::ostream &o) {
   o << "#include \"cudalibs.h\"\n";
   o << "#include \"leaf_kernels.cuh\"\n";
   CodegenLegion::emitHeaders(o);
+}
+
+void CodegenLegionCuda::visit(const Allocate* op) {
+  if (!op->pack.logicalRegion.defined()) {
+    CodeGen_CUDA::visit(op);
+  } else {
+    doIndent();
+    op->var.accept(this);
+    stream << " = ";
+    if (op->is_realloc) {
+      stream << "legionRealloc(ctx, runtime, ";
+      op->pack.logicalRegion.accept(this);
+      stream << ", ";
+      op->old_elements.accept(this);
+      stream << ", ";
+      op->num_elements.accept(this);
+      stream << ", ";
+      op->pack.fieldID.accept(this);
+    } else {
+      stream << "legionMalloc(ctx, runtime, ";
+      op->pack.logicalRegion.accept(this);
+      stream << ", ";
+      op->num_elements.accept(this);
+      stream << ", ";
+      op->pack.fieldID.accept(this);
+    }
+    stream << ");";
+    stream << std::endl;
+  }
 }
 
 }

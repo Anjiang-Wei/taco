@@ -11,6 +11,8 @@ namespace ir {
 
 class CodegenLegionCuda : public CodeGen_CUDA, public CodegenLegion {
 public:
+  // See the comment in codegen_legion_c.h about why simplify is set
+  // to false here.
   CodegenLegionCuda(std::ostream &dest, OutputKind outputKind, bool simplify=false);
   void compile(Stmt stmt, bool isFirst=false) override;
 private:
@@ -19,6 +21,9 @@ private:
   void visit(const For* node) override;
   void visit(const Function* node) override;
   void visit(const PackTaskArgs* node) override;
+  void visit(const UnpackTensorData* node) override;
+  void visit(const DeclareStruct* node) override;
+  void visit(const Allocate* node) override;
   void printDeviceFunctions(const Function* func) override;
   std::string procForTask(Stmt target, Stmt func) override;
   void emitHeaders(std::ostream& o) override;

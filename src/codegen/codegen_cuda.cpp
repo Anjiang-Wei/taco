@@ -1483,7 +1483,9 @@ void CodeGen_CUDA::visit(const Store* op) {
         //  when we are reducing into a scalar reduction.
         // taco_iassert(isa<Load>(add->a));
         // taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc);
-        if (deviceFunctionLoopDepth == 0 || op->atomic_parallel_unit == ParallelUnit::GPUWarp) {
+        // TODO (rohany): I'm not sure if we ever need to not use atomicAddWarp...
+        //  It's just better to coalesce the warp's access.
+        if (true || deviceFunctionLoopDepth == 0 || op->atomic_parallel_unit == ParallelUnit::GPUWarp) {
           // use atomicAddWarp
           // doIndent();
           // stream << "atomicAddWarp<" << printCUDAType(add->b.type(), false) << ">(";

@@ -3460,7 +3460,8 @@ bool preservesNonZeroStructure(IndexStmt stmt, NonZeroAnalyzerResult& res) {
   std::unique_ptr<Access> resultAccess = nullptr;
   // First, let's find the output access.
   match(stmt, std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node){
-    // There should only be one output access.
+    // There should only be one output access. If this assertion fires,
+    // it's likely because the input statement contains workspaces.
     taco_iassert(!resultAccess);
     resultAccess = std::make_unique<Access>(node->lhs);
   }));
