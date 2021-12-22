@@ -712,6 +712,8 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
       if (isa<GetProperty>(it.first)) {
         auto g = it.first.as<GetProperty>();
         switch (g->property) {
+          case TensorProperty::Values:
+          case TensorProperty::Indices:
           case TensorProperty::ValuesReadAccessor:
           case TensorProperty::ValuesWriteAccessor:
           case TensorProperty::ValuesReductionAccessor:
