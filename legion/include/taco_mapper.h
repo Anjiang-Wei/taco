@@ -22,6 +22,8 @@ public:
     UNTRACK_VALID_REGIONS = (1 << 7),
     // Marks that invocations of this task should be backpressured by the mapper.
     BACKPRESSURE_TASK = (1 << 8),
+    // Force a task to be mapped to LOC or OMP procs.
+    MAP_TO_OMP_OR_LOC = (1 << 9),
   };
 
   // Tunable values handled by the TACO mapper.

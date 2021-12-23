@@ -269,6 +269,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
   auto kind = this->default_find_preferred_variant(task, ctx, false /* needs tight bounds */).proc_kind;
   // If we're requested to fill/validate on the CPU, then hijack the initial
   // processor selection to do so.
+  // TODO (rohany): Do the management for the dummy read task here.
   if ((this->preferCPUFill && task.task_id == TID_TACO_FILL_TASK) ||
       (this->preferCPUValidate && task.task_id == TID_TACO_VALIDATE_TASK)) {
     // See if we have any OMP procs.
@@ -279,6 +280,14 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
       targetKind = Legion::Processor::Kind::OMP_PROC;
     }
     kind = targetKind;
+  } else if ((task.tag & MAP_TO_OMP_OR_LOC) != 0) {
+    // Map our task onto OMP or LOC processors.
+    if (!this->local_omps.empty() && this->have_proc_kind_variant(ctx, task.task_id, Processor::OMP_PROC)) {
+      kind = Processor::OMP_PROC;
+    } else {
+      taco_iassert(!this->local_cpus.empty());
+      kind = Processor::LOC_PROC;
+    }
   }
 
   // If we're running with multiple shards per node, then we already have a decomposition of tasks

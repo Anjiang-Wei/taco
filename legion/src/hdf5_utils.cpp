@@ -653,9 +653,11 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
         // Additionally, launch a dummy task to pull this region from disk into equal sizes in
         // CPU memories across the machine. We additionally mark this operation to allow the
         // instances to be considered ready for garbage collection (so that the actual instances
-        // used when doing the computation can take over the needed space).
-        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, posReg, FID_RECT_1, true /* wait */, true /* untrack */));
-        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, crdReg, FID_COORD, true /* wait */, true /* untrack */));
+        // used when doing the computation can take over the needed space). We also mark this
+        // operation as CPU-only, which forces these equal portions of memory to live in CPU memories
+        // instead of being duplicated in the frame-buffer (in case we're running with GPUs).
+        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, posReg, FID_RECT_1, true /* wait */, true /* untrack */, true /* cpuOnly */));
+        result.indicesEqPartitions[i].push_back(launchDummyRead(ctx, runtime, crdReg, FID_COORD, true /* wait */, true /* untrack */, true /* cpuOnly */));
 
         // We reset dimensionality back to 1 for sparse levels. This allows us to cleanly
         // encode the fact that we need one more dimension for dense levels after a sparse level.
@@ -682,7 +684,7 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
   }
   ex.addExternalAllocation(attachHDF5RO(ctx, runtime, vals, {{FID_VAL, LegionTensorValsField}}, filename));
   // Do the same read operation for the values array.
-  result.valsEqPartition = launchDummyRead(ctx, runtime, vals, FID_VAL, true /* wait */, true /* untrack */);
+  result.valsEqPartition = launchDummyRead(ctx, runtime, vals, FID_VAL, true /* wait */, true /* untrack */, true /* cpuOnly */);
 
   // Final cleanup operations.
   H5Tclose(pointTy);
