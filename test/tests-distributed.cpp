@@ -1579,25 +1579,26 @@ TEST(distributed, legionSpMV) {
            .communicate(c(j), io)
            ;
   }, true /* cuda */);
-  // TODO (rohany): This is a dummy implementation as pos splits likely do
-  //  not work for GPU's right now.
+  const int NNZ_PER_THREAD = 8;
+  const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;
+  const int NNZ_PER_TB = NNZ_PER_THREAD * BLOCK_SIZE;
+  IndexVar fpos1("fpos1"), fpos2("fpos2");
   add("PosSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c) {
     return stmt
-        .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-        .split(ii, block, block_row, ROWS_PER_TB)
-        .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
-        .pos(j, jpos, B(i, j))
-        .split(jpos, thread_nz, thread, WARP_SIZE)
-        .reorder({block, warp, warp_row, thread, thread_nz})
-        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
-        .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
-        // TODO (rohany): We want to use a temporary here, rather than atomics.
-        //  This requires getting workspaces _working_.
-        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
-        .communicate(a(i), io)
-        .communicate(B(i, j), io)
-        .communicate(c(j), io)
-        ;
+           .fuse(i, j, f)
+           .pos(f, fpos, B(i, j))
+           .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+           .split(fposi, block, fpos1, NNZ_PER_TB)
+           .split(fpos1, warp, fpos2, NNZ_PER_WARP)
+           .split(fpos2, thread, thread_nz, NNZ_PER_THREAD)
+           .reorder({block, warp, thread, thread_nz})
+           .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+           .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+           .communicate(a(i), fposo)
+           .communicate(B(i, j), fposo)
+           .communicate(c(j), fposo)
+           ;
   }, true /* cuda */);
   {
     auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);

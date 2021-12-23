@@ -604,7 +604,7 @@ void CodeGen_CUDA::printDeviceFuncCall(const vector<pair<string, Expr>> currentP
 
   indent--;
   doIndent();
-  stream << "}";
+  stream << "}\n";
 
   if (GEN_TIMING_CODE) {
     doIndent();
@@ -1446,8 +1446,9 @@ void CodeGen_CUDA::visit(const Store* op) {
       doIndent();
       stream << getAtomicPragma() << endl;
       IRPrinter::visit(op);
-    }
-    else {
+    } else {
+      auto arrGP = op->arr.as<GetProperty>();
+      auto lhsIsAccessor = arrGP != nullptr && arrGP->isAccessor();
       if (isa<Mul>(op->data)) {
         auto mul = to<Mul>(op->data);
         taco_iassert(isa<Load>(mul->a));
@@ -1479,40 +1480,31 @@ void CodeGen_CUDA::visit(const Store* op) {
         stream << ");" << endl;
       } else if (isa<Add>(op->data)) {
         auto add = to<Add>(op->data);
-        // TODO (rohany): I don't think that we want these assertions right now, as they fail
-        //  when we are reducing into a scalar reduction.
-        // taco_iassert(isa<Load>(add->a));
-        // taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc);
-        // TODO (rohany): I'm not sure if we ever need to not use atomicAddWarp...
-        //  It's just better to coalesce the warp's access.
-        if (true || deviceFunctionLoopDepth == 0 || op->atomic_parallel_unit == ParallelUnit::GPUWarp) {
-          // use atomicAddWarp
-          // doIndent();
-          // stream << "atomicAddWarp<" << printCUDAType(add->b.type(), false) << ">(";
-          // op->arr.accept(this);
-          // stream << ", ";
-          // op->loc.accept(this);
-          // stream << ", ";
-          // add->b.accept(this);
-          // stream << ");" << endl;
-          
+        // TODO (rohany): These assertions will fail (again) when we have a code that performs
+        //  a reduction into a scalar. I don't have any of these now in sparse-land, so I'm going
+        //  to include these assertions and we can tackle them again when we run into a problem.
+        taco_iassert(isa<Load>(add->a));
+        taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc);
+        // TODO (rohany): I don't think that there is a case in which we don't want to use
+        //  atomicAddWarp over atomicAdd. Being able to avoid some atomic operations at the
+        //  cost of a few warp-wide collectives seems worth it to me.
+        if (lhsIsAccessor) {
           // We implement a slightly different atomicAddWarp for the Legion backend. It does
           // pretty much the same thing but flattens the Point<DIM> object into an index for
           // the warp consistency check.
           doIndent();
-          stream << "atomicAddWarp(&";
+          stream << "atomicAddWarp(";
           op->arr.accept(this);
-          stream << "[";
+          stream << ".ptr(";
           op->loc.accept(this);
-          stream << "], flattenPoint(";
+          stream << "), flattenPoint(";
           op->arr.accept(this);
           stream << ", ";
           op->loc.accept(this);
           stream << "), ";
           add->b.accept(this);
           stream << ");" << endl;
-        }
-        else {
+        } else {
           doIndent();
           stream << "atomicAdd(&";
 

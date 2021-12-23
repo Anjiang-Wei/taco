@@ -219,11 +219,10 @@ void CodegenLegion::rewriteFunctionTaskIDs() {
           auto oldTaskID = call->args[0].as<Literal>()->getValue<int>();
           expr = ir::Call::make("taskID", {oldTaskID + maxTaskID}, Auto);
         } else {
-          std::vector<Expr> newArgs;
-          for (auto e : call->args) {
-            newArgs.push_back(rewrite(e));
-          }
-          expr = ir::Call::make(call->func, newArgs, call->type);
+          // It's important that we don't change the Call node if nothing has changed,
+          // because we rely on this equality in other parts of the program (like when
+          // converting reduction accesses into operator <<=.
+          IRRewriter::visit(call);
         }
       }
 

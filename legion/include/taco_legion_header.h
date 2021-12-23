@@ -157,7 +157,11 @@ private:
 
 // TODO (rohany): Double check these integer types.
 // arrayEnd is inclusive (i.e. we must be able to access posArray[arrayEnd] safely.
+// We'll also generate device code for this if we're going to run on GPUs.
 template<typename T>
+#if defined (__CUDACC__)
+__host__ __device__
+#endif
 int taco_binarySearchBefore(T posArray, int arrayStart, int arrayEnd, int target) {
   if (posArray[arrayEnd].hi < target) {
     return arrayEnd;
