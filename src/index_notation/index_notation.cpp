@@ -3453,18 +3453,18 @@ IndexStmt generatePackCOOStmt(TensorVar tensor,
 
 
 bool preservesNonZeroStructure(IndexStmt stmt, NonZeroAnalyzerResult& res) {
-  // TODO (rohany): Handle when the statement can contain workspaces.
-
   // We have to use a unique_ptr here to get around the overloaded operator=
   // on Access types.
   std::unique_ptr<Access> resultAccess = nullptr;
   // First, let's find the output access.
   match(stmt, std::function<void(const AssignmentNode*)>([&](const AssignmentNode* node){
-    // There should only be one output access. If this assertion fires,
-    // it's likely because the input statement contains workspaces.
+    // There should only be one output access.
     taco_iassert(!resultAccess);
     resultAccess = std::make_unique<Access>(node->lhs);
+  }), std::function<void(const WhereNode*, Matcher*)>([&](const WhereNode* node, Matcher* m) {
+    m->match(node->consumer);
   }));
+
   // Some expressions don't have assignments, and thus won't have an RHS to consider.
   if (resultAccess == nullptr) {
     return false;

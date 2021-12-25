@@ -1040,14 +1040,24 @@ void CodeGen_CUDA::visit(const Allocate* op) {
   string elementType = printCUDAType(op->var.type(), false);
   if (!isHostFunction) {
     if (parentParallelUnits.count(ParallelUnit::GPUThread)) {
-      // double w_GPUThread[num];
-      // for threads allocate thread local memory
+      // For threads, allocate thread local memory. In this case, the
+      // variable has already been defined and initialized to zero. So,
+      // we'll allocate thread local memory in a temporary variable, then
+      // assign that memory to the target.
+      taco_iassert(isa<Var>(op->var));
+      // This block declares a variable `double var__codegen_cuda_tmp[size];`.
       doIndent();
       stream << elementType << " ";
       op->var.accept(this);
-      stream << "[";
+      stream << "__codegen_cuda_tmp[";
       op->num_elements.accept(this);
-      stream << "];" << endl;
+      stream << "];" << std::endl;
+      // Now, assign the temporary storage into the output variable.
+      doIndent();
+      op->var.accept(this);
+      stream << " = ";
+      op->var.accept(this);
+      stream << "__codegen_cuda_tmp;" << std::endl;
       return;
     }
     // __shared__ double w_GPUThread[32]; if no warps
@@ -1071,7 +1081,6 @@ void CodeGen_CUDA::visit(const Allocate* op) {
     stream << "];" << endl;
     if (parentParallelUnits.count(ParallelUnit::GPUWarp)) {
       doIndent();
-      stream << elementType << " * ";
       op->var.accept(this);
 
       stream << " = ";
