@@ -573,7 +573,20 @@ void CodeGen_C::visit(const Assign* op) {
 
 void CodeGen_C::visit(const Store* op) {
   auto gp = op->arr.as<GetProperty>();
-  if (op->use_atomics && !(gp != nullptr && gp->property == TensorProperty::ValuesReductionNonExclusiveAccessor)) {
+  if (gp && gp->isReductionAccessor()) {
+    // If we have a reduction accessor, then we need to make sure that we don't
+    // double count the value as the reduction operation includes the addition.
+    taco_iassert(isa<Add>(op->data));
+    auto add = to<Add>(op->data);
+    taco_iassert(isa<Load>(add->a));
+    auto load = to<Load>(add->a);
+    taco_iassert(load->arr == op->arr && load->loc == op->loc);
+    // In this case, we'll lower a store that just writes the rhs of the add
+    // into the location.
+    auto newStore = ir::Store::make(op->arr, op->loc, add->b, op->use_atomics, op->atomic_parallel_unit);
+    IRPrinter::visit(to<Store>(newStore));
+    return;
+  } else if (op->use_atomics) {
     doIndent();
     stream << getAtomicPragma() << endl;
   }

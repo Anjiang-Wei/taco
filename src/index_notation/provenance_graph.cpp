@@ -228,11 +228,15 @@ std::vector<ir::Expr> SplitRelNode::deriveIterBounds(taco::IndexVar indexVar,
   std::vector<ir::Expr> parentBound = parentIterBounds.at(getParentVar());
   Datatype splitFactorType = parentBound[0].type();
   if (indexVar == getOuterVar()) {
-    ir::Expr minBound = ir::Div::make(parentBound[0], ir::Literal::make(getSplitFactor(), splitFactorType));
-    ir::Expr maxBound = ir::Div::make(ir::Add::make(parentBound[1], ir::Literal::make(getSplitFactor()-1, splitFactorType)), ir::Literal::make(getSplitFactor(), splitFactorType));
+    // The outer variable must always range from 0 to the extent of the bounds (chunked up).
+    // This is a noop for the common case where all of our loops start at 0. However, it is
+    // important when doing a single-pos split, where the resulting bounds may not start at 0,
+    // and instead start at a position like T_pos[i].lo.
+    ir::Expr minBound = 0;
+    auto upper = ir::Sub::make(parentBound[1], parentBound[0]);
+    ir::Expr maxBound = ir::Div::make(ir::Add::make(upper, ir::Literal::make(getSplitFactor()-1, splitFactorType)), ir::Literal::make(getSplitFactor(), splitFactorType));
     return {minBound, maxBound};
-  }
-  else if (indexVar == getInnerVar()) {
+  } else if (indexVar == getInnerVar()) {
     ir::Expr minBound = 0;
     ir::Expr maxBound = ir::Literal::make(getSplitFactor(), splitFactorType);
     return {minBound, maxBound};

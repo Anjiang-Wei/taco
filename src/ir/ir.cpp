@@ -1025,6 +1025,29 @@ GetProperty::Hashable GetProperty::toHashable() const {
   };
 }
 
+bool GetProperty::isAccessor() const {
+  switch (this->property) {
+    case TensorProperty::ValuesWriteAccessor:
+    case TensorProperty::ValuesReadAccessor:
+    case TensorProperty::ValuesReductionAccessor:
+    case TensorProperty::ValuesReductionNonExclusiveAccessor:
+    case TensorProperty::IndicesAccessor:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool GetProperty::isReductionAccessor() const {
+  switch (this->property) {
+    case TensorProperty::ValuesReductionAccessor:
+    case TensorProperty::ValuesReductionNonExclusiveAccessor:
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool operator<(const GetProperty::Hashable& a, const GetProperty::Hashable& b) {
   if (a.tensor != b.tensor) return a.tensor < b.tensor;
   if (a.property != b.property) return a.property < b.property;
@@ -1294,6 +1317,7 @@ std::ostream& operator<<(std::ostream& os, const Expr& expr) {
 ir::Expr ctx = ir::Symbol::make("ctx");
 ir::Expr runtime = ir::Symbol::make("runtime");
 ir::Expr AffineProjectionBot = ir::Symbol::make("AffineProjection::BOT");
+ir::Expr GPUFBMem = ir::Symbol::make("Legion::Memory::Kind::GPU_FB_MEM");
 
 } // namespace ir
 } // namespace taco

@@ -908,6 +908,9 @@ struct GetProperty : public ExprNode<GetProperty> {
   static Expr makeIndicesAccessor(Expr tensor, std::string nameBase, int mode, int index, AccessorArgs args);
 
   Hashable toHashable() const;
+
+  bool isAccessor() const;
+  bool isReductionAccessor() const;
   
   static const IRNodeType _type_info = IRNodeType::GetProperty;
 };
@@ -990,6 +993,7 @@ bool isValue(Expr expr, T val) {
 extern ir::Expr ctx;
 extern ir::Expr runtime;
 extern ir::Expr AffineProjectionBot;
+extern ir::Expr GPUFBMem;
 
 }}
 #endif

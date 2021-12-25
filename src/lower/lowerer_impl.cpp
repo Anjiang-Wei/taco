@@ -1004,17 +1004,9 @@ Stmt LowererImpl::lowerAssignment(Assignment assignment)
         computeStmt = Store::make(values, loc, rhs);
       }
       else {
-        if (this->legion && this->performingLegionReduction) {
-          // If we are performing a legion reduction, we can't load the value from
-          // the reduction accessor to perform the accumulation. Instead, the <<=
-          // operator on reduction accessors does this for us, so we'll just store
-          // the rhs into values[loc] which will perform the accumulation.
-          computeStmt = Store::make(values, loc, rhs, markAssignsAtomicDepth > 0, atomicParallelUnit);
-        } else {
-          computeStmt = compoundStore(values, loc, rhs,
-                                      markAssignsAtomicDepth > 0,
-                                      atomicParallelUnit);
-        }
+        computeStmt = compoundStore(values, loc, rhs,
+                                    markAssignsAtomicDepth > 0,
+                                    atomicParallelUnit);
       }
       taco_iassert(computeStmt.defined());
     }
@@ -1523,6 +1515,20 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
       legionSparseLevel = posIteratorLevel.getMode().getModeFormat().as<RectCompressedModeFormat>();
     }
 
+    // If we're operating on a sparse level, then we're probably operating
+    // on a partition of that level as well. Extract the domain of the position
+    // array so that we constrain the binary search to within that range.
+    auto posReg = legionSparseLevel->getRegion(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::POS);
+    auto crdReg = legionSparseLevel->getRegion(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::CRD);
+    auto domVar = ir::Var::make(posIteratorLevel.getMode().getName() + "PosDomain", Domain(1));
+    auto crdDomVar = ir::Var::make(posIteratorLevel.getMode().getName() + "CrdDomain", Domain(1));
+    auto getDom = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(posReg)}, Auto);
+    auto getCrdDom = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(crdReg)}, Auto);
+    if (legionSparseLevel) {
+      this->taskHeader.push_back(ir::VarDecl::make(domVar, getDom));
+      this->taskHeader.push_back(ir::VarDecl::make(crdDomVar, getCrdDom));
+    }
+
     // emit bounds search on cpu just bounds, on gpu search in blocks
     if (parallelUnitIndexVars.count(ParallelUnit::GPUBlock)) {
       Expr values_per_block;
@@ -1555,11 +1561,24 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
       IndexVar underived = underivedAncestors[i];
       ir::Expr blockStarts_temporary = ir::Var::make(underived.getName() + "_blockStarts",
                                                      getCoordinateVar(underived).type(), true, false);
-      header.push_back(ir::VarDecl::make(blockStarts_temporary, 0));
-      header.push_back(
-              Allocate::make(blockStarts_temporary, ir::Add::make(parallelUnitSizes[ParallelUnit::GPUBlock], 1)));
-      footer.push_back(Free::make(blockStarts_temporary));
-
+      // If we're lowering to Legion, then we'll use a DeferredBuffer for the allocation.
+      if (this->legion) {
+        // Make the DeferredBuffer backing the blockStarts_temporary pointer.
+        auto bufTy = DeferredBuffer(blockStarts_temporary.type(), 1);
+        auto rectTy = Rect(1);
+        auto rect = ir::makeConstructor(rectTy, {0, parallelUnitSizes[ParallelUnit::GPUBlock]});
+        auto buf = ir::Var::make("buf", bufTy);
+        this->taskHeader.push_back(ir::VarDecl::make(buf, makeConstructor(bufTy, {rect, GPUFBMem})));
+        // Now that the deferred buffer is constructed, extract the pointer out.
+        this->taskHeader.push_back(ir::VarDecl::make(blockStarts_temporary, ir::MethodCall::make(buf, "ptr", {0}, false /* deref */, Auto)));
+      } else {
+        this->taskHeader.push_back(ir::VarDecl::make(blockStarts_temporary, 0));
+        this->taskHeader.push_back(
+            Allocate::make(blockStarts_temporary, ir::Add::make(parallelUnitSizes[ParallelUnit::GPUBlock], 1)));
+        if (!this->legion) {
+          footer.push_back(Free::make(blockStarts_temporary));
+        }
+      }
 
       Expr blockSize;
       if (parallelUnitSizes.count(ParallelUnit::GPUThread)) {
@@ -1585,20 +1604,39 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
       taco_iassert(blockSize.defined());
 
       if (i == (int) underivedAncestors.size() - 2) {
-        std::vector<Expr> args = {
-                posIteratorLevel.getMode().getModePack().getArray(0), // array
-                blockStarts_temporary, // results
-                ir::Literal::zero(posIteratorLevel.getBeginVar().type()), // arrayStart
-                parentSize, // arrayEnd
-                values_per_block, // values_per_block
-                blockSize, // block_size
-                parallelUnitSizes[ParallelUnit::GPUBlock] // num_blocks
-        };
-        header.push_back(ir::Assign::make(blockStarts_temporary,
-                                          ir::Call::make("taco_binarySearchBeforeBlockLaunch", args,
-                                                         getCoordinateVar(underived).type())));
+        std::vector<Expr> args;
+        if (legionSparseLevel) {
+          auto acc = legionSparseLevel->getAccessor(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::POS);
+          args = {
+              acc, // array
+              blockStarts_temporary, // results
+              ir::FieldAccess::make(domVar, "bounds.lo", false /* deref */, Int()), // Search start.
+              ir::FieldAccess::make(domVar, "bounds.hi", false /* deref */, Int()), // Search end.
+              values_per_block, // values_per_block
+              blockSize, // block_size
+              parallelUnitSizes[ParallelUnit::GPUBlock], // num_blocks
+              // We need this offset here because whatever partition of the crd region we are operating
+              // on dictates what positions within the pos region we are actually looking for. If we don't
+              // offset the positions we're searching for, then we're going to end up with wildly inaccurate
+              // estimates, where all of the threads are are starting at the bottom of the positions array.
+              ir::FieldAccess::make(crdDomVar, "bounds.lo", false /* deref */, Int()), // offset
+          };
+        } else {
+          args = {
+              posIteratorLevel.getMode().getModePack().getArray(0), // array
+              blockStarts_temporary, // results
+              ir::Literal::zero(posIteratorLevel.getBeginVar().type()), // arrayStart
+              parentSize, // arrayEnd
+              values_per_block, // values_per_block
+              blockSize, // block_size
+              parallelUnitSizes[ParallelUnit::GPUBlock] // num_blocks
+          };
+        }
+        this->taskHeader.push_back(ir::SideEffect::make(ir::Call::make("taco_binarySearchBeforeBlockLaunch", args,
+                                                                       getCoordinateVar(underived).type())));
       }
       else {
+        taco_iassert(false) << "Unimplemented. Follow the methodology above to fix this case.";
         std::vector<Expr> args = {
                 posIteratorLevel.getMode().getModePack().getArray(0), // array
                 blockStarts_temporary, // results
@@ -1608,9 +1646,9 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
                 blockSize, // block_size
                 parallelUnitSizes[ParallelUnit::GPUBlock] // num_blocks
         };
-        header.push_back(ir::Assign::make(blockStarts_temporary,
-                                          ir::Call::make("taco_binarySearchIndirectBeforeBlockLaunch", args,
-                                                         getCoordinateVar(underived).type())));
+        this->taskHeader.push_back(
+            ir::SideEffect::make(ir::Call::make("taco_binarySearchIndirectBeforeBlockLaunch", args,
+                                                getCoordinateVar(underived).type())));
       }
       searchForUnderivedStart.push_back(VarDecl::make(posIteratorLevel.getBeginVar(),
                                                       ir::Load::make(blockStarts_temporary,
@@ -1624,10 +1662,6 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
       // If the posIterator is a Legion level, then use the bounds on the partition as the start
       // and end of the posIteration.
       if (legionSparseLevel) {
-        auto posReg = legionSparseLevel->getRegion(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::POS);
-        auto domVar = ir::Var::make(posIteratorLevel.getMode().getName() + "PosDomain", Domain(1));
-        auto getDom = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(posReg)}, Auto);
-        this->taskHeader.push_back(ir::VarDecl::make(domVar, getDom));
         this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getBeginVar(), ir::FieldAccess::make(domVar, "bounds.lo", false /* deref */, Int())));
         this->taskHeader.push_back(VarDecl::make(posIteratorLevel.getEndVar(), ir::FieldAccess::make(domVar, "bounds.hi", false /* deref */, Int())));
       } else {
@@ -1829,11 +1863,10 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     auto rectTy = Rect(1);
     auto dom = ir::makeConstructor(domTy, {ir::makeConstructor(rectTy, {0, 0})});
     auto buf = ir::Var::make("buf", bufTy);
-    auto mem = ir::Symbol::make("Legion::Memory::Kind::GPU_FB_MEM");
     auto addr = [](ir::Expr e) {
       return ir::Call::make("&", {e}, Auto);
     };
-    gpuReductionPreamble.push_back(ir::VarDecl::make(buf, makeConstructor(bufTy, {mem, dom, addr(initVal)})));
+    gpuReductionPreamble.push_back(ir::VarDecl::make(buf, makeConstructor(bufTy, {GPUFBMem, dom, addr(initVal)})));
     auto bufPtr = ir::Var::make("bufPtr", Pointer(this->scalarReductionResult.type()));
     gpuReductionPreamble.push_back(ir::VarDecl::make(bufPtr, ir::MethodCall::make(buf, "ptr", {0}, false, Auto)));
     // Now, rewrite body so that writes into the scalar result are replaced

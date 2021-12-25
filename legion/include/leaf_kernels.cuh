@@ -5,6 +5,7 @@
 #include "cudalibs.h"
 #include "cublas_v2.h"
 #include "legion.h"
+#include "taco_legion_header.h"
 
 // This atomicAddWarp kernel ensures that the warp level reduction only
 // happens if all threads in the warp are indeed writing to the same
@@ -174,6 +175,31 @@ void cu_ttv(TTVPack pack, T* A_vals, const T* B_vals, const T* C_vals) {
   auto ldB2 = pack.ldB2;
   auto ldB3 = pack.ldB3;
   ttv_kernel<T><<<((iDim * jDim * kDim) + 63) / 64, 64>>>(iDim, jDim, kDim, ldA, ldB2, ldB3, A_vals, B_vals, C_vals);
+}
+
+// Binary search routines for finding offsets to start execution in a position split.
+
+// Trickily, we take in an offset, as the binary search will not necessarily try and
+// find position idx * values_per_block for all tasks (and partitions of the pos array).
+// In particular, if we're operating on a partition starting at not index 0, we want
+// to be searching for positions offset by the start of the values partition that we
+// are considering.
+template<typename T>
+__global__ void taco_binarySearchBeforeBlock(T posArray, int32_t* __restrict__ results, int arrayStart, int arrayEnd, int values_per_block, int num_blocks, int offset) {
+  int thread = threadIdx.x;
+  int block = blockIdx.x;
+  int idx = block * blockDim.x + thread;
+  if (idx > num_blocks) {
+    return;
+  }
+
+  results[idx] = taco_binarySearchBefore<T>(posArray, arrayStart, arrayEnd, idx * values_per_block + offset);
+}
+
+template<typename T>
+__host__ void taco_binarySearchBeforeBlockLaunch(T posArray, int32_t* __restrict__ results, int arrayStart, int arrayEnd, int values_per_block, int block_size, int num_blocks, int offset = 0) {
+  int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
+  taco_binarySearchBeforeBlock<T><<<num_search_blocks, block_size>>>(posArray, results, arrayStart, arrayEnd, values_per_block, num_blocks, offset);
 }
 
 #endif // TACO_LG_CU_LEAF_KERNELS_H
