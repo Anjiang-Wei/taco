@@ -496,6 +496,12 @@ protected:
       ir::Stmt& unpackTensorData
   );
 
+  // loweringToGPU denotes whether this Lowerer is configured to lower to GPUs. It uses
+  // a combination of the static should_use_CUDA_codegen() function and containsGPULoops.
+  bool loweringToGPU();
+  // containsGPULoops is true if the target IndexStmt contains GPU parallelized loops.
+  bool containsGPULoops = false;
+
 private:
   bool assemble;
   bool compute;
@@ -518,6 +524,10 @@ private:
 
   // Set of tensors that will be written to.
   std::set<TensorVar> resultTensors;
+  // A set of tensors that are distributed. This set contains the input
+  // and output tensors, but does not contain any temporary workspaces
+  // that are local to a single memory.
+  std::set<TensorVar> legionTensors;
 
   struct TemporaryArrays {
     ir::Expr values;

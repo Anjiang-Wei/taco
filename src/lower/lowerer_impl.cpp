@@ -234,6 +234,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
   vector<TensorVar> temporaries = getTemporaries(stmt);
 
   this->resultTensors.insert(results.begin(), results.end());
+  // The set of LegionTensors is all of the results and arguments.
+  this->legionTensors.insert(results.begin(), results.end());
+  this->legionTensors.insert(arguments.begin(), arguments.end());
 
   needCompute = {};
   if (generateAssembleCode()) {
@@ -276,6 +279,26 @@ LowererImpl::lower(IndexStmt stmt, string name,
   }
   argumentsIR.insert(argumentsIR.begin(), indexSetArgs.begin(), indexSetArgs.end());
 
+  // Figure out whether we are going to generate some GPU code.
+  {
+    struct GPULoopFinder : public IndexNotationVisitor {
+      void visit(const ForallNode* node) {
+        switch (node->parallel_unit) {
+          case ParallelUnit::GPUBlock:
+          case ParallelUnit::GPUWarp:
+          case ParallelUnit::GPUThread:
+            this->found = true;
+            break;
+          default:
+            break;
+        }
+        node->stmt.accept(this);
+      }
+      bool found = false;
+    } finder; stmt.accept(&finder);
+    this->containsGPULoops = finder.found;
+  }
+
   if (this->legion) {
     auto lookupTV = [&](ir::Expr e) {
       for (auto it : this->tensorVars) {
@@ -309,8 +332,10 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }
 
-  // Create variables for temporaries
-  // TODO Remove this
+  // Create variables for temporaries.
+  // TODO (rohany): I don't think that we ever use these variables
+  //  in the generated code, but some code assumes that we have them
+  //  here. Future work can remove this pass.
   for (auto& temp : temporaries) {
     ir::Expr irVar = ir::Var::make(temp.getName(), temp.getType().getDataType(),
                                    true, true);
@@ -3225,7 +3250,7 @@ vector<Stmt> LowererImpl::codeToInitializeDenseAcceleratorArrays(Where where) {
   Stmt indexListDecl = Stmt();
   const Expr indexListSizeExpr = ir::Var::make(indexListName + "_size", taco::Int32, false, false);
   Stmt freeTemps = Block::make(Free::make(indexListArr), Free::make(alreadySetArr));
-  if ((isa<Forall>(where.getProducer()) && inParallelLoopDepth == 0) || !should_use_CUDA_codegen()) {
+  if ((isa<Forall>(where.getProducer()) && inParallelLoopDepth == 0) || !this->loweringToGPU()) {
     alreadySetDecl = VarDecl::make(alreadySetArr, ir::Literal::make(0));
     indexListDecl = VarDecl::make(indexListArr, ir::Literal::make(0));
   }
@@ -3235,7 +3260,7 @@ vector<Stmt> LowererImpl::codeToInitializeDenseAcceleratorArrays(Where where) {
   tempToBitGuard[temporary] = alreadySetArr;
 
   Stmt allocateIndexList = Allocate::make(indexListArr, bitGuardSize);
-  if(should_use_CUDA_codegen()) {
+  if (this->loweringToGPU()) {
     Stmt allocateAlreadySet = Allocate::make(alreadySetArr, bitGuardSize);
     Expr p = Var::make("p" + temporary.getName(), Int());
     Stmt guardZeroInit = Store::make(alreadySetArr, p, ir::Literal::zero(bitGuardType));
@@ -3268,7 +3293,7 @@ vector<Stmt> LowererImpl::codeToInitializeDenseAcceleratorArrays(Where where) {
 //       the generated code.
 std::pair<bool,bool> LowererImpl::canAccelerateDenseTemp(Where where) {
   // TODO: TEMPORARY -- Needs to be removed
-  if(should_use_CUDA_codegen()) {
+  if(this->loweringToGPU()) {
     return std::make_pair(false, false);
   }
 
@@ -3348,19 +3373,21 @@ vector<Stmt> LowererImpl::codeToInitializeTemporary(Where where) {
     Expr values;
     if (util::contains(needCompute, temporary) &&
         needComputeValues(where, temporary)) {
-      values = ir::Var::make(temporary.getName(),
-                             temporary.getType().getDataType(), true, false);
+      // We must re-use the variable defined for this temporary array
+      // as the further lowering steps will get confused if we use a
+      // a variable that hasn't been defined.
+      if (util::contains(this->temporaryArrays, temporary)) {
+        values = this->temporaryArrays[temporary].values;
+      } else {
+        values = ir::Var::make(temporary.getName(),
+                               temporary.getType().getDataType(), true, false);
+      }
       taco_iassert(temporary.getType().getOrder() == 1)
           << " Temporary order was " << temporary.getType().getOrder();  // TODO
       Expr size = getTemporarySize(where);
 
-      // no decl needed for shared memory
-      Stmt decl = Stmt();
-      if ((isa<Forall>(where.getProducer()) && inParallelLoopDepth == 0) || !should_use_CUDA_codegen()) {
-        decl = VarDecl::make(values, ir::Literal::make(0));
-      }
+      auto decl = VarDecl::make(values, ir::Literal::make(0));
       Stmt allocate = Allocate::make(values, size);
-
       freeTemporary = Block::make(freeTemporary, Free::make(values));
       initializeTemporary = Block::make(decl, initializeTemporary, allocate);
     }
@@ -3414,6 +3441,9 @@ Stmt LowererImpl::lowerWhere(Where where) {
     consumer = Block::make(sortCall, consumer);
   }
 
+  // TODO (rohany): If the workspace is in shared memory, then every thread can do a write to the
+  //  workspace, rather than emitting a loop to do the initialization. However, this has a pretty
+  //  negligible performance impact.
   // Now that temporary allocations are hoisted, we always need to emit an initialization loop before entering the
   // producer but only if there is no dense acceleration
   if (util::contains(needCompute, temporary) && !isScalar(temporary.getType()) && !accelerateDenseWorkSpace) {
@@ -3422,9 +3452,7 @@ Stmt LowererImpl::lowerWhere(Where where) {
     //      2) The PRODUCER RHS is sparse(not full). (Guarantees that old values are overwritten before consuming)
 
     Expr p = Var::make("p" + temporary.getName(), Int());
-    Expr values = ir::Var::make(temporary.getName(),
-                                temporary.getType().getDataType(),
-                                true, false);
+    auto values = this->temporaryArrays.at(temporary).values;
     Expr size = getTemporarySize(where);
     Stmt zeroInit = Store::make(values, p, ir::Literal::zero(temporary.getType().getDataType()));
     Stmt loopInit = For::make(p, 0, size, 1, zeroInit, LoopKind::Serial);
@@ -3790,9 +3818,8 @@ Expr LowererImpl::getCapacityVar(Expr tensor) const {
 
 ir::Expr LowererImpl::getValuesArray(TensorVar var, bool exclusive) const
 {
-  if (this->legion) {
+  if (this->legion && util::contains(this->legionTensors, var)) {
     auto valuesDim = this->valuesAnalyzer.getValuesDim(var);
-    // TODO (rohany): Handle temporary arrays at some point.
     // TODO (rohany): Hackingly including the size as the mode here.
     if (util::contains(this->resultTensors, var)) {
       if (this->performingLegionReduction) {
@@ -4246,7 +4273,7 @@ Stmt LowererImpl::zeroInitValues(Expr tensor, Expr begin, Expr size) {
   LoopKind parallel = (isa<ir::Literal>(size) &&
                        to<ir::Literal>(size)->getIntValue() < (1 << 10))
                       ? LoopKind::Serial : LoopKind::Static_Chunked;
-  if (should_use_CUDA_codegen() && util::contains(parallelUnitSizes, ParallelUnit::GPUBlock)) {
+  if (this->loweringToGPU() && util::contains(parallelUnitSizes, ParallelUnit::GPUBlock)) {
     return ir::VarDecl::make(ir::Var::make("status", Int()),
                                     ir::Call::make("cudaMemset", {values, ir::Literal::make(0, Int()), ir::Mul::make(ir::Sub::make(upper, lower), ir::Literal::make(values.type().getNumBytes()))}, Int()));
   }
@@ -4717,7 +4744,7 @@ Expr LowererImpl::generateValueLocExpr(Access access) const {
     return ir::Literal::make(0);
   }
   // If using legion, return the PointT<...> accessor.
-  if (this->legion) {
+  if (this->legion && util::contains(this->legionTensors, access.getTensorVar())) {
     return this->valuesAnalyzer.getAccessPoint(access);
   }
 
@@ -6208,6 +6235,10 @@ void LowererImpl::BoundsInferenceExprRewriter::visit(const GetProperty* gp) {
   // TODO (rohany): For some reason, I need to have this empty visit method
   //  for GetProperty here.
   expr = gp;
+}
+
+bool LowererImpl::loweringToGPU() {
+  return should_use_CUDA_codegen() || this->containsGPULoops;
 }
 
 }
