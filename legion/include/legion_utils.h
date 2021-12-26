@@ -46,6 +46,12 @@ size_t getMTTKRPFLOPCount(size_t I, size_t J, size_t K, size_t L);
 // Utility function to do the unit conversions for GFLOPS.
 double getGFLOPS(size_t flopCount, size_t ms);
 
+// Utility to get the number of pieces to break a computation into. It follows
+// the following heuristic:
+//  * If there are GPUs present, then return the total number of GPUs.
+//  * if there are OMPs present, then return the total number of OMPs.
+size_t getNumPieces(Legion::Context ctx, Legion::Runtime* runtime);
+
 // Utility function to return the average of a list of numbers.
 // TODO (rohany): We can update this to ignore the first element, or the maximum
 //  and minimum element etc.

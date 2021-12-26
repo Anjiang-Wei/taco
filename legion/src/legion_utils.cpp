@@ -98,6 +98,15 @@ double getGFLOPS(size_t flopCount, size_t ms) {
   return GFLOP / s;
 }
 
+size_t getNumPieces(Legion::Context ctx, Legion::Runtime* runtime) {
+  auto numGPUs = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_GPUS).get<size_t>();
+  if (numGPUs > 0) {
+    return numGPUs;
+  }
+  auto numOMPs = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+  return numOMPs;
+}
+
 #ifndef TACO_USE_CUDA
 // Dummy implementations of initCuBLAS and initCUDA if we aren't supposed to use CUDA.
 void initCuBLAS(Context ctx, Runtime* runtime) {}
