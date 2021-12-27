@@ -391,9 +391,11 @@ std::vector<ir::Expr> DivideRelNode::deriveIterBounds(taco::IndexVar indexVar,
     return {minBound, maxBound};
   }
   else if (indexVar == getInnerVar()) {
-    // The inner loop ranges over a chunk of size parentBound / divFactor.
-    ir::Expr minBound = ir::Div::make(parentBound[0], divFactor);
-    ir::Expr maxBound = ir::Div::make(ir::Add::make(parentBound[1], divFactorMinusOne), divFactor);
+    // The inner loop ranges over a chunk of size parentBound / divFactor. Similarly
+    // to split, the loop must range from 0 to parentBound.
+    ir::Expr minBound = 0;
+    auto upper = ir::Sub::make(parentBound[1], parentBound[0]);
+    ir::Expr maxBound = ir::Div::make(ir::Add::make(upper, divFactorMinusOne), divFactor);
     return {minBound, maxBound};
   }
   taco_ierror;
