@@ -46,6 +46,10 @@ struct partitionPackForcomputeLegionPosSplit;
 partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
 void computeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces);
 
+struct partitionPackForcomputeLegionPosSplitDCSR;
+partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
+void computeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplitDCSR* partitionPack, int32_t pieces);
+
 void registerTacoTasks();
 
 const int TID_INIT_X = 420;
@@ -61,11 +65,12 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
 }
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  std::string csrFileName;
+  std::string csrFileName, dcsrFileName;
   bool dump = false, pos = false;
   int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
+  parser.add_option_string("-dcsr", dcsrFileName);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
@@ -73,7 +78,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_bool("-pos", pos);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
-  taco_uassert(!csrFileName.empty()) << "Provide a matrix with -csr";
+  taco_uassert(!csrFileName.empty() || !dcsrFileName.empty()) << "Provide a matrix with -csr or -dcsr";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -81,8 +86,16 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
 
+  // Marks whether or not CSR was used.
+  bool csr = false;
   LegionTensor A; ExternalHDF5LegionTensor Aex;
-  std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
+  if (!csrFileName.empty()) {
+    std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
+    csr = true;
+  } else {
+    std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, dcsrFileName, {Sparse, Sparse});
+    taco_uassert(pos) << "position split schedule must be used for DCSR format.";
+  }
 
   auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
   auto x = createDenseTensor<1, valType>(ctx, runtime, {A.dims[1]}, FID_VAL);
@@ -106,8 +119,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // Partition the tensors.
   partitionPackForcomputeLegionPosSplit* posPack = nullptr;
   partitionPackForcomputeLegionRowSplit* rowPack = nullptr;
+  partitionPackForcomputeLegionPosSplitDCSR* posDCSRPack = nullptr;
   if (pos) {
-    posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces);
+    if (csr) {
+      posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces);
+    } else {
+      posDCSRPack = partitionForcomputeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, pieces);
+    }
   } else {
     rowPack = partitionForcomputeLegionRowSplit(ctx, runtime, &y, &A, &x, pieces);
   }
@@ -116,7 +134,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
     if (pos) {
-      computeLegionPosSplit(ctx, runtime, &y, &A, &x, posPack, pieces);
+      if (csr) {
+        computeLegionPosSplit(ctx, runtime, &y, &A, &x, posPack, pieces);
+      } else {
+        computeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, posDCSRPack, pieces);
+      }
       launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
     } else {
       computeLegionRowSplit(ctx, runtime, &y, &A, &x, rowPack, pieces);
@@ -131,6 +153,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // Delete the partition packs.
   if (posPack != nullptr) delete posPack;
   if (rowPack != nullptr) delete rowPack;
+  if (posDCSRPack != nullptr) delete posDCSRPack;
   Aex.destroy(ctx, runtime);
 }
 

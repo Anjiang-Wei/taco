@@ -629,7 +629,7 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
         col.add(posName); col.add(crdName);
 
         // Get the expected bounds of each region.
-        auto posBounds = getDatasetBounds(posName, dimensionality);
+        auto posBounds = getDatasetBounds(posName, dimensionality == 0 ? 1 : dimensionality);
         auto crdBounds = getDatasetBounds(crdName, 1);
         auto posIspace = runtime->create_index_space(ctx, posBounds);
         auto crdIspace = runtime->create_index_space(ctx, crdBounds);

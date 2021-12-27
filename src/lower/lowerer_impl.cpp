@@ -2123,6 +2123,10 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         partitioningStmts.push_back(ir::VarDecl::make(valsLogicalPart, valsLogicalPartition));
         tensorLogicalPartitions[posTensor][posTensor.getOrder()] = {valsLogicalPart};
 
+        // Extract information about the DenseFormatRuns of the posTensor.
+        auto posAccess = this->tensorVarToAccess[posTensor];
+        DenseFormatRuns posTensorFormatRuns(posAccess, this->iterators);
+
         // If we are writing into an output tensor that has the same non-zero structure
         // as the tensor that we are position iterating over, then we also need to
         // understand what to use as the initial partition for that tensor.
@@ -2143,6 +2147,17 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
               nonZeroInitialPartition = currentPart;
             }
           }
+        }
+
+        // TODO (rohany): Not sure how to assert some of the assumptions below.
+        // At this point, we should end up with a partition of the top dense levels
+        // of posTensor, so let's copy that partition into a partition of the first
+        // dense run of posTensor. We only do this if there is a dense run to partition.
+        auto denseRun = ir::GetProperty::makeDenseLevelRun(posTensorExpr, 0);
+        auto denseRunPartition = ir::Var::make(posTensor.getName() + "DenseRun0Partition", IndexPartition);
+        if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
+          partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
+          tensorDenseRunPartitions[posTensor][0] = denseRunPartition;
         }
 
         // Use the initial partition retrieved from above to partition the result tensor. We'll
@@ -2171,21 +2186,17 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
           }
 
           // TODO (rohany): Again, there's some duplication here...
-          // Also copy the result partition to the first dense run of the result tensor.
-          auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
-          auto denseRunPartition = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
-          partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
-          tensorDenseRunPartitions[tv][0] = denseRunPartition;
+          // Also copy the result partition to the first dense run of the result tensor, if the tensor has
+          // a top level dense run.
+          // TODO (rohany): Does it suffice to use the posTensorFormatRuns here, or do we need another
+          //  one specific to the tensor being copied?
+          if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
+            auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+            auto denseRunPartition = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
+            partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
+            tensorDenseRunPartitions[tv][0] = denseRunPartition;
+          }
         }
-
-        // TODO (rohany): Not sure how to assert some of the assumptions below.
-        // At this point, we should end up with a partition of the top dense levels
-        // of posTensor, so let's copy that partition into a partition of the first
-        // dense run of posTensor.
-        auto denseRun = ir::GetProperty::makeDenseLevelRun(posTensorExpr, 0);
-        auto denseRunPartition = ir::Var::make(posTensor.getName() + "DenseRun0Partition", IndexPartition);
-        partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
-        tensorDenseRunPartitions[posTensor][0] = denseRunPartition;
 
         // Now, use this dense run to create partitions onto the other tensors.
         for (auto tv : this->tensorVarOrdering) {
@@ -2361,9 +2372,11 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
               }
             }
           }
-          for (auto densePart : tensorDenseRunPartitions.at(t)) {
-            auto idxLoad = ir::Load::make(denseRuns, densePart.first);
-            returnPartitionStatements.push_back(ir::Assign::make(idxLoad, densePart.second));
+          if (util::contains(tensorDenseRunPartitions, t)) {
+            for (auto densePart : tensorDenseRunPartitions.at(t)) {
+              auto idxLoad = ir::Load::make(denseRuns, densePart.first);
+              returnPartitionStatements.push_back(ir::Assign::make(idxLoad, densePart.second));
+            }
           }
         }
       }
@@ -6095,6 +6108,13 @@ ir::Expr LowererImpl::constructAffineProjection(Access &from, Access &to) {
   // the ability to iterate over the position space).
   taco_iassert(toDenseRuns.runs.size() == 1 && toDenseRuns.runs[0].modes.size() == size_t(to.getTensorVar().getOrder()));
   auto toDenseRun = toDenseRuns.runs[0];
+
+  // If the `from` tensor doesn't have a top level dense run then
+  // resulting partition does not allow us to restrict the accessed
+  // index spaces of any dimensions, so we just return empty.
+  if (fromDenseRuns.runs.empty() || !util::contains(fromDenseRuns.runs[0].levels, 0)) {
+    return Expr();
+  }
 
   // Get the top level dense run of `from`. We'll use this set of dense levels to understand
   // what index variables are partitioned, and will be the basis of the projection that we construct.

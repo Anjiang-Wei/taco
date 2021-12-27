@@ -14,6 +14,7 @@ enum TaskIDs {
 // Forward declarations of all generated conversion methods.
 void registerTacoTasks();
 void packLegionCOOToCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
+void packLegionCOOToDCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void packLegionCOOToDSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void packLegionCOOToDDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 // End declarations.
@@ -64,6 +65,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   typedef void (*ConvFunc)(Context, Runtime*, LegionTensor*, LegionTensor*);
   std::map<std::string, ConvFunc> converters = {
       {"ds", packLegionCOOToCSR},
+      {"ss", packLegionCOOToDCSR},
       {"dss", packLegionCOOToDSS},
       {"dds", packLegionCOOToDDS},
   };

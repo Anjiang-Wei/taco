@@ -1519,9 +1519,15 @@ TEST(distributed, legionSpMV) {
   IndexVar i("i"), j("j"), io("io"), ii("ii"), f("f"), fpos("fpos"), fposi("fposi"), fposo("fposo"), fposio("fposio"), fposii("fposii");
   std::vector<ir::Stmt> stmts;
   std::vector<ir::Stmt> cudaStmts;
-  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputed)> sched, bool cuda = false) {
+  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputed)> sched, bool cuda = false, bool hyperSparse = false) {
     Tensor<double> a("a", {dim}, Format{Dense});
-    Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
+    Format bFormat;
+    if (hyperSparse) {
+      bFormat = LgFormat({LgSparse, LgSparse});
+    } else {
+      bFormat = LgFormat({Dense, LgSparse});
+    }
+    Tensor<double> B("B", {dim, dim}, bFormat);
     Tensor<double> c("c", {dim}, Format{Dense});
     // Importantly, we create the IndexExpr for B(i, j) * c(j) _once_, and pass this
     // to scheduling functions. This is important as the precompute transformation
@@ -1548,18 +1554,20 @@ TEST(distributed, legionSpMV) {
            ;
   });
 
-  add("PosSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
+  auto cpuPosSplitSched = [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
     return stmt
-           .fuse(i, j, f)
-           .pos(f, fpos, B(i, j))
-           .distribute({fpos}, {fposo}, {fposi}, pieces)
-           .split(fposi, fposio, fposii, chunkSize)
-           .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
-           .communicate(a(i), fposo)
-           .communicate(B(i, j), fposo)
-           .communicate(c(j), fposo)
-           ;
-  });
+        .fuse(i, j, f)
+        .pos(f, fpos, B(i, j))
+        .distribute({fpos}, {fposo}, {fposi}, pieces)
+        .split(fposi, fposio, fposii, chunkSize)
+        .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+        .communicate(a(i), fposo)
+        .communicate(B(i, j), fposo)
+        .communicate(c(j), fposo)
+        ;
+  };
+  add("PosSplit", cpuPosSplitSched);
+  add("PosSplitDCSR", cpuPosSplitSched, false /* cuda */, true /* hyperSparse */);
 
   // CUDA schedules. These are set up so that we can use the same main.cpp file.
   const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
@@ -1587,28 +1595,32 @@ TEST(distributed, legionSpMV) {
   const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;
   const int NNZ_PER_TB = NNZ_PER_THREAD * BLOCK_SIZE;
   IndexVar fpos1("fpos1"), fpos2("fpos2"), thread_nz_pre("thread_nz_pre");
-  add("PosSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputedExpr) {
+
+  auto gpuPosSplitSched = [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputedExpr) {
     TensorVar precomputed("precomputed", Type(Float64, {Dimension(thread_nz)}), taco::dense);
     return stmt
-           .fuse(i, j, f)
-           .pos(f, fpos, B(i, j))
-           .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-           .split(fposi, block, fpos1, NNZ_PER_TB)
-           .split(fpos1, warp, fpos2, NNZ_PER_WARP)
-           .split(fpos2, thread, thread_nz, NNZ_PER_THREAD)
-           .reorder({block, warp, thread, thread_nz})
-           .precompute(precomputedExpr, thread_nz, thread_nz_pre, precomputed)
-           // The unroll scheduling operation used in the tests-scheduling-eval.cpp schedule
-           // for SpMV does not actually provide much of an improvement, and requires getting
-           // the lowerer function lowerForallCloned to work.
-           .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
-           .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
-           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
-           .communicate(a(i), fposo)
-           .communicate(B(i, j), fposo)
-           .communicate(c(j), fposo)
-           ;
-  }, true /* cuda */);
+        .fuse(i, j, f)
+        .pos(f, fpos, B(i, j))
+        .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+        .split(fposi, block, fpos1, NNZ_PER_TB)
+        .split(fpos1, warp, fpos2, NNZ_PER_WARP)
+        .split(fpos2, thread, thread_nz, NNZ_PER_THREAD)
+        .reorder({block, warp, thread, thread_nz})
+        .precompute(precomputedExpr, thread_nz, thread_nz_pre, precomputed)
+        // The unroll scheduling operation used in the tests-scheduling-eval.cpp schedule
+        // for SpMV does not actually provide much of an improvement, and requires getting
+        // the lowerer function lowerForallCloned to work.
+        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+        .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+        .communicate(a(i), fposo)
+        .communicate(B(i, j), fposo)
+        .communicate(c(j), fposo)
+        ;
+  };
+  add("PosSplit", gpuPosSplitSched, true /* cuda */);
+  add("PosSplitDCSR", gpuPosSplitSched, true /* cuda */, true /* hyperSparse */);
+
   {
     auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
     codegen->compile(ir::Block::make(stmts));
@@ -1810,6 +1822,7 @@ TEST(distributed, legionFormatConverterLib) {
   addConverter(LgFormat({Dense, LgSparse}), "CSR");
   addConverter(LgFormat({Dense, LgSparse, LgSparse}), "DSS");
   addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS");
+  addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
 
   // Dump them all to the output.
   {
