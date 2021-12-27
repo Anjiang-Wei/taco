@@ -103,19 +103,57 @@ LogicalPartition copyPartition(Context ctx, Runtime* runtime, LogicalPartition t
 }
 
 Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::IndexSpace toPartition, Legion::Color color) {
+  // Currently, copyPartition only supports the following cases:
+  //  toCopy.index_space.dim() == toPartition.dim()
+  //  toCopy.index_space.dim() == n && toPartition.dim() > n
+  if (toCopy.get_dim() != toPartition.get_dim()) {
+    taco_iassert(toPartition.get_dim() > toCopy.get_dim());
+  }
+  auto toPartitionBounds = runtime->get_index_space_domain(ctx, toPartition);
+
+  auto copyDomain = [&](Domain d) {
+    // If the dimensionality of the input and output index spaces are the same, then
+    // we can copy the domain directly.
+    if (toCopy.get_dim() == toPartition.get_dim()) {
+      return d;
+    }
+    // In the case where dimensionalities are not equal, then we must extend the
+    // input domain to the domain of the output region. Currently, we assume two things:
+    // * The input domain is not sparse, as this requires doing a per-element operation.
+    // * The output dimensionality is larger than the input dimensionality.
+    taco_iassert(toPartition.get_dim() > toCopy.get_dim());
+    taco_iassert(d.dense());
+    // In the case where we must extend the dimensionality of the partition, this function
+    // is specific to DISTAL's use cases. In particular, the first toCopy.get_dim() dimensions
+    // of the domain are copied over, and the toPartition.get_dim() - toCopy.get_dim() dimensions
+    // span their full extent. This code is slightly duplicated with AffineProjection.
+    DomainPoint lo, hi;
+    lo.dim = toPartition.get_dim();
+    hi.dim = toPartition.get_dim();
+    for (int i = 0; i < toCopy.get_dim(); i++) {
+      lo[i] = d.lo()[i];
+      hi[i] = d.hi()[i];
+    }
+    for (int i = toCopy.get_dim(); i < toPartition.get_dim(); i++) {
+      lo[i] = toPartitionBounds.lo()[i];
+      hi[i] = toPartitionBounds.hi()[i];
+    }
+    return Domain(lo, hi);
+  };
+
   std::map<DomainPoint, Domain> domains;
   auto colorSpace = runtime->get_index_partition_color_space(ctx, toCopy);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, toCopy);
   switch (colorSpace.get_dim()) {
-#define BLOCK(DIM) \
-    case DIM:      \
-      {            \
-        for (PointInDomainIterator<DIM> itr(colorSpace); itr(); itr++) { \
+#define BLOCK(DIM)                                                                     \
+    case DIM:                                                                          \
+      {                                                                                \
+        for (PointInDomainIterator<DIM> itr(colorSpace); itr(); itr++) {               \
           auto subspace = runtime->get_index_subspace(ctx, toCopy, DomainPoint(*itr)); \
-          auto domain = runtime->get_index_space_domain(ctx, subspace);          \
-          domains[*itr] = domain;                                        \
-        }          \
-        break;     \
+          auto domain = runtime->get_index_space_domain(ctx, subspace);                \
+          domains[*itr] = copyDomain(domain);                                          \
+        }                                                                              \
+        break;                                                                         \
       }
     LEGION_FOREACH_N(BLOCK)
 #undef BLOCK
