@@ -1823,6 +1823,7 @@ TEST(distributed, legionFormatConverterLib) {
   addConverter(LgFormat({Dense, LgSparse, LgSparse}), "DSS");
   addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS");
   addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
+  addConverter(LgFormat({LgSparse, Dense}), "SD");
 
   // Dump them all to the output.
   {

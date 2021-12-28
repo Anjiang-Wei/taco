@@ -43,19 +43,42 @@ void registerPlacementShardingFunctor(Context ctx, Runtime* runtime, ShardingID 
 }
 
 // getSubRegion returns a subregion of the input region with the desired start and end coordinate.
-LogicalRegion getSubRegion(Context ctx, Runtime* runtime, LogicalRegion region, Rect<1> bounds) {
+LogicalRegion getSubRegion(Context ctx, Runtime* runtime, LogicalRegion region, Domain bounds) {
   // TODO (rohany): Can I avoid creating this IndexSpace on each reallocation call?
   IndexSpaceT<1> colorSpace = runtime->create_index_space(ctx, Rect<1>(0, 0));
-  Transform<1,1> transform;
-  transform[0][0] = 0;
+  DomainPointColoring coloring;
+  // Construct the resulting domain to get the subregion of.
+  Domain partBounds;
+  // If the dimensions match, then there's nothing to do.
+  if (bounds.dim == region.get_dim()) {
+    partBounds = bounds;
+  } else {
+    // Otherwise, we'll take all of the dimensions from bounds, and then fill in
+    // the remaining from the region's index space.
+    taco_iassert(bounds.dim < region.get_dim());
+    auto regionBounds = runtime->get_index_space_domain(ctx, region.get_index_space());
+    // TODO (rohany): I've implemented this logic a few times, maybe it's time to pull it out
+    //  into a helper method?
+    DomainPoint lo, hi;
+    lo.dim = region.get_dim();
+    hi.dim = region.get_dim();
+    for (int i = 0; i < bounds.dim; i++) {
+      lo[i] = bounds.lo()[i];
+      hi[i] = bounds.hi()[i];
+    }
+    for (int i = bounds.dim; i < region.get_dim(); i++) {
+      lo[i] = regionBounds.lo()[i];
+      hi[i] = regionBounds.hi()[i];
+    }
+    partBounds = Domain(lo, hi);
+  }
+  coloring[0] = partBounds;
   // TODO (rohany): Is there a way to destroy the old partition of this region's index space?
-  auto ip = runtime->create_partition_by_restriction(
-      ctx,
-      region.get_index_space(),
-      colorSpace,
-      transform,
-      bounds,
-      DISJOINT_KIND
+  auto ip = runtime->create_partition_by_domain(
+    ctx,
+    region.get_index_space(),
+    coloring,
+    colorSpace
   );
   // Get the subregion of the only point in the partition.
   return runtime->get_logical_subregion_by_color(ctx, runtime->get_logical_partition(ctx, region, ip), 0);
