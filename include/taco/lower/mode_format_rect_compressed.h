@@ -30,9 +30,9 @@ public:
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const override;
   ir::Stmt getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin, ir::Expr posEnd, Mode mode) const override;
   ir::Expr getSize(ir::Expr szPrev, Mode mode) const override;
-  ir::Stmt getAppendInitEdges(ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
+  ir::Stmt getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
-  ir::Stmt getAppendFinalizeLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
+  ir::Stmt getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr parentSize, ir::Expr size, Mode mode) const override;
 
   // Partitioning capabilities.
   ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const override;
@@ -57,6 +57,13 @@ protected:
   ir::Expr getPosCapacity(Mode mode) const;
   ir::Expr getCoordCapacity(Mode mode) const;
   ir::Expr packToPoint(const std::vector<ir::Expr>& args) const;
+  ir::Expr getPosBounds(Mode mode) const;
+  ir::Stmt initPosBounds(Mode mode) const;
+
+  // hasSparseAncestor returns true if there is a sparse mode
+  // above this mode, i.e. it returns false if all parent levels
+  // are dense.
+  bool hasSparseAncestor(Mode mode) const;
 
   std::string getModeSizeVarName(Mode& mode) const;
 

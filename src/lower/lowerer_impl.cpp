@@ -4078,7 +4078,8 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
       // Post-process data structures for storing levels
       if (iterator.hasAppend()) {
         size = iterator.getPosVar();
-        finalize = iterator.getAppendFinalizeLevel(parentSize, size);
+        auto lastSparseLevelPos = lastSparseLevel.defined() ? lastSparseLevel.getPosVar() : Expr();
+        finalize = iterator.getAppendFinalizeLevel(lastSparseLevelPos, parentSize, size);
         lastSparseLevel = iterator;
       } else if (iterator.hasInsert()) {
         size = simplify(ir::Mul::make(parentSize, iterator.getWidth()));
@@ -4207,7 +4208,7 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
       if (initIterator.defined()) {
         // Initialize data structures for storing edges of next append mode
         taco_iassert(initIterator.hasAppend());
-        result.push_back(initIterator.getAppendInitEdges(initBegin, initEnd));
+        result.push_back(initIterator.getAppendInitEdges(resultParentPos, resultParentPosNext, initBegin, initEnd));
       } else if (generateComputeCode() && !isTopLevel) {
         if (isa<ir::Mul>(stride)) {
           Expr strideVar = Var::make(util::toString(tensor) + "_stride", Int());
@@ -4321,6 +4322,8 @@ Stmt LowererImpl::lgZeroInitValues(const Access& acc) {
   auto tv = acc.getTensorVar();
   auto tvIR = this->getTensorVar(tv);
   auto accessVars = this->valuesAnalyzer.valuesAccess.at(acc);
+  // TODO (rohany): I could avoid having this code by getting the value regions
+  //  bounds in a header and then referencing that variable later.
   auto accessWidths = this->valuesAnalyzer.valuesAccessWidths.at(acc);
   // Skip the first variable, as that is fixed and depends on the position in
   // the sparse level above us (if exists). We need to initialize

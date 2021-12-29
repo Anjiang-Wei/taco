@@ -203,14 +203,18 @@ public:
 
   virtual ir::Expr getSize(ir::Expr parentSize, Mode mode) const;
 
+  // parentPos and nextParentPos are the position variables of the nearest
+  // sparse ancestor of a mode.
   virtual ir::Stmt
-  getAppendInitEdges(ir::Expr pPrevBegin, ir::Expr pPrevEnd, Mode mode) const;
+  getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr pPrevBegin, ir::Expr pPrevEnd, Mode mode) const;
 
   virtual ir::Stmt
   getAppendInitLevel(ir::Expr szPrev, ir::Expr sz, Mode mode) const;
 
+  // parentPos is the position variable of the nearest sparse ancestor of a mode.
+  // It can be undefined if the mode does not have a sparse ancestor.
   virtual ir::Stmt
-  getAppendFinalizeLevel(ir::Expr szPrev, ir::Expr sz, Mode mode) const;
+  getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr szPrev, ir::Expr sz, Mode mode) const;
   /// @}
 
   /// Level functions that implement ungrouped insert capabilitiy.

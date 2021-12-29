@@ -32,12 +32,11 @@ public:
   ir::Stmt getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin,
                           ir::Expr posEnd, Mode mode) const override;
   ir::Expr getSize(ir::Expr parentSize, Mode mode) const override;
-  ir::Stmt getAppendInitEdges(ir::Expr parentPosBegin, 
+  ir::Stmt getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr parentPosBegin,
                               ir::Expr parentPosEnd, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, 
                               Mode mode) const override;
-  ir::Stmt getAppendFinalizeLevel(ir::Expr parentSize, ir::Expr size, 
-                                  Mode mode) const override;
+  ir::Stmt getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr parentSize, ir::Expr size, Mode mode) const override;
 
   ir::Expr getAssembledSize(ir::Expr prevSize, Mode mode) const override;
   ir::Stmt getSeqInitEdges(ir::Expr prevSize, 

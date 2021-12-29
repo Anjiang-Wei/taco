@@ -196,38 +196,44 @@ ir::Stmt RectCompressedModeFormat::declareModeVariables(Mode& mode) const {
   return ir::Block::make(results);
 }
 
-ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr pPrevBegin, ir::Expr pPrevEnd,
-                                                      Mode mode) const {
+ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr pPrevBegin,
+                                                      ir::Expr pPrevEnd, Mode mode) const {
   auto pack = mode.getModePack();
   if (isa<ir::Literal>(pPrevBegin)) {
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
     return ir::Stmt();
   }
 
+  // If the parent mode has append (is sparse), all we need to do is
+  // potentially double the size of the pos array.
   auto posArray = this->getRegion(pack, POS);
   auto posArrayParent = this->getRegion(pack, POS_PARENT);
   ir::Expr posCapacity = this->getPosCapacity(mode);
   ModeFormat parentModeType = mode.getParentModeType();
-  if (!parentModeType.defined() || parentModeType.hasAppend()) {
-    // TODO (rohany): Don't make a symbol here.
-    // TODO (rohany): Management around physical/logical regions.
-    auto posAcc = this->getAccessor(pack, POS, ir::RW);
-    auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
-    return lgDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, ir::Symbol::make("FID_RECT_1"), ir::Assign::make(posAcc, newPosAcc));
-  }
-
-  // Initialize all of the spots in the pos array.
-  ir::Expr pVar = ir::Var::make("p" + mode.getName(), Int64);
-  ir::Expr lb = pPrevBegin;
-  ir::Expr ub = ir::Add::make(pPrevEnd, 1);
-  // Start off each component in the position array as <0, -1>, an empty rectangle.
-  auto store = ir::Store::make(posArray, pVar, ir::makeConstructor(Rect(1), {0, -1}));
-  auto initPos = ir::For::make(pVar, lb, ub, 1, store);
-  // TODO (rohany): Don't make a symbol here.
-  // TODO (rohany): Management around physical/logical regions.
   auto posAcc = this->getAccessor(pack, POS, ir::RW);
   auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
-  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, ir::Symbol::make("FID_RECT_1"), ir::Assign::make(posAcc, newPosAcc));
+  if (!parentModeType.defined() || parentModeType.hasAppend()) {
+    return lgDoubleSizeIfFull(posArray, posCapacity, nextParentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
+  }
+
+  // At this point, we are a sparse level with at least one dense level above
+  // us, which means that the first dimension of our pos array will be indexed
+  // by parentPos. Here, we need to initialize all of the entries in the pos
+  // array for the current parentPos. We emit loops that iterate over the
+  // remaining dimensions of the pos array, as the first one is fixed to parentPos.
+  std::vector<ir::Expr> pVars(this->posDim);
+  pVars[0] = parentPos;
+  for (int i = 1; i < this->posDim; i++) {
+    pVars[i] = ir::Var::make("p" + mode.getName() + util::toString(i), Int());
+  }
+  auto initPos = ir::Store::make(posAcc, this->packToPoint(pVars), ir::makeConstructor(Rect(1), {0, -1}));
+  for (int i = this->posDim - 1; i >= 1; i--) {
+    auto rect = ir::FieldAccess::make(this->getPosBounds(mode), "bounds", false /* isDeref */, Auto);
+    auto domHi = ir::FieldAccess::make(rect, "hi", false /* isDeref */, Int());
+    auto hi = ir::Add::make(ir::Load::make(domHi, i), 1);
+    initPos = ir::For::make(pVars[i], 0, hi, 1, initPos);
+  }
+  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -242,25 +248,17 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   ir::Expr initCapacity = szPrevIsZero ? defaultCapacity : szPrev;
   ir::Expr posCapacity = initCapacity;
 
-  std::vector<ir::Stmt> initStmts;
+  std::vector<ir::Stmt> initStmts = {this->initPosBounds(mode)};
   if (szPrevIsZero) {
     posCapacity = getPosCapacity(mode);
     initStmts.push_back(ir::VarDecl::make(posCapacity, initCapacity));
   }
 
-  // TODO (rohany): We actually can't use the ir's LegionMalloc as legionMalloc size variant
-  //  doesn't work with multi-dimensional regions. This will also need to be given another look
-  //  when considering multi-dimensional pos arrays that occur underneath a Sparse level. For
-  //  those levels, we want to have a legionMalloc that does doubling mallocs with a size along
-  //  the first dimension of tensor.
-  // TODO (rohany): A problem here is that we need non-local information about all of the posDim
-  //  sizes above us, as we need those sizes in order to malloc the correct subregions (especially
-  //  if the pos array has variable size). getAppendInitEdges isn't called in too many places so we
-  //  could potentially pass all of the necessary sizes down? I don't currently know how to do this
-  //  cleanly, and it also requires changing the legionMalloc implementation to be aware of higher
-  //  dimensional regions. For now, we'll assume that we have no variable size multi-dimensional pos arrays.
-  if (this->posDim == 1 && !mode.getParentModeType().is<DenseModeFormat>()) {
-     initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1));
+  // If we have a sparse ancestor, then we'll need to perform an initial
+  // allocation of the pos region. Otherwise, the dimensions of the pos
+  // region are statically known and we can directly allocate the region.
+  if (this->hasSparseAncestor(mode) || !mode.getParentMode().defined()) {
+    initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1));
   } else {
     auto mallocCall = ir::Call::make("legionMalloc", {ir::ctx, ir::runtime, posArray, posParent, fidRect1}, Auto);
     initStmts.push_back(ir::Assign::make(posArray, mallocCall));
@@ -271,20 +269,14 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
   initStmts.push_back(ir::Assign::make(posAcc, newPosAcc));
 
-  // Get the index space domain of the pos array for use in initializing it.
-  auto domainTy = Domain(this->posDim);
-  auto posDom = ir::Var::make("pDom" + mode.getName(), domainTy);
-  auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false /* deref */, Auto);
-  auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
-  initStmts.push_back(ir::VarDecl::make(posDom, getDomain));
-
   // Start off each component in the position array as <0, -1>, an empty rectangle
   auto zeros = std::vector<ir::Expr>(this->posDim, 0);
   initStmts.push_back(ir::Store::make(posAcc, this->packToPoint(zeros), ir::makeConstructor(Rect(1), {0, -1})));
 
+  // This initialization doesn't happen when the pos region has a sparse ancestor.
   if (mode.getParentModeType().defined() &&
       !mode.getParentModeType().hasAppend() && !szPrevIsZero) {
-    ir::Expr pVar = ir::Var::make("p" + mode.getName(), Int());
+    taco_iassert(!this->hasSparseAncestor(mode));
 
     // We need to emit a loop for each dimension of the pos region.
     std::vector<ir::Expr> pVars(this->posDim);
@@ -293,19 +285,13 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     }
     // Start off each component in the position array as <0, -1>, an empty rectangle
     auto loop = ir::Store::make(posAcc, this->packToPoint(pVars), ir::makeConstructor(Rect(1), {0, -1}));
-    // TODO (rohany): maybe need to do something with initCapacity here?
     for (int i = this->posDim - 1; i >= 0; i--) {
-      auto rect = ir::FieldAccess::make(posDom, "bounds", false /* isDeref */, Auto);
+      auto rect = ir::FieldAccess::make(this->getPosBounds(mode), "bounds", false /* isDeref */, Auto);
       auto domHi = ir::FieldAccess::make(rect, "hi", false /* isDeref */, Int());
       auto hi = ir::Add::make(ir::Load::make(domHi, i), 1);
       loop = ir::For::make(pVars[i], 0, hi, 1, loop);
     }
     initStmts.push_back(loop);
-
-    // Old code for single-dimensional pos array initialization. Keeping this around because
-    // we might need to revert to it (or use it as inspiration later).
-    // ir::Stmt storePos = ir::Store::make(posAcc, pVar, ir::makeConstructor(Rect(1), {0, 0}));
-    // initStmts.push_back(ir::For::make(pVar, 1, initCapacity, 1, storePos));
   }
 
   if (mode.getPackLocation() == (mode.getModePack().getNumModes() - 1)) {
@@ -313,7 +299,6 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     auto crdArray = this->getRegion(pack, CRD);
     auto crdParent = this->getRegion(pack, CRD_PARENT);
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
-    // TODO (rohany): I need to have separate management of the physical and logical regions.
     initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord));
     // Reinitialize the CRD RW accessor.
     auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
@@ -324,22 +309,24 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   return ir::Block::make(initStmts);
 }
 
-ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::Expr sz, Mode mode) const {
+ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr szPrev, ir::Expr sz, Mode mode) const {
   auto pack = mode.getModePack();
   ModeFormat parentModeType = mode.getParentModeType();
 
   auto getSubregionCasts = [&]() {
     std::vector<ir::Stmt> result;
-    // TODO (rohany): This isn't correct for variable size multi-dimensional pos arrays.
-    if (this->posDim == 1 && !mode.getParentModeType().is<DenseModeFormat>()) {
+    // If our mode has a sparse parent, or is the first mode in the tensor,
+    // we'll need to cast down the region to the actual size.
+    if (this->hasSparseAncestor(mode) || !mode.getParentMode().defined()) {
       // We also need to restrict the pos array to a subregion if our parent
       // region is not dense (i.e. we have a variable size).
       auto posReg = this->getRegion(pack, POS).as<ir::GetProperty>();
       auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
       auto levelLoad = ir::Load::make(field, posReg->mode);
       auto idxLoad = ir::Load::make(levelLoad, posReg->index);
+      auto size = parentPos.defined() ? parentPos : szPrev;
       auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, POS_PARENT),
-                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(szPrev, 1)})}, Auto);
+                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(size, 1)})}, Auto);
       auto setSubReg = ir::Assign::make(idxLoad, subreg);
       result.push_back(setSubReg);
     }
@@ -366,17 +353,14 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   // this even though we have rectangles so that we can binary search over the pos arrays.
 
   // Get the index space domain of the pos array.
-  auto posArray = this->getRegion(pack, POS);
-  auto domainTy = Domain(this->posDim);
-  auto posDom = ir::Var::make("pDom" + mode.getName(), domainTy);
-  auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false, Auto);
-  auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
-  auto setPosDom = ir::VarDecl::make(posDom, getDomain);
+  auto posDom = this->getPosBounds(mode);
 
   // We now need to iterate over the full multi-dimensional pos region
   // to perform the prefix sum over the rectangles. We handle doing the
   // prefix sum over multi-dimensional pos regions by simply linearizing
-  // the pos region in a row-major layout.
+  // the pos region in a row-major layout. This loop is not emitted when
+  // the pos region has a sparse direct parent, as then every location
+  // in the pos region will be written to.
   ir::Expr csVar = ir::Var::make("cs" + mode.getName(), Int64);
   ir::Stmt initCs = ir::VarDecl::make(csVar, 0);
   auto pos = this->getAccessor(pack, POS, ir::RW);
@@ -401,11 +385,19 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr szPrev, ir::E
   for (int i = this->posDim - 1; i >= 0; i--) {
     auto rect = ir::FieldAccess::make(posDom, "bounds", false, Auto);
     auto domHi = ir::FieldAccess::make(rect, "hi", false, Int());
-    auto loopHi = ir::Add::make(ir::Load::make(domHi, i), 1);
+    // If parentPos is defined, then this mode has a sparse ancestor which
+    // indexes the first dimension of the pos region. So, we'll use that variable
+    // instead of the runtime bounds (since the first dimension is given an infinite size).
+    ir::Expr loopHi;
+    if (parentPos.defined() && i == 0) {
+      loopHi = parentPos;
+    } else {
+      loopHi = ir::Add::make(ir::Load::make(domHi, i), 1);
+    }
     loop = ir::For::make(pVars[i], 0, loopHi, 1, loop);
   }
   auto setSubReg = getSubregionCasts();
-  return ir::Block::make({setPosDom, initCs, loop, setSubReg});
+  return ir::Block::make({initCs, loop, setSubReg});
 }
 
 ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const {
@@ -556,6 +548,38 @@ ir::Expr RectCompressedModeFormat::getCoordCapacity(Mode mode) const {
 ir::Expr RectCompressedModeFormat::packToPoint(const std::vector<ir::Expr>& args) const {
   auto pointTy = Point(args.size());
   return ir::makeConstructor(pointTy, args);
+}
+
+ir::Expr RectCompressedModeFormat::getPosBounds(Mode mode) const {
+  const std::string varName = mode.getName() + "_pos_domain";
+  if (!mode.hasVar(varName)) {
+    ir::Expr bounds = ir::Var::make(varName, Domain(this->posDim));
+    mode.addVar(varName, bounds);
+    return bounds;
+  }
+  return mode.getVar(varName);
+}
+
+ir::Stmt RectCompressedModeFormat::initPosBounds(Mode mode) const {
+  auto pack = mode.getModePack();
+  auto posArray = this->getRegion(pack, POS);
+  auto domainTy = Domain(this->posDim);
+  auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false, Auto);
+  auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
+  return ir::VarDecl::make(this->getPosBounds(mode), getDomain);
+}
+
+bool RectCompressedModeFormat::hasSparseAncestor(Mode mode) const {
+  bool hasSparseParent = false;
+  auto parentMode = mode.getParentMode();
+  while (parentMode.defined()) {
+    if (!parentMode.getModeFormat().is<DenseModeFormat>()) {
+      hasSparseParent = true;
+      break;
+    }
+    parentMode = parentMode.getParentMode();
+  }
+  return hasSparseParent;
 }
 
 }
