@@ -5301,7 +5301,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     //  sure it really matters how well we guess disjoint vs aliased.
 
     auto coloring = colorings[idx];
-    auto part = ir::Var::make(tv.getName() + "Partition", Auto);
+    auto part = ir::Var::make(tv.getName() + "_dense_run_0_Partition", Auto);
     // TODO (rohany): Make this LEGION_COMPUTE_KIND since it is happening
     //  off of the critical path.
     auto partKind = disjointPart;
@@ -5354,8 +5354,6 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       partKind = disjointPart;
     }
 
-    // TODO (rohany): Hacking.
-
     // TODO (rohany): We need to communicate this data structure of the partitions of each level
     //  to later passes that lower index launches / serial task launches. An example data structure
     //  for this can be as follows:
@@ -5389,30 +5387,66 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     };
 
     // TODO (rohany): Extract this into a helper method?
+
     // We don't need to mark the index partitions of the denseRuns with colors, since
     // we aren't going to actually look up the denseLevelRun partitions directly.
     auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, Auto);
     result.push_back(ir::VarDecl::make(part, partcall));
     // Using this initial partition, partition the rest of the tensor.
     Expr currentLevelPartition = part;
-    // Start at the last level of the run.
-    for (int level = runs.runs[0].levels.back(); level < tv.getOrder(); level++) {
-      ModeAccess acc(t.getAccess(), level + 1);
-      // TODO (rohany): Skip over dense runs here.
-      auto iter = this->iterators.levelIterator(acc);
-      auto backMap = this->iterators.modeAccess(iter);
-      taco_iassert(acc == backMap); // Sanity check...
-      auto partFunc = iter.getPartitionFromParent(currentLevelPartition, partitionColor);
-      if (partFunc.defined()) {
-        result.push_back(partFunc.compute());
-        currentLevelPartition = partFunc.getResults().back();
-        // Remember all of the partition variables so that we can use them when
-        // constructing region requirements later.
-        for (size_t i = 0; i < partFunc.numResults() - 1; i++) {
-          tensorLogicalPartitions[tv][level].push_back(partFunc[i]);
+
+    // We need to partition each mode in the tensor, but partition all of the dense
+    // modes in a dense mode run in an aggregate manner. We do this by maintaining
+    // an index of the dense run that is currently being considered, and skipping
+    // modes within the run once we've performed the partitioning operation for
+    // the dense run.
+    size_t currentDenseRunIndex = 0;
+    for (int level = 0; level < tv.getOrder(); level++) {
+      // Check if the current level is the start of the current dense run. If it is,
+      // then our job is to just partition the dense run by copying the current partition.
+      // This is sound because the first sparse region (or values region) after the dense
+      // run shares the same index space dimensions as the dense run itself. We also skip
+      // emitting a partition for level 0 since that has already been done by the initial
+      // partitioning step.
+      if (currentDenseRunIndex < runs.runs.size() && runs.runs[currentDenseRunIndex].levels.front() == level && level != 0) {
+        auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], currentDenseRunIndex);
+        auto runPart = ir::Var::make(tv.getName() + "_dense_run_" + util::toString(currentDenseRunIndex) + "_Partition", Auto);
+        auto partitionCall = ir::Call::make(
+            "copyPartition",
+            {ctx, runtime, currentLevelPartition, denseRun},
+            Auto
+        );
+        result.push_back(ir::VarDecl::make(runPart, partitionCall));
+        currentLevelPartition = runPart;
+        tensorDenseRunPartitions[tv][currentDenseRunIndex] = runPart;
+      }
+
+      // If the current level is not within a dense run, then we can partition it using
+      // the current partition.
+      if (currentDenseRunIndex >= runs.runs.size() || !util::contains(runs.runs[currentDenseRunIndex].levels, level)) {
+        ModeAccess acc(t.getAccess(), level + 1);
+        auto iter = this->iterators.levelIterator(acc);
+        auto backMap = this->iterators.modeAccess(iter);
+        taco_iassert(acc == backMap); // Sanity check...
+        auto partFunc = iter.getPartitionFromParent(currentLevelPartition, partitionColor);
+        if (partFunc.defined()) {
+          result.push_back(partFunc.compute());
+          currentLevelPartition = partFunc.getResults().back();
+          // Remember all of the partition variables so that we can use them when
+          // constructing region requirements later.
+          for (size_t i = 0; i < partFunc.numResults() - 1; i++) {
+            tensorLogicalPartitions[tv][level].push_back(partFunc[i]);
+          }
         }
       }
+
+      // Finally, if we've hit the back of a dense run, bump the currentDenseRunIndex
+      // onto the next dense run.
+      if (currentDenseRunIndex < runs.runs.size() && runs.runs[currentDenseRunIndex].levels.back() <= level) {
+        currentDenseRunIndex++;
+      }
     }
+
     auto partitionVals = ir::Call::make(
         "copyPartition",
         maybeAddPartColor(
@@ -5422,8 +5456,6 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     auto valsPart = ir::Var::make(tv.getName() + "_vals_partition", Auto);
     result.push_back(ir::VarDecl::make(valsPart, partitionVals));
     tensorLogicalPartitions[tv][tv.getOrder()].push_back(valsPart);
-
-    // TODO (rohany): End hacking.
   }
   return result;
 }
