@@ -994,6 +994,9 @@ extern ir::Expr ctx;
 extern ir::Expr runtime;
 extern ir::Expr AffineProjectionBot;
 extern ir::Expr GPUFBMem;
+extern ir::Expr disjointPart;
+extern ir::Expr aliasedPart;
+extern ir::Expr computePart;
 
 }}
 #endif

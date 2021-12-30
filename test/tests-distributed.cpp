@@ -1568,6 +1568,24 @@ TEST(distributed, legionSpMV) {
   };
   add("PosSplit", cpuPosSplitSched);
   add("PosSplitDCSR", cpuPosSplitSched, false /* cuda */, true /* hyperSparse */);
+  // This test is a case for code-generation of a {Sparse, Dense} format that
+  // distributes the position space among all processors. There are currently
+  // some blockers in actually running the code so it is not fully scheduled.
+  {
+    Tensor<double> a("a", {dim}, Format{Dense});
+    Tensor<double> B("B", {dim, dim}, LgFormat({LgSparse, Dense}));
+    Tensor<double> c("c", {dim}, Format{Dense});
+    a(i) = B(i, j) * c(j);
+    auto stmt = a.getAssignment().concretize()
+                 .pos(i, fpos, B(i, j))
+                 .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
+                 .communicate(a(i), fposo)
+                 .communicate(B(i, j), fposo)
+                 .communicate(c(j), fposo)
+                 ;
+    auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegionSparseDensePosParallelize", false /* waitOnFutureMap */);
+    stmts.push_back(lowered);
+  }
 
   // CUDA schedules. These are set up so that we can use the same main.cpp file.
   const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
@@ -1673,6 +1691,19 @@ TEST(distributed, legionSpTTV) {
         .fuse(i, j, f)
         .fuse(f, k, ff)
         .pos(ff, ffpos, B(i, j, k))
+        .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
+        .split(ffposi, ffposio, ffposii, chunkSize)
+        .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+        .communicate(B(i, j, k), ffposo)
+        .communicate(A(i, j), ffposo)
+        .communicate(c(k), ffposo)
+        ;
+    return stmt;
+  });
+  add("DSSPartialPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    stmt = stmt
+        .fuse(i, j, f)
+        .pos(f, ffpos, B(i, j, k))
         .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
         .split(ffposi, ffposio, ffposii, chunkSize)
         .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
@@ -1820,8 +1851,10 @@ TEST(distributed, legionFormatConverterLib) {
 
   // Register all converters.
   addConverter(LgFormat({Dense, LgSparse}), "CSR");
+  addConverter(LgFormat({LgSparse, LgSparse, LgSparse}), "SSS");
   addConverter(LgFormat({Dense, LgSparse, LgSparse}), "DSS");
   addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS");
+  addConverter(LgFormat({LgSparse, Dense, LgSparse}), "SDS");
   addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
   addConverter(LgFormat({LgSparse, Dense}), "SD");
 

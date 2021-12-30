@@ -488,11 +488,24 @@ void Iterator::setIndexSetIterator(Iterator iter) {
   this->content->indexSetIterator = iter;
 }
 
+ir::Stmt Iterator::getInitializePosColoring() const {
+  taco_iassert(this->defined());
+  return getMode().getModeFormat().impl->getInitializePosColoring(getMode());
+}
 
-ModeFunction Iterator::getCreateInitialPartition() const {
-  // TODO (rohany): This has to do some work to create an initial partition from the
-  //  dense runs in the format.
-  return getMode().getModeFormat().impl->getCreateInitialPartition(getMode());
+ir::Stmt Iterator::getCreatePosColoringEntry(ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const {
+  taco_iassert(this->defined());
+  return getMode().getModeFormat().impl->getCreatePosColoringEntry(getMode(), domainPoint, lowerBound, upperBound);
+}
+
+ir::Stmt Iterator::getFinalizePosColoring() const {
+  taco_iassert(this->defined());
+  return getMode().getModeFormat().impl->getFinalizePosColoring(getMode());
+}
+
+ModeFunction Iterator::getCreatePartitionWithPosColoring(ir::Expr domain, ir::Expr partitionColor) const {
+  taco_iassert(this->defined());
+  return getMode().getModeFormat().impl->getCreatePartitionWithPosColoring(getMode(), domain, partitionColor);
 }
 
 ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const {

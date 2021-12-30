@@ -3470,6 +3470,21 @@ bool preservesNonZeroStructure(IndexStmt stmt, NonZeroAnalyzerResult& res) {
     return false;
   }
 
+  // If the result tensor is all dense, then it doesn't matter as well.
+  {
+    bool resultAllDense = true;
+    auto formats = resultAccess->getTensorVar().getFormat().getModeFormats();
+    for (size_t i = 0; i < formats.size(); i++) {
+      if (!formats[i].is<DenseModeFormat>()) {
+        resultAllDense = false;
+        break;
+      }
+    }
+    if (resultAllDense) {
+      return false;
+    }
+  }
+
   // Now, there can only be one non-dense tensor in the LHS.
   std::vector<Access> sparseRHSTensors;
   match(stmt, std::function<void(const AssignmentNode*, Matcher*)>([&](const AssignmentNode* node, Matcher* m) {

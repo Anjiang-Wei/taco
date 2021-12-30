@@ -15,15 +15,20 @@ typedef double valType;
 struct partitionPackForcomputeLegionDSS;
 partitionPackForcomputeLegionDSS* partitionForcomputeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t gx);
 void computeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSS* partitionPack, int32_t gx);
+
 struct partitionPackForcomputeLegionDSSPosSplit;
 partitionPackForcomputeLegionDSSPosSplit* partitionForcomputeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t gx);
 void computeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPosSplit* partitionPack, int32_t gx);
+
+struct partitionPackForcomputeLegionDSSPartialPosSplit;
+partitionPackForcomputeLegionDSSPartialPosSplit* partitionForcomputeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces);
+void computeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPartialPosSplit* partitionPack, int32_t pieces);
 
 void registerTacoTasks();
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   int pieces = 0, n = 10, warmup = 5;
-  bool dump = false, pos = false;
+  bool dump = false, pos = false, partialPos = false;
   std::string input;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensor", input);
@@ -32,9 +37,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-warmup", warmup);
   parser.add_option_bool("-dump", dump);
   parser.add_option_bool("-pos", pos);
+  parser.add_option_bool("-partial_pos", partialPos);
   auto args = Runtime::get_input_args();
   taco_iassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failed.";
   taco_uassert(!input.empty()) << "Provide input with -tensor.";
+  taco_uassert(!(pos && partialPos)) << "Cannot do pos and partial_pos.";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -59,8 +66,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // Partition the computation.
   partitionPackForcomputeLegionDSS* dssPart = nullptr;
   partitionPackForcomputeLegionDSSPosSplit* dssPosPart = nullptr;
+  partitionPackForcomputeLegionDSSPartialPosSplit* dssPartialPosPart = nullptr;
   if (pos) {
     dssPosPart = partitionForcomputeLegionDSSPosSplit(ctx, runtime, &A, &B, &c, pieces);
+  } else if (partialPos) {
+    dssPartialPosPart = partitionForcomputeLegionDSSPartialPosSplit(ctx, runtime, &A, &B, &c, pieces);
   } else {
     dssPart = partitionForcomputeLegionDSS(ctx, runtime, &A, &B, &c, pieces);
   }
@@ -70,6 +80,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (pos) {
       computeLegionDSSPosSplit(ctx, runtime, &A, &B, &c, dssPosPart, pieces);
+      launchDummyReadOverPartition(ctx, runtime, A.vals, AEqLogPart, FID_VAL, eqDomain);
+    } else if (partialPos) {
+      computeLegionDSSPartialPosSplit(ctx, runtime, &A, &B, &c, dssPartialPosPart, pieces);
       launchDummyReadOverPartition(ctx, runtime, A.vals, AEqLogPart, FID_VAL, eqDomain);
     } else {
       computeLegionDSS(ctx, runtime, &A, &B, &c, dssPart, pieces);
@@ -83,6 +96,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   if (dssPosPart != nullptr) delete dssPosPart;
   if (dssPart != nullptr) delete dssPart;
+  if (dssPartialPosPart != nullptr) delete dssPartialPosPart;
   Bex.destroy(ctx, runtime);
 }
 
