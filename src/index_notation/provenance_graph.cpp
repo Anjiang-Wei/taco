@@ -417,7 +417,10 @@ ir::Expr DivideRelNode::recoverVariable(taco::IndexVar indexVar,
   // The bounds for the dimension are adjusted so that dimensions that aren't
   // divisible by divFactor have the last piece included.
   auto bounds = ir::Div::make(ir::Add::make(dimSize, divFactorMinusOne), divFactor);
-  return ir::Add::make(ir::Mul::make(variableNames[getOuterVar()], bounds), variableNames[getInnerVar()]);
+  // We multiply this all together and then add on the base of the parentBounds
+  // to shift up into the range of the parent. This is normally 0, but for cases
+  // like position loops it is not.
+  return ir::Add::make(ir::Add::make(ir::Mul::make(variableNames[getOuterVar()], bounds), variableNames[getInnerVar()]), parentIterBounds[indexVar][0]);
 }
 
 ir::Stmt DivideRelNode::recoverChild(taco::IndexVar indexVar,
