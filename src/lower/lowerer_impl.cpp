@@ -848,7 +848,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
         auto call = node->rhs.as<Call>();
         auto gp = node->lhs.as<GetProperty>();
         if (call && gp && (call->func == "legionMalloc" || call->func == "legionRealloc")) {
-          auto key = std::tuple<Expr,TensorProperty,int,int,std::string>(gp->tensor, gp->property, gp->mode, gp->index, gp->name);
+          auto key = std::tuple<std::string,Expr,TensorProperty,int,int>(gp->name, gp->tensor, gp->property, gp->mode, gp->index);
           this->allocations.insert(key);
         }
       }
@@ -856,11 +856,13 @@ LowererImpl::lower(IndexStmt stmt, string name,
         if (node->pack.logicalRegion.defined()) {
           auto gp = node->var.as<GetProperty>();
           taco_iassert(gp);
-          auto key = std::tuple<Expr,TensorProperty,int,int,std::string>(gp->tensor, gp->property, gp->mode, gp->index, gp->name);
+          auto key = std::tuple<std::string,Expr,TensorProperty,int,int>(gp->name, gp->tensor, gp->property, gp->mode, gp->index);
           this->allocations.insert(key);
         }
       }
-      std::set<std::tuple<ir::Expr, ir::TensorProperty, int, int, std::string>> allocations;
+      // The set is ordered to have the string first so that a consistent ordering of statements
+      // on the generated code is present. With the ir::Expr first, the ordering is not guaranteed.
+      std::set<std::tuple<std::string, ir::Expr, ir::TensorProperty, int, int>> allocations;
     } allocFinder;
 
     // We'll visit the loop body as well as the set of statements that we manually malloced.
@@ -870,11 +872,10 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
     // Now, emit unmap operations for each of the GetProperties that we saw were allocated.
     for (auto key : allocFinder.allocations) {
-      auto gp = ir::GetProperty::make(std::get<0>(key), std::get<1>(key), std::get<2>(key), std::get<3>(key), std::get<4>(key));
+      auto gp = ir::GetProperty::make(std::get<1>(key), std::get<2>(key), std::get<3>(key), std::get<4>(key), std::get<0>(key));
       unmapAllocedRegions.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, gp}, Auto)));
     }
   }
-
 
   // Collect an add any parameter variables to the function's inputs.
   struct ParameterFinder : public IRVisitor {
@@ -3991,6 +3992,8 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
                          ? DEFAULT_ALLOC_SIZE : parentSize;
         initArrays.push_back(VarDecl::make(capacityVar, allocSize));
         if (this->legion) {
+          // TODO (rohany): This allocation should be scaled so that it doesn't allocate too much
+          //  memory for a multi-dimensional allocation.
           // Allocate a new values array, and update the accessor.
           initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, fidVal));
           auto valsAcc = this->getValuesArray(write.getTensorVar());
@@ -4036,6 +4039,10 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
       // a zero-initialization loop. We only actually need a zero-initialization loop if the combined
       // iteration of all the iterators is not full. We can check this by seeing if we can recover a
       // full iterator from our set of iterators.
+      // TODO (rohany): This call to zeroInitValues will need to be updated once we support
+      //  parallel assembly of sparse tensors (that have formats like {Sparse, Dense}. We
+      //  currently don't allow parallel assembly of any sort of sparse tensors, so this
+      //  doesn't need any change right now.
       Expr size = generateAssembleCode() ? getCapacityVar(tensor) : parentSize;
       result.push_back(zeroInitValues(tensor, 0, size));
     }
@@ -4061,13 +4068,19 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     taco_iassert(!iterators.empty());
 
     Expr parentSize = 1;
+    // Maintain the deepest sparse level (i.e. doesn't have insert). This will be used to
+    // splice out the subregion for the values array, as the last sparse level will index
+    // the first dimension of a multi-dimensional sparse values region.
+    Iterator lastSparseLevel = Iterator();
     for (const auto& iterator : iterators) {
       Expr size;
       Stmt finalize;
       // Post-process data structures for storing levels
       if (iterator.hasAppend()) {
         size = iterator.getPosVar();
-        finalize = iterator.getAppendFinalizeLevel(parentSize, size);
+        auto lastSparseLevelPos = lastSparseLevel.defined() ? lastSparseLevel.getPosVar() : Expr();
+        finalize = iterator.getAppendFinalizeLevel(lastSparseLevelPos, parentSize, size);
+        lastSparseLevel = iterator;
       } else if (iterator.hasInsert()) {
         size = simplify(ir::Mul::make(parentSize, iterator.getWidth()));
         finalize = iterator.getInsertFinalizeLevel(parentSize, size);
@@ -4087,8 +4100,11 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
     if (this->legion) {
       auto field = ir::FieldAccess::make(this->tensorVars[write.getTensorVar()], "vals", true /* isDeref*/, Auto);
+      // If the vals region is multi-dimensional, then the deepest sparse level will
+      // index into the first dimension of it, so we always want to use that instead
+      // of the multiplication-based parentSize.
       auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, valuesParent,
-                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(parentSize, 1)})}, Auto);
+                                                    ir::makeConstructor(Rect(1), {0, ir::Sub::make(lastSparseLevel.getPosVar(), 1)})}, Auto);
       result.push_back(ir::Assign::make(field, subreg));
     }
 
@@ -4192,7 +4208,7 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
       if (initIterator.defined()) {
         // Initialize data structures for storing edges of next append mode
         taco_iassert(initIterator.hasAppend());
-        result.push_back(initIterator.getAppendInitEdges(initBegin, initEnd));
+        result.push_back(initIterator.getAppendInitEdges(resultParentPos, resultParentPosNext, initBegin, initEnd));
       } else if (generateComputeCode() && !isTopLevel) {
         if (isa<ir::Mul>(stride)) {
           Expr strideVar = Var::make(util::toString(tensor) + "_stride", Int());
@@ -4203,10 +4219,15 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
         // Resize values array if not large enough
         Expr capacityVar = getCapacityVar(tensor);
         Expr size = simplify(ir::Mul::make(resultParentPosNext, stride));
+
         if (this->legion) {
           auto valsAcc = this->getValuesArray(write.getTensorVar());
           auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
-          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, size, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
+          // resultParentPosNext is the position variable of the deepest sparse level
+          // above the values array. This position will always be the first index
+          // into the values array, so we use that instead of the multiplication-based
+          // size variable.
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPosNext, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
         } else {
           result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
         }
@@ -4215,7 +4236,11 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
             util::contains(reducedAccesses, write)) {
           // Zero-initialize values array if might not assign to every element
           // in values array during compute
-          result.push_back(zeroInitValues(tensor, resultParentPos, stride));
+          if (this->legion) {
+            result.push_back(this->lgZeroInitValues(write));
+          } else {
+            result.push_back(zeroInitValues(tensor, resultParentPos, stride));
+          }
         }
       }
     }
@@ -4291,6 +4316,24 @@ Stmt LowererImpl::zeroInitValues(Expr tensor, Expr begin, Expr size) {
                                     ir::Call::make("cudaMemset", {values, ir::Literal::make(0, Int()), ir::Mul::make(ir::Sub::make(upper, lower), ir::Literal::make(values.type().getNumBytes()))}, Int()));
   }
   return For::make(p, lower, upper, 1, zeroInit, parallel);
+}
+
+Stmt LowererImpl::lgZeroInitValues(const Access& acc) {
+  auto tv = acc.getTensorVar();
+  auto tvIR = this->getTensorVar(tv);
+  auto accessVars = this->valuesAnalyzer.valuesAccess.at(acc);
+  // TODO (rohany): I could avoid having this code by getting the value regions
+  //  bounds in a header and then referencing that variable later.
+  auto accessWidths = this->valuesAnalyzer.valuesAccessWidths.at(acc);
+  // Skip the first variable, as that is fixed and depends on the position in
+  // the sparse level above us (if exists). We need to initialize
+  // all of the values for a particular value of accessVars[0].
+  auto values = this->getValuesArray(tv);
+  auto body = ir::Store::make(values, this->valuesAnalyzer.getAccessPoint(acc), ir::Literal::zero(tvIR.type()));
+  for (size_t i = accessVars.size() - 1; i >= 1; i--) {
+    body = ir::For::make(accessVars[i], 0, accessWidths[i], 1, body);
+  }
+  return body;
 }
 
 std::vector<IndexVar> getIndexVarFamily(const Iterator& it) {
@@ -5981,6 +6024,10 @@ void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterator
 
   auto tv = access.getTensorVar();
   DenseFormatRuns runs(access, iterators);
+  auto getIter = [&](int level) {
+    ModeAccess acc(access, level);
+    return iterators.levelIterator(acc);
+  };
 
   // Figure out the dimensionality of the values array.
   if (!util::contains(this->valuesDims, tv)) {
@@ -6015,14 +6062,11 @@ void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterator
   if (!util::contains(this->valuesAccess, access)) {
     // If there aren't any dense runs in the tensor, then we use the index
     // variable corresponding to the last level in the tensor.
-    auto getIter = [&](int level) {
-      ModeAccess acc(access, level);
-      return iterators.levelIterator(acc);
-    };
-
     if (runs.runs.empty()) {
       // Accesses from a sparse level need to use the posVar().
-      this->valuesAccess[access] = {getIter(tv.getOrder()).getPosVar()};
+      auto iter = getIter(tv.getOrder());
+      this->valuesAccess[access] = {iter.getPosVar()};
+      this->valuesAccessWidths[access] = {iter.getWidth()};
     } else {
       // Get the last run.
       auto lastRun = runs.runs.back();
@@ -6030,24 +6074,31 @@ void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterator
       // dimensionality of the values array.
       if (util::contains(lastRun.levels, tv.getOrder() - 1)) {
         // Get the index variables for each level in the run.
-        std::vector<ir::Expr> targetVars;
+        std::vector<ir::Expr> targetVars, targetWidths;
         if (!util::contains(lastRun.levels, 0)) {
           // TODO (rohany): This case is a bit suss.
           // Get the position of the level before this dense run if the run
           // doesn't start from the root of the tensor. We do .front() because
           // we want the level before .front(), but levels are 1-indexed when
           // asking for the corresponding iterator.
-          targetVars.push_back(getIter(lastRun.levels.front()).getPosVar());
+          auto iter = getIter(lastRun.levels.front());
+          targetVars.push_back(iter.getPosVar());
+          targetWidths.push_back(iter.getWidth());
         }
 
         // Add the locator variables for each of the remaining dimensions in the run.
         for (auto level : lastRun.levels) {
-          targetVars.push_back(indexVarToExprMap.at(getIter(level + 1).getIndexVar()));
+          auto iter = getIter(level + 1);
+          targetVars.push_back(indexVarToExprMap.at(iter.getIndexVar()));
+          targetWidths.push_back(iter.getWidth());
         }
         this->valuesAccess[access] = targetVars;
+        this->valuesAccessWidths[access] = targetWidths;
       } else {
         // Accesses from a sparse level need to use the posVar().
-        this->valuesAccess[access] = {getIter(tv.getOrder()).getPosVar()};
+        auto iter = getIter(tv.getOrder());
+        this->valuesAccess[access] = {iter.getPosVar()};
+        this->valuesAccessWidths[access] = {iter.getWidth()};
       }
     }
   }

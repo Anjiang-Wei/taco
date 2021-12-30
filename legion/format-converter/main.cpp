@@ -15,8 +15,11 @@ enum TaskIDs {
 void registerTacoTasks();
 void packLegionCOOToCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void packLegionCOOToDCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
+void packLegionCOOToSD(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
+void packLegionCOOToSSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void packLegionCOOToDSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void packLegionCOOToDDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
+void packLegionCOOToSDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 // End declarations.
 
 Realm::Logger logApp("app");
@@ -66,8 +69,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   std::map<std::string, ConvFunc> converters = {
       {"ds", packLegionCOOToCSR},
       {"ss", packLegionCOOToDCSR},
+      {"sd", packLegionCOOToSD},
+      {"sss", packLegionCOOToSSS},
       {"dss", packLegionCOOToDSS},
       {"dds", packLegionCOOToDDS},
+      {"sds", packLegionCOOToSDS},
   };
   auto it = converters.find(outputFormat);
   if (it == converters.end()) {

@@ -327,6 +327,10 @@ protected:
    * [begin * size, (begin + 1) * size).
    */
   ir::Stmt zeroInitValues(ir::Expr tensor, ir::Expr begin, ir::Expr size);
+  // lgZeroInitValues is similar to zeroInitValues but for legion tensors.
+  // It is used to zero out the values allocation during assembly, but understands
+  // the multi-dimensional structure of the values region.
+  ir::Stmt lgZeroInitValues(const Access& acc);
 
   /// Declare position variables and initialize them with a locate.
   ir::Stmt declLocatePosVars(std::vector<Iterator> iterators);
@@ -710,8 +714,12 @@ private:
 
     // Member variables.
     std::map<TensorVar, int> valuesDims;
-    // valuesAccess maintains a map
+    // valuesAccess maintains a map between accesses and the variables needed
+    // to index into the values region.
     std::map<Access, std::vector<ir::Expr>> valuesAccess;
+    // valuesAccessWidths maintains a map between accesses and the size of
+    // each dimension for each index variable used to index into the region.
+    std::map<Access, std::vector<ir::Expr>> valuesAccessWidths;
   } valuesAnalyzer;
 
   // getAllNeededParentPositions get all of the position variables needed for multi-dimensional

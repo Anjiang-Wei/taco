@@ -240,7 +240,7 @@ Expr ModeFormatImpl::getSize(Expr szPrev, Mode mode) const {
   return Expr();
 }
 
-Stmt ModeFormatImpl::getAppendInitEdges(Expr pPrevBegin,
+Stmt ModeFormatImpl::getAppendInitEdges(Expr parentPos, Expr nextParentPos, Expr pPrevBegin,
     Expr pPrevEnd, Mode mode) const {
   return Stmt();
 }
@@ -250,8 +250,7 @@ Stmt ModeFormatImpl::getAppendInitLevel(Expr szPrev,
   return Stmt();
 }
 
-Stmt ModeFormatImpl::getAppendFinalizeLevel(Expr szPrev,
-    Expr sz, Mode mode) const {
+Stmt ModeFormatImpl::getAppendFinalizeLevel(Expr parentPos, Expr szPrev, Expr sz, Mode mode) const {
   return Stmt();
 }
 

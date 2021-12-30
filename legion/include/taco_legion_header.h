@@ -80,9 +80,8 @@ Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtim
 // Allocate a subregion from a region of a given size extended from an old size.
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid);
 
-// TODO (rohany): This probably needs to be templated.
 // getSubRegion returns the LogicalRegion corresponding to the subregion of region with bounds.
-Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::Rect<1> bounds);
+Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::Domain bounds);
 
 // Copy a partition onto a region with the same index space.
 Legion::LogicalPartition copyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition toCopy, Legion::LogicalRegion toPartition, Legion::Color color = LEGION_AUTO_GENERATE_ID);

@@ -183,6 +183,7 @@ void CodegenLegion::emitHeaders(std::ostream &out) {
   out << "#include \"taco_legion_header.h\"\n";
   out << "#include \"taco_mapper.h\"\n";
   out << "#define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))\n";
+  out << "#define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))\n";
   out << "using namespace Legion;\n";
 }
 

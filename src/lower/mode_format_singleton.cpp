@@ -118,7 +118,7 @@ Stmt SingletonModeFormat::getAppendInitLevel(Expr parentSize, Expr size,
   return Block::make(initCrdCapacity, allocCrd);
 }
 
-Stmt SingletonModeFormat::getAppendFinalizeLevel(Expr parentSize, Expr size, 
+Stmt SingletonModeFormat::getAppendFinalizeLevel(Expr, Expr parentSize, Expr size,
                                                  Mode mode) const {
   return Stmt();
 }

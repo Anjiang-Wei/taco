@@ -359,11 +359,15 @@ Expr Iterator::getSize(const ir::Expr& szPrev) const {
   return getMode().getModeFormat().impl->getSize(szPrev, getMode());
 }
 
-Stmt Iterator::getAppendInitEdges(const Expr& pPrevBegin, 
+Stmt Iterator::getAppendInitEdges(const Expr& parentPos,
+                                  const Expr& nextParentPos,
+                                  const Expr& pPrevBegin,
                                   const Expr& pPrevEnd) const {
   taco_iassert(defined() && content->mode.defined());
-  return content->mode.getModeFormat().impl->getAppendInitEdges(pPrevBegin,
-                                                              pPrevEnd,
+  return content->mode.getModeFormat().impl->getAppendInitEdges(parentPos,
+                                                                nextParentPos,
+                                                                pPrevBegin,
+                                                                pPrevEnd,
                                                               content->mode);
 }
 
@@ -373,10 +377,9 @@ Stmt Iterator::getAppendInitLevel(const Expr& szPrev, const Expr& sz) const {
                                                           getMode());
 }
 
-Stmt Iterator::getAppendFinalizeLevel(const Expr& szPrev, const Expr& sz) const{
+Stmt Iterator::getAppendFinalizeLevel(const Expr& parentPos, const Expr& szPrev, const Expr& sz) const{
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getAppendFinalizeLevel(szPrev, sz,
-                                                              getMode());
+  return getMode().getModeFormat().impl->getAppendFinalizeLevel(parentPos, szPrev, sz, getMode());
 }
 
 Expr Iterator::getAssembledSize(const Expr& prevSize) const {
@@ -641,7 +644,7 @@ void Iterators::createAccessIterators(Access access, Format format, Expr tensorI
   content->levelIterators.insert({{access,0}, parent});
 
   int level = 1;
-  ModeFormat parentModeType;
+  Mode parentMode;
 
   // This logic is for setting up iterators for pos splits. In a fused position split,
   // the original logic assigned all level iterators to have the index variable of the
@@ -688,8 +691,7 @@ void Iterators::createAccessIterators(Access access, Format format, Expr tensorI
           provGraph.isPosOfAccess(posFuseVar, access) && modeNumber == deepestPosMatch) {
         iteratorIndexVar = posFuseVar;
       }
-      Mode mode(tensorIR, dim, level, modeType, modePack, pos,
-                parentModeType);
+      Mode mode(tensorIR, dim, level, modeType, modePack, pos, parentMode);
 
       string name = iteratorIndexVar.getName() + tensorConcrete.getName();
       Iterator iterator(iteratorIndexVar, tensorIR, mode, parent, name, true);
@@ -711,7 +713,7 @@ void Iterators::createAccessIterators(Access access, Format format, Expr tensorI
         auto tvShape = tv.getType().getShape();
         auto accessIvar = access.getIndexVars()[modeNumber];
         ModePack tvModePack(1, tvFormat.getModeFormats()[0], tvVar, 0, 1);
-        Mode tvMode(tvVar, tvShape.getDimension(0), 1, tvFormat.getModeFormats()[0], tvModePack, 0, ModeFormat());
+        Mode tvMode(tvVar, tvShape.getDimension(0), 1, tvFormat.getModeFormats()[0], tvModePack, 0, Mode());
         // Finally, construct the iterator and register it as an indexSetIterator.
         auto iter = Iterator(accessIvar, tvVar, tvMode, {tvVar}, accessIvar.getName() + tv.getName() + "_filter");
         iterator.setIndexSetIterator(iter);
@@ -726,7 +728,7 @@ void Iterators::createAccessIterators(Access access, Format format, Expr tensorI
       }
 
       parent = iterator;
-      parentModeType = modeType;
+      parentMode = mode;
       pos++;
       level++;
     }
