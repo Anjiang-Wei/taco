@@ -26,7 +26,7 @@ public:
   ir::Expr getSize(ir::Expr parentSize, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, 
                               Mode mode) const override;
-  ir::Stmt getAppendFinalizeLevel(ir::Expr parentSize, ir::Expr size, 
+  ir::Stmt getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr parentSize, ir::Expr size,
                                   Mode mode) const override;
 
   ir::Expr getAssembledSize(ir::Expr prevSize, Mode mode) const override;

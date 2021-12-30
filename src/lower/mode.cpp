@@ -20,7 +20,7 @@ struct Mode::Content {
   ModePack   modePack;          /// the pack that contains the mode
   size_t     packLoc;           /// position within pack containing mode
 
-  ModeFormat parentModeFormat;  /// type of previous mode in the tensor
+  Mode parentMode; /// Pointer to the parent mode.
 
   std::map<std::string, ir::Expr> vars;
 };
@@ -29,7 +29,7 @@ Mode::Mode() : content(nullptr) {
 }
 
 Mode::Mode(ir::Expr tensor, Dimension size, int mode, ModeFormat modeFormat,
-     ModePack modePack, size_t packLoc, ModeFormat parentModeFormat)
+     ModePack modePack, size_t packLoc, Mode parentMode)
     : content(new Content) {
   taco_iassert(modeFormat.defined());
   content->tensor = tensor;
@@ -38,7 +38,7 @@ Mode::Mode(ir::Expr tensor, Dimension size, int mode, ModeFormat modeFormat,
   content->modeFormat = modeFormat;
   content->modePack = modePack;
   content->packLoc = packLoc;
-  content->parentModeFormat = parentModeFormat;
+  content->parentMode = parentMode;
 }
 
 std::string Mode::getName() const {
@@ -70,7 +70,14 @@ size_t Mode::getPackLocation() const {
 }
 
 ModeFormat Mode::getParentModeType() const {
-  return content->parentModeFormat;
+  if (!content->parentMode.defined()) {
+    return ModeFormat();
+  }
+  return content->parentMode.getModeFormat();
+}
+
+Mode Mode::getParentMode() const {
+  return content->parentMode;
 }
 
 ir::Expr Mode::getVar(std::string varName) const {

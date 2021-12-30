@@ -136,7 +136,7 @@ Expr CompressedModeFormat::getSize(ir::Expr szPrev, Mode mode) const {
   return Load::make(getPosArray(mode.getModePack()), szPrev);
 }
 
-Stmt CompressedModeFormat::getAppendInitEdges(Expr pPrevBegin, 
+Stmt CompressedModeFormat::getAppendInitEdges(Expr, Expr, Expr pPrevBegin,
     Expr pPrevEnd, Mode mode) const {
   if (isa<ir::Literal>(pPrevBegin)) {
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
@@ -193,8 +193,7 @@ Stmt CompressedModeFormat::getAppendInitLevel(Expr szPrev, Expr sz,
   return Block::make(initStmts);
 }
 
-Stmt CompressedModeFormat::getAppendFinalizeLevel(Expr szPrev, 
-    Expr sz, Mode mode) const {
+Stmt CompressedModeFormat::getAppendFinalizeLevel(Expr, Expr szPrev, Expr sz, Mode mode) const {
     ModeFormat parentModeType = mode.getParentModeType();
   if ((isa<ir::Literal>(szPrev) && to<ir::Literal>(szPrev)->equalsScalar(1)) || 
       !parentModeType.defined() || parentModeType.hasAppend()) {

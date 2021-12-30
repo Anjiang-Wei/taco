@@ -168,11 +168,9 @@ public:
   ir::Stmt getAppendCoord(const ir::Expr& p, const ir::Expr& i) const; 
   ir::Stmt getAppendEdges(const std::vector<ir::Expr>& parentPositions, const ir::Expr& pBegin, const ir::Expr& pEnd) const;
   ir::Expr getSize(const ir::Expr& szPrev) const;
-  ir::Stmt getAppendInitEdges(const ir::Expr& pPrevBegin, 
-      const ir::Expr& pPrevEnd) const;
+  ir::Stmt getAppendInitEdges(const ir::Expr& parentPos, const ir::Expr& nextParentPos, const ir::Expr& pPrevBegin, const ir::Expr& pPrevEnd) const;
   ir::Stmt getAppendInitLevel(const ir::Expr& szPrev, const ir::Expr& sz) const;
-  ir::Stmt getAppendFinalizeLevel(const ir::Expr& szPrev, 
-      const ir::Expr& sz) const;
+  ir::Stmt getAppendFinalizeLevel(const ir::Expr& parentPos, const ir::Expr& szPrev, const ir::Expr& sz) const;
 
   /// Return code for level functions that implement ungrouped insert 
   /// capabilitiy.
