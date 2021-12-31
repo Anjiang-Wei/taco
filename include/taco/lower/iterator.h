@@ -225,7 +225,10 @@ public:
   Iterator getIndexSetIterator() const;
 
   /// Methods for creating and manipulating partitions for distribution.
-  ModeFunction getCreateInitialPartition() const;
+  ir::Stmt getInitializePosColoring() const;
+  ir::Stmt getCreatePosColoringEntry(ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const;
+  ir::Stmt getFinalizePosColoring() const;
+  ModeFunction getCreatePartitionWithPosColoring(ir::Expr domain, ir::Expr partitionColor) const;
   ModeFunction getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const;
   ModeFunction getPartitionFromChild(ir::Expr childPartition, ir::Expr partitionColor) const;
 

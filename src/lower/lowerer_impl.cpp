@@ -566,9 +566,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
     initializeResults = ir::Block::make();
   }
 
-  // Begin hacking on bounds inference.
-
   // BoundsInferenceVisitor infers the exact bounds (inclusive) that each tensor is accessed on.
+  // In particular, the BoundsInferenceVisitor derives coordinate space bounds on each index
+  // variable in a tensor's accessed. Separate methods must be used for position space bounds.
   struct BoundsInferenceVisitor : public IndexNotationVisitor {
     BoundsInferenceVisitor(std::map<TensorVar, Expr> &tvs, ProvenanceGraph &pg, Iterators &iterators,
                            std::map<IndexVar, std::vector<ir::Expr>>& underivedBounds, std::map<IndexVar, ir::Expr>& indexVarToExprMap,
@@ -2013,93 +2013,77 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // Extract the region domains for each region in the transfer.
     std::map<TensorVar, ir::Expr> domains;
     if (inPosIter) {
-      // If we are doing a pos split, then we we construct partitions in a bottom-up manner.
+      // If we are splitting the position space, then we we construct partitions in a bottom-up manner.
       // TODO (rohany): I'm unsure how it works when there are variables transferred at lower
       //  than the distributed loop for a position split. For now, let's require that we are
       //  communicating all of the tensors at this loop.
       taco_iassert(forall.getTransfers().size() == this->tensorVarOrdering.size());
 
-      // We'll start with creating the initial partition of the tensor that has the
-      // position space we are iterating over. For now, the values array that we are
-      // iterating over should be one-dimensional.
+      // Find the deepest level accessed in the tensor. That is the point where we will
+      // take the initial partition.
+      auto underiveds = this->provGraph.getUnderivedAncestors(forall.getIndexVar());
       auto posAccess = posRel->getAccess();
       auto posTensor = posAccess.getTensorVar();
-      auto posTensorExpr = this->tensorVars[posTensor];
-      taco_iassert(this->valuesAnalyzer.getValuesDim(posTensor) == 1);
-      // We'll start by creating a coloring of the value's index partition.
-      auto valsDomain = ir::Var::make(posTensor.getName() + "ValsDomain", Auto);
-      auto valsIspace = getIndexSpace(ir::GetProperty::make(posTensorExpr, TensorProperty::Values));
-      auto coloring = ir::Var::make(posTensor.getName() + "ValsColoring", Auto);
-      // Collect the domain of the vals index space.
-      partitioningStmts.push_back(ir::VarDecl::make(valsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, valsIspace}, Auto)));
-      // Since vals is guaranteed to be one-dimensional, we can just find the lo and hi. Note
-      // that we don't use this->derivedBounds because the iteration bounds are not specific to
-      // the particular tensor here, as we're just doing a pos split.
-      {
-        auto parents = this->provGraph.getParents(forall.getIndexVar());
-        // We should have only 1 parent, the position variable.
-        taco_iassert(parents.size() == 1);
-        auto posVar = parents[0];
-        // Figure out how to recover the position variable with all the variables defined so far.
-        auto recovered = this->provGraph.recoverVariable(posVar, this->definedIndexVarsOrdered, this->underivedBounds,
-                                                         this->indexVarToExprMap, this->iterators);
-        // Here, we copy some logic from the BoundsInferenceExprRewriter to get bounds on the position variable.
-        // TODO (rohany): Make this a field on LowererImpl.
-        std::map<ir::Expr, IndexVar> exprToIndexVarMap;
-        for (auto it : this->indexVarToExprMap) {
-          exprToIndexVarMap[it.second] = it.first;
+      int posLevel = -1;
+      for (auto ivar : this->provGraph.getUnderivedAncestors(forall.getIndexVar())) {
+        for (int i = 0; i < posTensor.getOrder(); i++) {
+          if (posAccess.getIndexVars()[i] == ivar) {
+            posLevel = std::max(posLevel, i);
+          }
         }
-        auto rwFn = [&](bool lower, ir::Expr bound) {
-          BoundsInferenceExprRewriter rw(this->provGraph, this->iterators, this->underivedBounds,
-                                         this->indexVarToExprMap,
-                                         this->definedIndexVars, exprToIndexVarMap,
-                                         this->definedIndexVarsOrdered, lower, this->presentIvars);
-          do {
-            rw.changed = false;
-            bound = rw.rewrite(bound);
-          } while (rw.changed);
-          return bound;
-        };
-        auto lower = ir::simplify(rwFn(true /* lower */, recovered));
-        auto hi = ir::simplify(rwFn(false /* lower */, recovered));
-        auto upperBound = ir::Load::make(ir::MethodCall::make(valsDomain, "hi", {}, false, Int64), 0);
-        auto upper = ir::Min::make(hi, upperBound);
+      }
+      taco_iassert(posLevel >= 0);
 
-        // Now construct the loop over the current IndexVar's domain to build the coloring.
-        partitioningStmts.push_back(ir::VarDecl::make(coloring, makeConstructor(DomainPointColoring, {})));
-        std::vector<ir::Stmt> coloringStmts;
-        // Load the current domain iterator into a variable.
-        coloringStmts.push_back(ir::VarDecl::make(this->indexVarToExprMap[forall.getIndexVar()],
-                                                  ir::Load::make(ir::Deref::make(domainIter, pointT), 0)));
-        auto start = ir::Var::make(posTensor.getName() + "Start", Point(1));
-        auto end = ir::Var::make(posTensor.getName() + "End", Point(1));
-        coloringStmts.push_back(ir::VarDecl::make(start, makeConstructor(Point(1), {lower})));
-        coloringStmts.push_back(ir::VarDecl::make(end, makeConstructor(Point(1), {upper})));
-        auto rect = ir::Var::make(posTensor.getName() + "Rect", Rect(1));
-        coloringStmts.push_back(ir::VarDecl::make(rect, makeConstructor(Rect(1), {start, end})));
+      // Get the initial iterator to partition.
+      auto posIter = this->iterators.levelIterator(posTensor, posLevel + 1);
+      taco_iassert(posIter.defined());
 
-        // It's possible that this partitioning makes a rectangle that goes out of bounds
-        // of the tensor's index space. If so, replace the rectangle with an empty Rect.
-        auto lb = ir::MethodCall::make(valsDomain, "contains", {ir::FieldAccess::make(rect, "lo", false, Auto)}, false,
-                                       Bool);
-        auto hb = ir::MethodCall::make(valsDomain, "contains", {ir::FieldAccess::make(rect, "hi", false, Auto)}, false,
-                                       Bool);
-        auto guard = ir::Or::make(ir::Neg::make(lb), ir::Neg::make(hb));
-        coloringStmts.push_back(ir::IfThenElse::make(guard, ir::Block::make(
-            ir::Assign::make(rect, ir::MethodCall::make(rect, "make_empty", {}, false, Auto)))));
-        coloringStmts.push_back(ir::Assign::make(ir::Load::make(coloring, ir::Deref::make(domainIter, Auto)), rect));
+      // We should have only 1 parent, the position variable.
+      auto posParents = this->provGraph.getParents(forall.getIndexVar());
+      taco_iassert(posParents.size() == 1);
+      auto posVar = posParents[0];
+      // Symbolically recover the position variable to derive bounds on it.
+      auto recovered = this->provGraph.recoverVariable(posVar, this->definedIndexVarsOrdered, this->underivedBounds,
+                                                       this->indexVarToExprMap, this->iterators);
+      // Here, we copy some logic from the BoundsInferenceExprRewriter to get bounds on the position variable.
+      // TODO (rohany): Make this a field on LowererImpl.
+      std::map<ir::Expr, IndexVar> exprToIndexVarMap;
+      for (auto it : this->indexVarToExprMap) {
+        exprToIndexVarMap[it.second] = it.first;
+      }
+      auto rwFn = [&](bool lower, ir::Expr bound) {
+        BoundsInferenceExprRewriter rw(this->provGraph, this->iterators, this->underivedBounds,
+                                       this->indexVarToExprMap,
+                                       this->definedIndexVars, exprToIndexVarMap,
+                                       this->definedIndexVarsOrdered, lower, this->presentIvars);
+        do {
+          rw.changed = false;
+          bound = rw.rewrite(bound);
+        } while (rw.changed);
+        return bound;
+      };
+      auto lower = ir::simplify(rwFn(true /* lower */, recovered));
+      auto upper = ir::simplify(rwFn(false /* lower */, recovered));
 
-        auto coloringLoop = ir::For::make(
+      // Now, we use the meta-abstractions on the format to partition the target level. We
+      // create and populate the target DomainPointColorings.
+      partitioningStmts.push_back(posIter.getInitializePosColoring());
+      std::vector<ir::Stmt> coloringLoopBody;
+      coloringLoopBody.push_back(ir::VarDecl::make(this->indexVarToExprMap[forall.getIndexVar()],
+                                                   ir::Load::make(ir::Deref::make(domainIter, pointT), 0)));
+      coloringLoopBody.push_back(posIter.getCreatePosColoringEntry(ir::Deref::make(domainIter, Auto), lower, upper));
+      auto coloringLoop = ir::For::make(
           domainIter,
           ir::Call::make(pointInDimT.getName(), {domain}, pointInDimT),
           ir::MethodCall::make(domainIter, "valid", {}, false /* deref */, Datatype::Bool),
           1 /* increment -- hack to get ++ */,
-          ir::Block::make(coloringStmts)
-        );
-        partitioningStmts.push_back(coloringLoop);
-      }
+         ir::Block::make(coloringLoopBody)
+      );
+      partitioningStmts.push_back(coloringLoop);
+      partitioningStmts.push_back(posIter.getFinalizePosColoring());
 
-      // Now, create a bottom up partition of the posTensor. As usual, optionally add a color to the partitions.
+      // Now, we'll use the initial partition of the target level to create partitions
+      // of the rest of the levels in the tensor.
       ir::Expr partitionColor;
       if (!this->definedIndexVarsExpanded.empty()) {
         partitionColor = this->getIterationSpacePointIdentifier();
@@ -2113,141 +2097,184 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         return args;
       };
 
-      // Derive all of the partitions we need from this initial partition.
-      {
-        // Start with an index partition of the values.
-        auto valsIndexPart = ir::Var::make(posTensor.getName() + "ValsIndexPart", IndexPartition);
-        auto valsLogicalPart = ir::Var::make(posTensor.getName() + "ValsLogicalPart", LogicalPartition);
-        auto valsIndexPartition = ir::Call::make("runtime->create_index_partition", maybeAddPartColor({ctx, valsIspace, domain, coloring, disjointPart}), Auto);
-        partitioningStmts.push_back(ir::VarDecl::make(valsIndexPart, valsIndexPartition));
-        auto valsLogicalPartition = ir::Call::make("runtime->get_logical_partition", {ctx, ir::GetProperty::make(posTensorExpr, ir::TensorProperty::Values), valsIndexPart}, Auto);
-        partitioningStmts.push_back(ir::VarDecl::make(valsLogicalPart, valsLogicalPartition));
-        tensorLogicalPartitions[posTensor][posTensor.getOrder()] = {valsLogicalPart};
+      // Use the format meta-abstraction to create the initial partition. The
+      // last 2 elements in the ModeFunction are the initial upwards and downwards
+      // facing partitions.
+      auto posPartitionFunc = posIter.getCreatePartitionWithPosColoring(domain, partitionColor);
+      taco_iassert(posPartitionFunc.defined());
+      partitioningStmts.push_back(posPartitionFunc.compute());
+      for (size_t i = 0; i < posPartitionFunc.numResults() - 2; i++) {
+        tensorLogicalPartitions[posTensor][posLevel].push_back(posPartitionFunc[i]);
+      }
+      auto upwardsPart = posPartitionFunc[posPartitionFunc.numResults() - 2];
+      auto downwardsPart = posPartitionFunc[posPartitionFunc.numResults() - 1];
 
-        // Extract information about the DenseFormatRuns of the posTensor.
-        auto posAccess = this->tensorVarToAccess[posTensor];
-        DenseFormatRuns posTensorFormatRuns(posAccess, this->iterators);
+      // We also need to record an initial partition to use for the tensor
+      // that has the same non-zero structure as the pos tensor. This initial
+      // strategy only works because the output tensor will have dimension
+      // less than or equal the pos tensor.
+      if (this->preservesNonZeros) {
+        taco_iassert(this->nonZeroAnalyzerResult.resultAccess->getTensorVar().getOrder() <= posTensor.getOrder());
+      }
+      ir::Expr nonZeroInitialPartition = downwardsPart;
+      // We also apply the initial step below if we should switch to using the
+      // upwards partition as an initial partition of the output tensor.
+      if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar().getOrder() == posLevel) {
+        nonZeroInitialPartition = upwardsPart;
+      }
 
-        // If we are writing into an output tensor that has the same non-zero structure
-        // as the tensor that we are position iterating over, then we also need to
-        // understand what to use as the initial partition for that tensor.
-        ir::Expr nonZeroInitialPartition = valsLogicalPart;
+      // TODO (rohany): Handle partitioning the DenseFormatRuns like as in createIndexPartitions.
+      // First, partition all of the levels below the posLevel in a downward pass.
+      for (int level = posLevel + 1; level < posTensor.getOrder(); level++) {
+        auto iter = this->iterators.levelIterator(ModeAccess(posAccess, level + 1));
+        auto partFunc = iter.getPartitionFromParent(downwardsPart, partitionColor);
+        if (partFunc.defined()) {
+          partitioningStmts.push_back(partFunc.compute());
+          downwardsPart = partFunc.getResults().back();
+          // Remember all of the partition variables so that we can use them when
+          // constructing region requirements later.
+          for (size_t i = 0; i < partFunc.numResults() - 1; i++) {
+            tensorLogicalPartitions[posTensor][level].push_back(partFunc[i]);
+          }
+        }
+      }
 
-        // Now perform an upward pass through the tensor to partition it.
-        ir::Expr currentPart = valsLogicalPart;
-        for (int level = posTensor.getOrder() - 1; level >= 0; level--) {
-          auto iter = this->iterators.levelIterator(posTensor, level + 1);
+      // Then, using the resulting partition from the downward partitioning pass,
+      // partition the values region.
+      auto posTensorExpr = this->tensorVars[posTensor];
+      auto valsLogicalPart = ir::Var::make(posTensor.getName() + "ValsLogicalPart", LogicalPartition);
+      auto valsLogicalPartition = ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, downwardsPart, ir::GetProperty::make(posTensorExpr, ir::TensorProperty::Values)}), Auto);
+      partitioningStmts.push_back(ir::VarDecl::make(valsLogicalPart, valsLogicalPartition));
+      tensorLogicalPartitions[posTensor][posTensor.getOrder()] = {valsLogicalPart};
+
+      // Next, partition the levels of the tensor above the posLevel in an upwards pass.
+      // TODO (rohany): Handle partitioning the DenseFormatRuns like as in createIndexPartitions.
+      for (int level = posLevel - 1; level >= 0; level--) {
+        auto iter = this->iterators.levelIterator(posTensor, level + 1);
+        auto modeFunc = iter.getPartitionFromChild(upwardsPart, partitionColor);
+        if (modeFunc.defined()) {
+          partitioningStmts.push_back(modeFunc.compute());
+          upwardsPart = modeFunc.getResults().back();
+          for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
+            tensorLogicalPartitions[posTensor][level].push_back(modeFunc[i]);
+          }
+          // If we hit the bottom level of the result non-zero tensor, then mark
+          // the initial partition for the output tensor.
+          if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar().getOrder() <= level) {
+            nonZeroInitialPartition = upwardsPart;
+          }
+        }
+      }
+
+      // TODO (rohany): Not sure how to assert some of the assumptions below.
+      // At this point, we should end up with a partition of the top dense levels
+      // of posTensor, so let's copy that partition into a partition of the first
+      // dense run of posTensor. We only do this if there is a dense run to partition.
+      auto denseRun = ir::GetProperty::makeDenseLevelRun(posTensorExpr, 0);
+      auto denseRunPartition = ir::Var::make(posTensor.getName() + "DenseRun0Partition", IndexPartition);
+      DenseFormatRuns posTensorFormatRuns(posAccess, this->iterators);
+      if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
+        partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, upwardsPart, denseRun}), IndexPartition)));
+        tensorDenseRunPartitions[posTensor][0] = denseRunPartition;
+      }
+
+      // TODO (rohany): This doesn't do as much work as the position space split
+      //  for the input tensor, but should be fine based on the restrictions that
+      //  we apply here?
+      // Copy the partitions of the pos tensor over to the output tensor if
+      // the non-zero structure is preserved.
+      if (this->preservesNonZeros) {
+        // TODO (rohany): This doesn't do as much work as the partitioning pass on
+        //  the tensor who's position space has been split. For now that's fine
+        //  since we don't have any use cases that do something different. If
+        //  the below assertion fails then this partitioning pass will need to
+        //  be updated as well. The assertion checks the position split occurs
+        //  at or below the lowest level in the output tensor.
+        auto tv = this->nonZeroAnalyzerResult.resultAccess->getTensorVar();
+        taco_iassert((posLevel + 1) >= tv.getOrder());
+        auto vals = ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values);
+        auto lPart = ir::Var::make(tv.getName() + "ValsLogicalPart", LogicalPartition);
+        auto createLPart = ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, nonZeroInitialPartition, vals}), LogicalPartition);
+        partitioningStmts.push_back(ir::VarDecl::make(lPart, createLPart));
+        tensorLogicalPartitions[tv][tv.getOrder()] = {lPart};
+        // TODO (rohany): Is there a neat way of deduplicating this code?
+        // Now do an upwards partitioning pass.
+        ir::Expr currentPart = lPart;
+        for (int level = tv.getOrder() - 1; level >= 0; level--) {
+          auto iter = this->iterators.levelIterator(tv, level + 1);
           auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
           if (modeFunc.defined()) {
             partitioningStmts.push_back(modeFunc.compute());
             currentPart = modeFunc.getResults().back();
             for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
-              tensorLogicalPartitions[posTensor][level].push_back(modeFunc[i]);
-            }
-            if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar().getOrder() <= level) {
-              nonZeroInitialPartition = currentPart;
+              tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
             }
           }
         }
 
-        // TODO (rohany): Not sure how to assert some of the assumptions below.
-        // At this point, we should end up with a partition of the top dense levels
-        // of posTensor, so let's copy that partition into a partition of the first
-        // dense run of posTensor. We only do this if there is a dense run to partition.
-        auto denseRun = ir::GetProperty::makeDenseLevelRun(posTensorExpr, 0);
-        auto denseRunPartition = ir::Var::make(posTensor.getName() + "DenseRun0Partition", IndexPartition);
+        // TODO (rohany): Again, there's some duplication here...
+        // Also copy the result partition to the first dense run of the result tensor, if the tensor has
+        // a top level dense run.
+        // TODO (rohany): Does it suffice to use the posTensorFormatRuns here, or do we need another
+        //  one specific to the tensor being copied?
         if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
+          auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+          auto denseRunPartition = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
           partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
-          tensorDenseRunPartitions[posTensor][0] = denseRunPartition;
+          tensorDenseRunPartitions[tv][0] = denseRunPartition;
         }
+      }
 
-        // Use the initial partition retrieved from above to partition the result tensor. We'll
-        // use that partition to partition the values region using copyPartition, and then go up
-        // the coordinate tree.
-        if (this->preservesNonZeros) {
-          auto tv = this->nonZeroAnalyzerResult.resultAccess->getTensorVar();
-          auto vals = ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values);
-          auto lPart = ir::Var::make(tv.getName() + "ValsLogicalPart", LogicalPartition);
-          auto createLPart = ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, nonZeroInitialPartition, vals}), LogicalPartition);
-          partitioningStmts.push_back(ir::VarDecl::make(lPart, createLPart));
-          tensorLogicalPartitions[tv][tv.getOrder()] = {lPart};
-          // TODO (rohany): Is there a neat way of deduplicating this code?
-          // Now do an upwards partitioning pass.
-          ir::Expr currentPart = lPart;
-          for (int level = tv.getOrder() - 1; level >= 0; level--) {
-            auto iter = this->iterators.levelIterator(tv, level + 1);
-            auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
-            if (modeFunc.defined()) {
-              partitioningStmts.push_back(modeFunc.compute());
-              currentPart = modeFunc.getResults().back();
-              for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
-                tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
-              }
+      // Now, partition the rest of the tensors in the program using the
+      // derived top level partition of the pos tensor.
+      for (auto tv : this->tensorVarOrdering) {
+        // Skip the tensor who's position space we are iterating over.
+        if (tv == posTensor) continue;
+        // Also skip the tensor that shares the same non-zero structure as the input tensor
+        // (the one we are performing a position split over), as we'll partition that in
+        // the same way as the input tensor.
+        if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar() == tv) continue;
+        auto tvExpr = this->tensorVars[tv];
+        auto tvAccess = this->tensorVarToAccess.at(tv);
+        auto projection = this->constructAffineProjection(posAccess, tvAccess);
+        if (!projection.defined()) {
+          // If we don't have a projection, then this tensor is fully replicated.
+          continue;
+        }
+        // TODO (rohany): Deduplicate this out into a helper function used by the standard
+        //  partitioning pass.
+        // Otherwise, we'll use the projection to create a partition of the first
+        // dense run of the tensor.
+        auto runs = DenseFormatRuns(tvAccess, this->iterators);
+        taco_iassert(runs.runs.size() == 1);
+        auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
+        auto firstDenseRunPart = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
+        auto createDenseRunPart = ir::MethodCall::make(projection, "apply", maybeAddPartColor({ctx, runtime, denseRunPartition, firstDenseRun}), false /* deref */, IndexPartition);
+        partitioningStmts.push_back(ir::VarDecl::make(firstDenseRunPart, createDenseRunPart));
+        tensorDenseRunPartitions[tv][0] = firstDenseRunPart;
+        auto currentPart = firstDenseRunPart;
+        // TODO (rohany): Handle partitioning the dense format runs like createIndexPartitions.
+        for (int level = runs.runs[0].levels.back(); level < tv.getOrder(); level++) {
+          auto iter = this->iterators.levelIterator({tvAccess, level + 1});
+          auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
+          if (modeFunc.defined()) {
+            partitioningStmts.push_back(modeFunc.compute());
+            currentPart = modeFunc.getResults().back();
+            for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
+              tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
             }
           }
-
-          // TODO (rohany): Again, there's some duplication here...
-          // Also copy the result partition to the first dense run of the result tensor, if the tensor has
-          // a top level dense run.
-          // TODO (rohany): Does it suffice to use the posTensorFormatRuns here, or do we need another
-          //  one specific to the tensor being copied?
-          if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
-            auto denseRun = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
-            auto denseRunPartition = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
-            partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, currentPart, denseRun}), IndexPartition)));
-            tensorDenseRunPartitions[tv][0] = denseRunPartition;
-          }
         }
-
-        // Now, use this dense run to create partitions onto the other tensors.
-        for (auto tv : this->tensorVarOrdering) {
-          // Skip the tensor who's position space we are iterating over.
-          if (tv == posTensor) continue;
-          // Also skip the tensor that shares the same non-zero structure as the input tensor
-          // (the one we are performing a position split over), as we'll partition that in
-          // the same way as the input tensor.
-          if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar() == tv) continue;
-          auto tvExpr = this->tensorVars[tv];
-          auto tvAccess = this->tensorVarToAccess.at(tv);
-          auto projection = this->constructAffineProjection(posAccess, tvAccess);
-          if (!projection.defined()) {
-            // If we don't have a projection, then this tensor is fully replicated.
-            continue;
-          }
-          // TODO (rohany): Deduplicate this out into a helper function used by the standard
-          //  partitioning pass.
-          // Otherwise, we'll use the projection to create a partition of the first
-          // dense run of the tensor.
-          auto runs = DenseFormatRuns(tvAccess, this->iterators);
-          taco_iassert(runs.runs.size() == 1);
-          auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
-          auto firstDenseRunPart = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
-          auto createDenseRunPart = ir::MethodCall::make(projection, "apply", maybeAddPartColor({ctx, runtime, denseRunPartition, firstDenseRun}), false /* deref */, IndexPartition);
-          partitioningStmts.push_back(ir::VarDecl::make(firstDenseRunPart, createDenseRunPart));
-          tensorDenseRunPartitions[tv][0] = firstDenseRunPart;
-          auto currentPart = firstDenseRunPart;
-          for (int level = runs.runs[0].levels.back(); level < tv.getOrder(); level++) {
-            auto iter = this->iterators.levelIterator({tvAccess, level + 1});
-            auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
-            if (modeFunc.defined()) {
-              partitioningStmts.push_back(modeFunc.compute());
-              currentPart = modeFunc.getResults().back();
-              for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
-                tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
-              }
-            }
-          }
-          // Finally, construct the values partition.
-          auto partitionVals = ir::Call::make(
-              "copyPartition",
-              maybeAddPartColor(
-                  {ctx, runtime, currentPart, getLogicalRegion(ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values))}),
-              Auto
-          );
-          auto valsPart = ir::Var::make(tv.getName() + "_vals_partition", Auto);
-          partitioningStmts.push_back(ir::VarDecl::make(valsPart, partitionVals));
-          tensorLogicalPartitions[tv][tv.getOrder()].push_back(valsPart);
-        }
+        // Finally, construct the values partition.
+        auto partitionVals = ir::Call::make(
+            "copyPartition",
+            maybeAddPartColor(
+                {ctx, runtime, currentPart, getLogicalRegion(ir::GetProperty::make(this->tensorVars[tv], TensorProperty::Values))}),
+            Auto
+        );
+        auto valsPart = ir::Var::make(tv.getName() + "_vals_partition", Auto);
+        partitioningStmts.push_back(ir::VarDecl::make(valsPart, partitionVals));
+        tensorLogicalPartitions[tv][tv.getOrder()].push_back(valsPart);
       }
     } else {
       // If we aren't in a pos split, then we'll construct partitions in a standard top-down manner.

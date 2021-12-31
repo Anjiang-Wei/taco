@@ -1,6 +1,7 @@
 #include "taco_legion_header.h"
 #include "taco_mapper.h"
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
+#define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
@@ -45,32 +46,33 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   Point<1> upperBound = Point<1>((pieces - 1));
   auto koIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(koIndexSpace));
-  auto BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
-  auto BValsColoring = DomainPointColoring();
+  DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
+  DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int32_t ko = (*itr)[0];
-    Point<1> BStart = Point<1>((ko * ((B2Size + (pieces - 1)) / pieces) + 0 / pieces));
-    Point<1> BEnd = Point<1>(TACO_MIN((ko * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)), BValsDomain.hi()[0]));
-    Rect<1> BRect = Rect<1>(BStart, BEnd);
-    if (!BValsDomain.contains(BRect.lo) || !BValsDomain.contains(BRect.hi)) {
-      BRect = BRect.make_empty();
+    Point<1> B2CrdStart = Point<1>((ko * ((B2Size + (pieces - 1)) / pieces)));
+    Point<1> B2CrdEnd = Point<1>(TACO_MAX((ko * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)),B2_crd_domain.bounds.hi[0]));
+    Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
+    if (!B2_crd_domain.contains(B2CrdRect.lo) || !B2_crd_domain.contains(B2CrdRect.hi)) {
+      B2CrdRect = B2CrdRect.make_empty();
     }
-    BValsColoring[(*itr)] = BRect;
+    B2_crd_coloring[(*itr)] = B2CrdRect;
   }
-  IndexPartition BValsIndexPart = runtime->create_index_partition(ctx, get_index_space(B_vals), domain, BValsColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition BValsLogicalPart = runtime->get_logical_partition(ctx, B_vals, BValsIndexPart);
-  LogicalPartition crdPartB2 = copyPartition(ctx, runtime, BValsLogicalPart, B2_crd);
+  IndexPartition B2_crd_index_part = runtime->create_index_partition(ctx, B2_crd.get_index_space(), domain, B2_crd_coloring, LEGION_COMPUTE_KIND);
+  LogicalPartition B2_crd_part = runtime->get_logical_partition(ctx, B2_crd, B2_crd_index_part);
   IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(
     ctx,
-    crdPartB2.get_index_partition(),
+    B2_crd_index_part,
     B2_pos,
     B2_pos_parent,
     FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition())
+    runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part)
   );
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
-  LogicalPartition AValsLogicalPart = copyPartition(ctx, runtime, BValsLogicalPart, A_vals);
+  LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, B_vals);
+  IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
+  LogicalPartition AValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, A_vals);
   LogicalPartition crdPartA2 = copyPartition(ctx, runtime, AValsLogicalPart, A2_crd);
   IndexPartition posSparsePartA2 = runtime->create_partition_by_preimage_range(
     ctx,
@@ -83,7 +85,6 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   IndexPartition posIndexPartA2 = densifyPartition(ctx, runtime, get_index_space(A2_pos), posSparsePartA2);
   LogicalPartition posPartA2 = runtime->get_logical_partition(ctx, A2_pos, posIndexPartA2);
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
-  IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   IndexPartition CDenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, C_dense_run_0);
   auto C_vals_partition = copyPartition(ctx, runtime, CDenseRun0Partition, get_logical_region(C_vals));
   auto computePartitions = new(partitionPackForcomputeLegion);
@@ -96,7 +97,7 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   computePartitions->BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
   computePartitions->BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions->BPartition.indicesPartitions[1].push_back(posPartB2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(crdPartB2);
+  computePartitions->BPartition.indicesPartitions[1].push_back(B2_crd_part);
   computePartitions->BPartition.valsPartition = BValsLogicalPart;
   computePartitions->BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
   computePartitions->CPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
@@ -146,20 +147,21 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     return ;
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
+  DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
   int32_t pB2_begin = B2PosDomain.bounds.lo;
   int32_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ko;
   #pragma omp parallel for schedule(static)
-  for (int32_t kio = (0 / pieces) / 2048; kio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); kio++) {
+  for (int32_t kio = 0; kio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); kio++) {
     int64_t pointID2 = pointID1 * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + kio;
-    int32_t ki = kio * 2048 + 0 / pieces;
+    int32_t ki = kio * 2048;
     int32_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
     int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, kposB);
     int32_t i = i_pos;
     for (int32_t kii = 0; kii < 2048; kii++) {
-      int32_t ki = (kio * 2048 + kii) + 0 / pieces;
+      int32_t ki = kio * 2048 + kii;
       int32_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
-      if (kposB >= (ko + 1) * ((B2Size + (pieces - 1)) / pieces - 0 / pieces))
+      if (kposB >= (ko + 1) * ((B2Size + (pieces - 1)) / pieces))
         continue;
 
       if (kposB >= B2Size)

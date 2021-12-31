@@ -400,6 +400,74 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir
   return ir::Block::make({initCs, loop, setSubReg});
 }
 
+ir::Stmt RectCompressedModeFormat::getInitializePosColoring(Mode mode) const {
+  // Get the bounds of the CRD region.
+  auto declareColoring = ir::VarDecl::make(this->getCrdColoring(mode), ir::makeConstructor(DomainPointColoring, {}));
+  auto declareBounds = this->initCrdBounds(mode);
+  // Create a domainPointColoring for the CRD region.
+  return ir::Block::make(declareBounds, declareColoring);
+}
+
+ir::Stmt RectCompressedModeFormat::getFinalizePosColoring(Mode mode) const {
+  return ir::Stmt();
+}
+
+ir::Stmt RectCompressedModeFormat::getCreatePosColoringEntry(Mode mode, ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const {
+  std::vector<ir::Stmt> stmts;
+  auto pointT = Point(1);
+  auto rectT = Rect(1);
+
+  auto start = ir::Var::make(mode.getName() + "CrdStart", pointT);
+  auto end = ir::Var::make(mode.getName() + "CrdEnd", pointT);
+  auto domainMax = ir::Load::make(ir::FieldAccess::make(this->getCrdBounds(mode), "bounds.hi", false /* deref */, Int64));
+  stmts.push_back(ir::VarDecl::make(start, ir::makeConstructor(pointT, {lowerBound})));
+  stmts.push_back(ir::VarDecl::make(end, ir::makeConstructor(pointT, {ir::Min::make(upperBound, domainMax)})));
+  auto rect = ir::Var::make(mode.getName() + "CrdRect", rectT);
+  stmts.push_back(ir::VarDecl::make(rect, ir::makeConstructor(rectT, {start, end})));
+
+  // It's possible that this partitioning makes a rectangle that goes out of bounds
+  // of crd's index space. If so, replace the rectangle with an empty Rect.
+  auto crdBounds = this->getCrdBounds(mode);
+  auto lb = ir::MethodCall::make(crdBounds, "contains", {ir::FieldAccess::make(rect, "lo", false, Auto)}, false, Bool);
+  auto hb = ir::MethodCall::make(crdBounds, "contains", {ir::FieldAccess::make(rect, "hi", false, Auto)}, false, Bool);
+  auto guard = ir::Or::make(ir::Neg::make(lb), ir::Neg::make(hb));
+  stmts.push_back(ir::IfThenElse::make(guard, ir::Block::make(
+      ir::Assign::make(rect, ir::MethodCall::make(rect, "make_empty", {}, false, Auto)))));
+  stmts.push_back(ir::Assign::make(ir::Load::make(this->getCrdColoring(mode), domainPoint), rect));
+
+  return ir::Block::make(stmts);
+}
+
+ModeFunction RectCompressedModeFormat::getCreatePartitionWithPosColoring(Mode mode, ir::Expr domain, ir::Expr partitionColor) const {
+  // Here, we use the coloring to create a partition of the crd
+  // region using create_partition_by_domain. Then, we use that
+  // partition to create a partition of the pos region with
+  // create_partition_by_preimage_range. This logic is similar
+  // to getPartitionFromChild.
+  auto maybeAddColor = [&](std::vector<ir::Expr> args) {
+    if (!partitionColor.defined()) {
+      return args;
+    }
+    args.push_back(partitionColor);
+    return args;
+  };
+  auto pack = mode.getModePack();
+
+  std::vector<ir::Stmt> stmts;
+
+  auto crd = this->getRegion(pack, CRD);
+  auto crdIndexSpace = ir::MethodCall::make(crd, "get_index_space", {}, false /* deref */, Auto);
+  auto crdIndexPart = ir::Var::make(mode.getName() + "_crd_index_part", IndexPartition);
+  auto createCrdIndexPart = ir::Call::make("runtime->create_index_partition", maybeAddColor({ir::ctx, crdIndexSpace, domain, this->getCrdColoring(mode), ir::computePart}), Auto);
+  stmts.push_back(ir::VarDecl::make(crdIndexPart, createCrdIndexPart));
+  auto crdPart = ir::Var::make(mode.getName() + "_crd_part", LogicalPartition);
+  stmts.push_back(ir::VarDecl::make(crdPart, ir::Call::make("runtime->get_logical_partition", {ir::ctx, crd, crdIndexPart}, Auto)));
+  auto posPartition = this->partitionPosFromCrd(mode, crdIndexPart, maybeAddColor);
+  auto posPart = posPartition[0];
+  stmts.push_back(posPartition.compute());
+  return ModeFunction(ir::Block::make(stmts), {posPart, crdPart, posPart, crdPart});
+}
+
 ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const {
   auto maybeAddColor = [&](std::vector<ir::Expr> args) {
     if (!partitionColor.defined()) {
@@ -411,7 +479,6 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
   auto pack = mode.getModePack();
   // Partition the pos region in the same way that the parent is partitioned,
   // as there is a pos entry for each of the entries in the parent.
-  // TODO (rohany): Handle formats like {Sparse, Dense}.
   // TODO (rohany): Add these variables to the mode.
   auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
   auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("copyPartition", maybeAddColor(
@@ -462,40 +529,10 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
   auto createCrdPart = ir::VarDecl::make(crdPart, ir::Call::make("copyPartition", maybeAddColor(
       {ir::ctx, ir::runtime, childPartition, this->getRegion(pack, CRD)}), Auto));
   // Now, using this partition of crd, create a dependent partition of the pos array.
-  // There are some interesting things going on to create the backwards partition of
-  // the pos array from the crd array. First, we use create_partition_by_image_range
-  // to find the backpointers from each crd entry into the containing pos entry.
-  // However, this isn't enough. Only the pos entries that are non-empty will be contained
-  // in one of these dependent partitions, meaning that we won't be able to scan past the
-  // empty pos entries that denote empty rectangles. To remedy this, we exploit the fact
-  // that the crd array is sorted by increasing coordinate position. Therefore, if we know
-  // that two pos entries i and j are in a partition, then all entries between i and j must
-  // also be in the partition (this intuition extends to multiple dimensions). So, we can
-  // "densify" the sparse partition computed via create_partition_by_image_range to get
-  // the final partition of the pos region.
-  // TODO (rohany): Handle formats like {Sparse, Dense}.
-  auto posSparsePart = ir::Var::make("posSparsePart" + mode.getName(), IndexPartition);
-  auto createPosSparsePart = ir::Call::make(
-    "runtime->create_partition_by_preimage_range",
-    {
-      ir::ctx,
-      crdPartIndexPartition,
-      this->getRegion(pack, POS),
-      this->getRegion(pack, POS_PARENT),
-      fidRect1,
-      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdPartIndexPartition}, Auto)
-    },
-    Auto
-  );
-  auto definedPosSparsePart = ir::VarDecl::make(posSparsePart, createPosSparsePart);
-  auto posIndexPart = ir::Var::make("posIndexPart" + mode.getName(), IndexPartition);
-  auto createPosIndexPart = ir::VarDecl::make(posIndexPart, ir::Call::make("densifyPartition", maybeAddColor(
-      {ir::ctx, ir::runtime, ir::getIndexSpace(this->getRegion(pack, POS)), posSparsePart}), Auto));
-  auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
-  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("runtime->get_logical_partition",
-                                                                 {ir::ctx, this->getRegion(pack, POS), posIndexPart}, Auto));
+  auto posPartition = this->partitionPosFromCrd(mode, crdPartIndexPartition, maybeAddColor);
   // The resulting partition is a partition of the pos array.
-  return ModeFunction(ir::Block::make(createCrdPart, definedPosSparsePart, createPosIndexPart, createPosPart), {posPart, crdPart, posPart});
+  auto posPart = posPartition[0];
+  return ModeFunction(ir::Block::make(createCrdPart, posPartition.compute()), {posPart, crdPart, posPart});
 }
 
 ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
@@ -516,33 +553,23 @@ ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_RE
   }
 }
 
-// TODO (rohany): This probably has to be changed for the same reasons as below.
-ir::Expr RectCompressedModeFormat::getPosCapacity(Mode mode) const {
-  const std::string varName = mode.getName() + "_pos_size";
-
+ir::Expr RectCompressedModeFormat::getModeVar(Mode mode, const std::string varName, Datatype type) const {
   if (!mode.hasVar(varName)) {
-    ir::Expr posCapacity = ir::Var::make(varName, Int());
-    mode.addVar(varName, posCapacity);
-    return posCapacity;
+    auto var = ir::Var::make(varName, type);
+    mode.addVar(varName, var);
+    return var;
   }
-
   return mode.getVar(varName);
 }
 
-// TODO (rohany): This probably needs to be changed (at least how we
-//  access the capacity needs to be cached rather than making runtime calls).
-//  Maybe not, since the mode makes the variable once, it probably assigns to it
-//  and tracks it.
+ir::Expr RectCompressedModeFormat::getPosCapacity(Mode mode) const {
+  const std::string varName = mode.getName() + "_pos_size";
+  return this->getModeVar(mode, varName, Int());
+}
+
 ir::Expr RectCompressedModeFormat::getCoordCapacity(Mode mode) const {
   const std::string varName = mode.getName() + "_crd_size";
-
-  if (!mode.hasVar(varName)) {
-    ir::Expr idxCapacity = ir::Var::make(varName, Int());
-    mode.addVar(varName, idxCapacity);
-    return idxCapacity;
-  }
-
-  return mode.getVar(varName);
+  return this->getModeVar(mode, varName, Int());
 }
 
 ir::Expr RectCompressedModeFormat::packToPoint(const std::vector<ir::Expr>& args) const {
@@ -552,21 +579,33 @@ ir::Expr RectCompressedModeFormat::packToPoint(const std::vector<ir::Expr>& args
 
 ir::Expr RectCompressedModeFormat::getPosBounds(Mode mode) const {
   const std::string varName = mode.getName() + "_pos_domain";
-  if (!mode.hasVar(varName)) {
-    ir::Expr bounds = ir::Var::make(varName, Domain(this->posDim));
-    mode.addVar(varName, bounds);
-    return bounds;
-  }
-  return mode.getVar(varName);
+  return this->getModeVar(mode, varName, Domain(this->posDim));
+}
+
+ir::Expr RectCompressedModeFormat::getCrdBounds(Mode mode) const {
+  const std::string varName = mode.getName() + "_crd_domain";
+  return this->getModeVar(mode, varName, Domain(1));
+}
+
+ir::Expr RectCompressedModeFormat::getCrdColoring(Mode mode) const {
+  const std::string varName = mode.getName() + "_crd_coloring";
+  return this->getModeVar(mode, varName, DomainPointColoring);
 }
 
 ir::Stmt RectCompressedModeFormat::initPosBounds(Mode mode) const {
   auto pack = mode.getModePack();
   auto posArray = this->getRegion(pack, POS);
-  auto domainTy = Domain(this->posDim);
   auto getIspace = ir::MethodCall::make(posArray, "get_index_space", {}, false, Auto);
   auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
   return ir::VarDecl::make(this->getPosBounds(mode), getDomain);
+}
+
+ir::Stmt RectCompressedModeFormat::initCrdBounds(Mode mode) const {
+  auto pack = mode.getModePack();
+  auto crdArray = this->getRegion(pack, CRD);
+  auto getIspace = ir::MethodCall::make(crdArray, "get_index_space", {}, false, Auto);
+  auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, getIspace}, Auto);
+  return ir::VarDecl::make(this->getCrdBounds(mode), getDomain);
 }
 
 bool RectCompressedModeFormat::hasSparseAncestor(Mode mode) const {
@@ -580,6 +619,45 @@ bool RectCompressedModeFormat::hasSparseAncestor(Mode mode) const {
     parentMode = parentMode.getParentMode();
   }
   return hasSparseParent;
+}
+
+ModeFunction RectCompressedModeFormat::partitionPosFromCrd(Mode mode, ir::Expr crdIndexPartition,
+                                                           std::function<std::vector<ir::Expr>(
+                                                               std::vector<ir::Expr>)> maybeAddColor) const {
+  auto pack = mode.getModePack();
+  // There are some interesting things going on to create the backwards partition of
+  // the pos array from the crd array. First, we use create_partition_by_image_range
+  // to find the backpointers from each crd entry into the containing pos entry.
+  // However, this isn't enough. Only the pos entries that are non-empty will be contained
+  // in one of these dependent partitions, meaning that we won't be able to scan past the
+  // empty pos entries that denote empty rectangles. To remedy this, we exploit the fact
+  // that the crd array is sorted by increasing coordinate position. Therefore, if we know
+  // that two pos entries i and j are in a partition, then all entries between i and j must
+  // also be in the partition (this intuition extends to multiple dimensions). So, we can
+  // "densify" the sparse partition computed via create_partition_by_image_range to get
+  // the final partition of the pos region.
+  // TODO (rohany): Handle formats like {Sparse, Dense}.
+  auto posSparsePart = ir::Var::make("posSparsePart" + mode.getName(), IndexPartition);
+  auto createPosSparsePart = ir::Call::make(
+      "runtime->create_partition_by_preimage_range",
+      {
+          ir::ctx,
+          crdIndexPartition,
+          this->getRegion(pack, POS),
+          this->getRegion(pack, POS_PARENT),
+          fidRect1,
+          ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdIndexPartition}, Auto)
+      },
+      Auto
+  );
+  auto definedPosSparsePart = ir::VarDecl::make(posSparsePart, createPosSparsePart);
+  auto posIndexPart = ir::Var::make("posIndexPart" + mode.getName(), IndexPartition);
+  auto createPosIndexPart = ir::VarDecl::make(posIndexPart, ir::Call::make("densifyPartition", maybeAddColor(
+      {ir::ctx, ir::runtime, ir::getIndexSpace(this->getRegion(pack, POS)), posSparsePart}), Auto));
+  auto posPart = ir::Var::make("posPart" + mode.getName(), LogicalPartition);
+  auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("runtime->get_logical_partition",
+                                                                 {ir::ctx, this->getRegion(pack, POS), posIndexPart}, Auto));
+  return ModeFunction(ir::Block::make({definedPosSparsePart, createPosIndexPart, createPosPart}), {posPart});
 }
 
 }

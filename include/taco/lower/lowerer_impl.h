@@ -772,9 +772,6 @@ private:
 
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.
-  static inline ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
-  static inline ir::Expr aliasedPart = ir::Symbol::make("LEGION_ALIASED_COMPLETE_KIND");
-  static inline ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
   static inline ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
   static inline ir::Expr readWrite = ir::Symbol::make("READ_WRITE");
   static inline ir::Expr exclusive = ir::Symbol::make("EXCLUSIVE");

@@ -291,7 +291,19 @@ Stmt ModeFormatImpl::getFinalizeYieldPos(Expr prevSize, Mode mode) const {
   return Stmt();
 }
 
-ModeFunction ModeFormatImpl::getCreateInitialPartition(Mode mode) const {
+Stmt ModeFormatImpl::getInitializePosColoring(Mode mode) const {
+  return Stmt();
+}
+
+Stmt ModeFormatImpl::getFinalizePosColoring(Mode mode) const {
+  return Stmt();
+}
+
+Stmt ModeFormatImpl::getCreatePosColoringEntry(Mode mode, Expr domainPoint, Expr lowerBound, Expr upperBound) const {
+  return Stmt();
+}
+
+ModeFunction ModeFormatImpl::getCreatePartitionWithPosColoring(Mode mode, Expr domain, Expr coloring) const {
   return ModeFunction();
 }
 

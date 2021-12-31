@@ -35,6 +35,10 @@ public:
   ir::Stmt getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr parentSize, ir::Expr size, Mode mode) const override;
 
   // Partitioning capabilities.
+  ir::Stmt getInitializePosColoring(Mode mode) const override;
+  ir::Stmt getFinalizePosColoring(Mode mode) const override;
+  ir::Stmt getCreatePosColoringEntry(Mode mode, ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const override;
+  ModeFunction getCreatePartitionWithPosColoring(Mode mode, ir::Expr domain, ir::Expr partitionColor) const override;
   ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const override;
   ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr partitionColor) const override;
 
@@ -58,7 +62,14 @@ protected:
   ir::Expr getCoordCapacity(Mode mode) const;
   ir::Expr packToPoint(const std::vector<ir::Expr>& args) const;
   ir::Expr getPosBounds(Mode mode) const;
+  ir::Expr getCrdBounds(Mode mode) const;
   ir::Stmt initPosBounds(Mode mode) const;
+  ir::Stmt initCrdBounds(Mode mode) const;
+  ir::Expr getCrdColoring(Mode mode) const;
+  ir::Expr getModeVar(Mode mode, const std::string varName, Datatype type) const;
+
+  ModeFunction partitionPosFromCrd(Mode mode, ir::Expr crdIndexPartition,
+                                   std::function<std::vector<ir::Expr>(std::vector<ir::Expr>)> maybeAddColor) const;
 
   // hasSparseAncestor returns true if there is a sparse mode
   // above this mode, i.e. it returns false if all parent levels
