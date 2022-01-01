@@ -60,6 +60,7 @@ public:
 #undef BLOCK
       default:
         assert(false);
+        return 0; // Keep the compiler happy.
     }
   }
 };

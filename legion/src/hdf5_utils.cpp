@@ -251,6 +251,7 @@ const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, i
     case Dense:
       // We shouldn't be trying to get the tensor names from a Dense level.
       taco_iassert(false);
+      break;
     case Sparse: {
       // The name depends on what the value of idx is.
       std::stringstream nameSS;
@@ -266,6 +267,7 @@ const char* getTensorLevelFormatName(LegionTensorLevelFormat format, int mode, i
     default:
       taco_iassert(false);
   }
+  return nullptr; // Keep the compiler happy.
 }
 
 // createHDF5RectType returns a tuple of {Point, Rect} HDF5 types.
@@ -376,6 +378,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           // TODO (rohany): Support this case. I'm a bit lazy and don't want to consider
           //  it right now since I won't actually be doing parallel computations on COO matrices.
           taco_iassert(false);
+          break;
         }
         default:
           taco_iassert(false);
@@ -474,6 +477,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
         case Singleton:
           // TODO (rohany): Support singleton.
           taco_iassert(false);
+          break;
         default:
           taco_iassert(false);
       }
@@ -667,6 +671,7 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
       case Singleton:
         // TODO (rohany): Support singleton.
         taco_iassert(false);
+        break;
       default:
         taco_iassert(false);
     }

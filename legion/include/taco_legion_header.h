@@ -34,6 +34,7 @@ struct RegionWrapper {
         return this->logReg.get_index_space();
       default:
         taco_iassert(false);
+        return Legion::IndexSpace(); // Keep the compiler happy.
     }
   }
 

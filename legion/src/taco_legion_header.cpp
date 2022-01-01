@@ -216,7 +216,7 @@ int AffineProjection::dim() const {
 }
 
 int AffineProjection::operator[] (size_t i) const {
-  taco_iassert(i >= 0 && int(i) < this->dim());
+  taco_iassert(int(i) < this->dim());
   return this->projs[i];
 }
 
