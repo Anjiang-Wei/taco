@@ -3,16 +3,13 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 #define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
+
+#include "taco-generated.h"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef ReductionAccessor<SumReduction<double>,false,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReduceNonExcldouble1;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
-
-struct partitionPackForcomputeLegionDSS {
-  LegionTensorPartition APartition;
-  LegionTensorPartition BPartition;
-};
 
 struct task_1Args {
   int32_t A1_dimension;
@@ -20,20 +17,12 @@ struct task_1Args {
   int32_t c1_dimension;
   int32_t pieces;
 };
-struct partitionPackForcomputeLegionDSSPosSplit {
-  LegionTensorPartition APartition;
-  LegionTensorPartition BPartition;
-};
 
 struct task_2Args {
   int32_t A1_dimension;
   int64_t B3Size;
   int32_t c1_dimension;
   int32_t pieces;
-};
-struct partitionPackForcomputeLegionDSSPartialPosSplit {
-  LegionTensorPartition APartition;
-  LegionTensorPartition BPartition;
 };
 
 struct task_3Args {
@@ -43,7 +32,8 @@ struct task_3Args {
   int32_t pieces;
 };
 
-partitionPackForcomputeLegionDSS* partitionForcomputeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+
+partitionPackForcomputeLegionDSS* partitionForcomputeLegionDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper A2_pos = A->indices[1][0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -200,7 +190,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSS* partitionPack, int32_t pieces) {
+void computeLegionDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSS* partitionPack, int32_t pieces) {
   int A1_dimension = A->dims[0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -261,7 +251,7 @@ void computeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* A, LegionTens
 
 }
 
-partitionPackForcomputeLegionDSSPosSplit* partitionForcomputeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionDSSPosSplit* partitionForcomputeLegionDSSPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper A2_pos = A->indices[1][0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -437,7 +427,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPosSplit* partitionPack, int32_t pieces) {
+void computeLegionDSSPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPosSplit* partitionPack, int32_t pieces) {
   int A1_dimension = A->dims[0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -497,7 +487,7 @@ void computeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, Le
 
 }
 
-partitionPackForcomputeLegionDSSPartialPosSplit* partitionForcomputeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionDSSPartialPosSplit* partitionForcomputeLegionDSSPartialPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper A2_pos = A->indices[1][0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -663,7 +653,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPartialPosSplit* partitionPack, int32_t pieces) {
+void computeLegionDSSPartialPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPartialPosSplit* partitionPack, int32_t pieces) {
   int A1_dimension = A->dims[0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];

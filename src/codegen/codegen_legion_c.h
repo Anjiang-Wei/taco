@@ -19,6 +19,7 @@ public:
   CodegenLegionC(std::ostream &dest, OutputKind outputKind, bool simplify=false);
   void compile(Stmt stmt, bool isFirst=false) override;
 
+  static void compileToDirectory(std::string prefix, ir::Stmt stmt);
 private:
   // TODO (rohany): It doesn't seem like I can override these.
   using IRPrinter::visit;
@@ -28,7 +29,7 @@ private:
   void visit(const UnpackTensorData* node) override;
   void visit(const DeclareStruct* node) override;
   void visit(const Allocate* node) override;
-  void emitHeaders(std::ostream& o) override;
+  void emitHeaders(std::ostream& o);
   // TODO (rohany): It also doesn't seem like I can avoid duplicating this class.
   class FindVars;
   Stmt stmt;

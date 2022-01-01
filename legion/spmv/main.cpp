@@ -2,55 +2,20 @@
 #include "taco_legion_header.h"
 #include "hdf5_utils.h"
 #include "realm/cmdline.h"
-#include "mappers/default_mapper.h"
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+
+#ifdef TACO_USE_CUDA
+#include "taco-generated.cuh"
+#else
+#include "taco-generated.h"
+#endif
 
 using namespace Legion;
 using namespace Legion::Mapping;
 
 typedef double valType;
-
-// This mapper is currently unused but I'll keep it around for debugging purposes.
-class SpMVMapper : public DefaultMapper {
-public:
-  SpMVMapper(MapperRuntime* rt, Machine& machine, const Legion::Processor& local) : DefaultMapper(rt, machine, local) {}
-
-  void map_task(const Legion::Mapping::MapperContext ctx,
-                const Legion::Task &task,
-                const MapTaskInput &input,
-                MapTaskOutput &output) {
-    std::cout << "Mapping task!" << std::endl;
-    if (strcmp(task.get_task_name(), "task_1") == 0) {
-      for (size_t i = 0; i < task.regions.size(); i++) {
-        auto reg = task.regions[i];
-        auto ispace = reg.region.get_index_space();
-        auto dom = runtime->get_index_space_domain(ctx, ispace);
-        std::cout << "arg: " << i << " : " << dom << std::endl;
-      }
-    }
-    DefaultMapper::map_task(ctx, task, input, output);
-  }
-};
-
-void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& local_procs) {
-}
-
-// Forward declarations for partitioning and computation.
-struct partitionPackForcomputeLegionRowSplit;
-partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
-void computeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces);
-
-struct partitionPackForcomputeLegionPosSplit;
-partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
-void computeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces);
-
-struct partitionPackForcomputeLegionPosSplitDCSR;
-partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
-void computeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplitDCSR* partitionPack, int32_t pieces);
-
-void registerTacoTasks();
 
 const int TID_INIT_X = 420;
 void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
@@ -151,9 +116,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
 
   // Delete the partition packs.
-  if (posPack != nullptr) delete posPack;
-  if (rowPack != nullptr) delete rowPack;
-  if (posDCSRPack != nullptr) delete posDCSRPack;
+  delete posPack;
+  delete rowPack;
+  delete posDCSRPack;
   Aex.destroy(ctx, runtime);
 }
 

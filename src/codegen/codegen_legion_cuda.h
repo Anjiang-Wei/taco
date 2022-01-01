@@ -15,6 +15,7 @@ public:
   // to false here.
   CodegenLegionCuda(std::ostream &dest, OutputKind outputKind, bool simplify=false);
   void compile(Stmt stmt, bool isFirst=false) override;
+  static void compileToDirectory(std::string prefix, ir::Stmt stmt);
 private:
   // TODO (rohany): It doesn't seem like I can override these.
   using IRPrinter::visit;
@@ -26,7 +27,7 @@ private:
   void visit(const Allocate* node) override;
   void printDeviceFunctions(const Function* func) override;
   std::string procForTask(Stmt target, Stmt func) override;
-  void emitHeaders(std::ostream& o) override;
+  void emitHeaders(std::ostream& o);
   // TODO (rohany): It also doesn't seem like I can avoid duplicating this class.
   //  It seems like an artifact of how the code is organized.
   class FindVars;

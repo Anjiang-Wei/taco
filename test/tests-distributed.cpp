@@ -1603,7 +1603,7 @@ TEST(distributed, legionSpMV) {
            .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
            // The schedule with atomics ends up being faster than the one with temporaries due
            // to the coalescing of atomic operations into warp-local operations by atomicAddWarp.
-           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Temporary)
+           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
            .communicate(a(i), io)
            .communicate(B(i, j), io)
            .communicate(c(j), io)
@@ -1639,26 +1639,8 @@ TEST(distributed, legionSpMV) {
   add("PosSplit", gpuPosSplitSched, true /* cuda */);
   add("PosSplitDCSR", gpuPosSplitSched, true /* cuda */, true /* hyperSparse */);
 
-  {
-    auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(ir::Block::make(stmts));
-    {
-      ofstream f("../legion/spmv/taco-generated.cpp");
-      auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-      codegen->compile(ir::Block::make(stmts));
-      f.close();
-    }
-  }
-  {
-    auto codegen = std::make_shared<ir::CodegenLegionCuda>(std::cout, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(ir::Block::make(cudaStmts));
-    {
-      ofstream f("../legion/spmv/taco-generated.cu");
-      auto codegen = std::make_shared<ir::CodegenLegionCuda>(f, taco::ir::CodeGen::ImplementationGen);
-      codegen->compile(ir::Block::make(cudaStmts));
-      f.close();
-    }
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/spmv/", ir::Block::make(stmts));
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spmv/", ir::Block::make(cudaStmts));
 }
 
 TEST(distributed, legionSpTTV) {
@@ -1713,14 +1695,7 @@ TEST(distributed, legionSpTTV) {
         ;
     return stmt;
   });
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(ir::Block::make(stmts));
-  {
-    ofstream f("../legion/spttv/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(ir::Block::make(stmts));
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/spttv/", ir::Block::make(stmts));
 }
 
 TEST(distributed, legionSpMM) {
@@ -1747,14 +1722,7 @@ TEST(distributed, legionSpMM) {
                .communicate(C(k, j), ko)
                ;
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
-  {
-    ofstream f("../legion/spmm/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(lowered);
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", lowered);
 }
 
 TEST(distributed, legionSDDMM) {
@@ -1779,14 +1747,7 @@ TEST(distributed, legionSDDMM) {
                .communicate(D(j, k), ko)
                ;
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
-  {
-    ofstream f("../legion/sddmm/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(lowered);
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/sddmm/", lowered);
 }
 
 TEST(distributed, legionSpMTTKRP) {
@@ -1816,14 +1777,7 @@ TEST(distributed, legionSpMTTKRP) {
                .communicate(D(k, l), fposo)
                ;
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(lowered);
-  {
-    ofstream f("../legion/spmttkrp/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(lowered);
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/spmttkrp/", lowered);
 }
 
 TEST(distributed, legionFormatConverterLib) {
@@ -1857,14 +1811,7 @@ TEST(distributed, legionFormatConverterLib) {
   addConverter(LgFormat({LgSparse, Dense, LgSparse}), "SDS");
   addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
   addConverter(LgFormat({LgSparse, Dense}), "SD");
-
-  // Dump them all to the output.
-  {
-    ofstream f("../legion/format-converter/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(ir::Block::make(converters));
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/format-converter/", ir::Block::make(converters));
 }
 
 TEST(distributed, preserveNonZeros) {

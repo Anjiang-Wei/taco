@@ -3,6 +3,7 @@
 #include "taco/util/strings.h"
 #include "taco/ir/ir_rewriter.h"
 #include <algorithm>
+#include <fstream>
 
 namespace taco {
 namespace ir {
@@ -183,6 +184,12 @@ void CodegenLegionC::visit(const UnpackTensorData*) {}
 void CodegenLegionC::visit(const DeclareStruct*) {}
 
 void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
+  // If we're outputting a header, emit the necessary defines.
+  if (this->outputKind == HeaderGen) {
+    out << "#ifndef TACO_GENERATED_H\n";
+    out << "#define TACO_GENERATED_H\n";
+  }
+
   this->stmt = stmt;
   // Collect all of the individual functions that we need to generate code for.
   this->collectAllFunctions(stmt);
@@ -191,9 +198,13 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
   // Emit any needed headers.
   this->emitHeaders(out);
 
-  // Emit field accessors.
-  this->collectAndEmitAccessors(stmt, out);
-  this->analyzeAndCreateTasks(out);
+  // Emit field accessors. We don't need to emit accessors if we are
+  // generating a header file, as these declarations are local to the
+  // generated code.
+  if (this->outputKind == ImplementationGen) {
+    this->collectAndEmitAccessors(stmt, out);
+  }
+  this->analyzeAndCreateTasks(this->outputKind, out);
 
   for (auto& f : this->allFunctions) {
     for (auto func : this->functions[f]) {
@@ -202,7 +213,12 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
     CodeGen_C::compile(f, isFirst);
   }
 
-  this->emitRegisterTasks(out);
+  this->emitRegisterTasks(this->outputKind, out);
+
+  // If we're outputting a header, emit the necessary defines.
+  if (this->outputKind == HeaderGen) {
+    out << "#endif // TACO_GENERATED_H\n";
+  }
 }
 
 void CodegenLegionC::visit(const For* node) {
@@ -213,6 +229,15 @@ void CodegenLegionC::visit(const For* node) {
 }
 
 void CodegenLegionC::emitHeaders(std::ostream &o) {
+  CodegenLegion::emitHeaders(this->outputKind, o);
+  if (this->outputKind == HeaderGen) {
+    return;
+  }
+
+  // TODO (rohany): This is pretty hacky, but I don't want to plumb an
+  //  interface down here about the name of the generated files right now.
+  o << "#include \"taco-generated.h\"\n";
+
   struct BLASFinder : public IRVisitor {
     void visit(const Call* node) {
       if (node->func.find("blas") != std::string::npos) {
@@ -233,15 +258,14 @@ void CodegenLegionC::emitHeaders(std::ostream &o) {
   if (bs.usesLeafKernels) {
     o << "#include \"leaf_kernels.h\"\n";
   }
-  CodegenLegion::emitHeaders(o);
 }
 
 // TODO (rohany): This is duplicating alot of code.
 void CodegenLegionC::visit(const Function* func) {
-  // if generating a header, protect the function declaration with a guard
-  if (outputKind == HeaderGen) {
-    out << "#ifndef TACO_GENERATED_" << func->name << "\n";
-    out << "#define TACO_GENERATED_" << func->name << "\n";
+  if (outputKind == HeaderGen && func->name.find("task") != std::string::npos) {
+    // If we're generating a header, we don't want to emit these
+    // internal task declarations to the end user.
+    return;
   }
 
   int numYields = countYields(func);
@@ -259,10 +283,9 @@ void CodegenLegionC::visit(const Function* func) {
   doIndent();
   out << printFuncName(func, inputVarFinder.varDecls, outputVarFinder.varDecls);
 
-  // if we're just generating a header, this is all we need to do
+  // If we're just generating a header, this is all we need to do.
   if (outputKind == HeaderGen) {
     out << ";\n";
-    out << "#endif\n";
     return;
   }
 
@@ -410,6 +433,24 @@ void CodegenLegionC::visit(const Allocate* op) {
     }
     stream << ");";
     stream << std::endl;
+  }
+}
+
+void CodegenLegionC::compileToDirectory(std::string prefix, ir::Stmt stmt) {
+  taco_iassert(!prefix.empty() && prefix.back() == '/');
+  {
+    auto header = prefix + "taco-generated.h";
+    std::ofstream f(header);
+    CodegenLegionC headerComp(f, HeaderGen);
+    headerComp.compile(stmt);
+    f.close();
+  }
+  {
+    auto source = prefix + "taco-generated.cpp";
+    std::ofstream f(source);
+    CodegenLegionC headerComp(f, ImplementationGen);
+    headerComp.compile(stmt);
+    f.close();
   }
 }
 

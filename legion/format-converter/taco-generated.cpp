@@ -3,6 +3,8 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 #define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
+
+#include "taco-generated.h"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef FieldAccessor<READ_WRITE,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorRWdouble2;
@@ -13,7 +15,7 @@ typedef FieldAccessor<READ_WRITE,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>
 typedef FieldAccessor<READ_WRITE,Rect<1>,2,coord_t,Realm::AffineAccessor<Rect<1>,2,coord_t>> AccessorRWRect_1_2;
 
 
-void packLegionCOOToCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   int T1_dimension = T->dims[0];
   RegionWrapper T2_pos = T->indices[1][0];
   RegionWrapper T2_crd = T->indices[1][1];
@@ -117,7 +119,7 @@ void packLegionCOOToCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTe
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToSSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
   RegionWrapper T2_pos = T->indices[1][0];
@@ -308,7 +310,7 @@ void packLegionCOOToSSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTe
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToDSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   int T1_dimension = T->dims[0];
   RegionWrapper T2_pos = T->indices[1][0];
   RegionWrapper T2_crd = T->indices[1][1];
@@ -469,7 +471,7 @@ void packLegionCOOToDSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTe
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToDDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   int T1_dimension = T->dims[0];
   int T2_dimension = T->dims[1];
   RegionWrapper T3_pos = T->indices[2][0];
@@ -596,7 +598,7 @@ void packLegionCOOToDDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTe
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToSDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   int T2_dimension = T->dims[1];
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
@@ -762,7 +764,7 @@ void packLegionCOOToSDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTe
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToDCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
   RegionWrapper T2_pos = T->indices[1][0];
@@ -896,7 +898,7 @@ void packLegionCOOToDCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionT
   runtime->unmap_region(ctx, T_vals);
 }
 
-void packLegionCOOToSD(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
   int T2_dimension = T->dims[1];
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
