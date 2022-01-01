@@ -917,7 +917,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
   // the return type to be a vector of LogicalPartitions as the result.
   if (this->legionLoweringKind == PARTITION_ONLY) {
     taco_iassert(returnType.getKind() == Datatype::Undefined);
-    returnType = Pointer(this->getTopLevelTensorPartitionPackType());
+    returnType = this->getTopLevelTensorPartitionPackType();
   } else if ((this->isPartitionCode || this->isPlacementCode) && this->legionLoweringKind != COMPUTE_ONLY) {
     // The result for partition and placement codes is a LogicalPartition.
     taco_iassert(returnType.getKind() == Datatype::Undefined);
@@ -2365,7 +2365,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
       // First, instantiate an instance of the struct in a pointer.
       auto structPack = ir::Var::make("computePartitions", Auto);
-      returnPartitionStatements.push_back(ir::VarDecl::make(structPack, ir::Call::make("new", {ir::Symbol::make(structName)}, Auto)));
+      returnPartitionStatements.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
 
       for (auto& t : this->tensorVarOrdering) {
         auto tensor = this->tensorVars[t];
@@ -2376,7 +2376,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
           auto fieldName = t.getName() + "Partition";
           fieldNames.push_back(fieldName);
           fieldTypes.push_back(LegionTensorPartition);
-          auto fieldAccess = ir::FieldAccess::make(structPack, fieldName, true /* isDeref */, Auto);
+          auto fieldAccess = ir::FieldAccess::make(structPack, fieldName, false /* isDeref */, Auto);
 
           // Initialize all fields of this LegionTensorPartition.
           auto indicesPartitions = ir::FieldAccess::make(fieldAccess, "indicesPartitions", false /* isDeref */, Auto);

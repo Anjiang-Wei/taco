@@ -21,7 +21,7 @@ struct task_1Args {
 };
 
 
-partitionPackForcomputeLegion* partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
+partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -64,17 +64,17 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Legion::Context ctx, Le
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   IndexPartition ADenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, A_dense_run_0);
   auto A_vals_partition = copyPartition(ctx, runtime, ADenseRun0Partition, get_logical_region(A_vals));
-  auto computePartitions = new(partitionPackForcomputeLegion);
-  computePartitions->APartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
-  computePartitions->APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
-  computePartitions->APartition.valsPartition = A_vals_partition;
-  computePartitions->APartition.denseLevelRunPartitions[0] = ADenseRun0Partition;
-  computePartitions->BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
-  computePartitions->BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(posPartB2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(B2_crd_part);
-  computePartitions->BPartition.valsPartition = BValsLogicalPart;
-  computePartitions->BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+  auto computePartitions = partitionPackForcomputeLegion();
+  computePartitions.APartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.APartition.valsPartition = A_vals_partition;
+  computePartitions.APartition.denseLevelRunPartitions[0] = ADenseRun0Partition;
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(B2_crd_part);
+  computePartitions.BPartition.valsPartition = BValsLogicalPart;
+  computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
   return computePartitions;
 }
 

@@ -82,9 +82,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto yEqLPart = runtime->get_logical_partition(ctx, y.vals, yEqIndexPart);
 
   // Partition the tensors.
-  partitionPackForcomputeLegionPosSplit* posPack = nullptr;
-  partitionPackForcomputeLegionRowSplit* rowPack = nullptr;
-  partitionPackForcomputeLegionPosSplitDCSR* posDCSRPack = nullptr;
+  partitionPackForcomputeLegionPosSplit posPack;
+  partitionPackForcomputeLegionRowSplit rowPack;
+  partitionPackForcomputeLegionPosSplitDCSR posDCSRPack;
   if (pos) {
     if (csr) {
       posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces);
@@ -100,13 +100,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
     if (pos) {
       if (csr) {
-        computeLegionPosSplit(ctx, runtime, &y, &A, &x, posPack, pieces);
+        computeLegionPosSplit(ctx, runtime, &y, &A, &x, &posPack, pieces);
       } else {
-        computeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, posDCSRPack, pieces);
+        computeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, &posDCSRPack, pieces);
       }
       launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
     } else {
-      computeLegionRowSplit(ctx, runtime, &y, &A, &x, rowPack, pieces);
+      computeLegionRowSplit(ctx, runtime, &y, &A, &x, &rowPack, pieces);
     }
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
@@ -114,11 +114,6 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (dump) {
     printLegionTensor<valType>(ctx, runtime, y);
   }
-
-  // Delete the partition packs.
-  delete posPack;
-  delete rowPack;
-  delete posDCSRPack;
   Aex.destroy(ctx, runtime);
 }
 

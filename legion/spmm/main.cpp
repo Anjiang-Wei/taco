@@ -46,16 +46,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
-    computeLegion(ctx, runtime, &A, &B, &C, pack, pieces);
+    computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
     printLegionTensor<valType>(ctx, runtime, A);
   }
-
-  // Delete the partition pack.
-  delete pack;
   Bex.destroy(ctx, runtime);
 }
 

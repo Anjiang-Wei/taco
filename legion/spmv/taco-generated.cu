@@ -30,7 +30,7 @@ struct task_3Args {
 };
 
 
-partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   int B1_dimension = B->dims[0];
@@ -82,22 +82,22 @@ partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Legion:
     runtime->get_index_partition_color_space_name(ctx, posPartB2.get_index_partition())
   ));
   auto B_vals_partition = copyPartition(ctx, runtime, crdPartB2, get_logical_region(B_vals));
-  auto computePartitions = new(partitionPackForcomputeLegionRowSplit);
-  computePartitions->aPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
-  computePartitions->aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
-  computePartitions->aPartition.valsPartition = a_vals_partition;
-  computePartitions->aPartition.denseLevelRunPartitions[0] = a_dense_run_0_Partition;
-  computePartitions->BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
-  computePartitions->BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(posPartB2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(crdPartB2);
-  computePartitions->BPartition.valsPartition = B_vals_partition;
-  computePartitions->BPartition.denseLevelRunPartitions[0] = B_dense_run_0_Partition;
+  auto computePartitions = partitionPackForcomputeLegionRowSplit();
+  computePartitions.aPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
+  computePartitions.aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
+  computePartitions.aPartition.valsPartition = a_vals_partition;
+  computePartitions.aPartition.denseLevelRunPartitions[0] = a_dense_run_0_Partition;
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(crdPartB2);
+  computePartitions.BPartition.valsPartition = B_vals_partition;
+  computePartitions.BPartition.denseLevelRunPartitions[0] = B_dense_run_0_Partition;
   return computePartitions;
 }
 
 __global__
-void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorRWdouble1 a_vals_rw_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
+void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorRWdouble1 a_vals_rw_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -108,10 +108,6 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
 
   int64_t pointID2 = io * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
-  double* w_GPUThread = 0;
-  __shared__ double w_GPUThread_ALL[256];
-  w_GPUThread = w_GPUThread_ALL + warp * 32;
-
   for (int32_t warp_row = 0; warp_row < 32; warp_row++) {
     int32_t block_row = warp_row * 8 + warp;
     int32_t ii = block * 256 + block_row;
@@ -123,9 +119,6 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
       break;
 
     int64_t pointID4 = pointID3 * 32 + warp_row;
-    for (int32_t pw_GPUThread = 0; pw_GPUThread < 32; pw_GPUThread++) {
-      w_GPUThread[pw_GPUThread] = 0.0;
-    }
     int64_t pointID5 = pointID4 * 32 + thread;
     for (int32_t thread_nz = 0; thread_nz < ((((B2_pos_accessor[Point<1>(i)].hi + 1) - B2_pos_accessor[Point<1>(i)].lo) + 31) / 32); thread_nz++) {
       int32_t jposB = (thread_nz * 32 + thread) + B2_pos_accessor[Point<1>(i)].lo;
@@ -133,16 +126,12 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
         break;
 
       int32_t j = B2_crd_accessor[jposB];
-      w_GPUThread[thread] = w_GPUThread[thread] + B_vals_ro_accessor[Point<1>(jposB)] * c_vals_ro_accessor[Point<1>(j)];
-    }
-    for (int32_t thread = 0; thread < 32; thread++) {
-      a_vals_rw_accessor[Point<1>(i)] = a_vals_rw_accessor[Point<1>(i)] + w_GPUThread[thread];
+      atomicAddWarp(a_vals_rw_accessor.ptr(Point<1>(i)), flattenPoint(a_vals_rw_accessor, Point<1>(i)), (B_vals_ro_accessor[Point<1>(jposB)] * c_vals_ro_accessor[Point<1>(j)]));
     }
   }
-
 }
 
-void task_1(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B2_pos = regions[1];
@@ -166,7 +155,7 @@ void task_1(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>&
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
   if (((((B1_dimension + (pieces - 1)) / pieces + 255) / 256)) > 0) {
-    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, a_vals_rw_accessor, B1_dimension, pieces, io);
+    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, a_vals_rw_accessor, B_vals_ro_accessor, c_vals_ro_accessor, B1_dimension, pieces, io);
   }
 }
 
@@ -198,7 +187,7 @@ void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
 
 }
 
-partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionPosSplit partitionForcomputeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -241,17 +230,17 @@ partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Legion:
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   IndexPartition aDenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, a_dense_run_0);
   auto a_vals_partition = copyPartition(ctx, runtime, aDenseRun0Partition, get_logical_region(a_vals));
-  auto computePartitions = new(partitionPackForcomputeLegionPosSplit);
-  computePartitions->aPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
-  computePartitions->aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
-  computePartitions->aPartition.valsPartition = a_vals_partition;
-  computePartitions->aPartition.denseLevelRunPartitions[0] = aDenseRun0Partition;
-  computePartitions->BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
-  computePartitions->BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(posPartB2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(B2_crd_part);
-  computePartitions->BPartition.valsPartition = BValsLogicalPart;
-  computePartitions->BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+  auto computePartitions = partitionPackForcomputeLegionPosSplit();
+  computePartitions.aPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
+  computePartitions.aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
+  computePartitions.aPartition.valsPartition = a_vals_partition;
+  computePartitions.aPartition.denseLevelRunPartitions[0] = aDenseRun0Partition;
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(B2_crd_part);
+  computePartitions.BPartition.valsPartition = BValsLogicalPart;
+  computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
   return computePartitions;
 }
 
@@ -318,7 +307,7 @@ void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   }
 }
 
-void task_2(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B2_pos = regions[1];
@@ -393,7 +382,7 @@ void computeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
 
 }
 
-partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionPosSplitDCSR partitionForcomputeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper B1_pos = B->indices[0][0];
   RegionWrapper B1_crd = B->indices[0][1];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -444,14 +433,14 @@ partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR
   );
   IndexPartition posIndexPartB1 = densifyPartition(ctx, runtime, get_index_space(B1_pos), posSparsePartB1);
   LogicalPartition posPartB1 = runtime->get_logical_partition(ctx, B1_pos, posIndexPartB1);
-  auto computePartitions = new(partitionPackForcomputeLegionPosSplitDCSR);
-  computePartitions->BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
-  computePartitions->BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
-  computePartitions->BPartition.indicesPartitions[0].push_back(posPartB1);
-  computePartitions->BPartition.indicesPartitions[0].push_back(crdPartB1);
-  computePartitions->BPartition.indicesPartitions[1].push_back(posPartB2);
-  computePartitions->BPartition.indicesPartitions[1].push_back(B2_crd_part);
-  computePartitions->BPartition.valsPartition = BValsLogicalPart;
+  auto computePartitions = partitionPackForcomputeLegionPosSplitDCSR();
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.BPartition.indicesPartitions[0].push_back(posPartB1);
+  computePartitions.BPartition.indicesPartitions[0].push_back(crdPartB1);
+  computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(B2_crd_part);
+  computePartitions.BPartition.valsPartition = BValsLogicalPart;
   return computePartitions;
 }
 
@@ -518,7 +507,7 @@ void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   }
 }
 
-void task_3(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B1_pos = regions[1];

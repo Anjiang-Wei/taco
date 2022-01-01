@@ -48,9 +48,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto AEqLogPart = runtime->get_logical_partition(ctx, A.vals, AEqIndexPart);
 
   // Partition the computation.
-  partitionPackForcomputeLegionDSS* dssPart = nullptr;
-  partitionPackForcomputeLegionDSSPosSplit* dssPosPart = nullptr;
-  partitionPackForcomputeLegionDSSPartialPosSplit* dssPartialPosPart = nullptr;
+  partitionPackForcomputeLegionDSS dssPart;
+  partitionPackForcomputeLegionDSSPosSplit dssPosPart;
+  partitionPackForcomputeLegionDSSPartialPosSplit dssPartialPosPart;
   if (pos) {
     dssPosPart = partitionForcomputeLegionDSSPosSplit(ctx, runtime, &A, &B, &c, pieces);
   } else if (partialPos) {
@@ -63,13 +63,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (pos) {
-      computeLegionDSSPosSplit(ctx, runtime, &A, &B, &c, dssPosPart, pieces);
+      computeLegionDSSPosSplit(ctx, runtime, &A, &B, &c, &dssPosPart, pieces);
       launchDummyReadOverPartition(ctx, runtime, A.vals, AEqLogPart, FID_VAL, eqDomain);
     } else if (partialPos) {
-      computeLegionDSSPartialPosSplit(ctx, runtime, &A, &B, &c, dssPartialPosPart, pieces);
+      computeLegionDSSPartialPosSplit(ctx, runtime, &A, &B, &c, &dssPartialPosPart, pieces);
       launchDummyReadOverPartition(ctx, runtime, A.vals, AEqLogPart, FID_VAL, eqDomain);
     } else {
-      computeLegionDSS(ctx, runtime, &A, &B, &c, dssPart, pieces);
+      computeLegionDSS(ctx, runtime, &A, &B, &c, &dssPart, pieces);
     }
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
@@ -77,10 +77,6 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (dump) {
     printLegionTensor<valType>(ctx, runtime, A);
   }
-
-  if (dssPosPart != nullptr) delete dssPosPart;
-  if (dssPart != nullptr) delete dssPart;
-  if (dssPartialPosPart != nullptr) delete dssPartialPosPart;
   Bex.destroy(ctx, runtime);
 }
 
