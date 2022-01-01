@@ -3,11 +3,11 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 #define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
-typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
-typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
 typedef ReductionAccessor<SumReduction<double>,true,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorReducedouble2;
+typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
+typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct partitionPackForcomputeLegion {
   LegionTensorPartition APartition;
@@ -43,7 +43,7 @@ partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* r
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int32_t ko = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((ko * ((B2Size + (gx - 1)) / gx)));
-    Point<1> B2CrdEnd = Point<1>(TACO_MAX((ko * ((B2Size + (gx - 1)) / gx) + ((B2Size + (gx - 1)) / gx - 1)),B2_crd_domain.bounds.hi[0]));
+    Point<1> B2CrdEnd = Point<1>(TACO_MIN((ko * ((B2Size + (gx - 1)) / gx) + ((B2Size + (gx - 1)) / gx - 1)), B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
     if (!B2_crd_domain.contains(B2CrdRect.lo) || !B2_crd_domain.contains(B2CrdRect.hi)) {
       B2CrdRect = B2CrdRect.make_empty();

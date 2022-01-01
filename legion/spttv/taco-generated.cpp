@@ -3,10 +3,10 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 #define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
-typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef ReductionAccessor<SumReduction<double>,false,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReduceNonExcldouble1;
+typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct partitionPackForcomputeLegionDSS {
@@ -289,7 +289,7 @@ partitionPackForcomputeLegionDSSPosSplit* partitionForcomputeLegionDSSPosSplit(C
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int32_t ffposo = (*itr)[0];
     Point<1> B3CrdStart = Point<1>((ffposo * ((B3Size + (pieces - 1)) / pieces)));
-    Point<1> B3CrdEnd = Point<1>(TACO_MAX((ffposo * ((B3Size + (pieces - 1)) / pieces) + ((B3Size + (pieces - 1)) / pieces - 1)),B3_crd_domain.bounds.hi[0]));
+    Point<1> B3CrdEnd = Point<1>(TACO_MIN((ffposo * ((B3Size + (pieces - 1)) / pieces) + ((B3Size + (pieces - 1)) / pieces - 1)), B3_crd_domain.bounds.hi[0]));
     Rect<1> B3CrdRect = Rect<1>(B3CrdStart, B3CrdEnd);
     if (!B3_crd_domain.contains(B3CrdRect.lo) || !B3_crd_domain.contains(B3CrdRect.hi)) {
       B3CrdRect = B3CrdRect.make_empty();
@@ -379,8 +379,8 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t c1_dimension = args->c1_dimension;
   int32_t pieces = args->pieces;
 
-  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto A_vals_red_accessor_non_excl = createAccessor<AccessorReduceNonExcldouble1>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
@@ -525,7 +525,7 @@ partitionPackForcomputeLegionDSSPartialPosSplit* partitionForcomputeLegionDSSPar
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int32_t ffposo = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((ffposo * ((B2Size + (pieces - 1)) / pieces)));
-    Point<1> B2CrdEnd = Point<1>(TACO_MAX((ffposo * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)),B2_crd_domain.bounds.hi[0]));
+    Point<1> B2CrdEnd = Point<1>(TACO_MIN((ffposo * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)), B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
     if (!B2_crd_domain.contains(B2CrdRect.lo) || !B2_crd_domain.contains(B2CrdRect.hi)) {
       B2CrdRect = B2CrdRect.make_empty();

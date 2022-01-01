@@ -29,19 +29,10 @@ public:
     RegionPrivilege priv;
 
     friend bool operator<(const AccessorInfo& a, const AccessorInfo& b) {
-      if (a.prop < b.prop) {
-        return true;
-      }
-      if (a.dims < b.dims) {
-        return true;
-      }
-      if (a.typ < b.typ) {
-        return true;
-      }
-      if (a.priv < b.priv) {
-        return true;
-      }
-      return false;
+      if (a.prop != b.prop) return a.prop < b.prop;
+      if (a.dims != b.dims) return a.dims < b.dims;
+      if (a.typ != b.typ) return a.typ < b.typ;
+      return a.priv < b.priv;
     }
   };
   virtual void emitHeaders(std::ostream& out);

@@ -387,7 +387,14 @@ string CodeGen::printDecls(map<Expr, string, ExprCompare> varMap,
          if (a->mode != b->mode)
            return a->mode < b->mode;
 
-         return a->index < b->index;
+         if (a->index != b->index)
+           return a->index < b->index;
+
+         // Finally, there are cases where the tensors are not present in the
+         // input and output lists, so we might still not be sure of the ordering.
+         // Break the tie with an ordering on the tensor's names.
+         taco_iassert(isa<Var>(a->tensor) && isa<Var>(b->tensor));
+         return to<Var>(a->tensor)->name < to<Var>(b->tensor)->name;
        });
 
   for (auto prop: sortedProps) {
