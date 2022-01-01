@@ -360,15 +360,13 @@ Expr Iterator::getSize(const ir::Expr& szPrev) const {
 }
 
 Stmt Iterator::getAppendInitEdges(const Expr& parentPos,
-                                  const Expr& nextParentPos,
                                   const Expr& pPrevBegin,
                                   const Expr& pPrevEnd) const {
   taco_iassert(defined() && content->mode.defined());
   return content->mode.getModeFormat().impl->getAppendInitEdges(parentPos,
-                                                                nextParentPos,
                                                                 pPrevBegin,
                                                                 pPrevEnd,
-                                                              content->mode);
+                                                                content->mode);
 }
 
 Stmt Iterator::getAppendInitLevel(const Expr& szPrev, const Expr& sz) const {

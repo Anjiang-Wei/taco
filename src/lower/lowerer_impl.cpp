@@ -4235,7 +4235,7 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
       if (initIterator.defined()) {
         // Initialize data structures for storing edges of next append mode
         taco_iassert(initIterator.hasAppend());
-        result.push_back(initIterator.getAppendInitEdges(resultParentPos, resultParentPosNext, initBegin, initEnd));
+        result.push_back(initIterator.getAppendInitEdges(resultParentPos, initBegin, initEnd));
       } else if (generateComputeCode() && !isTopLevel) {
         if (isa<ir::Mul>(stride)) {
           Expr strideVar = Var::make(util::toString(tensor) + "_stride", Int());
@@ -4250,11 +4250,11 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
         if (this->legion) {
           auto valsAcc = this->getValuesArray(write.getTensorVar());
           auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
-          // resultParentPosNext is the position variable of the deepest sparse level
+          // resultParentPos is the position variable of the deepest sparse level
           // above the values array. This position will always be the first index
           // into the values array, so we use that instead of the multiplication-based
           // size variable.
-          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPosNext, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
         } else {
           result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
         }

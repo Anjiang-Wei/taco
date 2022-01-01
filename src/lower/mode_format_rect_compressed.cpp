@@ -196,8 +196,7 @@ ir::Stmt RectCompressedModeFormat::declareModeVariables(Mode& mode) const {
   return ir::Block::make(results);
 }
 
-ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr pPrevBegin,
-                                                      ir::Expr pPrevEnd, Mode mode) const {
+ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Expr pPrevBegin, ir::Expr pPrevEnd, Mode mode) const {
   auto pack = mode.getModePack();
   if (isa<ir::Literal>(pPrevBegin)) {
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
@@ -213,7 +212,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Ex
   auto posAcc = this->getAccessor(pack, POS, ir::RW);
   auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
-    return lgDoubleSizeIfFull(posArray, posCapacity, nextParentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
+    return lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
   }
 
   // At this point, we are a sparse level with at least one dense level above
@@ -233,7 +232,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Ex
     auto hi = ir::Add::make(ir::Load::make(domHi, i), 1);
     initPos = ir::For::make(pVars[i], 0, hi, 1, initPos);
   }
-  ir::Stmt maybeResizePos = lgAtLeastDoubleSizeIfFull(posArray, posCapacity, pPrevEnd, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
+  ir::Stmt maybeResizePos = lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -351,6 +350,27 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir
 
   // Otherwise, we need to perform a prefix sum to fill in the values of the pos array. We need
   // this even though we have rectangles so that we can binary search over the pos arrays.
+  auto pos = this->getAccessor(pack, POS, ir::RW);
+
+  // Before we do the initialization loop, we first need to malloc the whole pos region
+  // itself. This is important because the optimization performed by realloc drops access
+  // to the old portion of the region. So, we'll just re-allocate it here. However, we
+  // only need to do this if the pos region has a sparse ancestor. If the region does not
+  // have a sparse ancestor then it will have been malloc'd up front and will never have
+  // been realloced.
+  ir::Stmt reallocFullRegion;
+  if (this->hasSparseAncestor(mode)) {
+    std::vector<ir::Stmt> stmts;
+    // Unmap the existing pos region.
+    auto posReg = this->getRegion(pack, POS);
+    auto posParent = this->getRegion(pack, POS_PARENT);
+    stmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ir::ctx, posReg}, Auto)));
+    // Now malloc the region. Its first dimension will be of parentPos size.
+    stmts.push_back(ir::makeLegionMalloc(posReg, parentPos, posParent, fidRect1));
+    // Now update the accessor.
+    stmts.push_back(ir::Assign::make(pos, ir::makeCreateAccessor(pos, posReg, fidRect1)));
+    reallocFullRegion = ir::Block::make(stmts);
+  }
 
   // Get the index space domain of the pos array.
   auto posDom = this->getPosBounds(mode);
@@ -363,7 +383,6 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir
   // in the pos region will be written to.
   ir::Expr csVar = ir::Var::make("cs" + mode.getName(), Int64);
   ir::Stmt initCs = ir::VarDecl::make(csVar, 0);
-  auto pos = this->getAccessor(pack, POS, ir::RW);
 
   // We need to emit a loop for each dimension of the pos region.
   std::vector<ir::Expr> pVars(this->posDim);
@@ -397,7 +416,7 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir
     loop = ir::For::make(pVars[i], 0, loopHi, 1, loop);
   }
   auto setSubReg = getSubregionCasts();
-  return ir::Block::make({initCs, loop, setSubReg});
+  return ir::Block::make({reallocFullRegion, initCs, loop, setSubReg});
 }
 
 ir::Stmt RectCompressedModeFormat::getInitializePosColoring(Mode mode) const {

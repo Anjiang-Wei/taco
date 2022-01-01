@@ -203,10 +203,9 @@ public:
 
   virtual ir::Expr getSize(ir::Expr parentSize, Mode mode) const;
 
-  // parentPos and nextParentPos are the position variables of the nearest
-  // sparse ancestor of a mode.
+  // parentPos is the position variables of the nearest sparse ancestor of a mode.
   virtual ir::Stmt
-  getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr pPrevBegin, ir::Expr pPrevEnd, Mode mode) const;
+  getAppendInitEdges(ir::Expr parentPos, ir::Expr pPrevBegin, ir::Expr pPrevEnd, Mode mode) const;
 
   virtual ir::Stmt
   getAppendInitLevel(ir::Expr szPrev, ir::Expr sz, Mode mode) const;
@@ -349,7 +348,14 @@ protected:
   virtual bool equals(const ModeFormatImpl& other) const;
 };
 
+// If we are building in Debug configuration, then by default start with an
+// allocation of only size 1. This allows codepaths around reallocation to
+// get triggered and potentially expose bugs.
+#ifndef NDEBUG
+static const int DEFAULT_ALLOC_SIZE = 1;
+#else
 static const int DEFAULT_ALLOC_SIZE = 1 << 20;
+#endif
 
 }
 #endif

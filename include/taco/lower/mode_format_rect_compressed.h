@@ -5,8 +5,15 @@
 
 namespace taco {
 
+// If we are building in Debug configuration, then by default start with an
+// allocation of only size 1. This allows codepaths around reallocation to
+// get triggered and potentially expose bugs.
+#ifndef NDEBUG
+static const int LG_DEFAULT_ALLOC_SIZE = 1;
+#else
 // TODO (rohany): See what a decent default is here.
 static const int LG_DEFAULT_ALLOC_SIZE = 1 << 20;
+#endif
 
 // TODO (rohany): I want a Legion ModePack that I can sub in here, or adjust
 //  the ModePack default structure to use the LegionTensor when possible.
@@ -30,7 +37,7 @@ public:
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const override;
   ir::Stmt getAppendEdges(std::vector<ir::Expr> parentPositions, ir::Expr posBegin, ir::Expr posEnd, Mode mode) const override;
   ir::Expr getSize(ir::Expr szPrev, Mode mode) const override;
-  ir::Stmt getAppendInitEdges(ir::Expr parentPos, ir::Expr nextParentPos, ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
+  ir::Stmt getAppendInitEdges(ir::Expr parentPos, ir::Expr parentPosBegin, ir::Expr parentPosEnd, Mode mode) const override;
   ir::Stmt getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const override;
   ir::Stmt getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr parentSize, ir::Expr size, Mode mode) const override;
 

@@ -136,8 +136,7 @@ Expr CompressedModeFormat::getSize(ir::Expr szPrev, Mode mode) const {
   return Load::make(getPosArray(mode.getModePack()), szPrev);
 }
 
-Stmt CompressedModeFormat::getAppendInitEdges(Expr, Expr, Expr pPrevBegin,
-    Expr pPrevEnd, Mode mode) const {
+Stmt CompressedModeFormat::getAppendInitEdges(Expr, Expr pPrevBegin, Expr pPrevEnd, Mode mode) const {
   if (isa<ir::Literal>(pPrevBegin)) {
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
     return Stmt();
