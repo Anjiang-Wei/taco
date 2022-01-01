@@ -226,6 +226,12 @@ set_tests_properties(legion-sparse-spttv-basic PROPERTIES DEPENDS "legion-sparse
 set_tests_properties(legion-sparse-spttv-pos PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
 set_tests_properties(legion-sparse-spttv-partial-pos PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
 
+add_basic_legion_sparse_test(sddmm basic -csr ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -pieces 4 -dump)
+set_tests_properties(legion-sparse-sddmm-basic PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
+
+add_basic_legion_sparse_test(spmttkrp basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -pieces 4 -dump)
+set_tests_properties(legion-sparse-spmttkrp-basic PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
+
 
 list(REMOVE_DUPLICATES SPARSE_TEST_BINARIES)
 add_custom_target(test-legion-sparse COMMAND ctest -R legion-sparse DEPENDS ${SPARSE_TEST_BINARIES})

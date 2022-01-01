@@ -18,7 +18,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // that is divisible by 32, as per Stephen and Chang-wan.
   int n = 10, pieces = 0, warmup = 5, jDim = 32;
   Realm::CommandLineParser parser;
-  parser.add_option_string("-tensor", csrFileName);
+  parser.add_option_string("-csr", csrFileName);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
@@ -26,7 +26,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-jdim", jDim);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
-  taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
+  taco_uassert(!csrFileName.empty()) << "Provide a matrix with -csr";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
