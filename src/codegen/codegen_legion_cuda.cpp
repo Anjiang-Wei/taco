@@ -574,8 +574,9 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
         case TensorProperty::ValuesReductionNonExclusiveAccessor:
         case TensorProperty::IndicesAccessor: {
           auto hashable = op->toHashable();
-          if (!util::contains(this->gps, hashable)) {
-            this->gps[hashable] = op;
+          if (!util::contains(this->gpSet, hashable)) {
+            this->gpSet.insert(hashable);
+            this->gps.push_back(op);
           }
           break;
         }
@@ -583,7 +584,9 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
           return;
       }
     }
-    std::map<GetProperty::Hashable, const GetProperty*> gps;
+    // Use a set and a vector to make the output ordering deterministic.
+    std::set<GetProperty::Hashable> gpSet;
+    std::vector<const GetProperty*> gps;
   };
   GetPropertyCollector gpc;
   func->accept(&gpc);
@@ -600,8 +603,7 @@ void CodegenLegionCuda::printDeviceFunctions(const Function* func) {
       }
     };
 
-    for (auto it : gpc.gps) {
-      auto op = it.second;
+    for (auto op : gpc.gps) {
       auto param = ir::Var::make(op->name, accessorTypeString(op));
       addParam(std::make_pair(getVarName(param), param));
     }

@@ -106,7 +106,7 @@ partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Context
 }
 
 __global__
-void task_1DeviceKernel0(AccessorROdouble1 B_vals_ro_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorRWdouble1 a_vals_rw_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
+void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorRWdouble1 a_vals_rw_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -168,14 +168,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
 
-  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
   if (((((B1_dimension + (pieces - 1)) / pieces + 255) / 256)) > 0) {
-    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B_vals_ro_accessor, B2_pos_accessor, B2_crd_accessor, a_vals_rw_accessor, c_vals_ro_accessor, B1_dimension, pieces, io);
+    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, a_vals_rw_accessor, B1_dimension, pieces, io);
   }
 }
 
@@ -265,7 +265,7 @@ partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Context
 }
 
 __global__
-void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorROdouble1 c_vals_ro_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, int32_t fposo) {
+void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int32_t fposo) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -369,7 +369,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     B2CrdDomain.bounds.lo
   );
   if (((((B2Size + (pieces - 1)) / pieces + 2047) / 2048)) > 0) {
-    task_2DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, i_blockStarts, pieces, c_vals_ro_accessor, a_vals_red_accessor_non_excl, B_vals_ro_accessor, B2_pos_accessor, B2_crd_accessor, fposo);
+    task_2DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, i_blockStarts, pieces, B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, a_vals_red_accessor_non_excl, fposo);
   }
 }
 
@@ -465,7 +465,7 @@ partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR
 }
 
 __global__
-void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorROdouble1 c_vals_ro_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROint32_t1 B1_crd_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, int32_t fposo) {
+void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorROint32_t1 B1_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int32_t fposo) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -574,7 +574,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     B2CrdDomain.bounds.lo
   );
   if (((((B2Size + (pieces - 1)) / pieces + 2047) / 2048)) > 0) {
-    task_3DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, i_blockStarts, pieces, c_vals_ro_accessor, a_vals_red_accessor_non_excl, B_vals_ro_accessor, B1_crd_accessor, B2_pos_accessor, B2_crd_accessor, fposo);
+    task_3DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, i_blockStarts, pieces, B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, B1_crd_accessor, a_vals_red_accessor_non_excl, fposo);
   }
 }
 
