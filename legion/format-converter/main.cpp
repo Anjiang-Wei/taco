@@ -4,23 +4,13 @@
 #include "hdf5_utils.h"
 #include "realm/cmdline.h"
 #include "error.h"
+#include "taco-generated.h"
 
 using namespace Legion;
 
 enum TaskIDs {
   TID_TOP_LEVEL,
 };
-
-// Forward declarations of all generated conversion methods.
-void registerTacoTasks();
-void packLegionCOOToCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToDCSR(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToSD(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToSSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToDSS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToDDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-void packLegionCOOToSDS(Context ctx, Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
-// End declarations.
 
 Realm::Logger logApp("app");
 

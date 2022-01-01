@@ -80,7 +80,7 @@ std::string CodegenLegion::printFuncName(const Function *func,
 
   if (!isTask) {
     // Add the context and runtime arguments.
-    ret << "Context ctx, Runtime* runtime, ";
+    ret << "Legion::Context ctx, Legion::Runtime* runtime, ";
   }
 
   bool unfoldOutput = false;
@@ -179,12 +179,18 @@ void CodegenLegion::collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out) {
   out << "\n";
 }
 
-void CodegenLegion::emitHeaders(std::ostream &out) {
-  out << "#include \"taco_legion_header.h\"\n";
-  out << "#include \"taco_mapper.h\"\n";
-  out << "#define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))\n";
-  out << "#define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))\n";
-  out << "using namespace Legion;\n";
+void CodegenLegion::emitHeaders(OutputKind outputKind, std::ostream &out) {
+  if (outputKind == HeaderGen) {
+    out << "#include \"legion.h\"\n";
+    out << "#include \"legion_tensor.h\"\n";
+  } else {
+    out << "#include \"taco_legion_header.h\"\n";
+    out << "#include \"taco_mapper.h\"\n";
+    out << "#define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))\n";
+    out << "#define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))\n";
+    out << "using namespace Legion;\n";
+  }
+  out << "\n";
 }
 
 void CodegenLegion::collectAllFunctions(ir::Stmt stmt) {
@@ -253,7 +259,7 @@ void CodegenLegion::rewriteFunctionTaskIDs() {
   }
 }
 
-void CodegenLegion::analyzeAndCreateTasks(std::ostream& out) {
+void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& out) {
   for (auto ffunc : this->allFunctions) {
     struct TaskCollector : public IRVisitor {
       void visit(const For* node) {
@@ -445,18 +451,22 @@ void CodegenLegion::analyzeAndCreateTasks(std::ostream& out) {
       PackFinder pf; pf.taskID = forL->taskID;
       ffunc.accept(&pf);
 
-      out << "struct " << this->taskArgsName(func->name) << " {\n";
-      this->indent++;
-      for (auto& var : pf.packVars) {
-        doIndent();
-        out << printType(getVarType(var), false) << " " << var << ";\n";
+      // We only need to generate these structs for the implementation,
+      // as they are not user facing.
+      if (outputKind == ImplementationGen) {
+        out << "struct " << this->taskArgsName(func->name) << " {\n";
+        this->indent++;
+        for (auto& var : pf.packVars) {
+          doIndent();
+          out << printType(getVarType(var), false) << " " << var << ";\n";
+        }
+        for (auto& it : uses) {
+          doIndent();
+          out << printType(getVarType(it), false) << " " << it << ";\n";
+        }
+        this->indent--;
+        out << "};\n\n";
       }
-      for (auto& it : uses) {
-        doIndent();
-        out << printType(getVarType(it), false) << " " << it << ";\n";
-      }
-      this->indent--;
-      out << "};\n";
 
       this->taskArgs[func] = uses;
 
@@ -464,26 +474,28 @@ void CodegenLegion::analyzeAndCreateTasks(std::ostream& out) {
     }
 
     // We also need to generate any structs declared by this function before we generate
-    // code for the function.
-    struct DeclareStructFinder : public IRVisitor {
-      void visit(const DeclareStruct* ds) {
-        this->declares.push_back(ds);
-      }
-      std::vector<Stmt> declares;
-    };
-    DeclareStructFinder df;
-    ffunc.accept(&df);
+    // code for the function. We only need to define these structs in the header file.
+    if (outputKind == HeaderGen) {
+      struct DeclareStructFinder : public IRVisitor {
+        void visit(const DeclareStruct* ds) {
+          this->declares.push_back(ds);
+        }
+        std::vector<Stmt> declares;
+      };
+      DeclareStructFinder df;
+      ffunc.accept(&df);
 
-    for (auto& declareExpr : df.declares) {
-      auto declare = declareExpr.as<DeclareStruct>();
-      out << "struct " << declare->name << " {\n";
-      this->indent++;
-      for (size_t i = 0; i < declare->fields.size(); i++) {
-        doIndent();
-        out << printType(declare->fieldTypes[i], false) << " " << declare->fields[i] << ";\n";
+      for (auto& declareExpr : df.declares) {
+        auto declare = declareExpr.as<DeclareStruct>();
+        out << "struct " << declare->name << " {\n";
+        this->indent++;
+        for (size_t i = 0; i < declare->fields.size(); i++) {
+          doIndent();
+          out << printType(declare->fieldTypes[i], false) << " " << declare->fields[i] << ";\n";
+        }
+        this->indent--;
+        out << "};\n\n";
       }
-      this->indent--;
-      out << "};\n\n";
     }
   }
 }
@@ -495,7 +507,13 @@ std::string CodegenLegion::procForTask(Stmt, Stmt) {
   return "Processor::LOC_PROC";
 }
 
-void CodegenLegion::emitRegisterTasks(std::ostream &out) {
+void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) {
+  // If we're emitting a header, just generate the stub.
+  if (outputKind == HeaderGen) {
+    out << "void registerTacoTasks();\n";
+    return;
+  }
+
   // Output a function performing all of the task registrations.
   out << "void registerTacoTasks() {\n";
   indent++;

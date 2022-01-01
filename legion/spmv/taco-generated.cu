@@ -1,37 +1,27 @@
-#include "cublas_v2.h"
-#include "cudalibs.h"
-#include "leaf_kernels.cuh"
 #include "taco_legion_header.h"
 #include "taco_mapper.h"
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 #define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
+
+#include "taco-generated.cuh"
+#include "cublas_v2.h"
+#include "cudalibs.h"
+#include "leaf_kernels.cuh"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef ReductionAccessor<SumReduction<double>,false,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReduceNonExcldouble1;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
-struct partitionPackForcomputeLegionRowSplit {
-  LegionTensorPartition aPartition;
-  LegionTensorPartition BPartition;
-};
-
 struct task_1Args {
   int32_t B1_dimension;
   int32_t pieces;
-};
-struct partitionPackForcomputeLegionPosSplit {
-  LegionTensorPartition aPartition;
-  LegionTensorPartition BPartition;
 };
 
 struct task_2Args {
   int64_t B2Size;
   int32_t pieces;
-};
-struct partitionPackForcomputeLegionPosSplitDCSR {
-  LegionTensorPartition BPartition;
 };
 
 struct task_3Args {
@@ -39,7 +29,8 @@ struct task_3Args {
   int32_t pieces;
 };
 
-partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+
+partitionPackForcomputeLegionRowSplit* partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   int B1_dimension = B->dims[0];
@@ -151,7 +142,7 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
 
 }
 
-void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_1(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B2_pos = regions[1];
@@ -179,7 +170,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces) {
+void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces) {
   auto a_vals_parent = a->valsParent;
   int B1_dimension = B->dims[0];
   auto B2_pos_parent = B->indicesParents[1][0];
@@ -207,7 +198,7 @@ void computeLegionRowSplit(Context ctx, Runtime* runtime, LegionTensor* a, Legio
 
 }
 
-partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionPosSplit* partitionForcomputeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -327,7 +318,7 @@ void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   }
 }
 
-void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_2(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B2_pos = regions[1];
@@ -373,7 +364,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces) {
+void computeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces) {
   auto a_vals_parent = a->valsParent;
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
@@ -402,7 +393,7 @@ void computeLegionPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, Legio
 
 }
 
-partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+partitionPackForcomputeLegionPosSplitDCSR* partitionForcomputeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper B1_pos = B->indices[0][0];
   RegionWrapper B1_crd = B->indices[0][1];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -527,7 +518,7 @@ void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   }
 }
 
-void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+void task_3(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion B1_pos = regions[1];
@@ -578,7 +569,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   }
 }
 
-void computeLegionPosSplitDCSR(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplitDCSR* partitionPack, int32_t pieces) {
+void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplitDCSR* partitionPack, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
   RegionWrapper B2_crd = B->indices[1][1];

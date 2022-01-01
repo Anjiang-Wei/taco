@@ -5,26 +5,10 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
-#include "legion_string_utils.h"
+#include "taco-generated.h"
 
 using namespace Legion;
 typedef double valType;
-
-
-// Forward declarations.
-struct partitionPackForcomputeLegionDSS;
-partitionPackForcomputeLegionDSS* partitionForcomputeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t gx);
-void computeLegionDSS(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSS* partitionPack, int32_t gx);
-
-struct partitionPackForcomputeLegionDSSPosSplit;
-partitionPackForcomputeLegionDSSPosSplit* partitionForcomputeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t gx);
-void computeLegionDSSPosSplit(Context ctx, Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPosSplit* partitionPack, int32_t gx);
-
-struct partitionPackForcomputeLegionDSSPartialPosSplit;
-partitionPackForcomputeLegionDSSPartialPosSplit* partitionForcomputeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, int32_t pieces);
-void computeLegionDSSPartialPosSplit(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionDSSPartialPosSplit* partitionPack, int32_t pieces);
-
-void registerTacoTasks();
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   int pieces = 0, n = 10, warmup = 5;

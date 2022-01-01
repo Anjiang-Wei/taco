@@ -6,15 +6,10 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+#include "taco-generated.h"
 
 using namespace Legion;
-
 typedef double valType;
-
-struct partitionPackForcomputeLegion;
-partitionPackForcomputeLegion* partitionForcomputeLegion(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx);
-void computeLegion(Context ctx, Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegion* partitionPack, int32_t gx);
-void registerTacoTasks();
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;

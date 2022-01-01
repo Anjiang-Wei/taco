@@ -35,7 +35,7 @@ public:
       return a.priv < b.priv;
     }
   };
-  virtual void emitHeaders(std::ostream& out);
+  void emitHeaders(OutputKind outputKind, std::ostream& out);
   void collectAndEmitAccessors(ir::Stmt stmt, std::ostream& out);
   void collectAllFunctions(ir::Stmt stmt);
 
@@ -46,8 +46,8 @@ public:
   // will do a large amount of work of transforming task for loops
   // into actual tasks, and finding out the variables used by each
   // task.
-  void analyzeAndCreateTasks(std::ostream& out);
-  void emitRegisterTasks(std::ostream& out);
+  void analyzeAndCreateTasks(OutputKind outputKind, std::ostream& out);
+  void emitRegisterTasks(OutputKind outputKind, std::ostream& out);
   virtual std::string procForTask(Stmt target, Stmt func);
 
   static std::string getVarName(Expr e) {

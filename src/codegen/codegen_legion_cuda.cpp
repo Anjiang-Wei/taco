@@ -2,6 +2,7 @@
 #include "taco/ir/simplify.h"
 #include "taco/util/strings.h"
 #include "taco/version.h"
+#include <fstream>
 
 namespace taco {
 namespace ir {
@@ -313,6 +314,12 @@ void CodegenLegionCuda::visit(const UnpackTensorData*) {}
 void CodegenLegionCuda::visit(const DeclareStruct*) {}
 
 void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
+  // If we're outputting a header, emit the necessary defines.
+  if (this->outputKind == HeaderGen) {
+    out << "#ifndef TACO_GENERATED_CUH\n";
+    out << "#define TACO_GENERATED_CUH\n";
+  }
+
   stmt = simplifyFunctionBodies(stmt);
   this->stmt = stmt;
   // Collect all of the individual functions that we need to generate code for.
@@ -323,8 +330,13 @@ void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
   this->emitHeaders(out);
 
   // Emit field accessors.
-  this->collectAndEmitAccessors(stmt, out);
-  this->analyzeAndCreateTasks(out);
+  // Emit field accessors. We don't need to emit accessors if we are
+  // generating a header file, as these declarations are local to the
+  // generated code.
+  if (this->outputKind == ImplementationGen) {
+    this->collectAndEmitAccessors(stmt, out);
+  }
+  this->analyzeAndCreateTasks(this->outputKind, out);
 
   for (auto& f : this->allFunctions) {
     for (auto func : this->functions[f]) {
@@ -333,7 +345,12 @@ void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
     CodeGen_CUDA::compile(f, isFirst);
   }
 
-  this->emitRegisterTasks(out);
+  this->emitRegisterTasks(this->outputKind, out);
+
+  // If we're outputting a header, emit the necessary defines.
+  if (this->outputKind == HeaderGen) {
+    out << "#endif // TACO_GENERATED_CUH\n";
+  }
 }
 
 // TODO (rohany): See if we can deduplicate and pull this into the CodegenLegion.
@@ -376,18 +393,17 @@ void CodegenLegionCuda::visit(const For* node) {
 }
 
 void CodegenLegionCuda::visit(const Function* func) {
+  if (outputKind == HeaderGen && func->name.find("task") != std::string::npos) {
+    // If we're generating a header, we don't want to emit these
+    // internal task declarations to the end user.
+    return;
+  }
+
   funcName = func->name;
-  // if generating a header, protect the function declaration with a guard
-  if (outputKind == HeaderGen) {
-    out << "#ifndef TACO_GENERATED_" << func->name << "\n";
-    out << "#define TACO_GENERATED_" << func->name << "\n";
-  }
-  else {
-    emittingCoroutine = false;
-    isHostFunction = false;
-    printDeviceFunctions(func);
-    isHostFunction = true;
-  }
+  emittingCoroutine = false;
+  isHostFunction = false;
+  printDeviceFunctions(func);
+  isHostFunction = true;
 
   int numYields = countYields(func);
   emittingCoroutine = (numYields > 0);
@@ -405,10 +421,9 @@ void CodegenLegionCuda::visit(const Function* func) {
   doIndent();
   out << printFuncName(func, inputVarFinder.varDecls, outputVarFinder.varDecls);
 
-  // if we're just generating a header, this is all we need to do
+  // If we're just generating a header, this is all we need to do.
   if (outputKind == HeaderGen) {
     out << ";\n";
-    out << "#endif\n";
     return;
   }
 
@@ -783,11 +798,16 @@ std::string CodegenLegionCuda::procForTask(Stmt target, Stmt task) {
 }
 
 void CodegenLegionCuda::emitHeaders(std::ostream &o) {
+  CodegenLegion::emitHeaders(this->outputKind, o);
   // For simplicity, let's always just include the cublas headers.
-  o << "#include \"cublas_v2.h\"\n";
-  o << "#include \"cudalibs.h\"\n";
-  o << "#include \"leaf_kernels.cuh\"\n";
-  CodegenLegion::emitHeaders(o);
+  if (this->outputKind != HeaderGen) {
+    // TODO (rohany): This is pretty hacky, but I don't want to plumb an
+    //  interface down here about the name of the generated files right now.
+    o << "#include \"taco-generated.cuh\"\n";
+    o << "#include \"cublas_v2.h\"\n";
+    o << "#include \"cudalibs.h\"\n";
+    o << "#include \"leaf_kernels.cuh\"\n";
+  }
 }
 
 void CodegenLegionCuda::visit(const Allocate* op) {
@@ -816,6 +836,24 @@ void CodegenLegionCuda::visit(const Allocate* op) {
     }
     stream << ");";
     stream << std::endl;
+  }
+}
+
+void CodegenLegionCuda::compileToDirectory(std::string prefix, ir::Stmt stmt) {
+  taco_iassert(!prefix.empty() && prefix.back() == '/');
+  {
+    auto header = prefix + "taco-generated.cuh";
+    std::ofstream f(header);
+    CodegenLegionCuda headerComp(f, HeaderGen);
+    headerComp.compile(stmt);
+    f.close();
+  }
+  {
+    auto source = prefix + "taco-generated.cu";
+    std::ofstream f(source);
+    CodegenLegionCuda headerComp(f, ImplementationGen);
+    headerComp.compile(stmt);
+    f.close();
   }
 }
 
