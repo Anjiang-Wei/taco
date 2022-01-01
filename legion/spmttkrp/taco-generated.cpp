@@ -94,6 +94,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   computePartitions.BPartition.indicesPartitions[2].push_back(B3_crd_part);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
   computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+
   return computePartitions;
 }
 

@@ -953,7 +953,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
                                       topLevelTransfers,
                                       body,
                                       finalizeResults,
-                                      // TODO (rohany): Does this need to go before or after the footer?
                                       ir::Block::make(unmapAllocedRegions),
                                       Block::make(footer)), returnType);
 }
@@ -2409,7 +2408,9 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         }
       }
       returnPartitionStatements.push_back(ir::DeclareStruct::make(structName, fieldNames, fieldTypes));
-      returnPartitionStatements.push_back(ir::Return::make(structPack));
+      // We'll add this to the footer rather than returning right here so that any cleanup
+      // that must happen before the partition task exits can occur.
+      this->footer.push_back(ir::Return::make(structPack));
     }
     partitionOnlyStmts = transfers;
 

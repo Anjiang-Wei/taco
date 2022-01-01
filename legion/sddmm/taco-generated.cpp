@@ -101,6 +101,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   computePartitions.CPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.CPartition.valsPartition = C_vals_partition;
   computePartitions.CPartition.denseLevelRunPartitions[0] = CDenseRun0Partition;
+
   return computePartitions;
 }
 

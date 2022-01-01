@@ -93,6 +93,7 @@ partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::
   computePartitions.BPartition.indicesPartitions[1].push_back(crdPartB2);
   computePartitions.BPartition.valsPartition = B_vals_partition;
   computePartitions.BPartition.denseLevelRunPartitions[0] = B_dense_run_0_Partition;
+
   return computePartitions;
 }
 
@@ -241,6 +242,7 @@ partitionPackForcomputeLegionPosSplit partitionForcomputeLegionPosSplit(Legion::
   computePartitions.BPartition.indicesPartitions[1].push_back(B2_crd_part);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
   computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+
   return computePartitions;
 }
 
@@ -441,6 +443,7 @@ partitionPackForcomputeLegionPosSplitDCSR partitionForcomputeLegionPosSplitDCSR(
   computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
   computePartitions.BPartition.indicesPartitions[1].push_back(B2_crd_part);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
+
   return computePartitions;
 }
 

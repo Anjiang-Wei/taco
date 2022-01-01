@@ -127,6 +127,7 @@ partitionPackForcomputeLegionDSS partitionForcomputeLegionDSS(Legion::Context ct
   computePartitions.BPartition.indicesPartitions[2].push_back(crdPartB3);
   computePartitions.BPartition.valsPartition = B_vals_partition;
   computePartitions.BPartition.denseLevelRunPartitions[0] = B_dense_run_0_Partition;
+
   return computePartitions;
 }
 
@@ -339,6 +340,7 @@ partitionPackForcomputeLegionDSSPosSplit partitionForcomputeLegionDSSPosSplit(Le
   computePartitions.BPartition.indicesPartitions[2].push_back(B3_crd_part);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
   computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+
   return computePartitions;
 }
 
@@ -573,6 +575,7 @@ partitionPackForcomputeLegionDSSPartialPosSplit partitionForcomputeLegionDSSPart
   computePartitions.BPartition.indicesPartitions[2].push_back(crdPartB3);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
   computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
+
   return computePartitions;
 }
 
