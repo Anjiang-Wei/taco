@@ -891,29 +891,23 @@ Stmt Allocate::make(Expr var, Expr num_elements, bool is_realloc, Expr old_eleme
   return alloc;
 }
 
-Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID) {
+Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID, Expr priv) {
   return Allocate::make(var,
     numElements,
     false /* is_realloc */,
     Expr() /* old_elements */,
     false /* clear */,
-    {
-      .logicalRegion = logicalRegion,
-      .fieldID = fieldID,
-    }
+    Allocate::LegionAllocPack(logicalRegion, fieldID, priv)
   );
 }
 
-Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID) {
+Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID, Expr priv) {
   return Allocate::make(var,
     numElements,
     true /* is_realloc */,
     oldPhysicalRegion,
     false /* clear */,
-    {
-      .logicalRegion = logicalRegion,
-      .fieldID = fieldID,
-    }
+    Allocate::LegionAllocPack(logicalRegion, fieldID, priv)
   );
 }
 
@@ -1321,6 +1315,8 @@ ir::Expr GPUFBMem = ir::Symbol::make("Legion::Memory::Kind::GPU_FB_MEM");
 ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
 ir::Expr aliasedPart = ir::Symbol::make("LEGION_ALIASED_COMPLETE_KIND");
 ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
+ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
+ir::Expr readWrite = ir::Symbol::make("READ_WRITE");
 
 } // namespace ir
 } // namespace taco

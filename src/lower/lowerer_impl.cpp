@@ -824,7 +824,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
           // allocates a subregion.
           for (auto reg : iter.getRegions()) {
             // Malloc the region.
-            auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, reg.region, reg.regionParent, reg.field}, Auto);
+            auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, reg.region, reg.regionParent, reg.field, readOnly}, Auto);
             mallocRhsRegions.push_back(ir::Assign::make(reg.region, alloc));
             // Update the accessor.
             mallocRhsRegions.push_back(ir::Assign::make(reg.accessorRO, ir::makeCreateAccessor(reg.accessorRO, reg.region, reg.field)));
@@ -834,7 +834,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
         auto values = ir::GetProperty::make(getTensorVar(tv), TensorProperty::Values);
         auto valuesParent = ir::GetProperty::make(getTensorVar(tv), TensorProperty::ValuesParent);
         auto valuesAcc = this->getValuesArray(tv);
-        auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal}, Auto);
+        auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal, readOnly}, Auto);
         mallocRhsRegions.push_back(ir::Assign::make(values, alloc));
         mallocRhsRegions.push_back(ir::Assign::make(valuesAcc, ir::makeCreateAccessor(valuesAcc, values, fidVal)));
       }
@@ -4022,7 +4022,7 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
           // TODO (rohany): This allocation should be scaled so that it doesn't allocate too much
           //  memory for a multi-dimensional allocation.
           // Allocate a new values array, and update the accessor.
-          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, fidVal));
+          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, fidVal, readWrite));
           auto valsAcc = this->getValuesArray(write.getTensorVar());
           auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {valuesArr, fidVal}, Auto);
           initArrays.push_back(ir::Assign::make(valsAcc, newValsAcc));
@@ -4138,7 +4138,7 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     if (!generateComputeCode()) {
       // Allocate memory for values array after assembly if not also computing
       if (this->legion) {
-        result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, fidVal));
+        result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, fidVal, readWrite));
       } else {
         result.push_back(Allocate::make(valuesArr, parentSize, false /* is_realloc */, Expr() /* old_elements */,
                                             clearValuesAllocation));
@@ -4254,7 +4254,7 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
           // above the values array. This position will always be the first index
           // into the values array, so we use that instead of the multiplication-based
           // size variable.
-          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc), readWrite));
         } else {
           result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
         }
@@ -4313,7 +4313,7 @@ Stmt LowererImpl::resizeAndInitValues(const std::vector<Iterator>& appenders,
       if (this->legion) {
         auto valsAcc = this->getValuesArray(tv);
         auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
-        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc)));
+        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc), readWrite));
       } else {
         result.push_back(doubleSizeIfFull(values, capacity, pos));
       }

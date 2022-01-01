@@ -772,8 +772,6 @@ private:
 
   // Some common Legion expressions and types. Symbols that are needed outside of
   // the lowerer are defined in ir.{h, cpp}.
-  static inline ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
-  static inline ir::Expr readWrite = ir::Symbol::make("READ_WRITE");
   static inline ir::Expr exclusive = ir::Symbol::make("EXCLUSIVE");
   static inline ir::Expr simultaneous = ir::Symbol::make("LEGION_SIMULTANEOUS");
   static inline ir::Expr fidVal = ir::Symbol::make("FID_VAL");

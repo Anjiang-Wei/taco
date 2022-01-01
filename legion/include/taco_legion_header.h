@@ -75,11 +75,11 @@ void registerPlacementShardingFunctor(Legion::Context ctx, Legion::Runtime* runt
 // Functions for performing allocations on a region.
 // TODO (rohany): Do these need to all take in parents and target regions?
 // Allocate the entirety of a region with a given parent.
-Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid);
+Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid, Legion::PrivilegeMode priv);
 // Allocate a subregion from a region of the given size, i.e. [0, size).
-Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, size_t size, Legion::FieldID fid);
+Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, size_t size, Legion::FieldID fid, Legion::PrivilegeMode priv);
 // Allocate a subregion from a region of a given size extended from an old size.
-Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid);
+Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid, Legion::PrivilegeMode priv);
 
 // getSubRegion returns the LogicalRegion corresponding to the subregion of region with bounds.
 Legion::LogicalRegion getSubRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::Domain bounds);

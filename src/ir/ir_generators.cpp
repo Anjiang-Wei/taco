@@ -1,5 +1,4 @@
 #include "ir_generators.h"
-
 #include "taco/ir/ir.h"
 #include "taco/error.h"
 #include "taco/util/strings.h"
@@ -36,8 +35,8 @@ Stmt doubleSizeIfFull(Expr a, Expr size, Expr needed) {
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 
-Stmt lgDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor) {
-  auto realloc = ir::makeLegionRealloc(reg, Mul::make(size, 2), parentReg, oldPhysicalReg, fieldID);
+Stmt lgDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor, Expr priv) {
+  auto realloc = ir::makeLegionRealloc(reg, Mul::make(size, 2), parentReg, oldPhysicalReg, fieldID, priv);
   auto resize = Assign::make(size, Mul::make(size, 2));
   auto ifBody = Block::make({realloc, updateAccessor, resize});
   return IfThenElse::make(Lte::make(size, needed), ifBody);
@@ -53,11 +52,11 @@ Stmt atLeastDoubleSizeIfFull(Expr a, Expr size, Expr needed) {
   return IfThenElse::make(Lte::make(size, needed), ifBody);
 }
 
-Stmt lgAtLeastDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor) {
+Stmt lgAtLeastDoubleSizeIfFull(Expr reg, Expr size, Expr needed, Expr parentReg, Expr oldPhysicalReg, Expr fieldID, Stmt updateAccessor, Expr priv) {
   Expr newSizeVar = Var::make(util::toString(reg) + "_new_size", Int());
   Expr newSize = Max::make(Mul::make(size, 2), Add::make(needed, 1));
   Stmt computeNewSize = VarDecl::make(newSizeVar, newSize);
-  Stmt realloc = makeLegionRealloc(reg, newSizeVar, parentReg, oldPhysicalReg, fieldID);
+  Stmt realloc = makeLegionRealloc(reg, newSizeVar, parentReg, oldPhysicalReg, fieldID, priv);
   Stmt updateSize = Assign::make(size, newSizeVar);
   Stmt ifBody = Block::make({computeNewSize, realloc, updateAccessor, updateSize});
   return IfThenElse::make(Lte::make(size, needed), ifBody);

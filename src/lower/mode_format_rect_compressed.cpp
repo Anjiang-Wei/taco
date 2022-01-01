@@ -143,7 +143,7 @@ ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, 
 
   auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
   auto newCrdAcc = ir::makeCreateAccessor(crdAcc, idxArray, fidCoord);
-  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc));
+  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc), ir::readWrite);
   return ir::Block::make({maybeResizeIdx, storeIdx});
 }
 
@@ -212,7 +212,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Ex
   auto posAcc = this->getAccessor(pack, POS, ir::RW);
   auto newPosAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
   if (!parentModeType.defined() || parentModeType.hasAppend()) {
-    return lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
+    return lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc), ir::readWrite);
   }
 
   // At this point, we are a sparse level with at least one dense level above
@@ -232,7 +232,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Ex
     auto hi = ir::Add::make(ir::Load::make(domHi, i), 1);
     initPos = ir::For::make(pVars[i], 0, hi, 1, initPos);
   }
-  ir::Stmt maybeResizePos = lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc));
+  ir::Stmt maybeResizePos = lgDoubleSizeIfFull(posArray, posCapacity, parentPos, posArrayParent, posArray, fidRect1, ir::Assign::make(posAcc, newPosAcc), ir::readWrite);
   return ir::Block::make({maybeResizePos, initPos});
 }
 
@@ -257,9 +257,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
   // allocation of the pos region. Otherwise, the dimensions of the pos
   // region are statically known and we can directly allocate the region.
   if (this->hasSparseAncestor(mode) || !mode.getParentMode().defined()) {
-    initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1));
+    initStmts.push_back(ir::makeLegionMalloc(posArray, posCapacity, posParent, fidRect1, ir::readWrite));
   } else {
-    auto mallocCall = ir::Call::make("legionMalloc", {ir::ctx, ir::runtime, posArray, posParent, fidRect1}, Auto);
+    auto mallocCall = ir::Call::make("legionMalloc", {ir::ctx, ir::runtime, posArray, posParent, fidRect1, ir::readWrite}, Auto);
     initStmts.push_back(ir::Assign::make(posArray, mallocCall));
   }
 
@@ -298,7 +298,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     auto crdArray = this->getRegion(pack, CRD);
     auto crdParent = this->getRegion(pack, CRD_PARENT);
     initStmts.push_back(ir::VarDecl::make(crdCapacity, defaultCapacity));
-    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord));
+    initStmts.push_back(ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord, ir::readWrite));
     // Reinitialize the CRD RW accessor.
     auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
     auto newCrdAcc = ir::makeCreateAccessor(crdAcc, crdArray, fidCoord);
@@ -366,7 +366,7 @@ ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir
     auto posParent = this->getRegion(pack, POS_PARENT);
     stmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ir::ctx, posReg}, Auto)));
     // Now malloc the region. Its first dimension will be of parentPos size.
-    stmts.push_back(ir::makeLegionMalloc(posReg, parentPos, posParent, fidRect1));
+    stmts.push_back(ir::makeLegionMalloc(posReg, parentPos, posParent, fidRect1, ir::readWrite));
     // Now update the accessor.
     stmts.push_back(ir::Assign::make(pos, ir::makeCreateAccessor(pos, posReg, fidRect1)));
     reallocFullRegion = ir::Block::make(stmts);

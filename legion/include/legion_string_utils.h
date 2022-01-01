@@ -64,8 +64,8 @@ void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
         break; // Nothing to do for dense levels.
       case Sparse: {
         // Print out the crd and pos arrays here.
-        auto pos = legionMalloc(ctx, runtime, tensor.indices[i][0], tensor.indicesParents[i][0], FID_RECT_1);
-        auto crd = legionMalloc(ctx, runtime, tensor.indices[i][1], tensor.indicesParents[i][1], FID_COORD);
+        auto pos = legionMalloc(ctx, runtime, tensor.indices[i][0], tensor.indicesParents[i][0], FID_RECT_1, READ_ONLY);
+        auto crd = legionMalloc(ctx, runtime, tensor.indices[i][1], tensor.indicesParents[i][1], FID_COORD, READ_ONLY);
         std::cout << "pos " << i << ":" << std::endl;
         printPhysicalRegion<Legion::Rect<1>>(ctx, runtime, pos, FID_RECT_1);
         std::cout << "crd " << i << ":" << std::endl;
@@ -76,7 +76,7 @@ void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
       }
       case Singleton: {
         // Print out the crd array.
-        auto crd = legionMalloc(ctx, runtime, tensor.indices[i][0], tensor.indicesParents[i][0], FID_COORD);
+        auto crd = legionMalloc(ctx, runtime, tensor.indices[i][0], tensor.indicesParents[i][0], FID_COORD, READ_ONLY);
         std::cout << "crd " << i << ":" << std::endl;
         printPhysicalRegion<int32_t>(ctx, runtime, crd, FID_COORD);
         runtime->unmap_region(ctx, crd);
@@ -88,7 +88,7 @@ void printLegionTensor(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
     }
   }
   // Finally map the values.
-  auto vals = legionMalloc(ctx, runtime, tensor.vals, tensor.valsParent, FID_VAL);
+  auto vals = legionMalloc(ctx, runtime, tensor.vals, tensor.valsParent, FID_VAL, READ_ONLY);
   std::cout << "vals " << ":" << std::endl;
   printPhysicalRegion<T>(ctx, runtime, vals, FID_VAL);
   runtime->unmap_region(ctx, vals);

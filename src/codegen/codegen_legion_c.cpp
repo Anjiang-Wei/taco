@@ -423,6 +423,8 @@ void CodegenLegionC::visit(const Allocate* op) {
       op->num_elements.accept(this);
       stream << ", ";
       op->pack.fieldID.accept(this);
+      stream << ", ";
+      op->pack.priv.accept(this);
     } else {
       stream << "legionMalloc(ctx, runtime, ";
       op->pack.logicalRegion.accept(this);
@@ -430,6 +432,8 @@ void CodegenLegionC::visit(const Allocate* op) {
       op->num_elements.accept(this);
       stream << ", ";
       op->pack.fieldID.accept(this);
+      stream << ", ";
+      op->pack.priv.accept(this);
     }
     stream << ");";
     stream << std::endl;

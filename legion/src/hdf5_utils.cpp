@@ -410,7 +410,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
     runtime->fill_field(ctx, dims, dims, FID_COORD, int32_t(0));
     auto dimsCopy = runtime->create_logical_region(ctx, ispace, fspace);
     {
-      auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD);
+      auto dimsMem = legionMalloc(ctx, runtime, dims, dims, FID_COORD, READ_WRITE);
       FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
       for (int i = 0; i < t.order; i++) {
         acc[i] = t.dims[i];
@@ -603,7 +603,7 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
     AttachSpecificRegion().run(ctx, runtime, filename, dimsReg, FID_COORD, LegionTensorDimsField);
     // Now copy the values into the dims vector in the output.
     {
-      auto dimsMem = legionMalloc(ctx, runtime, dimsReg, dimsReg, FID_COORD);
+      auto dimsMem = legionMalloc(ctx, runtime, dimsReg, dimsReg, FID_COORD, READ_WRITE);
       FieldAccessor<READ_WRITE,int32_t,1,coord_t, Realm::AffineAccessor<int32_t, 1, coord_t>> acc(dimsMem, FID_COORD);
       for (size_t i = 0; i < format.size(); i++) {
         dims[i] = acc[i];

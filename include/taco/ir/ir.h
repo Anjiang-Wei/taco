@@ -777,10 +777,15 @@ struct Allocate : public StmtNode<Allocate> {
   // LegionAllocPack contains extra arguments necessary to perform
   // Legion Region backed allocations.
   struct LegionAllocPack {
+    LegionAllocPack() {}
+    LegionAllocPack(Expr logicalRegion, Expr fieldID, Expr priv) : logicalRegion(logicalRegion), fieldID(fieldID),
+                                                                   priv(priv) {}
     // The logical region being allocated within.
     Expr logicalRegion;
     // The field ID to allocate.
     Expr fieldID;
+    // The privilege to allocate the region with.
+    Expr priv;
   } pack;
 
   static Stmt make(Expr var, Expr num_elements, bool is_realloc=false,
@@ -790,8 +795,8 @@ struct Allocate : public StmtNode<Allocate> {
 };
 
 // Utility methods to make performing Legion allocations slightly more ergonomic.
-Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID);
-Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID);
+Stmt makeLegionMalloc(Expr var, Expr numElements, Expr logicalRegion, Expr fieldID, Expr priv);
+Stmt makeLegionRealloc(Expr var, Expr numElements, Expr logicalRegion, Expr oldPhysicalRegion, Expr fieldID, Expr priv);
 
 /** Free memory for a ptr var */
 struct Free : public StmtNode<Free> {
@@ -997,6 +1002,8 @@ extern ir::Expr GPUFBMem;
 extern ir::Expr disjointPart;
 extern ir::Expr aliasedPart;
 extern ir::Expr computePart;
+extern ir::Expr readOnly;
+extern ir::Expr readWrite;
 
 }}
 #endif

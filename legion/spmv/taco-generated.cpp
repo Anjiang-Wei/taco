@@ -536,13 +536,41 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
   auto c_vals_parent = c->valsParent;
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
 
-  B1_pos = legionMalloc(ctx, runtime, B1_pos, B1_pos_parent, FID_RECT_1);
+  B1_pos = legionMalloc(
+    ctx,
+    runtime,
+    B1_pos,
+    B1_pos_parent,
+    FID_RECT_1,
+    READ_ONLY
+  );
   B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
-  B1_crd = legionMalloc(ctx, runtime, B1_crd, B1_crd_parent, FID_COORD);
+  B1_crd = legionMalloc(
+    ctx,
+    runtime,
+    B1_crd,
+    B1_crd_parent,
+    FID_COORD,
+    READ_ONLY
+  );
   B1_crd_accessor = createAccessor<AccessorROint32_t1>(B1_crd, FID_COORD);
-  B_vals = legionMalloc(ctx, runtime, B_vals, B_vals_parent, FID_VAL);
+  B_vals = legionMalloc(
+    ctx,
+    runtime,
+    B_vals,
+    B_vals_parent,
+    FID_VAL,
+    READ_ONLY
+  );
   B_vals_ro_accessor = createAccessor<AccessorROdouble2>(B_vals, FID_VAL);
-  c_vals = legionMalloc(ctx, runtime, c_vals, c_vals_parent, FID_VAL);
+  c_vals = legionMalloc(
+    ctx,
+    runtime,
+    c_vals,
+    c_vals_parent,
+    FID_VAL,
+    READ_ONLY
+  );
   c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
 
   int64_t B1Size = runtime->get_index_space_domain(ctx, get_index_space(B1_crd)).hi()[0] + 1;

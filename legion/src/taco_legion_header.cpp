@@ -86,33 +86,33 @@ LogicalRegion getSubRegion(Context ctx, Runtime* runtime, LogicalRegion region, 
 
 // mapRegion inline maps a region. It abstracts away a bit of cruft around creating RegionRequirements
 // and making runtime calls.
-Legion::PhysicalRegion mapRegion(Context ctx, Runtime* runtime, LogicalRegion region, LogicalRegion parent, FieldID fid) {
+Legion::PhysicalRegion mapRegion(Context ctx, Runtime* runtime, LogicalRegion region, LogicalRegion parent, FieldID fid, PrivilegeMode priv) {
   // TODO (rohany): Do we need to pass in a privilege here, or if we are doing allocations
   //  we can assume that the region is going to be written to?
-  RegionRequirement req(region, READ_WRITE, EXCLUSIVE, parent, Mapping::DefaultMapper::EXACT_REGION);
+  RegionRequirement req(region, priv, EXCLUSIVE, parent, Mapping::DefaultMapper::EXACT_REGION);
   req.add_field(fid);
   auto result = runtime->map_region(ctx, req);
   result.wait_until_valid();
   return result;
 }
 
-Legion::PhysicalRegion legionMalloc(Context ctx, Runtime* runtime, LogicalRegion region, size_t size, FieldID fid) {
+Legion::PhysicalRegion legionMalloc(Context ctx, Runtime* runtime, LogicalRegion region, size_t size, FieldID fid, PrivilegeMode priv) {
   auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(0, size - 1));
-  return mapRegion(ctx, runtime, subreg, region, fid);
+  return mapRegion(ctx, runtime, subreg, region, fid, priv);
 }
 
-Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid) {
-  return mapRegion(ctx, runtime, region, parent, fid);
+Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid, PrivilegeMode priv) {
+  return mapRegion(ctx, runtime, region, parent, fid, priv);
 }
 
-Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid) {
+Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid, PrivilegeMode priv) {
   // Get the bounds on the old region.
   auto bounds = runtime->get_index_space_domain(ctx, old.get_logical_region().get_index_space());
   // Unmap the input existing region.
   runtime->unmap_region(ctx, old);
   // Just get between the old size and the new size to avoid having to copy the old data.
   auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(bounds.hi()[0] + 1, newSize - 1));
-  return mapRegion(ctx, runtime, subreg, region, fid);
+  return mapRegion(ctx, runtime, subreg, region, fid, priv);
 }
 
 LogicalPartition copyPartition(Context ctx, Runtime* runtime, IndexPartition toCopy, LogicalRegion toPartition, Color color) {
