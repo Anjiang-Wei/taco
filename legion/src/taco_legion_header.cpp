@@ -107,12 +107,11 @@ Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtim
 
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid) {
   // Get the bounds on the old region.
-  taco_iassert(old.get_logical_region().get_dim() == 1);
-  auto oldBounds = old.get_bounds<1, coord_t>();
+  auto bounds = runtime->get_index_space_domain(ctx, old.get_logical_region().get_index_space());
   // Unmap the input existing region.
   runtime->unmap_region(ctx, old);
   // Just get between the old size and the new size to avoid having to copy the old data.
-  auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(oldBounds.bounds.hi[0] + 1, newSize - 1));
+  auto subreg = getSubRegion(ctx, runtime, region, Rect<1>(bounds.hi()[0] + 1, newSize - 1));
   return mapRegion(ctx, runtime, subreg, region, fid);
 }
 
