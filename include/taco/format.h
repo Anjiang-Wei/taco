@@ -222,7 +222,7 @@ const Format LgCOO(int order, bool isUnique = true, bool isOrdered = true,
 
 // LgFormat is a wrapper to construct formats that inserts extra information in each ModeFormat
 // that is needed as there are now some dependencies between level formats.
-Format LgFormat(std::vector<ModeFormat> formats);
+Format LgFormat(std::vector<ModeFormat> formats, const std::vector<int>& modeOrdering = {});
 
 /// @}
 

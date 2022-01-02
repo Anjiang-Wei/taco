@@ -1,6 +1,6 @@
 #include "taco/lower/mode_format_lg_singleton.h"
-
 #include "taco/util/strings.h"
+#include "ir/ir_generators.h"
 
 using namespace taco::ir;
 
@@ -77,6 +77,56 @@ ModeFunction LgSingletonModeFormat::posIterAccess(ir::Expr pos,
   return ModeFunction(Stmt(), {idx, true});
 }
 
+Stmt LgSingletonModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const {
+  taco_iassert(mode.getPackLocation() == 0);
+  auto pack = mode.getModePack();
+
+  auto idxArray = this->getRegion(pack, CRD);
+  auto idxArrayParent = this->getRegion(pack, CRD_PARENT);
+  auto idxArrayAcc = this->getAccessor(pack, CRD, ir::RW);
+  ir::Expr stride = (int)mode.getModePack().getNumModes();
+  ir::Stmt storeIdx = ir::Store::make(idxArrayAcc, ir::Mul::make(pos, stride), coord);
+
+  if (pack.getNumModes() > 1) {
+    return storeIdx;
+  }
+
+  auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
+  auto newCrdAcc = ir::makeCreateAccessor(crdAcc, idxArray, fidCoord);
+  auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc), ir::readWrite);
+  return ir::Block::make({maybeResizeIdx, storeIdx});
+}
+
+Stmt LgSingletonModeFormat::getAppendInitLevel(ir::Expr parentSize, ir::Expr size, Mode mode) const {
+  auto pack = mode.getModePack();
+  if (mode.getPackLocation() != (pack.getNumModes() - 1)) {
+    return Stmt();
+  }
+
+  auto defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32);
+  auto crdCapacity = getCoordCapacity(mode);
+  auto crdArray = this->getRegion(pack, CRD);
+  auto crdParent = this->getRegion(pack, CRD_PARENT);
+  auto crdAcc = this->getAccessor(pack, CRD, RW);
+  auto initCrdCapacity = VarDecl::make(crdCapacity, defaultCapacity);
+  auto allocCrd = ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord, ir::readWrite);
+  auto newCrdAcc = ir::makeCreateAccessor(crdAcc, crdArray, fidCoord);
+  auto updateAcc = ir::Assign::make(crdAcc, newCrdAcc);
+  return Block::make(initCrdCapacity, allocCrd, updateAcc);
+}
+
+Stmt LgSingletonModeFormat::getAppendFinalizeLevel(ir::Expr, ir::Expr, ir::Expr size, Mode mode) const {
+  // We just need to emit a block that casts the region down to the final size.
+  auto pack = mode.getModePack();
+  auto crdReg = this->getRegion(pack, CRD).as<ir::GetProperty>();
+  auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
+  auto levelLoad = ir::Load::make(field, crdReg->mode);
+  auto idxLoad = ir::Load::make(levelLoad, crdReg->index);
+  auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, CRD_PARENT),
+                                                ir::makeConstructor(Rect(1), {0, ir::Sub::make(size, 1)})}, Auto);
+  return ir::Assign::make(idxLoad, subreg);
+}
+
 std::vector<ir::Expr> LgSingletonModeFormat::getArrays(ir::Expr tensor, int mode, int level) const {
   std::string arraysName = util::toString(tensor) + std::to_string(level);
   std::vector<ir::Expr> arrays(2);
@@ -124,6 +174,11 @@ ir::Expr LgSingletonModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIO
       taco_iassert(false);
       return ir::Expr();
   }
+}
+
+ir::Expr LgSingletonModeFormat::getCoordCapacity(Mode mode) const {
+  const std::string varName = mode.getName() + "_crd_size";
+  return this->getModeVar(mode, varName, Int());
 }
 
 }

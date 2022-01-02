@@ -346,6 +346,8 @@ protected:
   /// Check if other mode format is identical. Can assume that this method will 
   /// always be called with an argument that is of the same class.
   virtual bool equals(const ModeFormatImpl& other) const;
+  // Utility function to store variables inside the Mode.
+  ir::Expr getModeVar(Mode mode, const std::string varName, Datatype type) const;
 };
 
 // If we are building in Debug configuration, then by default start with an

@@ -455,7 +455,7 @@ const Format LgCOO(int order, bool isUnique, bool isOrdered, bool isAoS,
          : Format(modeTypes, modeOrdering);
 }
 
-Format LgFormat(std::vector<ModeFormat> formats) {
+Format LgFormat(std::vector<ModeFormat> formats, const std::vector<int>& modeOrdering) {
   int denseRunLength = 0;
   std::vector<ModeFormatPack> resultFormats;
   for (auto modeFormat : formats) {
@@ -473,7 +473,10 @@ Format LgFormat(std::vector<ModeFormat> formats) {
       taco_iassert(false) << "Only Dense and LgSparse formats currently supported";
     }
   }
-  return Format{resultFormats};
+  if (modeOrdering.empty()) {
+    return Format{resultFormats};
+  }
+  return Format{resultFormats, modeOrdering};
 }
 
 bool isDense(const Format& format) {

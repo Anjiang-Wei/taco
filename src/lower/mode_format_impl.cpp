@@ -318,6 +318,15 @@ std::vector<ModeRegion> ModeFormatImpl::getRegions(ir::Expr tensor, int level) c
   return {};
 }
 
+ir::Expr ModeFormatImpl::getModeVar(Mode mode, const std::string varName, Datatype type) const {
+  if (!mode.hasVar(varName)) {
+    auto var = ir::Var::make(varName, type);
+    mode.addVar(varName, var);
+    return var;
+  }
+  return mode.getVar(varName);
+}
+
 bool ModeFormatImpl::equals(const ModeFormatImpl& other) const {
   return (isFull == other.isFull &&
           isOrdered == other.isOrdered &&

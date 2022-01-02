@@ -1,7 +1,6 @@
 #include "taco/lower/mode_format_rect_compressed.h"
 #include "taco/lower/mode_format_dense.h"
 #include "ir/ir_generators.h"
-#include "ir/ir_generators.h"
 
 namespace taco {
 
@@ -570,15 +569,6 @@ ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_RE
       taco_iassert(false);
       return ir::Expr();
   }
-}
-
-ir::Expr RectCompressedModeFormat::getModeVar(Mode mode, const std::string varName, Datatype type) const {
-  if (!mode.hasVar(varName)) {
-    auto var = ir::Var::make(varName, type);
-    mode.addVar(varName, var);
-    return var;
-  }
-  return mode.getVar(varName);
 }
 
 ir::Expr RectCompressedModeFormat::getPosCapacity(Mode mode) const {
