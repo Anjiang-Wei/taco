@@ -1556,15 +1556,15 @@ TEST(distributed, legionSpMV) {
 
   auto cpuPosSplitSched = [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
     return stmt
-        .fuse(i, j, f)
-        .pos(f, fpos, B(i, j))
-        .distribute({fpos}, {fposo}, {fposi}, pieces)
-        .split(fposi, fposio, fposii, chunkSize)
-        .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
-        .communicate(a(i), fposo)
-        .communicate(B(i, j), fposo)
-        .communicate(c(j), fposo)
-        ;
+           .fuse(i, j, f)
+           .pos(f, fpos, B(i, j))
+           .distribute({fpos}, {fposo}, {fposi}, pieces)
+           .split(fposi, fposio, fposii, chunkSize)
+           .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+           .communicate(a(i), fposo)
+           .communicate(B(i, j), fposo)
+           .communicate(c(j), fposo)
+           ;
   };
   add("PosSplit", cpuPosSplitSched);
   add("PosSplitDCSR", cpuPosSplitSched, false /* cuda */, true /* hyperSparse */);
@@ -1725,7 +1725,7 @@ TEST(distributed, legionSpMM) {
   ir::CodegenLegionC::compileToDirectory("../legion/spmm/", lowered);
 }
 
-TEST(distributed, legionSDDMM) {
+TEST(distributed, legionSpSDDMM) {
   int dim = 100;
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
@@ -1780,7 +1780,7 @@ TEST(distributed, legionSpMTTKRP) {
   ir::CodegenLegionC::compileToDirectory("../legion/spmttkrp/", lowered);
 }
 
-TEST(distributed, legionFormatConverterLib) {
+TEST(distributed, legionSpFormatConverterLib) {
   int dim = 100;
 
   std::vector<ir::Stmt> converters;

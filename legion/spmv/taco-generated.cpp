@@ -650,7 +650,7 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int64_t pointID1 = fposo;
   for (int32_t fposi = 0; fposi < ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces); fposi++) {
     int32_t fposB = (fposo * ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + fposi) + B1_pos_accessor[Point<1>(0)].lo;
-    if (fposB >= (fposo + 1) * ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces))
+    if (fposB >= (fposo + 1) * ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + B1_pos_accessor[Point<1>(0)].lo)
       continue;
 
     if (fposB < B1_pos_accessor[Point<1>(0)].lo || fposB >= B1_pos_accessor[Point<1>(0)].hi + 1)

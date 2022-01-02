@@ -367,6 +367,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
   provGraph = ProvenanceGraph(stmt);
 
+  // Initialize the indexVarToExprMap.
   for (const IndexVar& indexVar : provGraph.getAllIndexVars()) {
     if (iterators.modeIterators().count(indexVar)) {
       indexVarToExprMap.insert({indexVar, iterators.modeIterators()[indexVar].getIteratorVar()});
@@ -374,6 +375,10 @@ LowererImpl::lower(IndexStmt stmt, string name,
     else {
       indexVarToExprMap.insert({indexVar, Var::make(indexVar.getName(), Int())});
     }
+  }
+  // Also initialize the backwards map.
+  for (auto it : this->indexVarToExprMap) {
+    this->exprToIndexVarMap[it.second] = it.first;
   }
 
   vector<Access> inputAccesses, resultAccesses;
@@ -1235,11 +1240,13 @@ Stmt LowererImpl::lowerForall(Forall forall)
       // Find the iteration bounds of the inner variable -- that is the size
       // that the outer loop was broken into.
       auto bounds = this->provGraph.deriveIterBounds(inner, definedIndexVarsOrdered, underivedBounds, indexVarToExprMap, iterators);
+      auto parentBounds = this->provGraph.deriveIterBounds(varToRecover, this->definedIndexVarsOrdered, this->underivedBounds, this->indexVarToExprMap, this->iterators);
       // Use the difference between the bounds to find the size of the loop.
       auto dimLen = ir::Sub::make(bounds[1], bounds[0]);
       // For a variable f divided into into f1 and f2, the guard ensures that
       // for iteration f, f should be within f1 * dimLen and (f1 + 1) * dimLen.
-      auto guard = ir::Gte::make(this->indexVarToExprMap[varToRecover], ir::simplify(ir::Mul::make(ir::Add::make(this->indexVarToExprMap[outer], 1), dimLen)));
+      auto upperBound = ir::simplify(ir::Add::make(ir::Mul::make(ir::Add::make(this->indexVarToExprMap[outer], 1), dimLen), parentBounds[0]));
+      auto guard = ir::Gte::make(this->indexVarToExprMap[varToRecover], upperBound);
       recoverySteps.push_back(IfThenElse::make(guard, ir::Continue::make()));
     }
     // If this is divided onto a partition, ensure that we don't go past the
@@ -2045,15 +2052,10 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       auto recovered = this->provGraph.recoverVariable(posVar, this->definedIndexVarsOrdered, this->underivedBounds,
                                                        this->indexVarToExprMap, this->iterators);
       // Here, we copy some logic from the BoundsInferenceExprRewriter to get bounds on the position variable.
-      // TODO (rohany): Make this a field on LowererImpl.
-      std::map<ir::Expr, IndexVar> exprToIndexVarMap;
-      for (auto it : this->indexVarToExprMap) {
-        exprToIndexVarMap[it.second] = it.first;
-      }
       auto rwFn = [&](bool lower, ir::Expr bound) {
         BoundsInferenceExprRewriter rw(this->provGraph, this->iterators, this->underivedBounds,
                                        this->indexVarToExprMap,
-                                       this->definedIndexVars, exprToIndexVarMap,
+                                       this->definedIndexVars, this->exprToIndexVarMap,
                                        this->definedIndexVarsOrdered, lower, this->presentIvars);
         do {
           rw.changed = false;

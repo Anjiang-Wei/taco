@@ -560,6 +560,8 @@ private:
 
   /// Map from indexvars to their variable names
   std::map<IndexVar, ir::Expr> indexVarToExprMap;
+  /// Maintain a backwards map from variables to the corresponding IndexVar's.
+  std::map<ir::Expr, IndexVar> exprToIndexVarMap;
 
   /// Tensor and mode iterators to iterate over in the lowered code
   Iterators iterators;
