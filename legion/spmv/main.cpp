@@ -29,6 +29,13 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
   }
 }
 
+// Configuration represents the kind of SpMV benchmark we are running.
+enum Configuration {
+  CSR_ROW_SPLIT,
+  CSR_POS_SPLIT,
+  DCSR_POS_SPLIT,
+};
+
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName, dcsrFileName;
   bool dump = false, pos = false;
@@ -51,13 +58,21 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
 
-  // Marks whether or not CSR was used.
-  bool csr = false;
-  LegionTensor A; ExternalHDF5LegionTensor Aex;
-  if (!csrFileName.empty()) {
-    std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
-    csr = true;
+  Configuration conf;
+  if (!csrFileName.empty() && !pos) {
+    conf = CSR_ROW_SPLIT;
+  } else if (!csrFileName.empty() && pos) {
+    conf = CSR_POS_SPLIT;
   } else {
+    taco_iassert(!dcsrFileName.empty() && pos);
+    conf = DCSR_POS_SPLIT;
+  }
+
+  LegionTensor A; ExternalHDF5LegionTensor Aex;
+  if (conf == CSR_POS_SPLIT || conf == CSR_ROW_SPLIT) {
+    std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
+  } else {
+    taco_iassert(conf == DCSR_POS_SPLIT);
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, dcsrFileName, {Sparse, Sparse});
     taco_uassert(pos) << "position split schedule must be used for DCSR format.";
   }
@@ -85,28 +100,29 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   partitionPackForcomputeLegionPosSplit posPack;
   partitionPackForcomputeLegionRowSplit rowPack;
   partitionPackForcomputeLegionPosSplitDCSR posDCSRPack;
-  if (pos) {
-    if (csr) {
-      posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces);
-    } else {
-      posDCSRPack = partitionForcomputeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, pieces);
-    }
-  } else {
-    rowPack = partitionForcomputeLegionRowSplit(ctx, runtime, &y, &A, &x, pieces);
+  switch (conf) {
+    case CSR_ROW_SPLIT:
+      rowPack = partitionForcomputeLegionRowSplit(ctx, runtime, &y, &A, &x, pieces); break;
+    case CSR_POS_SPLIT:
+      posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces); break;
+    case DCSR_POS_SPLIT:
+      posDCSRPack = partitionForcomputeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, pieces); break;
   }
 
   // Benchmark the computation.
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
-    if (pos) {
-      if (csr) {
+    switch (conf) {
+      case CSR_ROW_SPLIT:
+        computeLegionRowSplit(ctx, runtime, &y, &A, &x, &rowPack, pieces); break;
+      case CSR_POS_SPLIT:
         computeLegionPosSplit(ctx, runtime, &y, &A, &x, &posPack, pieces);
-      } else {
+        launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
+        break;
+      case DCSR_POS_SPLIT:
         computeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, &posDCSRPack, pieces);
-      }
-      launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
-    } else {
-      computeLegionRowSplit(ctx, runtime, &y, &A, &x, &rowPack, pieces);
+        launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
+        break;
     }
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);

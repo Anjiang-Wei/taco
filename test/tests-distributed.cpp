@@ -1514,21 +1514,40 @@ TEST(distributed, nesting) {
 TEST(distributed, legionSpMV) {
   int dim = 100;
 
+  // An enum to represent all of the different format configurations
+  // that SpMV is generated with.
+  enum Configuration {
+    CSR,
+    DCSR,
+    SPARSE_DENSE,
+    // Currently unused.
+    CSR_SP_C,
+    CSC_SP_C,
+  };
+
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   auto chunkSize = 2048;
   IndexVar i("i"), j("j"), io("io"), ii("ii"), f("f"), fpos("fpos"), fposi("fposi"), fposo("fposo"), fposio("fposio"), fposii("fposii");
   std::vector<ir::Stmt> stmts;
   std::vector<ir::Stmt> cudaStmts;
-  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputed)> sched, bool cuda = false, bool hyperSparse = false) {
+  auto add = [&](std::string name, std::function<IndexStmt(IndexStmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr precomputed)> sched, Configuration conf, bool cuda = false) {
     Tensor<double> a("a", {dim}, Format{Dense});
     Format bFormat;
-    if (hyperSparse) {
+    if (conf == Configuration::DCSR) {
       bFormat = LgFormat({LgSparse, LgSparse});
+    } else if (conf == Configuration::SPARSE_DENSE) {
+      bFormat = LgFormat({LgSparse, Dense});
     } else {
       bFormat = LgFormat({Dense, LgSparse});
     }
     Tensor<double> B("B", {dim, dim}, bFormat);
-    Tensor<double> c("c", {dim}, Format{Dense});
+    Format cFormat;
+    if (conf == Configuration::CSR_SP_C) {
+      cFormat = LgFormat({LgSparse});
+    } else {
+      cFormat = {Dense};
+    }
+    Tensor<double> c("c", {dim}, cFormat);
     // Importantly, we create the IndexExpr for B(i, j) * c(j) _once_, and pass this
     // to scheduling functions. This is important as the precompute transformation
     // does some equality checks _by pointer value_, so creating the IndexExpr
@@ -1552,7 +1571,7 @@ TEST(distributed, legionSpMV) {
            .communicate(a(i), io)
            .communicate(c(j), io)
            ;
-  });
+  }, Configuration::CSR);
 
   auto cpuPosSplitSched = [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
     return stmt
@@ -1566,27 +1585,20 @@ TEST(distributed, legionSpMV) {
            .communicate(c(j), fposo)
            ;
   };
-  add("PosSplit", cpuPosSplitSched);
-  add("PosSplitDCSR", cpuPosSplitSched, false /* cuda */, true /* hyperSparse */);
+  add("PosSplit", cpuPosSplitSched, Configuration::CSR);
+  add("PosSplitDCSR", cpuPosSplitSched, Configuration::DCSR);
   // This test is a case for code-generation of a {Sparse, Dense} format that
   // distributes the position space among all processors. There are currently
   // some blockers in actually running the code so it is not fully scheduled.
-  {
-    Tensor<double> a("a", {dim}, Format{Dense});
-    Tensor<double> B("B", {dim, dim}, LgFormat({LgSparse, Dense}));
-    Tensor<double> c("c", {dim}, Format{Dense});
-    a(i) = B(i, j) * c(j);
-    auto stmt = a.getAssignment().concretize()
-                 .pos(i, fpos, B(i, j))
-                 .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
-                 .communicate(a(i), fposo)
-                 .communicate(B(i, j), fposo)
-                 .communicate(c(j), fposo)
-                 ;
-    auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegionSparseDensePosParallelize", false /* waitOnFutureMap */);
-    stmts.push_back(lowered);
-  }
-
+  add("SparseDensePosParallelize", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
+    return stmt
+           .pos(i, fpos, B(i, j))
+           .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
+           .communicate(a(i), fposo)
+           .communicate(B(i, j), fposo)
+           .communicate(c(j), fposo)
+           ;
+  }, Configuration::SPARSE_DENSE);
   // CUDA schedules. These are set up so that we can use the same main.cpp file.
   const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
   const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
@@ -1608,7 +1620,7 @@ TEST(distributed, legionSpMV) {
            .communicate(B(i, j), io)
            .communicate(c(j), io)
            ;
-  }, true /* cuda */);
+  }, Configuration::CSR, true /* cuda */);
   const int NNZ_PER_THREAD = 8;
   const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;
   const int NNZ_PER_TB = NNZ_PER_THREAD * BLOCK_SIZE;
@@ -1636,8 +1648,8 @@ TEST(distributed, legionSpMV) {
         .communicate(c(j), fposo)
         ;
   };
-  add("PosSplit", gpuPosSplitSched, true /* cuda */);
-  add("PosSplitDCSR", gpuPosSplitSched, true /* cuda */, true /* hyperSparse */);
+  add("PosSplit", gpuPosSplitSched, Configuration::CSR, true /* cuda */);
+  add("PosSplitDCSR", gpuPosSplitSched, Configuration::DCSR, true /* cuda */);
 
   ir::CodegenLegionC::compileToDirectory("../legion/spmv/", ir::Block::make(stmts));
   ir::CodegenLegionCuda::compileToDirectory("../legion/spmv/", ir::Block::make(cudaStmts));
