@@ -78,6 +78,133 @@ ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<i
   return ModeFunction(ir::Stmt(), {idx, true});
 }
 
+std::vector<AttrQuery> RectCompressedModeFormat::attrQueries(std::vector<IndexVar> parentCoords,
+                                                             std::vector<IndexVar> childCoords) const {
+  // TODO (rohany): I have no clue what this does.
+  std::vector<IndexVar> groupBy(parentCoords.begin(), parentCoords.end() - 1);
+  std::vector<IndexVar> aggregatedCoords = {parentCoords.back()};
+  if (!isUnique) {
+    aggregatedCoords.insert(aggregatedCoords.end(), childCoords.begin(),
+                            childCoords.end());
+  }
+  return {AttrQuery(groupBy, {AttrQuery::Attr(std::make_tuple("nnz", AttrQuery::COUNT, aggregatedCoords))})};
+}
+
+ir::Expr RectCompressedModeFormat::getAssembledSize(ir::Expr prevSize, Mode mode) const {
+  taco_iassert(this->posDim == 1);
+  auto pack = mode.getModePack();
+  auto posAcc = this->getAccessor(pack, POS);
+  return ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(prevSize, 1)), "hi", false /* deref */, Int64), 1);
+}
+
+ir::Stmt RectCompressedModeFormat::getInitYieldPos(ir::Expr prevSize, Mode mode) const {
+  return ir::Stmt();
+}
+
+ModeFunction RectCompressedModeFormat::getYieldPos(ir::Expr parentPos, std::vector<ir::Expr> coords, Mode mode) const {
+  taco_iassert(this->posDim == 1);
+  auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
+  auto lo = ir::FieldAccess::make(ir::Load::make(posAcc, parentPos), "lo", false /* deref */, Int64);
+  auto pVar = ir::Var::make("p" + mode.getName(), Int());
+  auto getPtr = ir::VarDecl::make(pVar, lo);
+  auto incPtr = ir::Assign::make(lo, ir::Add::make(lo, 1));
+  return ModeFunction(ir::Block::make(getPtr, incPtr), {pVar});
+}
+
+ir::Stmt RectCompressedModeFormat::getFinalizeYieldPos(ir::Expr prevSize, Mode mode) const {
+  taco_iassert(this->posDim == 1);
+  auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
+  auto pVar = ir::Var::make("p", Int());
+  auto currLo = ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(ir::Sub::make(prevSize, pVar), 1)), "lo", false /* deref */, Int64);
+  auto prevLo = ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(ir::Sub::make(prevSize, pVar), 2)), "lo", false /* deref */, Int64);
+  auto resetLoop = ir::For::make(pVar, 0, ir::Sub::make(prevSize, 1), 1, ir::Assign::make(currLo, prevLo));
+  auto zero = ir::FieldAccess::make(ir::Load::make(posAcc, 0), "lo", false /* deref */, Int64);
+  auto setZero = ir::Assign::make(zero, 0);
+  return ir::Block::make(resetLoop, setZero);
+}
+
+ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vector<AttrQueryResult> queries,
+                                                   Mode mode) const {
+  taco_iassert(this->posDim == 1);
+  auto pack = mode.getModePack();
+  auto posAcc = this->getAccessor(pack, POS, ir::RW);
+  auto posArray = this->getRegion(pack, POS);
+  auto posParent = this->getRegion(pack, POS_PARENT);
+  auto allocate = ir::makeLegionMalloc(posArray, prevSize, posParent, fidRect1, ir::readWrite);
+  auto newAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
+  auto setNewAcc = ir::Assign::make(posAcc, newAcc);
+  // Since we are directly allocating the pos array here with a known size,
+  // we can do the subregion cast right here.
+  auto posArrayGP = posArray.as<ir::GetProperty>();
+  auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
+  auto levelLoad = ir::Load::make(field, posArrayGP->mode);
+  auto idxLoad = ir::Load::make(levelLoad, posArrayGP->index);
+  auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, POS_PARENT),
+                                                ir::makeConstructor(Rect(1), {0, ir::Sub::make(prevSize, 1)})}, Auto);
+  auto setSubReg = ir::Assign::make(idxLoad, subreg);
+  return ir::Block::make(allocate, setNewAcc, setSubReg);
+}
+
+ir::Stmt RectCompressedModeFormat::getSeqInsertEdge(ir::Expr parentPos, std::vector<ir::Expr> coords,
+                                                    std::vector<AttrQueryResult> queries, Mode mode) const {
+  taco_iassert(this->posDim == 1);
+
+  // We will emit:
+  // if (parentPos == 0) {
+  //   acc[0] = Rect<1>(0, nnz[0] - 1);
+  // } else {
+  //   auto prior = acc[parentPos - 1].hi + 1;
+  //   acc[parentPos] = Rect<1>(prior, prior + nnz[parentPos] - 1);
+  // }
+
+  // Case parentPos == 0.
+  auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
+  auto nnz = queries[0].getResult(coords, "nnz");
+  auto setZeroCase = ir::Store::make(posAcc, parentPos, ir::makeConstructor(Rect(1), {0, ir::Sub::make(nnz, 1)}));
+
+  // Case otherwise.
+  auto prevPos = ir::Sub::make(parentPos, 1);
+  auto priorVar = ir::Var::make(mode.getName() + "_pos_prior", Int64);
+  auto prior = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, prevPos), "hi", false /* deref */, Int64), 1);
+  auto setPrior = ir::VarDecl::make(priorVar, prior);
+  auto setPos = ir::Store::make(posAcc, parentPos, ir::makeConstructor(Rect(1), {priorVar, ir::Sub::make(ir::Add::make(priorVar, nnz), 1)}));
+
+  auto cond = ir::Eq::make(parentPos, 0);
+
+  return ir::IfThenElse::make(cond, ir::Block::make(setZeroCase), ir::Block::make(setPrior, setPos));
+}
+
+ir::Stmt RectCompressedModeFormat::getInitCoords(ir::Expr prevSize, std::vector<AttrQueryResult> queries,
+                                                 Mode mode) const {
+  taco_iassert(this->posDim == 1);
+  auto pack = mode.getModePack();
+  auto posAcc = this->getAccessor(pack, POS, ir::RW);
+  auto size = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(prevSize, 1)), "hi", false /* deref */, Int64), 1);
+  auto crdArray = this->getRegion(pack, CRD);
+  auto crdParent = this->getRegion(pack, CRD_PARENT);
+  auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
+  auto newCrdAcc = ir::makeCreateAccessor(crdAcc, crdArray, fidCoord);
+  auto alloc = ir::makeLegionMalloc(crdArray, size, crdParent, fidCoord, ir::readWrite);
+  // Since we are directly allocating the crd array here with a known size,
+  // we can do the subregion cast right here.
+  auto crdArrayGP = crdArray.as<ir::GetProperty>();
+  auto field = ir::FieldAccess::make(mode.getTensorExpr(), "indices", true /* isDeref*/, Auto);
+  auto levelLoad = ir::Load::make(field, crdArrayGP->mode);
+  auto idxLoad = ir::Load::make(levelLoad, crdArrayGP->index);
+  auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, CRD_PARENT),
+                                                ir::makeConstructor(Rect(1), {0, ir::Sub::make(size, 1)})}, Auto);
+  auto setSubReg = ir::Assign::make(idxLoad, subreg);
+  return ir::Block::make(alloc, ir::Assign::make(crdAcc, newCrdAcc), setSubReg);
+}
+
+ir::Stmt RectCompressedModeFormat::getInsertCoord(ir::Expr parentPos, ir::Expr pos, std::vector<ir::Expr> coords,
+                                                  Mode mode) const {
+  taco_iassert(mode.getPackLocation() == 0);
+  auto pack = mode.getModePack();
+  auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
+  auto stride = (int)pack.getNumModes();
+  return ir::Store::make(crdAcc, ir::Mul::make(pos, stride), coords.back());
+}
 
 std::vector<ir::Expr> RectCompressedModeFormat::getArrays(ir::Expr tensor, int mode, int level) const {
   std::string arraysName = util::toString(tensor) + std::to_string(level);

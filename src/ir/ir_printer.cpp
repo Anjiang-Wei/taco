@@ -553,7 +553,10 @@ void IRPrinter::visit(const VarDecl* op) {
   stream << keywordString(util::toString(op->var.type()));
   taco_iassert(isa<Var>(op->var));
   if (to<Var>(op->var)->is_ptr) {
-    stream << "* restrict";
+    // TODO (rohany): Stop emitting restrict keywords for allocated
+    //  arrays as this is not valid C++.
+    stream << "*";
+    // stream << "* restrict";
   }
   stream << " ";
   string varName = varNameGenerator.getUniqueName(util::toString(op->var));

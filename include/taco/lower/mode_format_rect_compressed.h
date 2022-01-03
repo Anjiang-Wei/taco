@@ -29,6 +29,30 @@ public:
 
   ModeFormat copy(std::vector<ModeFormat::Property> properties) const override;
 
+  // Implementing attrQueries allows us to use the Assemble infrastructure.
+  std::vector<AttrQuery>
+  attrQueries(std::vector<IndexVar> parentCoords,
+              std::vector<IndexVar> childCoords) const override;
+  ir::Expr getAssembledSize(ir::Expr prevSize, Mode mode) const override;
+  ir::Stmt getInitYieldPos(ir::Expr prevSize, Mode mode) const override;
+  ModeFunction getYieldPos(ir::Expr parentPos, std::vector<ir::Expr> coords,
+                           Mode mode) const override;
+  ir::Stmt getSeqInitEdges(ir::Expr prevSize,
+                           std::vector<AttrQueryResult> queries,
+                           Mode mode) const override;
+  ir::Stmt getSeqInsertEdge(ir::Expr parentPos,
+                            std::vector<ir::Expr> coords,
+                            std::vector<AttrQueryResult> queries,
+                            Mode mode) const override;
+  ir::Stmt getInitCoords(ir::Expr prevSize,
+                         std::vector<AttrQueryResult> queries,
+                         Mode mode) const override;
+  ir::Stmt getInsertCoord(ir::Expr parentPos, ir::Expr pos,
+                          std::vector<ir::Expr> coords,
+                          Mode mode) const override;
+  ir::Stmt getFinalizeYieldPos(ir::Expr prevSize, Mode mode) const override;
+  // End functions related to Assemble infrastructure.
+
   // Similarly to the compressed level, this format supports position iterate.
   ModeFunction posIterBounds(std::vector<ir::Expr> parentPos, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const override;
