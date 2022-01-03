@@ -3463,6 +3463,8 @@ bool preservesNonZeroStructure(IndexStmt stmt, NonZeroAnalyzerResult& res) {
     resultAccess = std::make_unique<Access>(node->lhs);
   }), std::function<void(const WhereNode*, Matcher*)>([&](const WhereNode* node, Matcher* m) {
     m->match(node->consumer);
+  }), std::function<void(const AssembleNode*, Matcher*)>([&](const AssembleNode* node, Matcher* m) {
+    m->match(node->compute);
   }));
 
   // Some expressions don't have assignments, and thus won't have an RHS to consider.

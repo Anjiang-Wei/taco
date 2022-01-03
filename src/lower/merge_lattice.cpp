@@ -45,7 +45,7 @@ public:
       vector<IndexVar> underivedVars = provGraph.getUnderivedAncestors(indexVar);
       if (underivedVars.size() != 1) {
         // this is a temporary accessed by scheduled var
-        Iterator levelIterator = iterators.levelIterator(ModeAccess(access, 1));
+        Iterator levelIterator = iterators.getLevelIteratorByModeAccess(ModeAccess(access, 1));
         return levelIterator;
       }
       accessUnderivedAncestorsToLoc[underivedVars[0]] = locCounter++;
@@ -61,7 +61,7 @@ public:
     }
 
     taco_iassert(loc != -1);
-    Iterator levelIterator = iterators.levelIterator(ModeAccess(access, loc));
+    Iterator levelIterator = iterators.getLevelIteratorByModeAccess(ModeAccess(access, loc));
     return levelIterator;
   }
 

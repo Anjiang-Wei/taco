@@ -288,13 +288,20 @@ public:
    * Retrieve the coordinate hierarchy level iterator corresponding to the
    * given mode access.
    */
-  Iterator levelIterator(ModeAccess) const;
+  Iterator getLevelIteratorByModeAccess(ModeAccess) const;
 
   /**
-   * Retrieve a level iterator corresponding to the given TensorVar. This method
-   * only works when each TensorVar appears once in an IndexStmt.
+   * Retrieve a level iterator corresponding to the given TensorVar and a tensor
+   * mode (0 indexed). This method only works when each TensorVar appears once
+   * in an IndexStmt.
    */
-  Iterator levelIterator(TensorVar& tv, int level) const;
+  Iterator getLevelIteratorByMode(const TensorVar& tv, int mode) const;
+
+  /**
+   * Retrieve a level iterator corresponding to the given TensorVar and
+   * level in the tensor (level is 0 indexed).
+   */
+  Iterator getLevelIteratorByLevel(const TensorVar& tv, int level) const;
 
   std::map<ModeAccess,Iterator> levelIterators() const;
 

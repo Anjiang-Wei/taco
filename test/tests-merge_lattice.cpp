@@ -103,7 +103,7 @@ static Iterators iterators = Iterators(dummy, tensorVars);
 
 static Iterator it(Access access)
 {
-  return iterators.levelIterator(ModeAccess(access,1));
+  return iterators.getLevelIteratorByModeAccess(ModeAccess(access,1));
 }
 
 struct Test {
@@ -599,8 +599,8 @@ TEST(merge_lattice, split) {
   Iterators iters = Iterators(stmt, tensorVars);
   ProvenanceGraph provGraph = ProvenanceGraph(stmt);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator d1it = iters.levelIterator(ModeAccess(d1,1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator d1it = iters.getLevelIteratorByModeAccess(ModeAccess(d1,1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
 
   taco::MergeLattice expected = MergeLattice({MergePoint({i1},
                                                          {},
@@ -626,8 +626,8 @@ TEST(merge_lattice, split_sparse) {
   Forall f = to<Forall>(suchThat.getStmt());
   Iterators iters = Iterators(stmt, tensorVars);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator s1it = iters.levelIterator(ModeAccess(s1,1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator s1it = iters.getLevelIteratorByModeAccess(ModeAccess(s1,1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
 
   taco::MergeLattice expected = MergeLattice({MergePoint({i1},
                                                          {},
@@ -652,8 +652,8 @@ TEST(merge_lattice, dense_tile) {
   Iterators iters = Iterators(stmt, tensorVars);
   ProvenanceGraph provGraph = ProvenanceGraph(stmt);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator d1it = iters.levelIterator(ModeAccess(d1,1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator d1it = iters.getLevelIteratorByModeAccess(ModeAccess(d1,1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
 
   taco::MergeLattice expected = MergeLattice({MergePoint({i2},
                                                          {},
@@ -680,8 +680,8 @@ TEST(merge_lattice, pos) {
   Forall f = to<Forall>(suchThat.getStmt());
   Iterators iters = Iterators(stmt, tensorVars);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator s1it = iters.levelIterator(ModeAccess(s1,1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator s1it = iters.getLevelIteratorByModeAccess(ModeAccess(s1,1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
 
   Iterator iposit = Iterator(ipos, s1it.getTensor(), s1it.getMode(), s1it.getParent(), ipos.getName(), true);
 
@@ -705,9 +705,9 @@ TEST(merge_lattice, pos_mul_sparse) {
   Forall f = to<Forall>(suchThat.getStmt());
   Iterators iters = Iterators(stmt, tensorVars);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator s1it = iters.levelIterator(ModeAccess(s1,1));
-  Iterator s2it = iters.levelIterator(ModeAccess(s2, 1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator s1it = iters.getLevelIteratorByModeAccess(ModeAccess(s1,1));
+  Iterator s2it = iters.getLevelIteratorByModeAccess(ModeAccess(s2, 1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
 
   Iterator iposit = Iterator(ipos, s1it.getTensor(), s1it.getMode(), s1it.getParent(), ipos.getName(), true);
 
@@ -731,8 +731,8 @@ TEST(merge_lattice, split_pos_sparse) {
   Forall f = to<Forall>(suchThat.getStmt());
   Iterators iters = Iterators(stmt, tensorVars);
   taco::MergeLattice lattice = taco::MergeLattice::make(f, iters, provGraph, {f.getIndexVar()});
-  Iterator s1it = iters.levelIterator(ModeAccess(s1,1));
-  Iterator rdit = iters.levelIterator(ModeAccess(rd,1));
+  Iterator s1it = iters.getLevelIteratorByModeAccess(ModeAccess(s1,1));
+  Iterator rdit = iters.getLevelIteratorByModeAccess(ModeAccess(rd,1));
   Iterator iposit = Iterator(ipos, s1it.getTensor(), s1it.getMode(), s1it.getParent(), ipos.getName(), true);
   taco::MergeLattice expected = MergeLattice({MergePoint({i1},
                                                          {},

@@ -16,13 +16,14 @@ Realm::Logger logApp("app");
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   bool roundTrip = false, dump = false;
-  std::string outputFormat, cooFile, outputFile;
+  std::string outputFormat, cooFile, outputFile, outputModeOrdering;
   Realm::CommandLineParser parser;
   parser.add_option_string("-coofile", cooFile);
   parser.add_option_string("-format", outputFormat);
   parser.add_option_string("-o", outputFile);
   parser.add_option_bool("-roundTrip", roundTrip);
   parser.add_option_bool("-dump", dump);
+  parser.add_option_string("-mode_ordering", outputModeOrdering);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!cooFile.empty()) << "provide a file with -coofile";
@@ -58,6 +59,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   typedef void (*ConvFunc)(Context, Runtime*, LegionTensor*, LegionTensor*);
   std::map<std::string, ConvFunc> converters = {
       {"ds", packLegionCOOToCSR},
+      {"ds10", packLegionCOOToCSC},
       {"ss", packLegionCOOToDCSR},
       {"sd", packLegionCOOToSD},
       {"sss", packLegionCOOToSSS},
@@ -65,7 +67,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
       {"dds", packLegionCOOToDDS},
       {"sds", packLegionCOOToSDS},
   };
-  auto it = converters.find(outputFormat);
+  auto it = converters.find(outputFormat + outputModeOrdering);
   if (it == converters.end()) {
     taco_uassert(false) << "unsupported output format kind";
   }
