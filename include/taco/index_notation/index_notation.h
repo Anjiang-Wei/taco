@@ -643,6 +643,7 @@ public:
   IndexStmt distribute(std::vector<IndexVar> original, std::vector<IndexVar> outerVars, std::vector<IndexVar> innerVars, std::vector<Access> onto, ParallelUnit parUnit = ParallelUnit::DistributedNode);
 
   IndexStmt communicate(Access a, IndexVar i);
+  IndexStmt communicate(std::vector<Access> a, IndexVar i);
 
   IndexStmt stagger(IndexVar target, std::vector<IndexVar> staggerBy, IndexVar result);
 

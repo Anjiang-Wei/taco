@@ -34,14 +34,17 @@ enum Configuration {
   CSR_ROW_SPLIT,
   CSR_POS_SPLIT,
   DCSR_POS_SPLIT,
+  CSC_SPC,
 };
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  std::string csrFileName, dcsrFileName;
+  std::string csrFileName, dcsrFileName, cscFileName, spxFile;
   bool dump = false, pos = false;
   int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
+  parser.add_option_string("-csc", cscFileName);
+  parser.add_option_string("-spx", spxFile);
   parser.add_option_string("-dcsr", dcsrFileName);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
@@ -50,7 +53,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_bool("-pos", pos);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
-  taco_uassert(!csrFileName.empty() || !dcsrFileName.empty()) << "Provide a matrix with -csr or -dcsr";
+  taco_uassert(!csrFileName.empty() || !dcsrFileName.empty() || !cscFileName.empty()) << "Provide a matrix with -csr, -dcsr or -csc.";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -63,33 +66,43 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     conf = CSR_ROW_SPLIT;
   } else if (!csrFileName.empty() && pos) {
     conf = CSR_POS_SPLIT;
-  } else {
-    taco_iassert(!dcsrFileName.empty() && pos);
+  } else if (!dcsrFileName.empty()) {
+    taco_iassert(pos) << "Must use pos split with DCSR matrix";
     conf = DCSR_POS_SPLIT;
+  } else {
+    taco_iassert(!cscFileName.empty());
+    taco_iassert(!spxFile.empty()) << "Must provide sparse X vector file with CSC configuration.";
+    conf = CSC_SPC;
   }
 
   LegionTensor A; ExternalHDF5LegionTensor Aex;
   if (conf == CSR_POS_SPLIT || conf == CSR_ROW_SPLIT) {
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
-  } else {
-    taco_iassert(conf == DCSR_POS_SPLIT);
+  } else if (conf == DCSR_POS_SPLIT) {
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, dcsrFileName, {Sparse, Sparse});
-    taco_uassert(pos) << "position split schedule must be used for DCSR format.";
+  } else {
+    taco_iassert(conf == CSC_SPC);
+    std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, cscFileName, {Dense, Sparse});
   }
 
-  auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
-  auto x = createDenseTensor<1, valType>(ctx, runtime, {A.dims[1]}, FID_VAL);
-  runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0));
-
-  // Initialize x.
   auto eqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
   auto eqPartDomain = runtime->get_index_space_domain(eqPartIspace);
-  auto xEqPart = runtime->create_equal_partition(ctx, x.vals.get_index_space(), eqPartIspace);
-  auto xEqLPart = runtime->get_logical_partition(ctx, x.vals, xEqPart);
-  {
-    IndexTaskLauncher launcher(TID_INIT_X, eqPartDomain, TaskArgument(), ArgumentMap());
-    launcher.add_region_requirement(RegionRequirement(xEqLPart, 0, WRITE_ONLY, EXCLUSIVE, x.valsParent).add_field(FID_VAL));
-    runtime->execute_index_space(ctx, launcher);
+  auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
+  runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0));
+
+  LegionTensor x; ExternalHDF5LegionTensor xEx;
+  if (conf == CSC_SPC) {
+    std::tie(x, xEx) = loadLegionTensorFromHDF5File(ctx, runtime, spxFile, {Sparse});
+  } else {
+    x = createDenseTensor<1, valType>(ctx, runtime, {A.dims[1]}, FID_VAL);
+    // Initialize x.
+    auto xEqPart = runtime->create_equal_partition(ctx, x.vals.get_index_space(), eqPartIspace);
+    auto xEqLPart = runtime->get_logical_partition(ctx, x.vals, xEqPart);
+    {
+      IndexTaskLauncher launcher(TID_INIT_X, eqPartDomain, TaskArgument(), ArgumentMap());
+      launcher.add_region_requirement(RegionRequirement(xEqLPart, 0, WRITE_ONLY, EXCLUSIVE, x.valsParent).add_field(FID_VAL));
+      runtime->execute_index_space(ctx, launcher);
+    }
   }
 
   // Create a partition of y for forcing reductions.
@@ -100,6 +113,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   partitionPackForcomputeLegionPosSplit posPack;
   partitionPackForcomputeLegionRowSplit rowPack;
   partitionPackForcomputeLegionPosSplitDCSR posDCSRPack;
+  partitionPackForcomputeLegionCSCMSpV cscPack;
   switch (conf) {
     case CSR_ROW_SPLIT:
       rowPack = partitionForcomputeLegionRowSplit(ctx, runtime, &y, &A, &x, pieces); break;
@@ -107,6 +121,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
       posPack = partitionForcomputeLegionPosSplit(ctx, runtime, &y, &A, &x, pieces); break;
     case DCSR_POS_SPLIT:
       posDCSRPack = partitionForcomputeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, pieces); break;
+    case CSC_SPC:
+      cscPack = partitionForcomputeLegionCSCMSpV(ctx, runtime, &y, &A, &x, pieces); break;
   }
 
   // Benchmark the computation.
@@ -121,6 +137,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
         break;
       case DCSR_POS_SPLIT:
         computeLegionPosSplitDCSR(ctx, runtime, &y, &A, &x, &posDCSRPack, pieces);
+        launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
+        break;
+      case CSC_SPC:
+        computeLegionCSCMSpV(ctx, runtime, &y, &A, &x, &cscPack, pieces);
         launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
         break;
     }

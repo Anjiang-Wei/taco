@@ -524,6 +524,8 @@ private:
 
   /// Map from tensor variables in index notation to variables in the IR
   std::map<TensorVar, ir::Expr> tensorVars;
+  /// A backwards map from tensor IR variables to TensorVars.
+  std::map<ir::Expr, TensorVar> exprToTensorVar;
   std::map<TensorVar, ir::Expr> scalars;
 
   // Set of tensors that will be written to.

@@ -29,6 +29,10 @@ struct task_3Args {
   int32_t pieces;
 };
 
+struct task_4Args {
+  int32_t pieces;
+};
+
 
 partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
@@ -602,6 +606,156 @@ void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, Le
   runtime->execute_index_space(ctx, launcher);
 
 }
+
+partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+  RegionWrapper c1_pos = c->indices[0][0];
+  RegionWrapper c1_crd = c->indices[0][1];
+  auto c1_pos_parent = c->indicesParents[0][0];
+  RegionWrapper c_vals = c->vals;
+  auto c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+
+  c1_pos = legionMalloc(
+    ctx,
+    runtime,
+    c1_pos,
+    c1_pos_parent,
+    FID_RECT_1,
+    READ_ONLY
+  );
+  c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+
+
+  Point<1> lowerBound = Point<1>(0);
+  Point<1> upperBound = Point<1>((pieces - 1));
+  auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
+  DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
+  DomainT<1> c1_crd_domain = runtime->get_index_space_domain(ctx, c1_crd.get_index_space());
+  DomainPointColoring c1_crd_coloring = DomainPointColoring();
+  for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
+    int32_t jposo = (*itr)[0];
+    Point<1> c1CrdStart = Point<1>((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo));
+    Point<1> c1CrdEnd = Point<1>(TACO_MIN(((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces - 1)) + c1_pos_accessor[Point<1>(0)].lo),c1_crd_domain.bounds.hi[0]));
+    Rect<1> c1CrdRect = Rect<1>(c1CrdStart, c1CrdEnd);
+    if (!c1_crd_domain.contains(c1CrdRect.lo) || !c1_crd_domain.contains(c1CrdRect.hi)) {
+      c1CrdRect = c1CrdRect.make_empty();
+    }
+    c1_crd_coloring[(*itr)] = c1CrdRect;
+  }
+  IndexPartition c1_crd_index_part = runtime->create_index_partition(ctx, c1_crd.get_index_space(), domain, c1_crd_coloring, LEGION_COMPUTE_KIND);
+  LogicalPartition c1_crd_part = runtime->get_logical_partition(ctx, c1_crd, c1_crd_index_part);
+  IndexPartition posSparsePartc1 = runtime->create_partition_by_preimage_range(
+    ctx,
+    c1_crd_index_part,
+    c1_pos,
+    c1_pos_parent,
+    FID_RECT_1,
+    runtime->get_index_partition_color_space_name(ctx, c1_crd_index_part)
+  );
+  IndexPartition posIndexPartc1 = densifyPartition(ctx, runtime, get_index_space(c1_pos), posSparsePartc1);
+  LogicalPartition posPartc1 = runtime->get_logical_partition(ctx, c1_pos, posIndexPartc1);
+  LogicalPartition cValsLogicalPart = copyPartition(ctx, runtime, c1_crd_part, c_vals);
+  auto computePartitions = partitionPackForcomputeLegionCSCMSpV();
+  computePartitions.cPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
+  computePartitions.cPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
+  computePartitions.cPartition.indicesPartitions[0].push_back(posPartc1);
+  computePartitions.cPartition.indicesPartitions[0].push_back(c1_crd_part);
+  computePartitions.cPartition.valsPartition = cValsLogicalPart;
+
+  runtime->unmap_region(ctx, c1_pos);
+
+  return computePartitions;
+}
+
+__global__
+void task_4DeviceKernel0(AccessorRORect_1_1 c1_pos_accessor, AccessorROint32_t1 c1_crd_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t pieces, int32_t jposo) {
+
+  int32_t block = blockIdx.x;
+  int32_t thread = (threadIdx.x % (512));
+  if (threadIdx.x >= 512) {
+    return;
+  }
+
+  int64_t pointID2 = jposo * (((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces + 511) / 512) + block;
+  int32_t jposi = block * 512 + thread;
+  int32_t jposc = (jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi) + c1_pos_accessor[Point<1>(0)].lo;
+  if (jposc >= (jposo + 1) * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo)
+    return;
+
+  if (jposc < c1_pos_accessor[Point<1>(0)].lo || jposc >= c1_pos_accessor[Point<1>(0)].hi + 1)
+    return;
+
+  int32_t j = c1_crd_accessor[jposc];
+  for (int32_t iB = B2_pos_accessor[Point<1>(j)].lo; iB < (B2_pos_accessor[Point<1>(j)].hi + 1); iB++) {
+    int32_t i = B2_crd_accessor[iB];
+    atomicAddWarp(a_vals_red_accessor_non_excl.ptr(Point<1>(i)), flattenPoint(a_vals_red_accessor_non_excl, Point<1>(i)), (B_vals_ro_accessor[Point<1>(iB)] * c_vals_ro_accessor[Point<1>(jposc)]));
+  }
+}
+
+void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  PhysicalRegion a_vals = regions[0];
+  LogicalRegion a_vals_parent = regions[0].get_logical_region();
+  PhysicalRegion B2_pos = regions[1];
+  LogicalRegion B2_pos_parent = regions[1].get_logical_region();
+  PhysicalRegion B2_crd = regions[2];
+  LogicalRegion B2_crd_parent = regions[2].get_logical_region();
+  PhysicalRegion B_vals = regions[3];
+  LogicalRegion B_vals_parent = regions[3].get_logical_region();
+  PhysicalRegion c1_pos = regions[4];
+  LogicalRegion c1_pos_parent = regions[4].get_logical_region();
+  PhysicalRegion c1_crd = regions[5];
+  LogicalRegion c1_crd_parent = regions[5].get_logical_region();
+  PhysicalRegion c_vals = regions[6];
+  LogicalRegion c_vals_parent = regions[6].get_logical_region();
+
+  int32_t jposo = task->index_point[0];
+  task_4Args* args = (task_4Args*)(task->args);
+  int32_t pieces = args->pieces;
+
+  auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
+  auto a_vals_red_accessor_non_excl = createAccessor<AccessorReduceNonExcldouble1>(a_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+  auto c1_crd_accessor = createAccessor<AccessorROint32_t1>(c1_crd, FID_COORD);
+  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
+  auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
+
+  if (((((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces + 511) / 512)) > 0) {
+    task_4DeviceKernel0<<<(((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces + 511) / 512), 512>>>(c1_pos_accessor, c1_crd_accessor, B2_pos_accessor, B2_crd_accessor, a_vals_red_accessor_non_excl, B_vals_ro_accessor, c_vals_ro_accessor, pieces, jposo);
+  }
+}
+
+void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionCSCMSpV* partitionPack, int32_t pieces) {
+  RegionWrapper a_vals = a->vals;
+  auto a_vals_parent = a->valsParent;
+  RegionWrapper B2_pos = B->indices[1][0];
+  RegionWrapper B2_crd = B->indices[1][1];
+  auto B2_pos_parent = B->indicesParents[1][0];
+  auto B2_crd_parent = B->indicesParents[1][1];
+  RegionWrapper B_vals = B->vals;
+  auto B_vals_parent = B->valsParent;
+  auto c1_pos_parent = c->indicesParents[0][0];
+  auto c1_crd_parent = c->indicesParents[0][1];
+  auto c_vals_parent = c->valsParent;
+
+
+  Point<1> lowerBound = Point<1>(0);
+  Point<1> upperBound = Point<1>((pieces - 1));
+  auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
+  DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
+  task_4Args taskArgsRaw;
+  taskArgsRaw.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_4Args));
+  IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_pos), READ_ONLY, EXCLUSIVE, B2_pos_parent).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_crd), READ_ONLY, EXCLUSIVE, B2_crd_parent).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B_vals), READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_pos_parent)).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_crd_parent)).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  runtime->execute_index_space(ctx, launcher);
+
+}
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
@@ -620,5 +774,11 @@ void registerTacoTasks() {
     registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_3>(registrar, "task_3");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(4), "task_4");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<task_4>(registrar, "task_4");
   }
 }

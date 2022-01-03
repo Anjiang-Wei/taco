@@ -41,6 +41,12 @@ struct task_4Args {
   int32_t pieces;
 };
 
+struct task_5Args {
+  int32_t B2_dimension;
+  int32_t a1_dimension;
+  int32_t pieces;
+};
+
 
 partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
   RegionWrapper a_vals = a->vals;
@@ -529,15 +535,8 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
   RegionWrapper B1_pos = B->indices[0][0];
   RegionWrapper B1_crd = B->indices[0][1];
   auto B1_pos_parent = B->indicesParents[0][0];
-  auto B1_crd_parent = B->indicesParents[0][1];
   RegionWrapper B_vals = B->vals;
-  auto B_vals_parent = B->valsParent;
-  auto B_vals_ro_accessor = createAccessor<AccessorROdouble2>(B_vals, FID_VAL);
   auto B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
-  auto B1_crd_accessor = createAccessor<AccessorROint32_t1>(B1_crd, FID_COORD);
-  RegionWrapper c_vals = c->vals;
-  auto c_vals_parent = c->valsParent;
-  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
 
   B1_pos = legionMalloc(
     ctx,
@@ -548,33 +547,6 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
     READ_ONLY
   );
   B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
-  B1_crd = legionMalloc(
-    ctx,
-    runtime,
-    B1_crd,
-    B1_crd_parent,
-    FID_COORD,
-    READ_ONLY
-  );
-  B1_crd_accessor = createAccessor<AccessorROint32_t1>(B1_crd, FID_COORD);
-  B_vals = legionMalloc(
-    ctx,
-    runtime,
-    B_vals,
-    B_vals_parent,
-    FID_VAL,
-    READ_ONLY
-  );
-  B_vals_ro_accessor = createAccessor<AccessorROdouble2>(B_vals, FID_VAL);
-  c_vals = legionMalloc(
-    ctx,
-    runtime,
-    c_vals,
-    c_vals_parent,
-    FID_VAL,
-    READ_ONLY
-  );
-  c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
 
   int64_t B1Size = runtime->get_index_space_domain(ctx, get_index_space(B1_crd)).hi()[0] + 1;
 
@@ -614,10 +586,7 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
   computePartitions.BPartition.indicesPartitions[0].push_back(B1_crd_part);
   computePartitions.BPartition.valsPartition = BValsLogicalPart;
 
-  runtime->unmap_region(ctx, B1_crd);
   runtime->unmap_region(ctx, B1_pos);
-  runtime->unmap_region(ctx, B_vals);
-  runtime->unmap_region(ctx, c_vals);
 
   return computePartitions;
 }
@@ -702,6 +671,159 @@ void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime
   runtime->execute_index_space(ctx, launcher);
 
 }
+
+partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+  RegionWrapper B2_crd = B->indices[1][1];
+  RegionWrapper c1_pos = c->indices[0][0];
+  RegionWrapper c1_crd = c->indices[0][1];
+  auto c1_pos_parent = c->indicesParents[0][0];
+  RegionWrapper c_vals = c->vals;
+  auto c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+
+  c1_pos = legionMalloc(
+    ctx,
+    runtime,
+    c1_pos,
+    c1_pos_parent,
+    FID_RECT_1,
+    READ_ONLY
+  );
+  c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+
+  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
+  int64_t c1Size = runtime->get_index_space_domain(ctx, get_index_space(c1_crd)).hi()[0] + 1;
+
+  Point<1> lowerBound = Point<1>(0);
+  Point<1> upperBound = Point<1>((pieces - 1));
+  auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
+  DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
+  DomainT<1> c1_crd_domain = runtime->get_index_space_domain(ctx, c1_crd.get_index_space());
+  DomainPointColoring c1_crd_coloring = DomainPointColoring();
+  for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
+    int32_t jposo = (*itr)[0];
+    Point<1> c1CrdStart = Point<1>((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo));
+    Point<1> c1CrdEnd = Point<1>(TACO_MIN(((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces - 1)) + c1_pos_accessor[Point<1>(0)].lo), c1_crd_domain.bounds.hi[0]));
+    Rect<1> c1CrdRect = Rect<1>(c1CrdStart, c1CrdEnd);
+    if (!c1_crd_domain.contains(c1CrdRect.lo) || !c1_crd_domain.contains(c1CrdRect.hi)) {
+      c1CrdRect = c1CrdRect.make_empty();
+    }
+    c1_crd_coloring[(*itr)] = c1CrdRect;
+  }
+  IndexPartition c1_crd_index_part = runtime->create_index_partition(ctx, c1_crd.get_index_space(), domain, c1_crd_coloring, LEGION_COMPUTE_KIND);
+  LogicalPartition c1_crd_part = runtime->get_logical_partition(ctx, c1_crd, c1_crd_index_part);
+  IndexPartition posSparsePartc1 = runtime->create_partition_by_preimage_range(
+    ctx,
+    c1_crd_index_part,
+    c1_pos,
+    c1_pos_parent,
+    FID_RECT_1,
+    runtime->get_index_partition_color_space_name(ctx, c1_crd_index_part)
+  );
+  IndexPartition posIndexPartc1 = densifyPartition(ctx, runtime, get_index_space(c1_pos), posSparsePartc1);
+  LogicalPartition posPartc1 = runtime->get_logical_partition(ctx, c1_pos, posIndexPartc1);
+  LogicalPartition cValsLogicalPart = copyPartition(ctx, runtime, c1_crd_part, c_vals);
+  auto computePartitions = partitionPackForcomputeLegionCSCMSpV();
+  computePartitions.cPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
+  computePartitions.cPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
+  computePartitions.cPartition.indicesPartitions[0].push_back(posPartc1);
+  computePartitions.cPartition.indicesPartitions[0].push_back(c1_crd_part);
+  computePartitions.cPartition.valsPartition = cValsLogicalPart;
+
+  runtime->unmap_region(ctx, c1_pos);
+
+  return computePartitions;
+}
+
+void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  PhysicalRegion a_vals = regions[0];
+  LogicalRegion a_vals_parent = regions[0].get_logical_region();
+  PhysicalRegion B2_pos = regions[1];
+  LogicalRegion B2_pos_parent = regions[1].get_logical_region();
+  PhysicalRegion B2_crd = regions[2];
+  LogicalRegion B2_crd_parent = regions[2].get_logical_region();
+  PhysicalRegion B_vals = regions[3];
+  LogicalRegion B_vals_parent = regions[3].get_logical_region();
+  PhysicalRegion c1_pos = regions[4];
+  LogicalRegion c1_pos_parent = regions[4].get_logical_region();
+  PhysicalRegion c1_crd = regions[5];
+  LogicalRegion c1_crd_parent = regions[5].get_logical_region();
+  PhysicalRegion c_vals = regions[6];
+  LogicalRegion c_vals_parent = regions[6].get_logical_region();
+
+  int32_t jposo = task->index_point[0];
+  task_5Args* args = (task_5Args*)(task->args);
+  int32_t B2_dimension = args->B2_dimension;
+  int32_t a1_dimension = args->a1_dimension;
+  int32_t pieces = args->pieces;
+
+  auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
+  auto a_vals_red_accessor_non_excl = createAccessor<AccessorReduceNonExcldouble1>(a_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
+  auto c1_crd_accessor = createAccessor<AccessorROint32_t1>(c1_crd, FID_COORD);
+  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
+  auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
+
+  int64_t pointID1 = jposo;
+  #pragma omp parallel for schedule(static)
+  for (int32_t jposi = 0; jposi < ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces); jposi++) {
+    int32_t jposc = (jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi) + c1_pos_accessor[Point<1>(0)].lo;
+    if (jposc >= (jposo + 1) * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo)
+      continue;
+
+    if (jposc < c1_pos_accessor[Point<1>(0)].lo || jposc >= c1_pos_accessor[Point<1>(0)].hi + 1)
+      continue;
+
+    int32_t j = c1_crd_accessor[jposc];
+    int64_t pointID2 = pointID1 * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi;
+    int32_t jB = 0 * B2_dimension + j;
+    for (int32_t iB = B2_pos_accessor[Point<1>(j)].lo; iB < (B2_pos_accessor[Point<1>(j)].hi + 1); iB++) {
+      int32_t i = B2_crd_accessor[(iB * 1)];
+      int32_t ia = 0 * a1_dimension + i;
+      a_vals_red_accessor_non_excl[Point<1>(i)] <<= B_vals_ro_accessor[Point<1>(iB)] * c_vals_ro_accessor[Point<1>(jposc)];
+    }
+  }
+}
+
+void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionCSCMSpV* partitionPack, int32_t pieces) {
+  int a1_dimension = a->dims[0];
+  RegionWrapper a_vals = a->vals;
+  auto a_vals_parent = a->valsParent;
+  int B2_dimension = B->dims[1];
+  RegionWrapper B2_pos = B->indices[1][0];
+  RegionWrapper B2_crd = B->indices[1][1];
+  auto B2_pos_parent = B->indicesParents[1][0];
+  auto B2_crd_parent = B->indicesParents[1][1];
+  RegionWrapper B_vals = B->vals;
+  auto B_vals_parent = B->valsParent;
+  RegionWrapper c1_crd = c->indices[0][1];
+  auto c1_pos_parent = c->indicesParents[0][0];
+  auto c1_crd_parent = c->indicesParents[0][1];
+  auto c_vals_parent = c->valsParent;
+
+  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
+  int64_t c1Size = runtime->get_index_space_domain(ctx, get_index_space(c1_crd)).hi()[0] + 1;
+
+  Point<1> lowerBound = Point<1>(0);
+  Point<1> upperBound = Point<1>((pieces - 1));
+  auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
+  DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
+  task_5Args taskArgsRaw;
+  taskArgsRaw.B2_dimension = B2_dimension;
+  taskArgsRaw.a1_dimension = a1_dimension;
+  taskArgsRaw.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_5Args));
+  IndexLauncher launcher = IndexLauncher(taskID(5), domain, taskArgs, ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_pos), READ_ONLY, EXCLUSIVE, B2_pos_parent).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_crd), READ_ONLY, EXCLUSIVE, B2_crd_parent).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(get_logical_region(B_vals), READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_pos_parent)).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_crd_parent)).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  runtime->execute_index_space(ctx, launcher);
+
+}
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
@@ -726,5 +848,11 @@ void registerTacoTasks() {
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_4>(registrar, "task_4");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(5), "task_5");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<task_5>(registrar, "task_5");
   }
 }
