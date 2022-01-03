@@ -143,13 +143,14 @@ std::vector<ModeRegion> LgSingletonModeFormat::getRegions(ir::Expr tensor, int l
   // TODO (rohany): Do the crd arrays need to be int64's?
   auto makeCrdAcc = [&](ir::RegionPrivilege priv) {
     // The CRD array will always have dimensionality = 1.
-    return ir::GetProperty::makeIndicesAccessor(tensor, crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs {
-        .dim = 1,
-        .elemType = Int32,
-        .field = fidCoord,
-        .regionAccessing = crdReg,
-        .priv = priv,
-    });
+    return ir::GetProperty::makeIndicesAccessor(tensor, crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs(
+        1,
+        Int32,
+        fidCoord,
+        crdReg,
+        arrays[CRD_PARENT],
+        priv
+    ));
   };
 
   return {

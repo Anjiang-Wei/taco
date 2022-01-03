@@ -19,5 +19,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
 void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 
 void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
+
+void packLegionCOOToVec(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO);
 void registerTacoTasks();
 #endif // TACO_GENERATED_H

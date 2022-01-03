@@ -1537,12 +1537,14 @@ TEST(distributed, legionSpMV) {
       bFormat = LgFormat({LgSparse, LgSparse});
     } else if (conf == Configuration::SPARSE_DENSE) {
       bFormat = LgFormat({LgSparse, Dense});
+    } else if (conf == Configuration::CSC_SP_C) {
+      bFormat = LgFormat({Dense, LgSparse}, {1, 0});
     } else {
       bFormat = LgFormat({Dense, LgSparse});
     }
     Tensor<double> B("B", {dim, dim}, bFormat);
     Format cFormat;
-    if (conf == Configuration::CSR_SP_C) {
+    if (conf == Configuration::CSR_SP_C || conf == Configuration::CSC_SP_C) {
       cFormat = LgFormat({LgSparse});
     } else {
       cFormat = {Dense};
@@ -1599,10 +1601,21 @@ TEST(distributed, legionSpMV) {
            .communicate(c(j), fposo)
            ;
   }, Configuration::SPARSE_DENSE);
+  IndexVar jpos("jpos"), jposo("jposo"), jposi("jposi");
+  add("CSCMSpV", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
+    return stmt
+           .reorder({j, i})
+           .pos(j, jpos, c(j))
+           .distribute({jpos}, {jposo}, {jposi}, Grid(pieces))
+           .parallelize(jposi, ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+           .communicate({a(i), B(i, j), c(j)}, jposo)
+           ;
+  }, Configuration::CSC_SP_C);
+
   // CUDA schedules. These are set up so that we can use the same main.cpp file.
   const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
   const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
-  IndexVar block("block"), warp("warp"), thread("thread"), thread_nz("thread_nz"), i1("i1"), jpos("jpos"), block_row("block_row"), warp_row("warp_row");
+  IndexVar block("block"), warp("warp"), thread("thread"), thread_nz("thread_nz"), i1("i1"), block_row("block_row"), warp_row("warp_row");
   add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
     return stmt
            .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
@@ -1650,6 +1663,18 @@ TEST(distributed, legionSpMV) {
   };
   add("PosSplit", gpuPosSplitSched, Configuration::CSR, true /* cuda */);
   add("PosSplitDCSR", gpuPosSplitSched, Configuration::DCSR, true /* cuda */);
+  add("CSCMSpV", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
+    return stmt
+        .reorder({j, i})
+        .pos(j, jpos, c(j))
+        .distribute({jpos}, {jposo}, {jposi}, Grid(pieces))
+        .split(jposi, block, thread, 512)
+        .reorder({block, thread, i})
+        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+        .communicate({a(i), B(i, j), c(j)}, jposo)
+        ;
+  }, Configuration::CSC_SP_C, true /* cuda */);
 
   ir::CodegenLegionC::compileToDirectory("../legion/spmv/", ir::Block::make(stmts));
   ir::CodegenLegionCuda::compileToDirectory("../legion/spmv/", ir::Block::make(cudaStmts));
@@ -1836,6 +1861,7 @@ TEST(distributed, legionSpFormatConverterLib) {
   addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
   addConverter(LgFormat({LgSparse, Dense}), "SD");
   addConverter(LgFormat({Dense, LgSparse}, {1, 0}), "CSC", true /* assemble */);
+  addConverter(LgFormat({LgSparse}), "Vec");
   ir::CodegenLegionC::compileToDirectory("../legion/format-converter/", ir::Block::make(converters));
 }
 

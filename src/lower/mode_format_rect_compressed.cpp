@@ -226,23 +226,25 @@ std::vector<ModeRegion> RectCompressedModeFormat::getRegions(ir::Expr tensor, in
   // Set up our accessors too.
   auto makePosAcc = [&](ir::RegionPrivilege priv) {
     // TODO (rohany): Do the entries in the pos and crd arrays need to be int64's?
-    return ir::GetProperty::makeIndicesAccessor(tensor, posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs {
-        .dim = posDim,
-        .elemType = Rect(1),
-        .field = fidRect1,
-        .regionAccessing = posReg,
-        .priv = priv,
-    });
+    return ir::GetProperty::makeIndicesAccessor(tensor, posReg->name, posReg->mode, posReg->index, ir::GetProperty::AccessorArgs(
+        posDim,
+        Rect(1),
+        fidRect1,
+        posReg,
+        arrays[POS_PARENT],
+        priv
+    ));
   };
   auto makeCrdAcc = [&](ir::RegionPrivilege priv) {
     // The CRD array will always have dimensionality = 1.
-    return ir::GetProperty::makeIndicesAccessor(tensor, crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs {
-        .dim = 1,
-        .elemType = Int32,
-        .field = fidCoord,
-        .regionAccessing = crdReg,
-        .priv = priv,
-    });
+    return ir::GetProperty::makeIndicesAccessor(tensor, crdReg->name, crdReg->mode, crdReg->index, ir::GetProperty::AccessorArgs(
+        1,
+        Int32,
+        fidCoord,
+        crdReg,
+        arrays[CRD_PARENT],
+        priv
+    ));
   };
 
   return {

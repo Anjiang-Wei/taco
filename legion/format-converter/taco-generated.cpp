@@ -1375,5 +1375,103 @@ void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   runtime->unmap_region(ctx, TCOO_vals);
   runtime->unmap_region(ctx, T_vals);
 }
+
+void packLegionCOOToVec(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
+  RegionWrapper T1_pos = T->indices[0][0];
+  RegionWrapper T1_crd = T->indices[0][1];
+  auto T1_pos_parent = T->indicesParents[0][0];
+  auto T1_crd_parent = T->indicesParents[0][1];
+  RegionWrapper T_vals = T->vals;
+  auto T_vals_parent = T->valsParent;
+  auto T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
+  auto T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
+  auto T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
+  RegionWrapper TCOO1_pos = TCOO->indices[0][0];
+  RegionWrapper TCOO1_crd = TCOO->indices[0][1];
+  auto TCOO1_pos_parent = TCOO->indicesParents[0][0];
+  auto TCOO1_crd_parent = TCOO->indicesParents[0][1];
+  RegionWrapper TCOO_vals = TCOO->vals;
+  auto TCOO_vals_parent = TCOO->valsParent;
+  auto TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
+  auto TCOO1_pos_accessor = createAccessor<AccessorRORect_1_1>(TCOO1_pos, FID_RECT_1);
+  auto TCOO1_crd_accessor = createAccessor<AccessorROint32_t1>(TCOO1_crd, FID_COORD);
+
+  TCOO1_crd = legionMalloc(
+    ctx,
+    runtime,
+    TCOO1_crd,
+    TCOO1_crd_parent,
+    FID_COORD,
+    READ_ONLY
+  );
+  TCOO1_crd_accessor = createAccessor<AccessorROint32_t1>(TCOO1_crd, FID_COORD);
+  TCOO_vals = legionMalloc(
+    ctx,
+    runtime,
+    TCOO_vals,
+    TCOO_vals_parent,
+    FID_VAL,
+    READ_ONLY
+  );
+  TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
+  TCOO1_pos = legionMalloc(
+    ctx,
+    runtime,
+    TCOO1_pos,
+    TCOO1_pos_parent,
+    FID_RECT_1,
+    READ_ONLY
+  );
+  TCOO1_pos_accessor = createAccessor<AccessorRORect_1_1>(TCOO1_pos, FID_RECT_1);
+
+  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
+  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
+
+  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
+  T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
+  T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
+  T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
+  int32_t T1_crd_size = 1;
+  T1_crd = legionMalloc(ctx, runtime, T1_crd_parent, T1_crd_size, FID_COORD, READ_WRITE);
+  T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
+  int32_t iT = 0;
+  int32_t T_capacity = 1;
+  T_vals = legionMalloc(ctx, runtime, T_vals_parent, T_capacity, FID_VAL, READ_WRITE);
+  T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
+
+  int32_t pT1_begin = iT;
+
+  for (int32_t iTCOO = TCOO1_pos_accessor[Point<1>(0)].lo; iTCOO < (TCOO1_pos_accessor[Point<1>(0)].hi + 1); iTCOO++) {
+    int32_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    if (T_capacity <= iT) {
+      T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
+      T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
+      T_capacity = T_capacity * 2;
+    }
+    T_vals_rw_accessor[Point<1>(iT)] = TCOO_vals_ro_accessor[Point<1>(iTCOO)];
+    if (T1_crd_size <= iT) {
+      T1_crd = legionRealloc(ctx, runtime, T1_crd_parent, T1_crd, T1_crd_size * 2, FID_COORD, READ_WRITE);
+      T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
+      T1_crd_size = T1_crd_size * 2;
+    }
+    T1_crd_accessor[iT * 1] = i;
+    iT = iT + 1;
+  }
+
+  T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
+  T1_pos_accessor[Point<1>(0)].hi = iT - 1;
+
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
+
+  T->vals = getSubRegion(ctx, runtime, T_vals_parent, Rect<1>(0, (iT - 1)));
+
+  runtime->unmap_region(ctx, T1_crd);
+  runtime->unmap_region(ctx, T1_pos);
+  runtime->unmap_region(ctx, TCOO1_crd);
+  runtime->unmap_region(ctx, TCOO1_pos);
+  runtime->unmap_region(ctx, TCOO_vals);
+  runtime->unmap_region(ctx, T_vals);
+}
 void registerTacoTasks() {
 }

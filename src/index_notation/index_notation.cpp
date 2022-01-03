@@ -1634,6 +1634,14 @@ IndexStmt IndexStmt::distribute(std::vector<IndexVar> original, std::vector<Inde
   return transformed;
 }
 
+IndexStmt IndexStmt::communicate(std::vector<Access> accesses, IndexVar i) {
+  auto stmt = *this;
+  for (auto a : accesses) {
+    stmt = stmt.communicate(a, i);
+  }
+  return stmt;
+}
+
 IndexStmt IndexStmt::communicate(Access a, IndexVar i) {
   // TODO (rohany): We should do a bunch of checks here, but I'll omit those for now.
 

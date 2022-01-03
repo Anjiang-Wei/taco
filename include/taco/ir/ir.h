@@ -884,10 +884,16 @@ struct GetProperty : public ExprNode<GetProperty> {
 
   // Struct containing a pack of data used when property == IndicesAccessor.
   struct AccessorArgs {
+    AccessorArgs() {}
+    AccessorArgs(int dim, Datatype elemType, Expr field, Expr regionAccessing,
+                 Expr regionParent, RegionPrivilege priv) :
+                 dim(dim), elemType(elemType), field(field), regionAccessing(regionAccessing),
+                 regionParent(regionParent), priv(priv) {}
     int dim;
     Datatype elemType;
     Expr field;
-    ir::Expr regionAccessing;
+    Expr regionAccessing;
+    Expr regionParent;
     RegionPrivilege priv;
   };
   AccessorArgs accessorArgs;

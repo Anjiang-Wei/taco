@@ -58,6 +58,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   //  probably emit it at the top of the taco generated file?
   typedef void (*ConvFunc)(Context, Runtime*, LegionTensor*, LegionTensor*);
   std::map<std::string, ConvFunc> converters = {
+      {"s", packLegionCOOToVec},
       {"ds", packLegionCOOToCSR},
       {"ds10", packLegionCOOToCSC},
       {"ss", packLegionCOOToDCSR},

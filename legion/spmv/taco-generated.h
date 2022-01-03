@@ -21,6 +21,10 @@ struct partitionPackForcomputeLegionSparseDensePosParallelize {
   LegionTensorPartition BPartition;
 };
 
+struct partitionPackForcomputeLegionCSCMSpV {
+  LegionTensorPartition cPartition;
+};
+
 
 partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
 
@@ -41,5 +45,10 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
 
 
 void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionSparseDensePosParallelize* partitionPack, int32_t pieces);
+
+partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces);
+
+
+void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionCSCMSpV* partitionPack, int32_t pieces);
 void registerTacoTasks();
 #endif // TACO_GENERATED_H

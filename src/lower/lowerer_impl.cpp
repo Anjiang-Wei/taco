@@ -279,6 +279,11 @@ LowererImpl::lower(IndexStmt stmt, string name,
   }
   argumentsIR.insert(argumentsIR.begin(), indexSetArgs.begin(), indexSetArgs.end());
 
+  // Create the backwards map from Expr to TensorVar.
+  for (auto it : this->tensorVars) {
+    this->exprToTensorVar[it.second] = it.first;
+  }
+
   // Figure out whether we are going to generate some GPU code.
   {
     struct GPULoopFinder : public IndexNotationVisitor {
@@ -348,8 +353,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
   // Figure out whether we can preserve the non-zero structure
   // of an input tensor for the result tensor. However, to ensure
   // that we don't break normal TACO usage, we'll only do this
-  // when Legion lowering is enabled.
-  if (this->legion) {
+  // when Legion lowering is enabled. We also don't want to enable
+  // this when we are explicitly assembling an output tensor.
+  if (this->legion && !this->assemble) {
     this->preservesNonZeros = preservesNonZeroStructure(stmt, this->nonZeroAnalyzerResult);
   }
 
@@ -789,56 +795,65 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
   std::vector<ir::Stmt> mallocRhsRegions;
   if (this->legion) {
-    // If we aren't launching any tasks, then we are doing all computation
-    // in the driver function. In this case, we need to actually allocate
-    // all regions on the RHS so that we have physical regions to read from.
-    // We also need to check that the function is actually accessing data
-    // (for example partitioning code only isn't going to use accessors
-    // on the regions).
-    struct TaskFinder : public IRVisitor {
+    // We may need to access some data in a region in the top level
+    // task itself if we aren't launching any tasks. This pass adds
+    // malloc's every region that has an accessor in the body if the
+    // body does not launch any tasks.
+    struct AccessorFinder : public IRVisitor {
       void visit(const For *node) {
         this->hasTasks |= node->isTask;
         node->contents.accept(this);
+        node->start.accept(this);
+        node->end.accept(this);
       }
+
       void visit(const GetProperty* node) {
         switch (node->property) {
           case TensorProperty::ValuesReductionNonExclusiveAccessor:
           case TensorProperty::ValuesReductionAccessor:
           case TensorProperty::ValuesReadAccessor:
           case TensorProperty::ValuesWriteAccessor:
-          case TensorProperty::IndicesAccessor:
-            this->accessesData = true;
+          case TensorProperty::IndicesAccessor: {
+            auto hashable = node->toHashable();
+            if (!util::contains(this->gpSet, hashable)) {
+              this->gpSet.insert(hashable);
+              this->gps.push_back(node);
+            }
+            break;
+          }
           default:
             break;
         }
       }
+
       bool hasTasks = false;
-      bool accessesData = false;
+      std::set<ir::GetProperty::Hashable> gpSet;
+      std::vector<const ir::GetProperty*> gps;
     };
-    TaskFinder taskFinder; body.accept(&taskFinder);
-    if (!taskFinder.hasTasks && taskFinder.accessesData) {
-      // Malloc all RHS regions.
-      for (auto tv : arguments) {
-        for (int level = 0; level < tv.getOrder(); level++) {
-          auto iter = this->iterators.getLevelIteratorByLevel(tv, level);
-          // For each region, directly malloc it and update the accessor. Note that we
-          // call legionMalloc directly so that we get access to the overload the directly
-          // allocates a subregion.
-          for (auto reg : iter.getRegions()) {
-            // Malloc the region.
-            auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, reg.region, reg.regionParent, reg.field, readOnly}, Auto);
-            mallocRhsRegions.push_back(ir::Assign::make(reg.region, alloc));
-            // Update the accessor.
-            mallocRhsRegions.push_back(ir::Assign::make(reg.accessorRO, ir::makeCreateAccessor(reg.accessorRO, reg.region, reg.field)));
-          }
+    AccessorFinder accessorFinder; body.accept(&accessorFinder);
+    if (!accessorFinder.hasTasks && !accessorFinder.gpSet.empty()) {
+      // Malloc all RHS regions that are accessed by an accessor.
+      for (auto acc : accessorFinder.gps) {
+        auto tensorVar = this->exprToTensorVar[acc->tensor];
+        if (!util::contains(arguments, tensorVar)) continue;
+        if (acc->property == TensorProperty::ValuesReadAccessor) {
+          auto tv = acc->tensor;
+          auto values = ir::GetProperty::make(tv, TensorProperty::Values);
+          auto valuesParent = ir::GetProperty::make(tv, TensorProperty::ValuesParent);
+          auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal, readOnly}, Auto);
+          mallocRhsRegions.push_back(ir::Assign::make(values, alloc));
+          mallocRhsRegions.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, values, fidVal)));
+        } else if (acc->property == TensorProperty::IndicesAccessor) {
+          auto region = acc->accessorArgs.regionAccessing;
+          auto regionParent = acc->accessorArgs.regionParent;
+          auto field = acc->accessorArgs.field;
+          auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, region, regionParent, field, readOnly}, Auto);
+          mallocRhsRegions.push_back(ir::Assign::make(region, alloc));
+          // Update the accessor.
+          mallocRhsRegions.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, region, field)));
+        } else {
+          taco_iassert(false);
         }
-        // Do the same thing for the values.
-        auto values = ir::GetProperty::make(getTensorVar(tv), TensorProperty::Values);
-        auto valuesParent = ir::GetProperty::make(getTensorVar(tv), TensorProperty::ValuesParent);
-        auto valuesAcc = this->getValuesArray(tv);
-        auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal, readOnly}, Auto);
-        mallocRhsRegions.push_back(ir::Assign::make(values, alloc));
-        mallocRhsRegions.push_back(ir::Assign::make(valuesAcc, ir::makeCreateAccessor(valuesAcc, values, fidVal)));
       }
     }
   }
@@ -6241,9 +6256,12 @@ std::vector<ir::Expr> LowererImpl::getAllNeededParentPositions(Iterator &iter) {
 ir::Expr LowererImpl::constructAffineProjection(Access &from, Access &to) {
   auto fromDenseRuns = DenseFormatRuns(from, this->iterators);
   auto toDenseRuns = DenseFormatRuns(to, this->iterators);
-  // For now, the target tensor should be all dense (otherwise we wouldn't have
-  // the ability to iterate over the position space).
-  taco_iassert(toDenseRuns.runs.size() == 1 && toDenseRuns.runs[0].modes.size() == size_t(to.getTensorVar().getOrder()));
+
+  // If the target tensor doesn't have any dense runs then we won't be able to
+  // partition it.
+  if (toDenseRuns.runs.empty()) {
+    return Expr();
+  }
   auto toDenseRun = toDenseRuns.runs[0];
 
   // If the `from` tensor doesn't have a top level dense run then

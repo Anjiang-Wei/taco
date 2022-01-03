@@ -628,8 +628,9 @@ Iterators::Iterators(IndexStmt stmt, const map<TensorVar, Expr>& tensorVars)
     auto inputTV = nonZeroResult.inputAccess->getTensorVar();
 
     for (int i = 0; i < resultTV.getOrder(); i++) {
-      auto resultIter = this->content->levelIterators[{*nonZeroResult.resultAccess, i+1}];
-      auto inputIter = this->content->levelIterators[{*nonZeroResult.inputAccess, i+1}];
+      auto mode = resultTV.getFormat().getModeOrdering()[i];
+      auto resultIter = this->content->levelIterators[{*nonZeroResult.resultAccess, mode+1}];
+      auto inputIter = this->content->levelIterators[{*nonZeroResult.inputAccess, mode+1}];
       taco_iassert(resultIter.defined());
       taco_iassert(inputIter.defined());
       resultIter.content->trackingIterator = inputIter;
