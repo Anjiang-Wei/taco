@@ -279,8 +279,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  DomainT<1> BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
-  if (BValsDomain.empty())
+  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
     return ;
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
@@ -444,8 +443,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  DomainT<1> BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
-  if (BValsDomain.empty())
+  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
     return ;
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
@@ -532,9 +530,12 @@ void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, Le
 }
 
 partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+  RegionWrapper a_vals = a->vals;
+  IndexSpace a_dense_run_0 = a->denseLevelRuns[0];
   RegionWrapper B1_pos = B->indices[0][0];
   RegionWrapper B1_crd = B->indices[0][1];
   auto B1_pos_parent = B->indicesParents[0][0];
+  auto B1_crd_parent = B->indicesParents[0][1];
   RegionWrapper B_vals = B->vals;
   auto B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
 
@@ -579,7 +580,13 @@ partitionPackForcomputeLegionSparseDensePosParallelize partitionForcomputeLegion
   IndexPartition posIndexPartB1 = densifyPartition(ctx, runtime, get_index_space(B1_pos), posSparsePartB1);
   LogicalPartition posPartB1 = runtime->get_logical_partition(ctx, B1_pos, posIndexPartB1);
   LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B1_crd_part, B_vals);
+  IndexPartition aDenseRun0Partition = SparseGatherProjection(0).apply(ctx, runtime, B1_crd_parent, B1_crd_part, FID_COORD, a_dense_run_0);
+  auto a_vals_partition = copyPartition(ctx, runtime, aDenseRun0Partition, get_logical_region(a_vals));
   auto computePartitions = partitionPackForcomputeLegionSparseDensePosParallelize();
+  computePartitions.aPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
+  computePartitions.aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
+  computePartitions.aPartition.valsPartition = a_vals_partition;
+  computePartitions.aPartition.denseLevelRunPartitions[0] = aDenseRun0Partition;
   computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.BPartition.indicesPartitions[0].push_back(posPartB1);
@@ -616,6 +623,9 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
   auto B1_crd_accessor = createAccessor<AccessorROint32_t1>(B1_crd, FID_COORD);
 
+  if (runtime->get_index_space_domain(ctx, get_index_space(B1_crd)).empty())
+    return ;
+
   int64_t pointID1 = fposo;
   for (int32_t fposi = 0; fposi < ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces); fposi++) {
     int32_t fposB = (fposo * ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + fposi) + B1_pos_accessor[Point<1>(0)].lo;
@@ -639,7 +649,6 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionSparseDensePosParallelize* partitionPack, int32_t pieces) {
   int a1_dimension = a->dims[0];
-  RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
   int B2_dimension = B->dims[1];
   RegionWrapper B1_crd = B->indices[0][1];
@@ -663,7 +672,7 @@ void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime
   taskArgsRaw.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B1_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B1_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
@@ -673,10 +682,15 @@ void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime
 }
 
 partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {
+  RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
+  auto B2_pos_parent = B->indicesParents[1][0];
+  RegionWrapper B_vals = B->vals;
+  IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
   RegionWrapper c1_pos = c->indices[0][0];
   RegionWrapper c1_crd = c->indices[0][1];
   auto c1_pos_parent = c->indicesParents[0][0];
+  auto c1_crd_parent = c->indicesParents[0][1];
   RegionWrapper c_vals = c->vals;
   auto c1_pos_accessor = createAccessor<AccessorRORect_1_1>(c1_pos, FID_RECT_1);
 
@@ -722,7 +736,24 @@ partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Co
   IndexPartition posIndexPartc1 = densifyPartition(ctx, runtime, get_index_space(c1_pos), posSparsePartc1);
   LogicalPartition posPartc1 = runtime->get_logical_partition(ctx, c1_pos, posIndexPartc1);
   LogicalPartition cValsLogicalPart = copyPartition(ctx, runtime, c1_crd_part, c_vals);
+  IndexPartition BDenseRun0Partition = SparseGatherProjection(0).apply(ctx, runtime, c1_crd_parent, c1_crd_part, FID_COORD, B_dense_run_0);
+  LogicalPartition posPartB2 = copyPartition(ctx, runtime, BDenseRun0Partition, B2_pos);
+  LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, runtime->create_partition_by_image_range(
+    ctx,
+    B2_crd.get_index_space(),
+    posPartB2,
+    B2_pos_parent,
+    FID_RECT_1,
+    runtime->get_index_partition_color_space_name(ctx, posPartB2.get_index_partition())
+  ));
+  auto B_vals_partition = copyPartition(ctx, runtime, crdPartB2, get_logical_region(B_vals));
   auto computePartitions = partitionPackForcomputeLegionCSCMSpV();
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
+  computePartitions.BPartition.indicesPartitions[1].push_back(crdPartB2);
+  computePartitions.BPartition.valsPartition = B_vals_partition;
+  computePartitions.BPartition.denseLevelRunPartitions[0] = BDenseRun0Partition;
   computePartitions.cPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(1);
   computePartitions.cPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
   computePartitions.cPartition.indicesPartitions[0].push_back(posPartc1);
@@ -764,6 +795,9 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
+  if (runtime->get_index_space_domain(ctx, get_index_space(c1_crd)).empty())
+    return ;
+
   int64_t pointID1 = jposo;
   #pragma omp parallel for schedule(static)
   for (int32_t jposi = 0; jposi < ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces); jposi++) {
@@ -790,11 +824,9 @@ void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
   int B2_dimension = B->dims[1];
-  RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
-  RegionWrapper B_vals = B->vals;
   auto B_vals_parent = B->valsParent;
   RegionWrapper c1_crd = c->indices[0][1];
   auto c1_pos_parent = c->indicesParents[0][0];
@@ -815,9 +847,9 @@ void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_5Args));
   IndexLauncher launcher = IndexLauncher(taskID(5), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_pos), READ_ONLY, EXCLUSIVE, B2_pos_parent).add_field(FID_RECT_1));
-  launcher.add_region_requirement(RegionRequirement(get_logical_region(B2_crd), READ_ONLY, EXCLUSIVE, B2_crd_parent).add_field(FID_COORD));
-  launcher.add_region_requirement(RegionRequirement(get_logical_region(B_vals), READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));

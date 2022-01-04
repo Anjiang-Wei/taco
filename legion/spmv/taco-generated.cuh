@@ -18,6 +18,7 @@ struct partitionPackForcomputeLegionPosSplitDCSR {
 };
 
 struct partitionPackForcomputeLegionCSCMSpV {
+  LegionTensorPartition BPartition;
   LegionTensorPartition cPartition;
 };
 

@@ -732,8 +732,14 @@ private:
 
   // construct an AffineProjection between the bottom-up partition of the top dense
   // level pack of `from` to the fully-dense level pack of `to`. It returns an empty
-  // Expr (i.e. !ret.defined()) when the `to` is not partitioned by `from`.
+  // Expr (i.e. !ret.defined()) when `to` is not partitioned by `from`.
   ir::Expr constructAffineProjection(Access& from, Access& to);
+
+  // construct a SparseGatherProjection between the partition of a
+  // sparse level of `from` to the dense level pack of `to`. It returns
+  // an empty Expr (i.e. !ret.defined()) when `to` cannot be partitioned
+  // with a SparseGatherProjection.
+  ir::Expr constructSparseGatherProjection(Access& from, Access& to, int posMode);
 
   // tensorVarToAccess contains a mapping between TensorVar's to the access in
   // which they appear in the statement. We require that each tensor is used once
