@@ -128,6 +128,9 @@ extern Datatype LegionTensorPartition;
 extern Datatype RegionWrapper;
 // A helper type to perform affine projections between IndexPartitions.
 extern Datatype AffineProjection;
+// A helper type to perform gather operations from a sparse level into
+// a dense level.
+extern Datatype SparseGatherProjection;
 // An n-dimensional point.
 Datatype Point(int n);
 // An n-dimensional rectangle.

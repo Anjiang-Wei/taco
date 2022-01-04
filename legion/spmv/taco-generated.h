@@ -18,10 +18,12 @@ struct partitionPackForcomputeLegionPosSplitDCSR {
 };
 
 struct partitionPackForcomputeLegionSparseDensePosParallelize {
+  LegionTensorPartition aPartition;
   LegionTensorPartition BPartition;
 };
 
 struct partitionPackForcomputeLegionCSCMSpV {
+  LegionTensorPartition BPartition;
   LegionTensorPartition cPartition;
 };
 

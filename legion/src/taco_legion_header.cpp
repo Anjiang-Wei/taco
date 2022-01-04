@@ -1,6 +1,7 @@
 #include "taco_legion_header.h"
 #include "shard.h"
 #include "error.h"
+#include "task_ids.h"
 #include <mutex>
 
 using namespace Legion;
@@ -264,4 +265,120 @@ Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point, Legion::D
   }
 
   return res;
+}
+
+SparseGatherProjection::SparseGatherProjection(int mapTo) : mapTo(mapTo) {}
+
+Legion::IndexPartition SparseGatherProjection::apply(Legion::Context ctx, Legion::Runtime *runtime,
+                                                     Legion::LogicalRegion reg, Legion::LogicalPartition part,
+                                                     Legion::FieldID fieldID, Legion::IndexSpace toPartition,
+                                                     Legion::Color color) {
+  // Create a temporary region partitioned in the same way as the input.
+  auto newFieldSpace = runtime->create_field_space(ctx);
+  auto falloc = runtime->create_field_allocator(ctx, newFieldSpace);
+  size_t fieldSize = 0;
+  switch (toPartition.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM: { \
+      fieldSize = sizeof(Rect<DIM>); \
+      break;       \
+    }
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      taco_iassert(false);
+  }
+  falloc.allocate_field(fieldSize, fieldID);
+  auto regPtrs = runtime->create_logical_region(ctx, reg.get_index_space(), newFieldSpace);
+  auto indexPart = part.get_index_partition();
+  auto regPtrsPart = runtime->get_logical_partition(ctx, regPtrs, indexPart);
+  auto colorSpace = runtime->get_index_partition_color_space(ctx, part.get_index_partition());
+
+  // Launch a task to project the coordinates into Rect's.
+  auto args = taskArgs {
+    .mapTo = this->mapTo,
+    .target = toPartition,
+    .fieldID = fieldID,
+  };
+  IndexLauncher launcher(SparseGatherProjection::taskID, colorSpace, TaskArgument(&args, sizeof(taskArgs)), ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, reg).add_field(fieldID));
+  launcher.add_region_requirement(RegionRequirement(regPtrsPart, 0, WRITE_ONLY, EXCLUSIVE, regPtrs).add_field(fieldID));
+  runtime->execute_index_space(ctx, launcher);
+
+  // Use the temporary region to perform the partitioning operation.
+  auto result = runtime->create_partition_by_image_range(ctx, toPartition, regPtrsPart, regPtrs, fieldID,
+                                                         runtime->get_index_partition_color_space_name(ctx, indexPart),
+                                                         LEGION_COMPUTE_KIND, color);
+
+  // Cleanup the temporary resources.
+  runtime->destroy_field_space(ctx, newFieldSpace);
+  runtime->destroy_logical_region(ctx, regPtrs);
+
+  // Return the result.
+  return result;
+}
+
+template<int DIM>
+void SparseGatherProjection::taskBody(Legion::Context ctx, Legion::Runtime* runtime,
+                                      taskArgs args, Legion::PhysicalRegion input, Legion::PhysicalRegion output) {
+
+  // Here dim is the dimension of the target index space to partition.
+  auto ispace = IndexSpaceT<DIM>(args.target);
+  auto ispaceBounds = runtime->get_index_space_domain(ispace);
+  taco_iassert(input.get_logical_region().get_dim() == 1);
+  auto inputBounds = runtime->get_index_space_domain(IndexSpaceT<1>(input.get_logical_region().get_index_space()));
+  typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorInput;
+  typedef FieldAccessor<WRITE_ONLY,Rect<DIM>,1,coord_t,Realm::AffineAccessor<Rect<DIM>,1,coord_t>> AccessorOutput;
+  AccessorInput ai(input, args.fieldID);
+  AccessorOutput ao(output, args.fieldID);
+
+  #pragma omp parallel for schedule(static)
+  for (int i = inputBounds.bounds.lo; i <= inputBounds.bounds.hi; i++) {
+    Rect<DIM> res;
+    for (int j = 0; j < DIM; j++) {
+      if (j == args.mapTo) {
+        res.lo[j] = ai[i];
+        res.hi[j] = ai[i];
+      } else {
+        res.lo[j] = ispaceBounds.bounds.lo[j];
+        res.hi[j] = ispaceBounds.bounds.hi[j];
+      }
+    }
+    ao[i] = res;
+  }
+}
+
+void SparseGatherProjection::task(const Legion::Task *task, const std::vector<Legion::PhysicalRegion> &regions,
+                                  Legion::Context ctx, Legion::Runtime *runtime) {
+  auto args = *(taskArgs*)(task->args);
+  switch (args.target.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM: { \
+      SparseGatherProjection::taskBody<DIM>(ctx, runtime, args, regions[0], regions[1]); \
+      break;       \
+    }
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      taco_iassert(false);
+  }
+}
+
+// Separate declaration of taskID, similar to AffineProjection::BOT.
+const int SparseGatherProjection::taskID = TID_SPARSE_GATHER_PARTITION;
+void SparseGatherProjection::registerTasks() {
+  {
+    TaskVariantRegistrar registrar(SparseGatherProjection::taskID, "sparseGatherWrite");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<SparseGatherProjection::task>(registrar, "sparseGatherWrite");
+  }
+  {
+    TaskVariantRegistrar registrar(SparseGatherProjection::taskID, "sparseGatherWrite");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<SparseGatherProjection::task>(registrar, "sparseGatherWrite");
+  }
+}
+
+void registerTacoRuntimeLibTasks() {
+  SparseGatherProjection::registerTasks();
 }

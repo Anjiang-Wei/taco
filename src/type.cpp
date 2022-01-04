@@ -440,6 +440,7 @@ Datatype LegionTensor = Datatype("LegionTensor");
 Datatype LegionTensorPartition = Datatype("LegionTensorPartition");
 Datatype RegionWrapper = Datatype("RegionWrapper");
 Datatype AffineProjection = Datatype("AffineProjection");
+Datatype SparseGatherProjection = Datatype("SparseGatherProjection");
 Datatype Point(int n) {
   return templateGen("Point", n);
 }

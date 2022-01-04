@@ -106,8 +106,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  DomainT<1> BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
-  if (BValsDomain.empty())
+  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
     return ;
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));

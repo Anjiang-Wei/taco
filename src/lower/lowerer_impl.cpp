@@ -1307,6 +1307,46 @@ Stmt LowererImpl::lowerForall(Forall forall)
   if (temp != temporaryInitialization.end() && forall.getParallelUnit() == ParallelUnit::NotParallel && !isScalar(temp->second.getTemporary().getType()))
     temporaryValuesInitFree = codeToInitializeTemporary(temp->second);
 
+  // If this is a distributed position space loop, then a guard needs
+  // to be emitted to make sure that we don't do anything if the set
+  // of positions allocated to this task is empty.
+  if (this->legion && this->distLoopDepth > 0) {
+    auto posRel = this->provGraph.getParentPosRel(forall.getIndexVar());
+    bool inPosIter = posRel != nullptr;
+    if (inPosIter) {
+      auto underiveds = this->provGraph.getUnderivedAncestors(forall.getIndexVar());
+      auto posAccess = posRel->getAccess();
+      auto posTensor = posAccess.getTensorVar();
+      auto posAccessVars = posAccess.getIndexVars();
+      // Find the deepest mode accessed by this position variable. We need to find
+      // the deepest in case the loop is a fused position space loop.
+      int posMode = -1;
+      for (auto ivar : underiveds) {
+        for (int i = 0; i < posTensor.getOrder(); i++) {
+          if (posAccess.getIndexVars()[i] == ivar) {
+            posMode = std::max(posMode, i);
+          }
+        }
+      }
+      taco_iassert(posMode >= 0);
+      IndexVar fullDescendant;
+      auto found = this->provGraph.getPosIteratorFullyDerivedDescendant(underiveds[0], &fullDescendant);
+      taco_iassert(found);
+      // If this forall is lowering the deepest derived descendant of the position space loop,
+      // then we'll emit the guard over the size of the position space.
+      if (forall.getIndexVar() == fullDescendant) {
+        // TODO (rohany): This could be extracted into a mode function rather than specializing
+        //  to the RectCompressedModeFormat.
+        auto posModeIter = this->iterators.getLevelIteratorByModeAccess({posAccess, posMode + 1});
+        taco_iassert(posModeIter.getMode().getModeFormat().is<RectCompressedModeFormat>());
+        auto rcmf = posModeIter.getMode().getModeFormat().as<RectCompressedModeFormat>();
+        auto crdReg = rcmf->getRegion(posModeIter.getMode().getModePack(), RectCompressedModeFormat::CRD);
+        auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(crdReg)}, Auto);
+        this->taskHeader.push_back(ir::IfThenElse::make(ir::MethodCall::make(getDomain, "empty", {}, false /* deref */, Bool), ir::Return::make(Expr())));
+      }
+    }
+  }
+
   Stmt loops;
   // Emit a loop that iterates over over a single iterator (optimization)
   if (lattice.iterators().size() == 1 && lattice.iterators()[0].isUnique()) {
@@ -2044,10 +2084,13 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       // Find the deepest level accessed in the tensor. That is the point where we will
       // take the initial partition.
       auto underiveds = this->provGraph.getUnderivedAncestors(forall.getIndexVar());
+      // If there is more than one underived variable then this position split
+      // is a fused position split.
+      auto isFusedPos = underiveds.size() > 1;
       auto posAccess = posRel->getAccess();
       auto posTensor = posAccess.getTensorVar();
       int posMode = -1;
-      for (auto ivar : this->provGraph.getUnderivedAncestors(forall.getIndexVar())) {
+      for (auto ivar : underiveds) {
         for (int i = 0; i < posTensor.getOrder(); i++) {
           if (posAccess.getIndexVars()[i] == ivar) {
             posMode = std::max(posMode, i);
@@ -2262,20 +2305,39 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         if (this->preservesNonZeros && this->nonZeroAnalyzerResult.resultAccess->getTensorVar() == tv) continue;
         auto tvExpr = this->tensorVars[tv];
         auto tvAccess = this->tensorVarToAccess.at(tv);
-        auto projection = this->constructAffineProjection(posAccess, tvAccess);
-        if (!projection.defined()) {
-          // If we don't have a projection, then this tensor is fully replicated.
+
+        ir::Expr createDenseRunPart;
+        auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
+        // Attempt to create different projections from the pos tensor
+        // into the target tensor.
+        auto affineProjection = this->constructAffineProjection(posAccess, tvAccess);
+        auto sparseGatherProjection = this->constructSparseGatherProjection(posAccess, tvAccess, posMode);
+        if (affineProjection.defined()) {
+          createDenseRunPart = ir::MethodCall::make(affineProjection, "apply", maybeAddPartColor({ctx, runtime, denseRunPartition, firstDenseRun}), false /* deref */, IndexPartition);
+        } else if (sparseGatherProjection.defined() && !isFusedPos) {
+          // We can't apply a SparseGatherProjection if the position space loop is fused.
+          // TODO (rohany): This is still hardcoded for the RectCompressedModeFormat.
+          auto rcmf = posIter.getMode().getModeFormat().as<RectCompressedModeFormat>();
+          auto pack = posIter.getMode().getModePack();
+          auto crdParent = rcmf->getRegion(pack, RectCompressedModeFormat::CRD_PARENT);
+          auto crdAcc = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO).as<ir::GetProperty>();
+          auto crdField = crdAcc->accessorArgs.field;
+          auto crdPart = tensorLogicalPartitions[posTensor][posLevel][1];
+          createDenseRunPart = ir::MethodCall::make(sparseGatherProjection, "apply", maybeAddPartColor(
+              {ctx, runtime, crdParent, crdPart, crdField, firstDenseRun}), false /* deref */,
+                                                    IndexPartition);
+        } else {
+          // If we can't make any projections, then this tensor is fully replicated.
           continue;
         }
+
         // TODO (rohany): Deduplicate this out into a helper function used by the standard
         //  partitioning pass.
         // Otherwise, we'll use the projection to create a partition of the first
         // dense run of the tensor.
         auto runs = DenseFormatRuns(tvAccess, this->iterators);
         taco_iassert(runs.runs.size() == 1);
-        auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
         auto firstDenseRunPart = ir::Var::make(tv.getName() + "DenseRun0Partition", IndexPartition);
-        auto createDenseRunPart = ir::MethodCall::make(projection, "apply", maybeAddPartColor({ctx, runtime, denseRunPartition, firstDenseRun}), false /* deref */, IndexPartition);
         partitioningStmts.push_back(ir::VarDecl::make(firstDenseRunPart, createDenseRunPart));
         tensorDenseRunPartitions[tv][0] = firstDenseRunPart;
         auto currentPart = firstDenseRunPart;
@@ -2283,7 +2345,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         for (int level = runs.runs[0].levels.back(); level < tv.getOrder(); level++) {
           auto mode = tvAccess.getTensorVar().getFormat().getModeOrdering()[level];
           auto iter = this->iterators.getLevelIteratorByModeAccess({tvAccess, mode + 1});
-          auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
+          auto modeFunc = iter.getPartitionFromParent(currentPart, partitionColor);
           if (modeFunc.defined()) {
             partitioningStmts.push_back(modeFunc.compute());
             currentPart = modeFunc.getResults().back();
@@ -2757,18 +2819,6 @@ Stmt LowererImpl::lowerForallFusedPosition(Forall forall, Iterator iterator,
     Expr coordinateArray = iterator.posAccess(iterator.getPosVar(),
                                               coordinates(iterator)).getResults()[0];
     declareCoordinate = VarDecl::make(coordinate, coordinateArray);
-  }
-
-  // If we're generating legion code and in a distributed loop, then we want to break out if we
-  // don't actually have any values to process in this task.
-  if (this->legion && this->distLoopDepth > 0) {
-    auto posRel = this->provGraph.getParentPosRel(forall.getIndexVar());
-    taco_iassert(posRel);
-    auto posTensor = posRel->getAccess().getTensorVar();
-    auto valsReg = ir::GetProperty::make(this->tensorVars[posTensor], ir::TensorProperty::Values);
-    auto valsDomain = ir::Var::make(posTensor.getName() + "ValsDomain", Domain(1));
-    this->taskHeader.push_back(ir::VarDecl::make(valsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(valsReg)}, Auto)));
-    this->taskHeader.push_back(ir::IfThenElse::make(ir::MethodCall::make(valsDomain, "empty", {}, false /* deref */, Bool), ir::Return::make(Expr())));
   }
 
   // declare upper-level underived ancestors that will be tracked with while loops
@@ -6312,6 +6362,30 @@ ir::Expr LowererImpl::constructAffineProjection(Access &from, Access &to) {
     return Expr();
   }
   return makeConstructor(AffineProjection, projectionArgs);
+}
+
+ir::Expr LowererImpl::constructSparseGatherProjection(Access &from, Access &to, int posMode) {
+  // We can construct a SparseGatherProjection if the mode of
+  // the position space loop is a RectCompressedModeFormat, and
+  // the posMode's index variable exists within the target access's
+  // first dense run.
+  // TODO (rohany): Think about how this could be abstracted into a
+  //  mode function, as it seems like it's possible.
+  auto fromIter = this->iterators.getLevelIteratorByModeAccess({from, posMode + 1});
+  if (!fromIter.getMode().getModeFormat().is<RectCompressedModeFormat>()) return ir::Expr();
+
+  auto toModeItr = std::find(to.getIndexVars().begin(), to.getIndexVars().end(), from.getIndexVars()[posMode]);
+  if (toModeItr == to.getIndexVars().end()) return ir::Expr();
+  int toMode = toModeItr - to.getIndexVars().begin();
+
+  DenseFormatRuns toDenseRuns(to, this->iterators);
+  if (toDenseRuns.runs.empty()) return ir::Expr();
+
+  auto runPosItr = std::find(toDenseRuns.runs[0].modes.begin(), toDenseRuns.runs[0].modes.end(), toMode);
+  if (runPosItr == toDenseRuns.runs[0].modes.end()) return ir::Expr();
+  auto runPos = runPosItr - toDenseRuns.runs[0].modes.begin();
+
+  return ir::makeConstructor(SparseGatherProjection, {int(runPos)});
 }
 
 LowererImpl::BoundsInferenceExprRewriter::BoundsInferenceExprRewriter(ProvenanceGraph &pg, Iterators &iterators,

@@ -180,6 +180,7 @@ int main(int argc, char** argv) {
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerDummyReadTasks();
+  registerTacoRuntimeLibTasks();
   Runtime::add_registration_callback(register_taco_mapper);
   Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);
