@@ -130,6 +130,25 @@ T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid, Legion::Reduct
   return T();
 }
 
+// getPreviousPoint is a utility function to get the point lexicographically
+// before the current point in the current rectangle. It is the inverse of
+// the step function defined in legion/runtime/realm/point.inl.
+template<int DIM>
+Legion::Point<DIM> getPreviousPoint(Legion::Point<DIM> point, Legion::Rect<DIM> bounds) {
+  for (int i = DIM - 1; i >= 0; i--) {
+    // If this dimension of the point is greater than the lower bound,
+    // subtract it and return.
+    if (point[i] > bounds.lo[i]) {
+      point[i]--;
+      return point;
+    }
+    // Otherwise if the dimension is already at the lowest value, set it
+    // to the upper bound and continue to smaller dimensions.
+    point[i] = bounds.hi[i];
+  }
+  return point;
+}
+
 // AffineProjection represents a projection between two dense index space partitions
 // as a function f that maps indices in one index space to indices in another.
 class AffineProjection {
