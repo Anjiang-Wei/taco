@@ -246,6 +246,22 @@ set_tests_properties(legion-sparse-sddmm-basic PROPERTIES DEPENDS "legion-sparse
 add_basic_legion_sparse_test(spmttkrp basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -pieces 4 -dump)
 set_tests_properties(legion-sparse-spmttkrp-basic PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
 
+# Use GoogleTest to write some test cases that utilize Legion.
+# First, create a library for GoogleTest itself.
+file(GLOB GTEST_SOURCE ../test/gtest/gtest-all.cc)
+file(GLOB GTEST_HEADER ../test/gtest/gtest.h)
+add_library(distal-gtest ${GTEST_HEADER} ${GTEST_SOURCE})
+target_include_directories(distal-gtest PRIVATE ../test/)
+# Next, create a executable for DISTAL tests that links against GoogleTest.
+file(GLOB DISTAL_TEST_HEADERS test/*.h)
+file(GLOB DISTAL_TEST_SOURCES test/*.cpp)
+add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
+target_include_directories(distal-runtime-test PRIVATE ../test/)
+target_link_libraries(distal-runtime-test distal-gtest Legion::Legion ${HDF5_LIBRARIES})
+# Tell CMake about all of the tests that GoogleTest will register.
+include(GoogleTest)
+gtest_add_tests(TARGET distal-runtime-test)
 
+# Run all sparse tests and distal runtime tests.
 list(REMOVE_DUPLICATES SPARSE_TEST_BINARIES)
-add_custom_target(test-legion-sparse COMMAND ctest -R legion-sparse DEPENDS ${SPARSE_TEST_BINARIES})
+add_custom_target(test-legion-sparse COMMAND ctest -R "((legion-sparse)|(DISTALRuntime))" DEPENDS ${SPARSE_TEST_BINARIES} distal-runtime-test)
