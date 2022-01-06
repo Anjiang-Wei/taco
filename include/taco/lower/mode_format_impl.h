@@ -221,12 +221,12 @@ public:
   virtual ir::Expr getAssembledSize(ir::Expr prevSize, Mode mode) const;
 
   virtual ir::Stmt
-  getSeqInitEdges(ir::Expr prevSize, std::vector<AttrQueryResult> queries, 
-                  Mode mode) const;
+  getSeqInitEdges(ir::Expr prevSize, std::vector<ir::Expr> parentDims,
+                  std::vector<AttrQueryResult> queries, Mode mode) const;
   
   virtual ir::Stmt
-  getSeqInsertEdge(ir::Expr parentPos, std::vector<ir::Expr> coords,
-                   std::vector<AttrQueryResult> queries, Mode mode) const;
+  getSeqInsertEdges(ir::Expr parentPos, std::vector<ir::Expr> parentDims,
+                    std::vector<ir::Expr> coords, std::vector<AttrQueryResult> queries, Mode mode) const;
 
   virtual ir::Stmt
   getInitCoords(ir::Expr prevSize, std::vector<AttrQueryResult> queries, 

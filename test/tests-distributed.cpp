@@ -1856,7 +1856,7 @@ TEST(distributed, legionSpFormatConverterLib) {
   addConverter(LgFormat({Dense, LgSparse}), "CSR", true /* assemble */);
   addConverter(LgFormat({LgSparse, LgSparse, LgSparse}), "SSS");
   addConverter(LgFormat({Dense, LgSparse, LgSparse}), "DSS");
-  addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS");
+  addConverter(LgFormat({Dense, Dense, LgSparse}), "DDS", true /* assemble */);
   addConverter(LgFormat({LgSparse, Dense, LgSparse}), "SDS");
   addConverter(LgFormat({LgSparse, LgSparse}), "DCSR");
   addConverter(LgFormat({LgSparse, Dense}), "SD");

@@ -173,12 +173,14 @@ public:
   ir::Stmt getAppendFinalizeLevel(const ir::Expr& parentPos, const ir::Expr& szPrev, const ir::Expr& sz) const;
 
   /// Return code for level functions that implement ungrouped insert 
-  /// capabilitiy.
+  /// capability.
   ir::Expr getAssembledSize(const ir::Expr& prevSize) const;
-  ir::Stmt getSeqInitEdges(const ir::Expr& prevSize, 
-      const std::vector<AttrQueryResult>& queries) const;
-  ir::Stmt getSeqInsertEdge(const ir::Expr& parentPos, 
-      const std::vector<ir::Expr>& coords, 
+  ir::Stmt getSeqInitEdges(const ir::Expr& prevSize,
+                           const std::vector<ir::Expr>& parentDims,
+                           const std::vector<AttrQueryResult>& queries) const;
+  ir::Stmt getSeqInsertEdges(const ir::Expr& parentPos,
+      const std::vector<ir::Expr>& parentDims,
+      const std::vector<ir::Expr>& coords,
       const std::vector<AttrQueryResult>& queries) const;
   ir::Stmt getInitCoords(const ir::Expr& prevSize, 
       const std::vector<AttrQueryResult>& queries) const;

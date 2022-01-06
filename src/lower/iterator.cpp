@@ -385,19 +385,20 @@ Expr Iterator::getAssembledSize(const Expr& prevSize) const {
   return getMode().getModeFormat().impl->getAssembledSize(prevSize, getMode());
 }
 
-Stmt Iterator::getSeqInitEdges(const Expr& prevSize, 
-    const std::vector<AttrQueryResult>& queries) const {
+Stmt Iterator::getSeqInitEdges(const Expr& prevSize,
+                               const std::vector<Expr>& parentDims,
+                               const std::vector<AttrQueryResult>& queries) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getSeqInitEdges(prevSize, queries, 
-                                                         getMode());
+  return getMode().getModeFormat().impl->getSeqInitEdges(prevSize, parentDims, queries, getMode());
 }
 
-Stmt Iterator::getSeqInsertEdge(const Expr& parentPos, 
-    const std::vector<Expr>& coords, 
-    const std::vector<AttrQueryResult>& queries) const {
+Stmt Iterator::getSeqInsertEdges(const Expr& parentPos,
+                                 const std::vector<Expr>& parentDims,
+                                 const std::vector<Expr>& coords,
+                                 const std::vector<AttrQueryResult>& queries) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getSeqInsertEdge(parentPos, coords, 
-                                                          queries, getMode());
+  return getMode().getModeFormat().impl->getSeqInsertEdges(parentPos, parentDims,
+                                                           coords, queries, getMode());
 }
 
 Stmt Iterator::getInitCoords(const Expr& prevSize, 
@@ -426,10 +427,9 @@ Stmt Iterator::getInsertCoord(const Expr& parentPos, const Expr& pos,
                                                         getMode());
 }
 
-Stmt Iterator::getFinalizeYieldPos(const Expr& prevSize) const {
+Stmt Iterator::getFinalizeYieldPos(const Expr &prevSize) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getFinalizeYieldPos(prevSize, 
-                                                             getMode());
+  return getMode().getModeFormat().impl->getFinalizeYieldPos(prevSize, getMode());
 }
 
 bool Iterator::defined() const {

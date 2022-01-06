@@ -144,6 +144,7 @@ Datatype Domain(int n);
 extern Datatype IndexSpace;
 // A specialized IndexSpace.
 Datatype IndexSpaceT(int n);
+extern Datatype FieldSpace;
 Datatype DeferredBuffer(Datatype bufType, int dim);
 Datatype Pointer(Datatype baseType);
 // Represents a templated C++ std::vector.

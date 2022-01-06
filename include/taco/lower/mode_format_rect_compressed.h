@@ -38,12 +38,14 @@ public:
   ModeFunction getYieldPos(ir::Expr parentPos, std::vector<ir::Expr> coords,
                            Mode mode) const override;
   ir::Stmt getSeqInitEdges(ir::Expr prevSize,
+                           std::vector<ir::Expr> parentDims,
                            std::vector<AttrQueryResult> queries,
                            Mode mode) const override;
-  ir::Stmt getSeqInsertEdge(ir::Expr parentPos,
-                            std::vector<ir::Expr> coords,
-                            std::vector<AttrQueryResult> queries,
-                            Mode mode) const override;
+  ir::Stmt getSeqInsertEdges(ir::Expr parentPos,
+                             std::vector<ir::Expr> parentDims,
+                             std::vector<ir::Expr> coords,
+                             std::vector<AttrQueryResult> queries,
+                             Mode mode) const override;
   ir::Stmt getInitCoords(ir::Expr prevSize,
                          std::vector<AttrQueryResult> queries,
                          Mode mode) const override;

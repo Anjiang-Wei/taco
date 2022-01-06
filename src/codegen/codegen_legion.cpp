@@ -22,6 +22,14 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
     tp = "auto";
     ret << tp << " " << varname << " = get_index_space(" << tensor->name << ");\n";
   } else if (op->property == TensorProperty::ValuesReadAccessor || op->property == TensorProperty::ValuesWriteAccessor) {
+    // TODO (rohany): This is a hack...
+    // TODO (rohany): I think the proper way of doing this is marking
+    //  in the variable that this is temporary, and then also having
+    //  a flag in the lowerer about when we are allowed to do this or not.
+    if (varname.find("_nnz") != std::string::npos) {
+      ret << accessorTypeString(op) << " " << varname << ";\n";
+      return ret.str();
+    }
     // We can't just use the tensor's name when constructing the value accessors, as for child
     // tasks the value array is not just the tensor's name.
     ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL);\n";
@@ -30,6 +38,11 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   } else if (op->property == TensorProperty::DenseLevelRun) {
     ret << "IndexSpace " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
   } else if (op->property == TensorProperty::Values) {
+    // TODO (rohany): This is a hack...
+    if (varname.find("_nnz") != std::string::npos) {
+      ret << "RegionWrapper " << varname << ";\n";
+      return ret.str();
+    }
     ret << "RegionWrapper " << varname << " = " << tensor->name << "->vals;\n";
   } else if (op->property == TensorProperty::ValuesParent) {
     ret << "auto " << varname << " = " << tensor->name << "->valsParent;\n";
