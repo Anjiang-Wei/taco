@@ -204,6 +204,7 @@ add_basic_legion_sparse_test(format-converter dcsr -coofile ${CMAKE_CURRENT_SOUR
 add_basic_legion_sparse_test(format-converter sd -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.hdf5 -format sd -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.sd.hdf5 -dump)
 add_basic_legion_sparse_test(format-converter csc -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.hdf5 -format ds -mode_ordering 10 -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csc.hdf5 -dump)
 add_basic_legion_sparse_test(format-converter 3-tensor-dss -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5 -format dss -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -dump)
+add_basic_legion_sparse_test(format-converter 3-tensor-dds -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5 -format dds -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dds.hdf5 -dump)
 add_basic_legion_sparse_test(format-converter 3-tensor-sss -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5 -format sss -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.sss.hdf5 -dump)
 add_basic_legion_sparse_test(format-converter 3-tensor-sds -coofile ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.hdf5 -format sds -o ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.sds.hdf5 -dump)
 # Make sure that the format-converter tests runs after tensor_to_hdf5.
@@ -214,6 +215,7 @@ set_tests_properties(legion-sparse-format-converter-dcsr PROPERTIES DEPENDS "leg
 set_tests_properties(legion-sparse-format-converter-sd PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-basic")
 set_tests_properties(legion-sparse-format-converter-csc PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-basic")
 set_tests_properties(legion-sparse-format-converter-3-tensor-dss PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-3-tensor")
+set_tests_properties(legion-sparse-format-converter-3-tensor-dds PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-3-tensor")
 set_tests_properties(legion-sparse-format-converter-3-tensor-sss PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-3-tensor")
 set_tests_properties(legion-sparse-format-converter-3-tensor-sds PROPERTIES DEPENDS "legion-sparse-tensor_to_hdf5-3-tensor")
 
@@ -264,4 +266,4 @@ gtest_add_tests(TARGET distal-runtime-test)
 
 # Run all sparse tests and distal runtime tests.
 list(REMOVE_DUPLICATES SPARSE_TEST_BINARIES)
-add_custom_target(test-legion-sparse COMMAND ctest -R "((legion-sparse)|(DISTALRuntime))" DEPENDS ${SPARSE_TEST_BINARIES} distal-runtime-test)
+add_custom_target(test-legion-sparse COMMAND ctest -R \"\(\(legion-sparse\)|\(DISTALRuntime\)\)\" DEPENDS ${SPARSE_TEST_BINARIES} distal-runtime-test)

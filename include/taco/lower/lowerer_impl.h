@@ -540,6 +540,10 @@ private:
   };
   std::map<TensorVar, TemporaryArrays> temporaryArrays;
 
+  // TODO (rohany): This maybe should maintain some information about what
+  //  privilege we want to access each query result with.
+  std::set<TensorVar> assembleQueryResults;
+
   /// Map form temporary to indexList var if accelerating dense workspace
   std::map<TensorVar, ir::Expr> tempToIndexList;
 

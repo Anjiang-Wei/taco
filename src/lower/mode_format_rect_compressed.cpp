@@ -80,7 +80,6 @@ ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<i
 
 std::vector<AttrQuery> RectCompressedModeFormat::attrQueries(std::vector<IndexVar> parentCoords,
                                                              std::vector<IndexVar> childCoords) const {
-  // TODO (rohany): I have no clue what this does.
   std::vector<IndexVar> groupBy(parentCoords.begin(), parentCoords.end() - 1);
   std::vector<IndexVar> aggregatedCoords = {parentCoords.back()};
   if (!isUnique) {
@@ -91,10 +90,10 @@ std::vector<AttrQuery> RectCompressedModeFormat::attrQueries(std::vector<IndexVa
 }
 
 ir::Expr RectCompressedModeFormat::getAssembledSize(ir::Expr prevSize, Mode mode) const {
-  taco_iassert(this->posDim == 1);
   auto pack = mode.getModePack();
-  auto posAcc = this->getAccessor(pack, POS);
-  return ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(prevSize, 1)), "hi", false /* deref */, Int64), 1);
+  auto posAcc = this->getAccessor(pack, POS, ir::RW);
+  auto lastPos = ir::FieldAccess::make(this->getPosBounds(mode), "bounds.hi", false /* deref */, Auto);
+  return ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, lastPos), "hi", false /* deref */, Int64), 1);
 }
 
 ir::Stmt RectCompressedModeFormat::getInitYieldPos(ir::Expr prevSize, Mode mode) const {
@@ -102,35 +101,96 @@ ir::Stmt RectCompressedModeFormat::getInitYieldPos(ir::Expr prevSize, Mode mode)
 }
 
 ModeFunction RectCompressedModeFormat::getYieldPos(ir::Expr parentPos, std::vector<ir::Expr> coords, Mode mode) const {
-  taco_iassert(this->posDim == 1);
+  taco_iassert(!this->hasSparseAncestor(mode));
+  // This way of constructing the access point doesn't work if we have
+  // a sparse ancestor. This can be fixed by extending the interface
+  // of getYieldPos to take in all parent positions.
+  std::vector<ir::Expr> pointArgs;
+  taco_iassert(int(coords.size()) >= (this->posDim + 1));
+  // The final coordinate in coords is the coordinate of _this_ level, so
+  // we don't want to include it. We start at coords.size() - (this->posDim + 1)
+  // to start at the coordinates that make up this multi-dimensional pos array,
+  // while excluding the final coordinate.
+  for (size_t i = coords.size() - (this->posDim + 1); i < (coords.size() - 1); i++) {
+    pointArgs.push_back(coords[i]);
+  }
   auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
-  auto lo = ir::FieldAccess::make(ir::Load::make(posAcc, parentPos), "lo", false /* deref */, Int64);
+  auto point = this->packToPoint(pointArgs);
+  auto lo = ir::FieldAccess::make(ir::Load::make(posAcc, point), "lo", false /* deref */, Int64);
   auto pVar = ir::Var::make("p" + mode.getName(), Int());
   auto getPtr = ir::VarDecl::make(pVar, lo);
   auto incPtr = ir::Assign::make(lo, ir::Add::make(lo, 1));
   return ModeFunction(ir::Block::make(getPtr, incPtr), {pVar});
 }
 
-ir::Stmt RectCompressedModeFormat::getFinalizeYieldPos(ir::Expr prevSize, Mode mode) const {
-  taco_iassert(this->posDim == 1);
+ir::Stmt RectCompressedModeFormat::getFinalizeYieldPos(ir::Expr, Mode mode) const {
+  // This finalization process is a backwards scan over the pos regions
+  // domain, where each point copies the lo value of the previous point.
+  // To implement this, we generate a multi-dimensional loop over the domain.
+  std::vector<ir::Stmt> result;
+  std::vector<ir::Expr> loopVars, pointVars;
+  for (int i = 0; i < this->posDim; i++) {
+    loopVars.push_back(ir::Var::make("p" + util::toString(i), Int()));
+    pointVars.push_back(ir::Var::make("point" + util::toString(i), Int()));
+  }
+  auto bounds = this->getPosBounds(mode);
+  auto boundsLo = ir::FieldAccess::make(bounds, "bounds.lo", false /* deref */, Int64);
+  auto boundsHi = ir::FieldAccess::make(bounds, "bounds.hi", false /* deref */, Int64);
+
+  // We have to do some trickiness here to recover the actual point that we want,
+  // because the current code-generation infrastructure doesn't support decrementing
+  // iteration in for loops. So, we iterate over the total size of the domain, and
+  // recover the target point that we want.
+  std::vector<ir::Stmt> body;
+  for (int i = 0; i < this->posDim; i++) {
+    auto hi = ir::Load::make(boundsHi, i);
+    body.push_back(ir::VarDecl::make(pointVars[i], ir::Sub::make(hi, loopVars[i])));
+  }
+  // As the loop body, we emit:
+  // if (accPoint == accPoint.ZEROS()) {
+  //   pos[accPoint].lo = 0;
+  // } else {
+  //   pos[getPreviousPoint(accPoint, bounds.bounds)].lo = pos[accPoint].lo;
+  // }
+  auto point = ir::Var::make("accPoint", Auto);
+  body.push_back(ir::VarDecl::make(point, this->packToPoint(pointVars)));
   auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
-  auto pVar = ir::Var::make("p", Int());
-  auto currLo = ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(ir::Sub::make(prevSize, pVar), 1)), "lo", false /* deref */, Int64);
-  auto prevLo = ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(ir::Sub::make(prevSize, pVar), 2)), "lo", false /* deref */, Int64);
-  auto resetLoop = ir::For::make(pVar, 0, ir::Sub::make(prevSize, 1), 1, ir::Assign::make(currLo, prevLo));
-  auto zero = ir::FieldAccess::make(ir::Load::make(posAcc, 0), "lo", false /* deref */, Int64);
-  auto setZero = ir::Assign::make(zero, 0);
-  return ir::Block::make(resetLoop, setZero);
+  auto currLo = ir::FieldAccess::make(ir::Load::make(posAcc, point), "lo", false /* deref */, Int64);
+  auto prevPoint = ir::Call::make("getPreviousPoint", {point, ir::FieldAccess::make(bounds, "bounds", false /* deref */, Auto)}, Auto);
+  auto prevLo = ir::FieldAccess::make(ir::Load::make(posAcc, prevPoint), "lo", false /* deref */, Int64);
+  body.push_back(ir::IfThenElse::make(
+     ir::Eq::make(point, ir::MethodCall::make(point, "ZEROES", {}, false /* deref */, Auto)),
+     ir::Block::make(ir::Assign::make(currLo, 0)),
+     ir::Assign::make(currLo, prevLo)
+  ));
+
+  // Finally, generate the loop over the domain.
+  auto loop = ir::Block::make(body);
+  for (int i = this->posDim - 1; i >= 0; i--) {
+    // This workaround to iterating over the loop size is because we don't
+    // currently have the ability to use decrementing for loops.
+    auto loopSize = ir::Sub::make(ir::Load::make(boundsHi, i), ir::Load::make(boundsLo, i));
+    loop = ir::For::make(loopVars[i], 0, ir::Add::make(loopSize, 1), 1, loop);
+  }
+  result.push_back(loop);
+  return ir::Block::make(result);
 }
 
-ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vector<AttrQueryResult> queries,
-                                                   Mode mode) const {
-  taco_iassert(this->posDim == 1);
+ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vector<ir::Expr> parentDims,
+                                                   std::vector<AttrQueryResult> queries, Mode mode) const {
+  // Allocate the pos region of the domain given by the parent dimensions.
+  taco_iassert(this->posDim == int(parentDims.size()));
+  std::vector<ir::Expr> upperArgs;
+  for (auto d : parentDims) {
+    upperArgs.push_back(ir::Sub::make(d, 1));
+  }
+  auto upperArg = ir::makeConstructor(Point(this->posDim), upperArgs);
+  auto upper = ir::Call::make("createSimpleDomain", {upperArg}, Auto);
   auto pack = mode.getModePack();
   auto posAcc = this->getAccessor(pack, POS, ir::RW);
   auto posArray = this->getRegion(pack, POS);
   auto posParent = this->getRegion(pack, POS_PARENT);
-  auto allocate = ir::makeLegionMalloc(posArray, prevSize, posParent, fidRect1, ir::readWrite);
+  auto allocate = ir::Assign::make(posArray, ir::Call::make("legionMalloc", {ir::ctx, ir::runtime, posParent, upper, fidRect1, ir::readWrite}, Auto));
   auto newAcc = ir::makeCreateAccessor(posAcc, posArray, fidRect1);
   auto setNewAcc = ir::Assign::make(posAcc, newAcc);
   // Since we are directly allocating the pos array here with a known size,
@@ -142,14 +202,37 @@ ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vecto
   auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, this->getRegion(pack, POS_PARENT),
                                                 ir::makeConstructor(Rect(1), {0, ir::Sub::make(prevSize, 1)})}, Auto);
   auto setSubReg = ir::Assign::make(idxLoad, subreg);
-  return ir::Block::make(allocate, setNewAcc, setSubReg);
+  return ir::Block::make(allocate, setNewAcc, setSubReg, this->initPosBounds(mode));
 }
 
-ir::Stmt RectCompressedModeFormat::getSeqInsertEdge(ir::Expr parentPos, std::vector<ir::Expr> coords,
+ir::Stmt RectCompressedModeFormat::getSeqInsertEdges(ir::Expr parentPos, std::vector<ir::Expr> parentDims, std::vector<ir::Expr> coords,
                                                     std::vector<AttrQueryResult> queries, Mode mode) const {
-  taco_iassert(this->posDim == 1);
 
-  // We will emit:
+  taco_iassert(coords.size() == parentDims.size());
+  // TODO (rohany): I don't know if this assumption is too fragile.
+  //  It seems like it isn't quite right if there are dimensions like
+  //  {Sparse,Dense,Sparse}.
+  taco_iassert(coords.size() == size_t(this->posDim));
+
+  // This function inserts all of the edges described by the query results.
+  // To do this, we generate a multi-dimensional loop that iterates over
+  // all of the points defined in the nnz query, and insert each edges
+  // into pos region. This operation performs a scan+ operation over
+  // the pos region.
+
+  std::vector<ir::Stmt> result;
+  auto bounds = this->getPosBounds(mode);
+  auto boundsRect = ir::FieldAccess::make(bounds, "bounds", false /* deref */, Auto);
+  auto boundsLo = ir::FieldAccess::make(bounds, "bounds.lo", false /* deref */, Int64);
+  auto boundsHi = ir::FieldAccess::make(bounds, "bounds.hi", false /* deref */, Int64);
+
+  std::vector<ir::Stmt> loopBody;
+  auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
+  auto point = ir::Var::make("accPoint", Auto);
+  loopBody.push_back(ir::VarDecl::make(point, this->packToPoint(coords)));
+  auto nnz = queries[0].getResult(coords, "nnz");
+
+  // The loop body will be:
   // if (parentPos == 0) {
   //   acc[0] = Rect<1>(0, nnz[0] - 1);
   // } else {
@@ -157,29 +240,38 @@ ir::Stmt RectCompressedModeFormat::getSeqInsertEdge(ir::Expr parentPos, std::vec
   //   acc[parentPos] = Rect<1>(prior, prior + nnz[parentPos] - 1);
   // }
 
-  // Case parentPos == 0.
-  auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
-  auto nnz = queries[0].getResult(coords, "nnz");
-  auto setZeroCase = ir::Store::make(posAcc, parentPos, ir::makeConstructor(Rect(1), {0, ir::Sub::make(nnz, 1)}));
-
-  // Case otherwise.
-  auto prevPos = ir::Sub::make(parentPos, 1);
+  // Zero point case.
+  auto setZeroCase = ir::Store::make(posAcc, point, ir::makeConstructor(Rect(1), {0, ir::Sub::make(nnz, 1)}));
+  // Non-zero case.
   auto priorVar = ir::Var::make(mode.getName() + "_pos_prior", Int64);
-  auto prior = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, prevPos), "hi", false /* deref */, Int64), 1);
-  auto setPrior = ir::VarDecl::make(priorVar, prior);
-  auto setPos = ir::Store::make(posAcc, parentPos, ir::makeConstructor(Rect(1), {priorVar, ir::Sub::make(ir::Add::make(priorVar, nnz), 1)}));
+  auto prevPoint = ir::Load::make(posAcc, ir::Call::make("getPreviousPoint", {point, boundsRect}, Auto));
+  auto prior = ir::Add::make(ir::FieldAccess::make(prevPoint, "hi", false /* deref */, Int64), 1);
+  loopBody.push_back(ir::IfThenElse::make(
+    ir::Eq::make(point, ir::MethodCall::make(point, "ZEROES", {}, false /* deref */, Auto)),
+    ir::Block::make(setZeroCase),
+    ir::Block::make(
+      ir::VarDecl::make(priorVar, prior),
+      ir::Store::make(posAcc, point, ir::makeConstructor(Rect(1), {priorVar, ir::Sub::make(ir::Add::make(priorVar, nnz), 1)}))
+    )
+  ));
 
-  auto cond = ir::Eq::make(parentPos, 0);
-
-  return ir::IfThenElse::make(cond, ir::Block::make(setZeroCase), ir::Block::make(setPrior, setPos));
+  // Now, we emit a loop over all of the coordinates that the nnz query
+  // is defined over.
+  auto loop = ir::Block::make(loopBody);
+  for (int i = coords.size() - 1; i >= 0; i--) {
+    loop = ir::For::make(coords[i], ir::Load::make(boundsLo, i), ir::Add::make(ir::Load::make(boundsHi, i), 1), 1, loop);
+  }
+  result.push_back(loop);
+  return ir::Block::make(result);
 }
 
 ir::Stmt RectCompressedModeFormat::getInitCoords(ir::Expr prevSize, std::vector<AttrQueryResult> queries,
                                                  Mode mode) const {
-  taco_iassert(this->posDim == 1);
+  // We allocate the crd region to be the total number of non-zeros.
+  // We can find this by looking at the final element of the pos region.
   auto pack = mode.getModePack();
   auto posAcc = this->getAccessor(pack, POS, ir::RW);
-  auto size = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posAcc, ir::Sub::make(prevSize, 1)), "hi", false /* deref */, Int64), 1);
+  auto size = this->getAssembledSize(prevSize, mode);
   auto crdArray = this->getRegion(pack, CRD);
   auto crdParent = this->getRegion(pack, CRD_PARENT);
   auto crdAcc = this->getAccessor(pack, CRD, ir::RW);

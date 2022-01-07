@@ -43,6 +43,15 @@ void registerPlacementShardingFunctor(Context ctx, Runtime* runtime, ShardingID 
   runtime->register_sharding_functor(funcID, functor, true /* silence_warnings */);
 }
 
+FieldSpace createFieldSpaceWithSize(Context ctx, Runtime* runtime, FieldID id, size_t size) {
+  auto fspace = runtime->create_field_space(ctx);
+  {
+    auto falloc = runtime->create_field_allocator(ctx, fspace);
+    falloc.allocate_field(size, id);
+  }
+  return fspace;
+}
+
 // getSubRegion returns a subregion of the input region with the desired start and end coordinate.
 LogicalRegion getSubRegion(Context ctx, Runtime* runtime, LogicalRegion region, Domain bounds) {
   // TODO (rohany): Can I avoid creating this IndexSpace on each reallocation call?
@@ -104,6 +113,12 @@ Legion::PhysicalRegion legionMalloc(Context ctx, Runtime* runtime, LogicalRegion
 
 Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent, Legion::FieldID fid, PrivilegeMode priv) {
   return mapRegion(ctx, runtime, region, parent, fid, priv);
+}
+
+Legion::PhysicalRegion legionMalloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::Domain domain, Legion::FieldID fid, Legion::PrivilegeMode priv) {
+  taco_iassert(domain.dim == region.get_dim());
+  auto subreg = getSubRegion(ctx, runtime, region, domain);
+  return mapRegion(ctx, runtime, subreg, region, fid, priv);
 }
 
 Legion::PhysicalRegion legionRealloc(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::PhysicalRegion old, size_t newSize, Legion::FieldID fid, PrivilegeMode priv) {

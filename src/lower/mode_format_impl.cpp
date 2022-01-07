@@ -90,12 +90,20 @@ Expr AttrQueryResult::getResult(const std::vector<Expr>& indices,
     return resultValues;
   }
 
-  Expr pos = 0;
-  for (int i = 0; i < (int)indices.size(); ++i) {
-    Expr dim = GetProperty::make(resultVar, TensorProperty::Dimension, i);
-    pos = ir::Add::make(ir::Mul::make(pos, dim), indices[i]);
+  // Special case for size 0.
+  if (indices.size() == 1) {
+    return Load::make(resultValues, indices[0]);
   }
-  return Load::make(resultValues, pos);
+
+  auto point = ir::makeConstructor(Point(indices.size()), indices);
+  return ir::Load::make(resultValues, point);
+
+  // Expr pos = 0;
+  // for (int i = 0; i < (int)indices.size(); ++i) {
+  //   Expr dim = GetProperty::make(resultVar, TensorProperty::Dimension, i);
+  //   pos = ir::Add::make(ir::Mul::make(pos, dim), indices[i]);
+  // }
+  // return Load::make(resultValues, pos);
 }
 
 std::ostream& operator<<(std::ostream& os, const AttrQueryResult& result) {
@@ -257,13 +265,14 @@ Expr ModeFormatImpl::getAssembledSize(Expr prevSize, Mode mode) const {
   return Expr();
 }
 
-Stmt ModeFormatImpl::getSeqInitEdges(Expr prevSize, 
+Stmt ModeFormatImpl::getSeqInitEdges(Expr prevSize, std::vector<ir::Expr> parentDims,
     std::vector<AttrQueryResult> queries, Mode mode) const {
   return Stmt();
 }
 
-Stmt ModeFormatImpl::getSeqInsertEdge(Expr parentPos, std::vector<Expr> coords,
-    std::vector<AttrQueryResult> queries, Mode mode) const {
+Stmt ModeFormatImpl::getSeqInsertEdges(Expr parentPos, std::vector<Expr> parentDims,
+                                       std::vector<Expr> coords, std::vector<AttrQueryResult> queries,
+                                       Mode mode) const {
   return Stmt();
 }
 

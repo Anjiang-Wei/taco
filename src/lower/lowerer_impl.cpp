@@ -3622,10 +3622,27 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
     const auto queryAccesses = getResultAccesses(assemble.getQueries()).first;
     for (const auto& queryAccess : queryAccesses) {
       const auto queryResult = queryAccess.getTensorVar();
-      Expr values = ir::Var::make(queryResult.getName(),
-                                  queryResult.getType().getDataType(),
-                                  true, false);
+      // If we're lowering to Legion, add this query result to several analysis data
+      // structures, as we'll use a region to represent the query result.
+      if (this->legion) {
+        this->legionTensors.insert(queryResult);
+        this->valuesAnalyzer.addAccess(queryAccess, this->iterators, this->indexVarToExprMap);
+        this->assembleQueryResults.insert(queryResult);
+      }
 
+      auto queryResultExpr = ir::GetProperty::make(this->getTensorVar(queryResult), TensorProperty::Values);
+      Expr values;
+      // If we're lowering to Legion, we'll use an accessor on the query result region
+      // as the values array. Otherwise, we'll just use a pointer.
+      if (this->legion) {
+        // TODO (rohany): Maybe there are cases where we might do reductions
+        //  into the query results?
+        values = this->getValuesArray(queryResult);
+      } else {
+        values = ir::Var::make(queryResult.getName(),
+                               queryResult.getType().getDataType(),
+                               true, false);
+      }
       TemporaryArrays arrays;
       arrays.values = values;
       this->temporaryArrays.insert({queryResult, arrays});
@@ -3634,44 +3651,83 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
       const auto indexVars = queryAccess.getIndexVars();
       taco_iassert(util::all(indexVars,
           [&](const auto& var) { return provGraph.isUnderived(var); }));
+      std::vector<ir::Expr> queryResultDims;
       Expr size = 1;
       for (const auto& indexVar : indexVars) {
         size = ir::Mul::make(size, getDimension(indexVar));
+        queryResultDims.push_back(getDimension(indexVar));
       }
 
-      multimap<IndexVar, Iterator> readIterators;
-      for (auto& read : getArgumentAccesses(assemble.getQueries())) {
-        for (auto& readIterator : getIterators(read)) {
-          for (auto& underivedAncestor :
-              provGraph.getUnderivedAncestors(readIterator.getIndexVar())) {
-            readIterators.insert({underivedAncestor, readIterator});
+      // Create a region for the query result if we're lowering to Legion.
+      // Otherwise, initialize the query result with malloc or calloc.
+      if (this->legion) {
+        // Create a region for the query result.
+        std::vector<ir::Expr> boundsHiArgs;
+        for (auto& dim : queryResultDims) {
+          boundsHiArgs.push_back(ir::Sub::make(dim, 1));
+        }
+        auto pointTy = Point(queryResultDims.size());
+        auto hi = ir::makeConstructor(pointTy, boundsHiArgs);
+        auto bounds = ir::Call::make("createSimpleDomain", {hi}, Auto);
+        // Create an index space and field space for the region.
+        auto ispace = ir::Var::make(queryResult.getName() + "ispace", IndexSpace);
+        auto makeIspace = ir::Call::make("runtime->create_index_space", {ctx, bounds}, IndexSpace);
+        allocStmts.push_back(ir::VarDecl::make(ispace, makeIspace));
+        auto fspace = ir::Var::make(queryResult.getName() + "fspace", FieldSpace);
+        auto makeFspace = ir::Call::make("createFieldSpaceWithSize", {ctx, runtime, fidVal, ir::Sizeof::make(queryResult.getType().getDataType())}, FieldSpace);
+        allocStmts.push_back(ir::VarDecl::make(fspace, makeFspace));
+        auto makeRegion = ir::Call::make("runtime->create_logical_region", {ctx, ispace, fspace}, Auto);
+        allocStmts.push_back(ir::Assign::make(queryResultExpr, makeRegion));
+        // Launch a fill to initialize the region.
+        auto cast = ir::Cast::make(0, queryResult.getType().getDataType());
+        allocStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->fill_field", {ctx, queryResultExpr, queryResultExpr, fidVal, cast}, Auto)));
+
+        // We'll always physically map this for now. When we start thinking about distributed
+        // assembly, we'll have to do some analysis to maybe map the region or not.
+        allocStmts.push_back(ir::Assign::make(queryResultExpr, ir::Call::make("legionMalloc", {ctx, runtime, queryResultExpr, queryResultExpr, fidVal, readWrite}, Auto)));
+        allocStmts.push_back(ir::Assign::make(values, ir::makeCreateAccessor(values, queryResultExpr, fidVal)));
+        // Destroy all of the temporary resources that we created here.
+        freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, queryResultExpr}, Auto)));
+        freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_field_space", {ctx, fspace}, Auto)));
+        freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_index_space", {ctx, ispace}, Auto)));
+        freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_logical_region", {ctx, queryResultExpr}, Auto)));
+      } else {
+        multimap<IndexVar, Iterator> readIterators;
+        for (auto& read : getArgumentAccesses(assemble.getQueries())) {
+          for (auto& readIterator : getIterators(read)) {
+            for (auto& underivedAncestor :
+                provGraph.getUnderivedAncestors(readIterator.getIndexVar())) {
+              readIterators.insert({underivedAncestor, readIterator});
+            }
           }
         }
-      }
-      const auto writeIterators = getIterators(queryAccess);
-      const bool zeroInit = hasSparseInserts(writeIterators, readIterators);
-      if (zeroInit) {
-        Expr sizeOfElt = Sizeof::make(queryResult.getType().getDataType());
-        auto ptrType = Pointer(queryResult.getType().getDataType());
-        Expr callocValues = ir::Cast::make(ir::Call::make("calloc", {size, sizeOfElt},
-                                           queryResult.getType().getDataType()), ptrType);
-        Stmt allocResult = VarDecl::make(values, callocValues);
-        allocStmts.push_back(allocResult);
-      }
-      else {
-        Stmt declResult = VarDecl::make(values, 0);
-        allocStmts.push_back(declResult);
+        const auto writeIterators = getIterators(queryAccess);
+        const bool zeroInit = hasSparseInserts(writeIterators, readIterators);
+        if (zeroInit) {
+          Expr sizeOfElt = Sizeof::make(queryResult.getType().getDataType());
+          auto ptrType = Pointer(queryResult.getType().getDataType());
+          Expr callocValues = ir::Cast::make(ir::Call::make("calloc", {size, sizeOfElt},
+                                                            queryResult.getType().getDataType()), ptrType);
+          Stmt allocResult = VarDecl::make(values, callocValues);
+          allocStmts.push_back(allocResult);
+        }
+        else {
+          Stmt declResult = VarDecl::make(values, 0);
+          allocStmts.push_back(declResult);
 
-        Stmt allocResult = Allocate::make(values, size);
-        allocStmts.push_back(allocResult);
-      }
+          Stmt allocResult = Allocate::make(values, size);
+          allocStmts.push_back(allocResult);
+        }
 
-      Stmt freeResult = Free::make(values);
-      freeStmts.push_back(freeResult);
+        Stmt freeResult = Free::make(values);
+        freeStmts.push_back(freeResult);
+      }
     }
     Stmt allocResults = Block::make(allocStmts);
     freeQueryResults = Block::make(freeStmts);
 
+    // TODO (rohany): If the uses of the query launches a task then
+    //  we cannot map it here.
     queries = lower(assemble.getQueries());
     queries = Block::blanks(allocResults, queries);
   }
@@ -3682,6 +3738,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
   std::vector<Stmt> initAssembleStmts;
   for (const auto& resultAccess : resultAccesses) {
     Expr prevSize = 1;
+    std::vector<ir::Expr> parentSizes = {prevSize};
     std::vector<Expr> coords;
     const auto resultIterators = getIterators(resultAccess);
     const auto resultTensor = resultAccess.getTensorVar();
@@ -3698,27 +3755,24 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
         }
 
         if (resultIterator.hasSeqInsertEdge()) {
-          Stmt initEdges = resultIterator.getSeqInitEdges(prevSize, queryResults);
+          Stmt initEdges = resultIterator.getSeqInitEdges(prevSize, parentSizes, queryResults);
           initAssembleStmts.push_back(initEdges);
 
-          Stmt insertEdgeLoop = resultIterator.getSeqInsertEdge(
-              resultIterator.getParent().getPosVar(), coords, queryResults);
-          auto locateCoords = coords;
-          for (auto iter = resultIterator.getParent(); !iter.isRoot();
-               iter = iter.getParent()) {
-            if (iter.hasLocate()) {
-              Expr dim = GetProperty::make(resultTensorVar,
-                  TensorProperty::Dimension,
-                  resultModeOrdering[iter.getMode().getLevel() - 1]);
-              Expr pos = iter.getPosVar();
-              Stmt initPos = VarDecl::make(pos, iter.locate(locateCoords)[0]);
-              insertEdgeLoop = For::make(coords.back(), 0, dim, 1,
-                                         Block::make(initPos, insertEdgeLoop));
-            } else {
-              taco_not_supported_yet;
-            }
-            locateCoords.pop_back();
+          // Calculate the loop dimensions for the query result, which
+          // we'll use the insert all of the edges computed by the query.
+          std::vector<ir::Expr> dims;
+          for (auto iter = resultIterator.getParent(); !iter.isRoot(); iter = iter.getParent()) {
+            taco_iassert(iter.hasLocate());
+            Expr dim = GetProperty::make(resultTensorVar,
+                                         TensorProperty::Dimension,
+                                         resultModeOrdering[iter.getMode().getLevel() - 1]);
+            dims.push_back(dim);
           }
+          auto rev = util::reverse(dims);
+          dims = {rev.begin(), rev.end()};
+
+          Stmt insertEdgeLoop = resultIterator.getSeqInsertEdges(
+              resultIterator.getParent().getPosVar(), dims, coords, queryResults);
           initAssembleStmts.push_back(insertEdgeLoop);
         }
 
@@ -3730,11 +3784,24 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
       initAssembleStmts.push_back(initYieldPos);
 
       prevSize = resultIterator.getAssembledSize(prevSize);
+      // If the current iterator is dense, then we want to accumulate
+      // the width for the first sparse level.
+      if (resultIterator.hasInsert()) {
+        // If the sizes array is just {1}, we want to change it to
+        // {prevSize}, rather than {1, prevSize}.
+        if (parentSizes.size() == 1 && parentSizes[0].as<ir::Literal>() != nullptr &&
+            parentSizes[0].as<ir::Literal>()->getIntValue() == 1) {
+          parentSizes = {resultIterator.getWidth()};
+        } else {
+          parentSizes.push_back(resultIterator.getWidth());
+        }
+      } else {
+        parentSizes = {prevSize};
+      }
       coords.push_back(getCoordinateVar(resultIterator));
     }
 
     if (generateAssembleCode()) {
-      // TODO: call calloc if not compact or not unpadded
       auto resultTensorExpr = this->getTensorVar(resultTensor);
       Expr valuesArr = getValuesArray(resultTensor);
       if (this->legion) {
@@ -3751,6 +3818,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
                                                       ir::makeConstructor(Rect(1), {0, ir::Sub::make(prevSize, 1)})}, Auto);
         initAssembleStmts.push_back(ir::Assign::make(field, subreg));
       } else {
+        // TODO: call calloc if not compact or not unpadded
         Stmt initValues = Allocate::make(valuesArr, prevSize);
         initAssembleStmts.push_back(initValues);
       }
@@ -3768,7 +3836,6 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
     for (const auto& resultIterator : resultIterators) {
       Stmt finalizeYieldPos = resultIterator.getFinalizeYieldPos(prevSize);
       finalizeAssembleStmts.push_back(finalizeYieldPos);
-
       prevSize = resultIterator.getAssembledSize(prevSize);
     }
   }
@@ -3957,6 +4024,11 @@ ir::Expr LowererImpl::getValuesArray(TensorVar var, bool exclusive) const
   if (this->legion && util::contains(this->legionTensors, var)) {
     auto valuesDim = this->valuesAnalyzer.getValuesDim(var);
     // TODO (rohany): Hackingly including the size as the mode here.
+    // TODO (rohany): We might need to look at the privilege here for the
+    //  query result.
+    if (util::contains(this->assembleQueryResults, var)) {
+      return GetProperty::make(getTensorVar(var), TensorProperty::ValuesWriteAccessor, valuesDim);
+    }
     if (util::contains(this->resultTensors, var)) {
       if (this->performingLegionReduction) {
         if (exclusive) {

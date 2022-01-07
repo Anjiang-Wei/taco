@@ -460,6 +460,7 @@ Datatype IndexSpace = Datatype("IndexSpace");
 Datatype IndexSpaceT(int n) {
   return templateGen("IndexSpaceT", n);
 }
+Datatype FieldSpace = Datatype("FieldSpace");
 Datatype DeferredBuffer(Datatype bufType, int dim) {
   std::stringstream s;
   s << "Legion::DeferredBuffer<" << bufType << ", " << dim << ">";

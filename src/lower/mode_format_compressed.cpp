@@ -216,21 +216,25 @@ Expr CompressedModeFormat::getAssembledSize(Expr prevSize, Mode mode) const {
   return Load::make(getPosArray(mode.getModePack()), prevSize);
 }
 
-Stmt CompressedModeFormat::getSeqInitEdges(Expr prevSize, 
+Stmt CompressedModeFormat::getSeqInitEdges(Expr prevSize, std::vector<ir::Expr>,
     std::vector<AttrQueryResult> queries, Mode mode) const {
   Expr posArray = getPosArray(mode.getModePack());
   return Block::make({Allocate::make(posArray, ir::Add::make(prevSize, 1)),
                       Store::make(posArray, 0, 0)});
 }
 
-Stmt CompressedModeFormat::getSeqInsertEdge(Expr parentPos, 
-    std::vector<Expr> coords, std::vector<AttrQueryResult> queries, 
-    Mode mode) const {
+Stmt CompressedModeFormat::getSeqInsertEdges(Expr,
+                                             std::vector<ir::Expr> parentDims, std::vector<Expr> coords,
+                                             std::vector<AttrQueryResult> queries,
+                                             Mode mode) const {
+  taco_iassert(parentDims.size() == 1);
+  taco_iassert(coords.size() == 1);
   Expr posArray = getPosArray(mode.getModePack());
-  Expr prevPos = Load::make(posArray, parentPos);
+  Expr prevPos = Load::make(posArray, coords[0]);
   Expr nnz = queries[0].getResult(coords, "nnz");
   Expr pos = ir::Add::make(prevPos, nnz);
-  return Store::make(posArray, ir::Add::make(parentPos, 1), pos);
+  auto body = Store::make(posArray, ir::Add::make(coords[0], 1), pos);
+  return ir::For::make(coords[0], 0, parentDims[0], 1, body);
 }
 
 Stmt CompressedModeFormat::getInitCoords(Expr prevSize, 
