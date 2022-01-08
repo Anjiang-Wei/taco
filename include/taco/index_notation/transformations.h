@@ -398,5 +398,10 @@ IndexStmt scalarPromote(IndexStmt stmt);
  */
 IndexStmt insertTemporaries(IndexStmt stmt);
 
+/**
+ * Hoist all such that nodes present in the IndexStmt to the top level.
+ */
+IndexStmt hoistSuchThats(IndexStmt stmt);
+
 }
 #endif

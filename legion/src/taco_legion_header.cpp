@@ -394,6 +394,171 @@ void SparseGatherProjection::registerTasks() {
   }
 }
 
+RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
+    Context ctx, Runtime *runtime, LogicalRegion region,
+    LogicalPartition part,
+    FieldID fid) :
+    IndexLauncher(RectCompressedFinalizeYieldPositions::taskID, Domain(), TaskArgument(), ArgumentMap()) {
+  this->launch_domain = runtime->get_index_partition_color_space(ctx, part.get_index_partition());
+  auto launchSpace = runtime->get_index_partition_color_space_name(ctx, part.get_index_partition());
+
+  // The input partition must be complete and disjoint.
+  taco_iassert(runtime->is_index_partition_complete(ctx, part.get_index_partition()));
+  taco_iassert(runtime->is_index_partition_disjoint(ctx, part.get_index_partition()));
+
+  // TODO (rohany): For now, let's just worry about one-dimensional color spaces.
+  taco_iassert(this->launch_domain.dim == 1);
+  // Create a ghost partition.
+  // TODO (rohany): I think that in the general case with this access pattern
+  //  only one of the dimensions can be partitioned. This makes sense because
+  //  the access order that we have is i - 1 in a linearized space, so it can
+  //  only be partitioned in one dimension.
+  DomainPointColoring coloring;
+  switch (region.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM: {    \
+      DomainT<DIM> regionBounds = runtime->get_index_space_domain(ctx, region.get_index_space());             \
+      for (PointInDomainIterator<1> itr(this->launch_domain); itr(); itr++) { \
+        auto subreg = runtime->get_logical_subregion_by_color(ctx, part, Color(*itr)); \
+        DomainT<DIM> bounds = runtime->get_index_space_domain(ctx, subreg.get_index_space());                 \
+        taco_iassert(bounds.dense());           \
+        for (int i = 1; i < DIM; i++) {                                                                       \
+          taco_iassert(bounds.bounds.lo[i] == regionBounds.bounds.lo[i]);           \
+          taco_iassert(bounds.bounds.hi[i] == regionBounds.bounds.hi[i]);           \
+        }          \
+        /* We might need to access the previous "i" dimension. */           \
+        Point<DIM> newLo = bounds.bounds.lo;                                                                  \
+        if (newLo[0] != 0) newLo[0]--;           \
+        coloring[*itr] = {newLo, bounds.bounds.hi};           \
+      }             \
+      break;       \
+    }
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      taco_iassert(false);
+  }
+
+  // We can't launch a task on two partitions of the same region and same field
+  // to get a "update in one step" kind of behavior. Instead, we'll create a
+  // temporary region that will hold the data before the finalization process.
+  // We'll then use this temporary region as the old version of the data.
+  auto tempReg = runtime->create_logical_region(ctx, region.get_index_space(), region.get_field_space());
+  auto tempPart = runtime->get_logical_partition(ctx, tempReg, part.get_index_partition());
+  {
+    IndexCopyLauncher cl(this->launch_domain);
+    cl.add_copy_requirements(
+        RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, region).add_field(fid),
+        RegionRequirement(tempPart, 0, WRITE_ONLY, EXCLUSIVE, tempReg).add_field(fid)
+    );
+    runtime->issue_copy_operation(ctx, cl);
+  }
+
+  auto ghostip = runtime->create_partition_by_domain(ctx, tempReg.get_index_space(), coloring, launchSpace,
+                                                     false /* perform_intersections */,
+                                                     LEGION_ALIASED_COMPLETE_KIND);
+  auto ghostlp = runtime->get_logical_partition(ctx, tempReg, ghostip);
+
+  // Add the regions arguments.
+  this->add_region_requirement(RegionRequirement(part, 0, READ_WRITE, EXCLUSIVE, region).add_field(fid));
+  this->add_region_requirement(
+      RegionRequirement(ghostlp, 0, READ_ONLY, EXCLUSIVE, tempReg).add_field(fid));
+}
+
+template<>
+void RectCompressedFinalizeYieldPositions::body<1>(Context ctx, Runtime* runtime,
+                                                   Rect<1> fullBounds, Rect<1> iterBounds,
+                                                   Accessor<1, READ_WRITE> output, Accessor<1, READ_ONLY> ghost) {
+  #pragma omp parallel for schedule(static)
+  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+    if (i == 0) {
+      output[0].lo = 0;
+    } else {
+      output[i].lo = ghost[i - 1].lo;
+    }
+  }
+}
+
+template<>
+void RectCompressedFinalizeYieldPositions::body<2>(Context ctx, Runtime* runtime,
+                                                   Rect<2> fullBounds, Rect<2> iterBounds,
+                                                   Accessor<2, READ_WRITE> output, Accessor<2, READ_ONLY> ghost) {
+  #pragma omp parallel for schedule(static) collapse(2)
+  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+    for (int j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
+      Point<2> point(i, j);
+      if (point == Point<2>::ZEROES()) {
+        output[point].lo = 0;
+      } else {
+        output[point].lo = ghost[getPreviousPoint(point, fullBounds)].lo;
+      }
+    }
+  }
+}
+
+template<>
+void RectCompressedFinalizeYieldPositions::body<3>(Context ctx, Runtime* runtime,
+                                                   Rect<3> fullBounds, Rect<3> iterBounds,
+                                                   Accessor<3, READ_WRITE> output, Accessor<3, READ_ONLY> ghost) {
+  #pragma omp parallel for schedule(static) collapse(3)
+  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+    for (int j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
+      for (int k = iterBounds.lo.z; k <= iterBounds.hi.z; k++) {
+        Point<3> point(i, j, k);
+        if (point == Point<3>::ZEROES()) {
+          output[point].lo = 0;
+        } else {
+          output[point].lo = ghost[getPreviousPoint(point, fullBounds)].lo;
+        }
+      }
+    }
+  }
+}
+
+void RectCompressedFinalizeYieldPositions::task(const Legion::Task *task,
+                                                const std::vector<Legion::PhysicalRegion> &regions, Legion::Context ctx,
+                                                Legion::Runtime *runtime) {
+  auto output = regions[0];
+  auto outputlr = output.get_logical_region();
+  auto ghost = regions[1];
+  std::vector<FieldID> fields;
+  output.get_fields(fields);
+  taco_iassert(runtime->has_parent_logical_partition(ctx, outputlr));
+  auto outputPart = runtime->get_parent_logical_partition(ctx, outputlr);
+  auto outputParent = runtime->get_parent_logical_region(ctx, outputPart);
+  taco_iassert(fields.size() == 1);
+  switch (outputlr.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM: {    \
+      Rect<DIM> fullBounds = runtime->get_index_space_domain(ctx, outputParent.get_index_space()).bounds<DIM, coord_t>(); \
+      Rect<DIM> iterBounds = runtime->get_index_space_domain(ctx, outputlr.get_index_space()).bounds<DIM, coord_t>();     \
+      Accessor<DIM, READ_WRITE> outAcc(output, fields[0]); \
+      Accessor<DIM, READ_ONLY> ghostAcc(ghost, fields[0]); \
+      RectCompressedFinalizeYieldPositions::body<DIM>(ctx, runtime, fullBounds, iterBounds, outAcc, ghostAcc); \
+      break;       \
+    }
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      taco_iassert(false);
+  }
+}
+
+const int RectCompressedFinalizeYieldPositions::taskID = TID_RECT_COMPRESSED_FINALIZE_YIELD_POSITIONS;
+void RectCompressedFinalizeYieldPositions::registerTasks() {
+  {
+    TaskVariantRegistrar registrar(RectCompressedFinalizeYieldPositions::taskID, "rectCompressedFinalizeYieldPositions");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<RectCompressedFinalizeYieldPositions::task>(registrar, "rectCompressedFinalizeYieldPositions");
+  }
+  {
+    TaskVariantRegistrar registrar(RectCompressedFinalizeYieldPositions::taskID, "rectCompressedFinalizeYieldPositions");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<RectCompressedFinalizeYieldPositions::task>(registrar, "rectCompressedFinalizeYieldPositions");
+  }
+}
+
 void registerTacoRuntimeLibTasks() {
   SparseGatherProjection::registerTasks();
+  RectCompressedFinalizeYieldPositions::registerTasks();
 }

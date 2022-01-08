@@ -2639,4 +2639,28 @@ IndexStmt insertTemporaries(IndexStmt stmt)
   return stmt;
 }
 
+IndexStmt hoistSuchThats(IndexStmt stmt) {
+  struct SuchThatHoister : public IndexNotationRewriter {
+    IndexStmt apply(IndexStmt stmt) {
+      stmt = IndexNotationRewriter::rewrite(stmt);
+      if (!(this->predicates.empty() && this->calls.empty())) {
+        stmt = SuchThat(stmt, this->predicates, this->calls);
+      }
+      return stmt;
+    }
+
+    void visit(const SuchThatNode* node) {
+      this->stmt = node->stmt;
+      util::append(this->predicates, node->predicate);
+      for (auto it : node->calls) {
+        this->calls.insert({it.first, it.second});
+      }
+    }
+
+    std::vector<IndexVarRel> predicates;
+    std::map<IndexVar, std::shared_ptr<LeafCallInterface>> calls;
+  };
+  return SuchThatHoister().apply(stmt);
+}
+
 }
