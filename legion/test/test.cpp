@@ -7,9 +7,19 @@ using namespace Legion;
 Context DISTALRuntime::ctx = Context();
 Runtime* DISTALRuntime::runtime = nullptr;
 
+void register_mapper(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs) {
+  auto proc = *local_procs.begin();
+  runtime->replace_default_mapper(
+      new DISTALRuntimeTestMapper(runtime->get_mapper_runtime(), machine, proc, "DISTALRuntimeTestMapper"),
+      Processor::NO_PROC);
+}
+
 void DISTALRuntime::SetUpTestCase() {
   // Register all of the tasks that we may need for tests.
   registerTacoRuntimeLibTasks();
+
+  // Register the test mapper.
+  Runtime::add_registration_callback(register_mapper);
 
   // Start the runtime in the background.
   Legion::Runtime::start(my_argc, my_argv, true /* backgroun */);
@@ -21,6 +31,18 @@ void DISTALRuntime::TearDownTestCase() {
   // Close up the runtime.
   runtime->finish_implicit_task(ctx);
   Legion::Runtime::wait_for_shutdown();
+}
+
+DISTALRuntimeTestMapper::DISTALRuntimeTestMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &machine,
+                                                 const Legion::Processor &local, const char *name)
+    : Mapping::DefaultMapper(rt, machine, local, name) {}
+
+Legion::Memory DISTALRuntimeTestMapper::default_policy_select_target_memory(Legion::Mapping::MapperContext ctx,
+                                                                            Legion::Processor target_proc,
+                                                                            const Legion::RegionRequirement &req,
+                                                                            Legion::MemoryConstraint mc) {
+  // Always return the first CPU memory.
+  return Machine::MemoryQuery(this->machine).only_kind(Realm::Memory::SYSTEM_MEM).first();
 }
 
 // Redeclarations of the extern variables so that everything links.

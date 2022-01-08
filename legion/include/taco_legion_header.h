@@ -269,4 +269,30 @@ int taco_binarySearchBefore(T posArray, int arrayStart, int arrayEnd, int target
   return lowerBound;
 }
 
+// A set of tasks and methods for distributed-parallel construction of sparse tensors.
+// TODO (rohany): Make sure all of the necessary IndexLauncher fields are done.
+class RectCompressedFinalizeYieldPositions : public Legion::IndexLauncher {
+public:
+  // RectCompressedFinalizeYieldPositions(Legion::LogicalRegion region, Legion::FieldID fid);
+  // TODO (rohany): I don't know yet if this will naturally allow for
+  //  taking in an existing partition.
+  RectCompressedFinalizeYieldPositions(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalPartition partition, Legion::FieldID fid);
+  static void registerTasks();
+private:
+
+  // Local typedef for Accessors.
+  template<int DIM, Legion::PrivilegeMode MODE>
+  using Accessor = Legion::FieldAccessor<MODE, Legion::Rect<1>, DIM, Legion::coord_t, Realm::AffineAccessor<Legion::Rect<1>, DIM, Legion::coord_t>>;
+
+  // TODO (rohany): Decide what this does.
+  template<int DIM>
+  static void body(Legion::Context ctx, Legion::Runtime *runtime,
+                   Legion::Rect<DIM> fullBounds, Legion::Rect<DIM> iterBounds,
+                   Accessor<DIM, READ_WRITE> output, Accessor<DIM, READ_ONLY> ghost);
+  // TODO (rohany): Comment.
+  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  // TODO (rohany): Why can't I define these inline like in the Legion examples?
+  static const int taskID;
+};
+
 #endif // TACO_LEGION_INCLUDES_H
