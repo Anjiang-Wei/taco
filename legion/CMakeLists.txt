@@ -258,6 +258,10 @@ target_include_directories(distal-gtest PRIVATE ../test/)
 file(GLOB DISTAL_TEST_HEADERS test/*.h)
 file(GLOB DISTAL_TEST_SOURCES test/*.cpp)
 add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
+# Compile distal-runtime-test with OpenMP if we're configured with it.
+if (OPENMP)
+  target_compile_options(distal-runtime-test PRIVATE ${OpenMP_CXX_FLAGS})
+endif(OPENMP)
 target_include_directories(distal-runtime-test PRIVATE ../test/)
 target_link_libraries(distal-runtime-test distal-gtest Legion::Legion ${HDF5_LIBRARIES})
 # Tell CMake about all of the tests that GoogleTest will register.

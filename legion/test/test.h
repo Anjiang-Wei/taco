@@ -5,6 +5,7 @@
 #include "legion.h"
 #include "mappers/default_mapper.h"
 #include "task_ids.h"
+#include "legion_string_utils.h"
 
 // Nasty global variables to get access to argc and argv.
 extern int my_argc;
@@ -31,5 +32,8 @@ public:
                                                      const Legion::RegionRequirement &req,
                                                      Legion::MemoryConstraint mc = Legion::MemoryConstraint());
 };
+
+// initRandomDevice initializes a random device for use in a test.
+unsigned initRandomDevice();
 
 #endif // LG_TEST_H
