@@ -604,7 +604,9 @@ RectCompressedGetSeqInsertEdges::compute(Legion::Context ctx, Legion::Runtime *r
   Serializer localScanSer;
   localScanSer.serialize(posFid);
   localScanSer.serialize(nnzFid);
-  IndexLauncher localScanLauncher(RectCompressedGetSeqInsertEdges::scanTaskID, colorSpace, TaskArgument(localScanSer.get_buffer(), localScanSer.get_used_bytes()), ArgumentMap());
+  IndexLauncher localScanLauncher(RectCompressedGetSeqInsertEdges::scanTaskID, colorSpace,
+                                  TaskArgument(localScanSer.get_buffer(), localScanSer.get_used_bytes()),
+                                  ArgumentMap());
   localScanLauncher.add_region_requirement(RegionRequirement(pospart, 0, WRITE_ONLY, EXCLUSIVE, pos).add_field(posFid));
   localScanLauncher.add_region_requirement(RegionRequirement(nnzpart, 0, READ_ONLY, EXCLUSIVE, nnz).add_field(nnzFid));
   auto localScanResults = runtime->execute_index_space(ctx, localScanLauncher);
@@ -626,8 +628,11 @@ RectCompressedGetSeqInsertEdges::compute(Legion::Context ctx, Legion::Runtime *r
   // Now, we just need to apply the partial results to each subregion of pos.
   Serializer applyPartialResultsSer;
   applyPartialResultsSer.serialize(posFid);
-  IndexLauncher applyPartialResultsLauncher(RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID, colorSpace, TaskArgument(applyPartialResultsSer.get_buffer(), applyPartialResultsSer.get_used_bytes()), scanMap);
-  applyPartialResultsLauncher.add_region_requirement(RegionRequirement(pospart, 0, READ_WRITE, EXCLUSIVE, pos).add_field(posFid));
+  IndexLauncher applyPartialResultsLauncher(RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID, colorSpace,
+                                            TaskArgument(applyPartialResultsSer.get_buffer(),
+                                                         applyPartialResultsSer.get_used_bytes()), scanMap);
+  applyPartialResultsLauncher.add_region_requirement(
+      RegionRequirement(pospart, 0, READ_WRITE, EXCLUSIVE, pos).add_field(posFid));
   runtime->execute_index_space(ctx, applyPartialResultsLauncher);
 
   // At this point, the final result of the scan is in scanVal.
@@ -639,11 +644,11 @@ RectCompressedGetSeqInsertEdges::compute(Legion::Context ctx, Legion::Runtime *r
 
 template<typename T, int DIM, typename ACC>
 T inclusiveScanPlus(
-  DeferredBuffer<T, DIM> output,
-  ACC input,
-  const Rect<DIM>& bounds,
-  const Pitches<DIM - 1> pitches,
-  size_t volume
+    DeferredBuffer<T, DIM> output,
+    ACC input,
+    const Rect<DIM> &bounds,
+    const Pitches<DIM - 1> pitches,
+    size_t volume
 ) {
 #ifdef REALM_USE_OPENMP
   // The strategy here will be to create an array with an entry for each
@@ -721,7 +726,8 @@ int32_t RectCompressedGetSeqInsertEdges::scanBody(Context ctx, Runtime *runtime,
 }
 
 int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
-                                                  const std::vector<Legion::PhysicalRegion> &regions, Legion::Context ctx,
+                                                  const std::vector<Legion::PhysicalRegion> &regions,
+                                                  Legion::Context ctx,
                                                   Legion::Runtime *runtime) {
 
   // Unpack arguments for the task.
@@ -734,9 +740,11 @@ int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
   Memory::Kind tmpMemKind;
   switch (task->current_proc.kind()) {
     case Realm::Processor::LOC_PROC:
-      tmpMemKind = Realm::Memory::SYSTEM_MEM; break;
+      tmpMemKind = Realm::Memory::SYSTEM_MEM;
+      break;
     case Realm::Processor::OMP_PROC:
-      tmpMemKind = Realm::Memory::SOCKET_MEM; break;
+      tmpMemKind = Realm::Memory::SOCKET_MEM;
+      break;
     default:
       taco_iassert(false);
   }
@@ -828,8 +836,6 @@ void RectCompressedGetSeqInsertEdges::registerTasks() {
     Runtime::preregister_task_variant<RectCompressedGetSeqInsertEdges::applyPartialResultsTask>(registrar, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
   }
 }
-
-
 
 void registerTacoRuntimeLibTasks() {
   SparseGatherProjection::registerTasks();
