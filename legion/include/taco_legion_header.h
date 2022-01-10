@@ -286,4 +286,41 @@ private:
   static const int taskID;
 };
 
+class RectCompressedGetSeqInsertEdges {
+public:
+  struct ResultValuePack {
+    int32_t scanResult;
+    Legion::LogicalPartition partition;
+  };
+  static ResultValuePack compute(Legion::Context ctx, Legion::Runtime *runtime,
+                                 Legion::IndexSpace colorSpace,
+                                 Legion::LogicalRegion pos, Legion::FieldID posFid,
+                                 Legion::LogicalRegion nnz, Legion::FieldID nnzFid);
+
+  static void registerTasks();
+private:
+  // Local typedef for Accessors.
+  template<typename T, int DIM, Legion::PrivilegeMode MODE>
+  using Accessor = Legion::FieldAccessor<MODE, T, DIM, Legion::coord_t, Realm::AffineAccessor<T, DIM, Legion::coord_t>>;
+
+  // TODO (rohany): I think that the best way of doing this is to have subclasses for each
+  //  of these methods that inherit from IndexLauncher. However, each is only used once
+  //  so it is not too much overhead.
+
+  // There are two phases to the scan computation. A local scan on each processor,
+  // and then an application of partial results onto each processor.
+
+  // scan{Body,Task} are the implementations of the first step.
+  template<int DIM>
+  static int32_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int32_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static const int scanTaskID;
+
+  // applyPartialResults{Body,Task} are the implementations of the second step.
+  template<int DIM>
+  static void applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, READ_WRITE> output, int32_t value);
+  static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static const int applyPartialResultsTaskID;
+};
+
 #endif // TACO_LEGION_INCLUDES_H

@@ -32,7 +32,7 @@ ErrorReport::ErrorReport(const char *file, const char *func, int line,
       (*msg) << " at " << file << ":" << line << " in " << func << ":" << endl;
       break;
     case Internal:
-      (*msg) << "Compiler bug";
+      (*msg) << "Internal error";
       if (warning) {
         (*msg) << "(warning)";
       }
