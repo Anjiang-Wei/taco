@@ -103,5 +103,6 @@ int main(int argc, char** argv) {
   }
   registerHDF5UtilTasks();
   registerTacoTasks();
+  registerTacoRuntimeLibTasks();
   return Runtime::start(argc, argv);
 }

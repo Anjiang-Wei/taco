@@ -516,6 +516,18 @@ Expr getIndexSpace(Expr e) {
   return ir::Call::make("get_index_space", {e}, Auto);
 }
 
+ir::Expr regionPrivilegeToExpr(RegionPrivilege rp) {
+  switch (rp) {
+    case RO:
+      return readOnly;
+    case RW:
+      return readWrite;
+    default:
+      taco_iassert(false);
+  }
+  return Expr();
+}
+
 std::ostream& operator<<(std::ostream& os, const RegionPrivilege& rp) {
   switch (rp) {
     case RO:
@@ -1317,6 +1329,7 @@ ir::Expr aliasedPart = ir::Symbol::make("LEGION_ALIASED_COMPLETE_KIND");
 ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
 ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
 ir::Expr readWrite = ir::Symbol::make("READ_WRITE");
+ir::Expr fidVal = ir::Symbol::make("FID_VAL");
 
 } // namespace ir
 } // namespace taco

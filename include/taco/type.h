@@ -131,6 +131,9 @@ extern Datatype AffineProjection;
 // A helper type to perform gather operations from a sparse level into
 // a dense level.
 extern Datatype SparseGatherProjection;
+// A helper type that implements logic for the FinalizeYieldPositions
+// mode function for the RectCompressed level type.
+extern Datatype RectCompressedFinalizeYieldPositions;
 // An n-dimensional point.
 Datatype Point(int n);
 // An n-dimensional rectangle.

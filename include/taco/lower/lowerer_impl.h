@@ -750,6 +750,14 @@ private:
   // in a statement right now, so we only populate this map when this->legion = true.
   std::map<TensorVar, Access> tensorVarToAccess;
 
+  // getAllAccessors returns a deduplicated list of all accessors present in a
+  // statement. The returnd list of ir::Expr are gauranteed to be ir::GetProperty's.
+  std::vector<ir::Expr> getAllAccessors(ir::Stmt stmt);
+
+  // stmtHasTasks returns whether or not the input statement contains any
+  // for loops that are tasks.
+  bool stmtHasTasks(ir::Stmt stmt);
+
   // BoundsInferenceExprRewriter rewrites an expression by replacing Var's corresponding
   // to IndexVariable's with their upper and lower bounds, if those variables are not
   // current defined.
@@ -788,7 +796,6 @@ private:
   // the lowerer are defined in ir.{h, cpp}.
   static inline ir::Expr exclusive = ir::Symbol::make("EXCLUSIVE");
   static inline ir::Expr simultaneous = ir::Symbol::make("LEGION_SIMULTANEOUS");
-  static inline ir::Expr fidVal = ir::Symbol::make("FID_VAL");
   static inline ir::Expr task = ir::Symbol::make("task");
   static inline ir::Expr virtualMap = ir::Symbol::make("Mapping::DefaultMapper::VIRTUAL_MAP");
   static inline ir::Expr placementMap = ir::Symbol::make("TACOMapper::PLACEMENT");

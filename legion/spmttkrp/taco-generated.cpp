@@ -56,26 +56,12 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   }
   IndexPartition B3_crd_index_part = runtime->create_index_partition(ctx, B3_crd.get_index_space(), domain, B3_crd_coloring, LEGION_COMPUTE_KIND);
   LogicalPartition B3_crd_part = runtime->get_logical_partition(ctx, B3_crd, B3_crd_index_part);
-  IndexPartition posSparsePartB3 = runtime->create_partition_by_preimage_range(
-    ctx,
-    B3_crd_index_part,
-    B3_pos,
-    B3_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part)
-  );
+  IndexPartition posSparsePartB3 = runtime->create_partition_by_preimage_range(ctx, B3_crd_index_part, B3_pos, B3_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part));
   IndexPartition posIndexPartB3 = densifyPartition(ctx, runtime, get_index_space(B3_pos), posSparsePartB3);
   LogicalPartition posPartB3 = runtime->get_logical_partition(ctx, B3_pos, posIndexPartB3);
   LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B3_crd_part, B_vals);
   LogicalPartition crdPartB2 = copyPartition(ctx, runtime, posPartB3, B2_crd);
-  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(
-    ctx,
-    crdPartB2.get_index_partition(),
-    B2_pos,
-    B2_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition())
-  );
+  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(ctx, crdPartB2.get_index_partition(), B2_pos, B2_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition()));
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);

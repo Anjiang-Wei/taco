@@ -57,28 +57,14 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   }
   IndexPartition B2_crd_index_part = runtime->create_index_partition(ctx, B2_crd.get_index_space(), domain, B2_crd_coloring, LEGION_COMPUTE_KIND);
   LogicalPartition B2_crd_part = runtime->get_logical_partition(ctx, B2_crd, B2_crd_index_part);
-  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(
-    ctx,
-    B2_crd_index_part,
-    B2_pos,
-    B2_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part)
-  );
+  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(ctx, B2_crd_index_part, B2_pos, B2_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part));
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
   LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, B_vals);
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   LogicalPartition AValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, A_vals);
   LogicalPartition crdPartA2 = copyPartition(ctx, runtime, AValsLogicalPart, A2_crd);
-  IndexPartition posSparsePartA2 = runtime->create_partition_by_preimage_range(
-    ctx,
-    crdPartA2.get_index_partition(),
-    A2_pos,
-    A2_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, crdPartA2.get_index_partition())
-  );
+  IndexPartition posSparsePartA2 = runtime->create_partition_by_preimage_range(ctx, crdPartA2.get_index_partition(), A2_pos, A2_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, crdPartA2.get_index_partition()));
   IndexPartition posIndexPartA2 = densifyPartition(ctx, runtime, get_index_space(A2_pos), posSparsePartA2);
   LogicalPartition posPartA2 = runtime->get_logical_partition(ctx, A2_pos, posIndexPartA2);
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
@@ -219,22 +205,8 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   taskArgsRaw.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(
-    partitionPack->APartition.indicesPartitions[1][0],
-    0,
-    READ_ONLY,
-    EXCLUSIVE,
-    get_logical_region(A2_pos_parent),
-    Mapping::DefaultMapper::VIRTUAL_MAP
-  ).add_field(FID_RECT_1));
-  launcher.add_region_requirement(RegionRequirement(
-    partitionPack->APartition.indicesPartitions[1][1],
-    0,
-    READ_ONLY,
-    EXCLUSIVE,
-    get_logical_region(A2_crd_parent),
-    Mapping::DefaultMapper::VIRTUAL_MAP
-  ).add_field(FID_COORD));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_RECT_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_crd_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, A_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));

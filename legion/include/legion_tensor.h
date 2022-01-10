@@ -130,6 +130,11 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
   return result;
 }
 
+// An "infinitely" sized region will just be a really big one. I'm not sure how
+// big we actually need this to be, but 1 << 30 wasn't enough. However, 1 << 63
+// caused some other problems (bounds check failure) that I don't understand.
+const Legion::coord_t LEGION_TENSOR_INFTY = Legion::coord_t(1) << 48;
+
 // createSparseTensorForPack creates an empty sparse tensor that can be used as the target of
 // a pack operation from a COO matrix. This tensor is initialized to have regions of "infinite"
 // size that are mapped into variable size chunks depending on what the actual sizes of the
@@ -162,11 +167,6 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
     fa.allocate_field(sizeof(int32_t), crdField);
   }
 
-  // An "infinitely" sized region will just be a really big one. I'm not sure how
-  // big we actually need this to be, but 1 << 30 wasn't enough. However, 1 << 63
-  // caused some other problems (bounds check failure) that I don't understand.
-  auto infty = Legion::coord_t(1) << 48;
-
   bool inDenseRun = false;
   std::vector<int> levelsInDenseRun;
   auto getIspaceDomainPoints = [&](Legion::DomainPoint& lo, Legion::DomainPoint& hi) {
@@ -176,7 +176,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
       lo.dim = 1;
       hi.dim = 1;
       lo[0] = 0;
-      hi[0] = infty - 1;
+      hi[0] = LEGION_TENSOR_INFTY;
     } else {
       // Otherwise, we were in a dense run. If the first level is contained in the dense run,
       // then the dimensionality of the array is |levelsInDenseRun|. Otherwise, it's
@@ -194,7 +194,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         lo.dim = dim;
         hi.dim = dim;
         lo[0] = 0;
-        hi[0] = infty;
+        hi[0] = LEGION_TENSOR_INFTY;
         for (size_t i = 1; i < dim; i++) {
           lo[i] = 0;
           hi[i] = dims[levelsInDenseRun[i - 1]] - 1;
@@ -223,7 +223,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         // Create the index space using the information about the dense runs.
         auto posIspace = runtime->create_index_space(ctx, Legion::Domain(lo, hi));
         auto posReg = runtime->create_logical_region(ctx, posIspace, posFspace);
-        auto crdIspace = runtime->create_index_space(ctx, Legion::Rect<1>(0, infty));
+        auto crdIspace = runtime->create_index_space(ctx, Legion::Rect<1>(0, LEGION_TENSOR_INFTY));
         auto crdReg = runtime->create_logical_region(ctx, crdIspace, crdFspace);
         result.indices[level] = {posReg, crdReg};
         result.indicesParents[level] = {posReg, crdReg};

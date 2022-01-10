@@ -81,22 +81,24 @@ std::ostream& operator<<(std::ostream&os, const AttrQuery& query) {
 
 
 // class AttrQueryResult
-AttrQueryResult::AttrQueryResult(Expr resultVar, Expr resultValues) 
-    : resultVar(resultVar), resultValues(resultValues) {}
+AttrQueryResult::AttrQueryResult(Expr resultVar, Expr resultValuesArray, Expr resultValuesAccessor)
+    : resultVar(resultVar), resultValuesArray(resultValuesArray), resultValuesAccessor(resultValuesAccessor) {}
+
+
 
 Expr AttrQueryResult::getResult(const std::vector<Expr>& indices,
                                 const std::string& attr) const {
   if (indices.empty()) {
-    return resultValues;
+    return this->resultValuesArray;
   }
 
   // Special case for size 0.
   if (indices.size() == 1) {
-    return Load::make(resultValues, indices[0]);
+    return Load::make(resultValuesAccessor, indices[0]);
   }
 
   auto point = ir::makeConstructor(Point(indices.size()), indices);
-  return ir::Load::make(resultValues, point);
+  return ir::Load::make(resultValuesAccessor, point);
 
   // Expr pos = 0;
   // for (int i = 0; i < (int)indices.size(); ++i) {

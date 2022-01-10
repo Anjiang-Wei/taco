@@ -99,6 +99,7 @@ protected:
   ir::Stmt initPosBounds(Mode mode) const;
   ir::Stmt initCrdBounds(Mode mode) const;
   ir::Expr getCrdColoring(Mode mode) const;
+  ir::Expr getSeqInsertEdgesResultVar(Mode mode) const;
 
   ModeFunction partitionPosFromCrd(Mode mode, ir::Expr crdIndexPartition,
                                    std::function<std::vector<ir::Expr>(std::vector<ir::Expr>)> maybeAddColor) const;
