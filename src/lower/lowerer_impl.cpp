@@ -799,41 +799,12 @@ LowererImpl::lower(IndexStmt stmt, string name,
     // task itself if we aren't launching any tasks. This pass adds
     // malloc's every region that has an accessor in the body if the
     // body does not launch any tasks.
-    struct AccessorFinder : public IRVisitor {
-      void visit(const For *node) {
-        this->hasTasks |= node->isTask;
-        node->contents.accept(this);
-        node->start.accept(this);
-        node->end.accept(this);
-      }
-
-      void visit(const GetProperty* node) {
-        switch (node->property) {
-          case TensorProperty::ValuesReductionNonExclusiveAccessor:
-          case TensorProperty::ValuesReductionAccessor:
-          case TensorProperty::ValuesReadAccessor:
-          case TensorProperty::ValuesWriteAccessor:
-          case TensorProperty::IndicesAccessor: {
-            auto hashable = node->toHashable();
-            if (!util::contains(this->gpSet, hashable)) {
-              this->gpSet.insert(hashable);
-              this->gps.push_back(node);
-            }
-            break;
-          }
-          default:
-            break;
-        }
-      }
-
-      bool hasTasks = false;
-      std::set<ir::GetProperty::Hashable> gpSet;
-      std::vector<const ir::GetProperty*> gps;
-    };
-    AccessorFinder accessorFinder; body.accept(&accessorFinder);
-    if (!accessorFinder.hasTasks && !accessorFinder.gpSet.empty()) {
+    auto hasTasks = this->stmtHasTasks(body);
+    auto accessors = this->getAllAccessors(body);
+    if (!hasTasks && !accessors.empty()) {
       // Malloc all RHS regions that are accessed by an accessor.
-      for (auto acc : accessorFinder.gps) {
+      for (auto accExpr : accessors) {
+        auto acc = accExpr.as<ir::GetProperty>();
         auto tensorVar = this->exprToTensorVar[acc->tensor];
         if (!util::contains(arguments, tensorVar)) continue;
         if (acc->property == TensorProperty::ValuesReadAccessor) {
@@ -3751,6 +3722,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
         std::vector<AttrQueryResult> queryResults;
         for (const auto& queryResultVar : queryResultVars) {
           queryResults.emplace_back(getTensorVar(queryResultVar),
+                                    ir::GetProperty::make(getTensorVar(queryResultVar), TensorProperty::Values),
                                     getValuesArray(queryResultVar));
         }
 
@@ -3806,17 +3778,18 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
       Expr valuesArr = getValuesArray(resultTensor);
       if (this->legion) {
         taco_iassert(this->valuesAnalyzer.getValuesDim(resultTensor) == 1);
+        // Here, we just cast the values region down to the size that it will
+        // actually take. We don't physically map the region as we might launch
+        // tasks that need to operate on it.
         auto valuesReg = ir::GetProperty::make(resultTensorExpr, TensorProperty::Values);
         auto valuesParent = ir::GetProperty::make(resultTensorExpr, TensorProperty::ValuesParent);
-        auto allocValues = ir::makeLegionMalloc(valuesReg, prevSize, valuesParent, fidVal, readWrite);
-        auto newAcc = ir::makeCreateAccessor(valuesArr, valuesReg, fidVal);
-        initAssembleStmts.push_back(allocValues);
-        initAssembleStmts.push_back(ir::Assign::make(valuesArr, newAcc));
-        // Finally, we need to perform the subregion cast for the values array here.
         auto field = ir::FieldAccess::make(resultTensorExpr, "vals", true /* isDeref*/, Auto);
         auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, valuesParent,
                                                       ir::makeConstructor(Rect(1), {0, ir::Sub::make(prevSize, 1)})}, Auto);
-        initAssembleStmts.push_back(ir::Assign::make(field, subreg));
+        // Note that we need to set the field in the LegionTensor as well
+        // as the actual variable for the region.
+        initAssembleStmts.push_back(ir::Assign::make(valuesReg, subreg));
+        initAssembleStmts.push_back(ir::Assign::make(field, valuesReg));
       } else {
         // TODO: call calloc if not compact or not unpadded
         Stmt initValues = Allocate::make(valuesArr, prevSize);
@@ -3827,7 +3800,43 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
   Stmt initAssemble = Block::make(initAssembleStmts);
 
   guardedTemps = util::toSet(getTemporaries(assemble.getCompute()));
+
   Stmt compute = lower(assemble.getCompute());
+
+  // The regions we just constructed might need to be malloc'ed if the
+  // body of the compute statement doesn't launch any tasks. We collect
+  // them all and malloc them here, as their sizes should have all been set.
+  std::vector<Stmt> resultAllocStmts, resultUnmapStmts;
+  auto computeHasTasks = this->stmtHasTasks(compute);
+  if (this->legion && !computeHasTasks) {
+    auto computeAccessors = this->getAllAccessors(compute);
+    for (const auto& resultAccess : resultAccesses) {
+      for (auto accExpr : computeAccessors) {
+        auto acc = accExpr.as<ir::GetProperty>();
+        if (acc->tensor == this->getTensorVar(resultAccess.getTensorVar())) {
+          ir::Expr region, regionParent, field, priv;
+          if (acc->property == TensorProperty::ValuesWriteAccessor) {
+            region = ir::GetProperty::make(acc->tensor, TensorProperty::Values);
+            regionParent = ir::GetProperty::make(acc->tensor, TensorProperty::ValuesParent);
+            field = fidVal;
+            priv = readWrite;
+          } else if (acc->property == TensorProperty::IndicesAccessor) {
+            auto args = acc->accessorArgs;
+            region = args.regionAccessing;
+            regionParent = args.regionParent;
+            field = args.field;
+            priv = regionPrivilegeToExpr(args.priv);
+          } else {
+            taco_iassert(false);
+          }
+          auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, region, regionParent, field, priv}, Auto);
+          resultAllocStmts.push_back(ir::Assign::make(region, alloc));
+          resultAllocStmts.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, region, field)));
+          resultUnmapStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, region}, Auto)));
+        }
+      }
+    }
+  }
 
   std::vector<Stmt> finalizeAssembleStmts;
   for (const auto& resultAccess : resultAccesses) {
@@ -3843,7 +3852,9 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
 
   return Block::blanks(queries,
                        initAssemble,
+                       ir::Block::make(resultAllocStmts),
                        compute,
+                       ir::Block::make(resultUnmapStmts),
                        finalizeAssemble,
                        freeQueryResults);
 }
@@ -6556,6 +6567,44 @@ void LowererImpl::BoundsInferenceExprRewriter::visit(const GetProperty* gp) {
   // TODO (rohany): For some reason, I need to have this empty visit method
   //  for GetProperty here.
   expr = gp;
+}
+
+std::vector<ir::Expr> LowererImpl::getAllAccessors(ir::Stmt stmt) {
+  struct AccessorFinder : public IRVisitor {
+    void visit(const GetProperty* node) {
+      switch (node->property) {
+        case TensorProperty::ValuesReductionNonExclusiveAccessor:
+        case TensorProperty::ValuesReductionAccessor:
+        case TensorProperty::ValuesReadAccessor:
+        case TensorProperty::ValuesWriteAccessor:
+        case TensorProperty::IndicesAccessor: {
+          auto hashable = node->toHashable();
+          if (!util::contains(this->gpSet, hashable)) {
+            this->gpSet.insert(hashable);
+            this->gps.push_back(node);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+    std::set<ir::GetProperty::Hashable> gpSet;
+    std::vector<ir::Expr> gps;
+  } af; stmt.accept(&af);
+  return af.gps;
+}
+
+bool LowererImpl::stmtHasTasks(ir::Stmt stmt) {
+  struct TaskFinder : public IRVisitor {
+    void visit(const For *node) {
+      this->hasTasks |= node->isTask;
+      node->contents.accept(this);
+    }
+    bool hasTasks = false;
+  };
+  TaskFinder tf; stmt.accept(&tf);
+  return tf.hasTasks;
 }
 
 bool LowererImpl::loweringToGPU() {

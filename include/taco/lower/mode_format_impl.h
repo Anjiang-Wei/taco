@@ -49,7 +49,7 @@ std::ostream& operator<<(std::ostream&, const AttrQuery&);
 class AttrQueryResult {
 public:
   AttrQueryResult() = default;
-  AttrQueryResult(ir::Expr resultVar, ir::Expr resultValues);
+  AttrQueryResult(ir::Expr resultVar, ir::Expr resultValuesArray, ir::Expr resultValuesAccessor);
 
   ir::Expr getResult(const std::vector<ir::Expr>& indices, 
                      const std::string& attr) const;
@@ -58,7 +58,8 @@ public:
 
 private:
   ir::Expr resultVar;
-  ir::Expr resultValues;
+  ir::Expr resultValuesArray;
+  ir::Expr resultValuesAccessor;
 };
 
 // ModeRegion is information about a region used by a mode.

@@ -441,6 +441,7 @@ Datatype LegionTensorPartition = Datatype("LegionTensorPartition");
 Datatype RegionWrapper = Datatype("RegionWrapper");
 Datatype AffineProjection = Datatype("AffineProjection");
 Datatype SparseGatherProjection = Datatype("SparseGatherProjection");
+Datatype RectCompressedFinalizeYieldPositions = Datatype("RectCompressedFinalizeYieldPositions");
 Datatype Point(int n) {
   return templateGen("Point", n);
 }

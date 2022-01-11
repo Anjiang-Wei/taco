@@ -243,7 +243,7 @@ void IRPrinter::visit(const Cast* op) {
 void IRPrinter::visit(const Call* op) {
   stream << op->func << "(";
   parentPrecedence = Precedence::CALL;
-  if (op->args.size() > 5) {
+  if (op->args.size() > 6) {
     // For functions with alot of arguments, it's easier to read if we
     // print the arguments out on separate lines.
     indent++;

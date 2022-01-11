@@ -870,6 +870,7 @@ enum RegionPrivilege {
   RO,
   RW,
 };
+ir::Expr regionPrivilegeToExpr(RegionPrivilege rp);
 std::ostream &operator<<(std::ostream &os, const RegionPrivilege &);
 
 /** A tensor property.
@@ -1010,6 +1011,7 @@ extern ir::Expr aliasedPart;
 extern ir::Expr computePart;
 extern ir::Expr readOnly;
 extern ir::Expr readWrite;
+extern ir::Expr fidVal;
 
 }}
 #endif

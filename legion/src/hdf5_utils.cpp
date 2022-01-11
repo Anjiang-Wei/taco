@@ -350,6 +350,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           std::vector<hsize_t> dims(posDom.dim);
           for (int dim = 0; dim < posDom.dim; dim++) {
             dims[dim] = posDom.hi()[dim] + 1;
+            taco_iassert(posDom.hi()[dim] < LEGION_TENSOR_INFTY) << "writing infinitely sized region to disk";
           }
           hid_t posDataspaceID = H5Screate_simple(posDom.dim, dims.data(), NULL);
           col.addHDFdataspace(posDataspaceID);
@@ -364,6 +365,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           taco_iassert(crdDom.dim == 1);
           hsize_t crdDims[1];
           crdDims[0] = crdDom.hi()[0] + 1;
+          taco_iassert(crdDom.hi()[0] < LEGION_TENSOR_INFTY) << "writing infinitely sized region to disk";
           auto crdName = getTensorLevelFormatName(format[i], i, 1);
           col.add(crdName);
           hid_t crdDataspaceID = H5Screate_simple(1, crdDims, NULL);
@@ -390,6 +392,7 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
     std::vector<hsize_t> dims(valsDom.dim);
     for (int dim = 0; dim < valsDom.dim; dim++) {
       dims[dim] = valsDom.hi()[dim] + 1;
+      taco_iassert(valsDom.hi()[0] < LEGION_TENSOR_INFTY) << "writing infinitely sized region to disk";
     }
     auto valsDataSpace = H5Screate_simple(valsDom.dim, dims.data(), NULL);
     col.addHDFdataspace(valsDataSpace);
