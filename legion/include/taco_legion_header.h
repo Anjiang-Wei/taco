@@ -53,10 +53,10 @@ struct RegionWrapper {
       case PHYSICAL:
         return this->physReg;
       case UNSET:
-        taco_iassert(false);
-        return Legion::PhysicalRegion(); // Keep the compiler happy.
+        return Legion::PhysicalRegion();
     }
   }
+
   operator Legion::LogicalRegion() {
     // If we're a PhysicalRegion, then we can easily return the corresponding LogicalRegion.
     switch (this->regionKind) {
@@ -65,8 +65,7 @@ struct RegionWrapper {
       case PHYSICAL:
         return this->physReg.get_logical_region();
       case UNSET:
-        taco_iassert(false);
-        return Legion::LogicalRegion(); // Keep the compiler happy.
+        return Legion::LogicalRegion();
     }
   }
 };

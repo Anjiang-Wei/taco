@@ -45,6 +45,7 @@ public:
                            Mode mode) const override;
   ir::Stmt getSeqInsertEdges(ir::Expr parentPos,
                              std::vector<ir::Expr> parentDims,
+                             ir::Expr colorSpace,
                              std::vector<ir::Expr> coords,
                              std::vector<AttrQueryResult> queries,
                              Mode mode) const override;

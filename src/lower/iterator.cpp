@@ -394,10 +394,11 @@ Stmt Iterator::getSeqInitEdges(const Expr& prevSize,
 
 Stmt Iterator::getSeqInsertEdges(const Expr& parentPos,
                                  const std::vector<Expr>& parentDims,
+                                 const Expr& colorSpace,
                                  const std::vector<Expr>& coords,
                                  const std::vector<AttrQueryResult>& queries) const {
   taco_iassert(defined() && content->mode.defined());
-  return getMode().getModeFormat().impl->getSeqInsertEdges(parentPos, parentDims,
+  return getMode().getModeFormat().impl->getSeqInsertEdges(parentPos, parentDims, colorSpace,
                                                            coords, queries, getMode());
 }
 

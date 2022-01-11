@@ -478,6 +478,89 @@ bool isomorphic(IndexStmt a, IndexStmt b) {
   return Isomorphic().check(a,b);
 }
 
+// TODO (rohany): This can be made more rigorous in the future, but for now I plan
+//  on only using it for simple things, i.e. double checking that the partitionings
+//  of Assemble queries and compute statements are the same.
+bool isomorphicForallStructure(IndexStmt a, IndexStmt b) {
+  struct IsomorphicForallChecker : public IndexNotationVisitor {
+    bool check(IndexStmt a, IndexStmt b) {
+      if (!a.defined() && !b.defined()) {
+        return true;
+      }
+      if ((a.defined() && !b.defined()) || (!a.defined() && b.defined())) {
+        return false;
+      }
+      this->bStmt = b;
+      a.accept(this);
+      return this->isomorphic;
+    }
+    void visit(const ForallNode* anode) {
+      if (!isa<ForallNode>(this->bStmt.ptr)) {
+        this->isomorphic = false;
+        return;
+      }
+      auto bnode = to<ForallNode>(this->bStmt.ptr);
+      if (!check(anode->stmt, bnode->stmt) ||
+          anode->parallel_unit != bnode->parallel_unit ||
+          anode->output_race_strategy != bnode->output_race_strategy ||
+          anode->unrollFactor != bnode->unrollFactor) {
+        this->isomorphic = false;
+        return;
+      }
+      this->isomorphic = true;
+    }
+    void visit(const SuchThatNode* anode) {
+      // TODO (rohany): Should do a variable isomorphic check here, but the IndexVarRels
+      //  don't have a notion of equality under isomorphism.
+      if (!isa<SuchThatNode>(this->bStmt.ptr)) {
+        this->isomorphic = false;
+        return;
+      }
+      auto bnode = to<SuchThatNode>(this->bStmt.ptr);
+      if (!check(anode->stmt, bnode->stmt)) {
+        this->isomorphic = false;
+        return;
+      }
+      this->isomorphic = true;
+    }
+    IndexStmt bStmt;
+    bool isomorphic = true;
+  };
+
+  // We do a check both ways to ensure that both forall structures are matched.
+  return IsomorphicForallChecker().check(a, b) && IsomorphicForallChecker().check(b, a);
+}
+
+std::map<IndexVar, IndexVar> getIsomorphicForallStructureIndexVarMapping(IndexStmt a, IndexStmt b) {
+  taco_iassert(isomorphicForallStructure(a, b));
+
+  struct IsomorphicMapMaker : public IndexNotationVisitor {
+    void rec(IndexStmt a, IndexStmt b) {
+      this->bStmt = b;
+      a.accept(this);
+    }
+
+    void visit(const ForallNode* anode) {
+      auto bnode = to<ForallNode>(this->bStmt.ptr);
+      this->mapping[anode->indexVar] = bnode->indexVar;
+
+      this->rec(anode->stmt, bnode->stmt);
+    }
+
+    void visit(const SuchThatNode* anode) {
+      auto bnode = to<SuchThatNode>(this->bStmt.ptr);
+      this->rec(anode->stmt, bnode->stmt);
+    }
+
+    IndexStmt bStmt;
+    std::map<IndexVar, IndexVar> mapping;
+  };
+
+  IsomorphicMapMaker m;
+  m.rec(a, b);
+  return m.mapping;
+}
+
 struct Equals : public IndexNotationVisitorStrict {
   bool eq = false;
   IndexExpr bExpr;
@@ -3008,6 +3091,26 @@ pair<vector<Access>,set<Access>> getResultAccesses(IndexStmt stmt)
     })
   );
   return {result, reduced};
+}
+
+Access getNNZQueryAccess(IndexStmt stmt) {
+  // We store the result access in a vector so that we don't run into
+  // problems around the overloaded operator= on Access types.
+  std::vector<Access> result;
+
+  match(stmt, function<void(const AccessNode* node)>([&](const AccessNode* node) {
+    if (node->tensorVar.getName().find("_nnz") != std::string::npos) {
+      result.push_back(node);
+    }
+  }), function<void(const AssignmentNode* node, Matcher* m)>([&](const AssignmentNode* node, Matcher* m) {
+    if (node->lhs.getTensorVar().getName().find("_nnz") != std::string::npos) {
+      result.push_back(node->lhs);
+    }
+    m->match(node->rhs);
+  }));
+
+  taco_iassert(result.size() == 1);
+  return result[0];
 }
 
 

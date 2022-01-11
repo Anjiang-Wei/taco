@@ -279,6 +279,13 @@ LowererImpl::lower(IndexStmt stmt, string name,
   }
   argumentsIR.insert(argumentsIR.begin(), indexSetArgs.begin(), indexSetArgs.end());
 
+  // Create variables for temporaries.
+  for (auto& temp : temporaries) {
+    ir::Expr irVar = ir::Var::make(temp.getName(), temp.getType().getDataType(),
+                                   true, true);
+    tensorVars.insert({temp, irVar});
+  }
+
   // Create the backwards map from Expr to TensorVar.
   for (auto it : this->tensorVars) {
     this->exprToTensorVar[it.second] = it.first;
@@ -335,16 +342,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
         this->tensorVarOrdering.push_back(lookupTV(ir));
       }
     }
-  }
-
-  // Create variables for temporaries.
-  // TODO (rohany): I don't think that we ever use these variables
-  //  in the generated code, but some code assumes that we have them
-  //  here. Future work can remove this pass.
-  for (auto& temp : temporaries) {
-    ir::Expr irVar = ir::Var::make(temp.getName(), temp.getType().getDataType(),
-                                   true, true);
-    tensorVars.insert({temp, irVar});
   }
 
   // Create variables for keeping track of result values array capacity
@@ -583,15 +580,22 @@ LowererImpl::lower(IndexStmt stmt, string name,
     initializeResults = ir::Block::make();
   }
 
+  // AssembleVisitKind controls how the BoundsInferenceVisitor should traverse
+  // into AssembleNodes (i.e. visit the queries or compute statements only).
+  enum AssembleVisitKind {
+    NO_ASSEMBLE,
+    QUERIES,
+    COMPUTE,
+  };
   // BoundsInferenceVisitor infers the exact bounds (inclusive) that each tensor is accessed on.
   // In particular, the BoundsInferenceVisitor derives coordinate space bounds on each index
   // variable in a tensor's accessed. Separate methods must be used for position space bounds.
   struct BoundsInferenceVisitor : public IndexNotationVisitor {
     BoundsInferenceVisitor(std::map<TensorVar, Expr> &tvs, ProvenanceGraph &pg, Iterators &iterators,
                            std::map<IndexVar, std::vector<ir::Expr>>& underivedBounds, std::map<IndexVar, ir::Expr>& indexVarToExprMap,
-                           std::set<IndexVar> presentIvars)
+                           std::set<IndexVar> presentIvars, AssembleVisitKind assembleVisitKind)
         : pg(pg), iterators(iterators), underivedBounds(underivedBounds), indexVarToExprMap(indexVarToExprMap),
-          presentIvars(presentIvars) {
+          presentIvars(presentIvars), assembleVisitKind(assembleVisitKind) {
       for (auto &it : tvs) {
         this->inScopeVars[it.first] = {};
       }
@@ -683,6 +687,22 @@ LowererImpl::lower(IndexStmt stmt, string name,
       }
     }
 
+    void visit(const AssembleNode* node) {
+      switch (this->assembleVisitKind) {
+        case NO_ASSEMBLE:
+          taco_iassert(false) << "BoundsInferenceVisitor configured without Assemble";
+          break;
+        case QUERIES:
+          this->inferBounds(node->queries);
+          break;
+        case COMPUTE:
+          this->inferBounds(node->compute);
+          break;
+        default:
+          taco_iassert(false) << "unreachable";
+      }
+    }
+
     ProvenanceGraph& pg;
     Iterators& iterators;
     std::map<IndexVar, std::vector<ir::Expr>>& underivedBounds;
@@ -695,6 +715,8 @@ LowererImpl::lower(IndexStmt stmt, string name,
     std::set<TensorVar> requestedTensorVars;
 
     std::set<IndexVar> presentIvars;
+
+    AssembleVisitKind assembleVisitKind;
 
     std::map<TensorVar, std::vector<std::vector<ir::Expr>>> derivedBounds;
 
@@ -713,13 +735,17 @@ LowererImpl::lower(IndexStmt stmt, string name,
     }
   }));
 
-  match(stmt, function<void(const ForallNode*)>([&](const ForallNode* node) {
+  // If the input statement contains AssembleNodes then we have to be a little bit more
+  // careful about how we traverse the statement to construct bounds. In particular,
+  // we want to only walk into one of the AssembleNode's queries or compute statements
+  // at a time to avoid duplicating data about each tensor.
+  auto boundsFunc = [&](const ForallNode* node, AssembleVisitKind assembleVisitKind) {
     // Want to derive bounds for each distributed forall. Can worry about how to
     // connect this all together later.
     auto f = Forall(node);
     if (f.isDistributed() || !f.getTransfers().empty()) {
       // Get bounds for this forall.
-      BoundsInferenceVisitor bi(this->tensorVars, this->provGraph, this->iterators, this->underivedBounds, this->indexVarToExprMap, this->presentIvars);
+      BoundsInferenceVisitor bi(this->tensorVars, this->provGraph, this->iterators, this->underivedBounds, this->indexVarToExprMap, this->presentIvars, assembleVisitKind);
       bi.trackingForall = node;
       bi.inferBounds(stmt);
       // std::cout << "Bounds for index var: " << f.getIndexVar() << " at forall: " << f << std::endl;
@@ -731,7 +757,23 @@ LowererImpl::lower(IndexStmt stmt, string name,
       // }
       this->derivedBounds[f.getIndexVar()] = bi.derivedBounds;
     }
-  }));
+  };
+  if (this->stmtHasAssemble(stmt)) {
+    match(stmt, function<void(const ForallNode*)>([&](const ForallNode* node) {
+      boundsFunc(node, QUERIES);
+    }), function<void(const AssembleNode*, Matcher*)>([&](const AssembleNode* node, Matcher* m) {
+      m->match(node->queries);
+    }));
+    match(stmt, function<void(const ForallNode*)>([&](const ForallNode* node) {
+      boundsFunc(node, COMPUTE);
+    }), function<void(const AssembleNode*, Matcher*)>([&](const AssembleNode* node, Matcher* m) {
+      m->match(node->compute);
+    }));
+  } else {
+    match(stmt, function<void(const ForallNode*)>([&](const ForallNode* node) {
+      boundsFunc(node, NO_ASSEMBLE);
+    }));
+  }
 
   // If we're going to COMPUTE_ONLY, create the top level partition pack.
   if (this->legionLoweringKind == COMPUTE_ONLY) {
@@ -962,7 +1004,7 @@ Stmt LowererImpl::lowerAssignment(Assignment assignment)
 
   Expr rhs;
   if (needComputeAssign) {
-    rhs = lower(assignment.getRhs());
+    rhs = ir::simplify(lower(assignment.getRhs()));
   }
 
   // Assignment to scalar variables.
@@ -2341,8 +2383,16 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       for (auto& t : forall.getTransfers()) {
         auto tv = t.getAccess().getTensorVar();
         auto domain = ir::Var::make(tv.getName() + "Domain", Auto);
-        // TODO (rohany): We'll assume for now that we want just the domains for the first level dense index space run.
-        auto ispace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+        ir::Expr ispace;
+        // If the TensorVar being transferred is a query result, it won't have
+        // an dense run to operate on.
+        if (util::contains(this->assembleQueryResults, tv)) {
+          auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
+          ispace = ir::MethodCall::make(vals, "get_index_space", {}, false /* deref */, Auto);
+        } else {
+          // TODO (rohany): We'll assume for now that we want just the domains for the first level dense index space run.
+          ispace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+        }
         partitioningStmts.push_back(ir::VarDecl::make(domain, ir::Call::make("runtime->get_index_space_domain", {ctx, ispace}, Auto)));
         domains[t.getAccess().getTensorVar()] = domain;
       }
@@ -2388,6 +2438,12 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       util::append(partitioningStmts,
                    this->createIndexPartitions(forall, domain,tensorLogicalPartitions,
                                                tensorDenseRunPartitions, fullyReplicatedTensors, colorings, distIvars));
+
+      // After we've created all of the partitions in the query phase, remember those
+      // partitions for use in the compute phase.
+      if (this->loweringAssembleQueries && this->assembleIsomorphicQueryAndCompute) {
+        this->assembleQueryPartitions[forall.getIndexVar()] = tensorLogicalPartitions;
+      }
     }
 
     // If we're not only performing compute statements, then include the statements that create
@@ -3697,9 +3753,17 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
     Stmt allocResults = Block::make(allocStmts);
     freeQueryResults = Block::make(freeStmts);
 
-    // TODO (rohany): If the uses of the query launches a task then
-    //  we cannot map it here.
+
+    // See whether the compute and queries have the same structure. If they do, this allows
+    // us to avoid repartitioning the data in the exact same way.
+    this->assembleIsomorphicQueryAndCompute = isomorphicForallStructure(assemble.getQueries(), assemble.getCompute());
+    if (this->assembleIsomorphicQueryAndCompute) {
+      this->assembleComputeIVarToQueryIVar = getIsomorphicForallStructureIndexVarMapping(assemble.getCompute(), assemble.getQueries());
+    }
+    // Mark that we are lowering assemble queries.
+    this->loweringAssembleQueries = true;
     queries = lower(assemble.getQueries());
+    this->loweringAssembleQueries = false;
     queries = Block::blanks(allocResults, queries);
   }
 
@@ -3744,7 +3808,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
           dims = {rev.begin(), rev.end()};
 
           Stmt insertEdgeLoop = resultIterator.getSeqInsertEdges(
-              resultIterator.getParent().getPosVar(), dims, coords, queryResults);
+              resultIterator.getParent().getPosVar(), dims, this->assembleQueryIndexSpace, coords, queryResults);
           initAssembleStmts.push_back(insertEdgeLoop);
         }
 
@@ -4385,7 +4449,8 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
     // TODO (rohany): This should not be generated in all situations (in particular
     //  it seems to be incorrect when there is a transpose in the input) for code
     //  that assembles sparse tensors.
-    if (resultIterator.hasAppend() && !resultIterator.isBranchless()) {
+    if (resultIterator.hasAppend() && !resultIterator.isBranchless() &&
+        !util::contains(this->assembledByUngroupedInsert, write.getTensorVar())) {
       Expr begin = resultIterator.getBeginVar();
       result.push_back(VarDecl::make(begin, resultIterator.getPosVar()));
     }
@@ -4558,6 +4623,13 @@ Stmt LowererImpl::declLocatePosVars(vector<Iterator> locators) {
   vector<Stmt> result;
   for (Iterator& locator : locators) {
     accessibleIterators.insert(locator);
+
+    // Query results are not full tensors, and most of their TensorProperties
+    // cannot be accessed. We get around this in legion mode by using multi-dimensional
+    // accessors for them, instead of the standard accumulator based locators.
+    if (this->legion && util::contains(this->assembleQueryResults, this->exprToTensorVar[locator.getTensor()])) {
+      continue;
+    }
 
     bool doLocate = true;
     for (Iterator ancestorIterator = locator.getParent();
@@ -5309,6 +5381,12 @@ std::vector<ir::Stmt> LowererImpl::declareLaunchDomain(ir::Expr domain, Forall f
         Auto
     );
     result.push_back(ir::VarDecl::make(varIspace, makeIspace));
+
+    // If we are lowing assemble queries, remember the color space we are creating.
+    if (this->loweringAssembleQueries) {
+      this->assembleQueryIndexSpace = varIspace;
+    }
+
     auto makeDomain = ir::Call::make(
         "runtime->get_index_space_domain",
         {ctx, makeConstructor(indexSpaceT, {varIspace})},
@@ -5440,6 +5518,17 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
       continue;
     }
 
+    // If we already partitioned this tensor for the queries in the same way, we don't need
+    // to go through the effort of creating a DomainPointColoring for it.
+    if (!this->loweringAssembleQueries && this->assembleIsomorphicQueryAndCompute && !util::contains(this->resultTensors, tv)) {
+      // There must be an entry in the old tensorLogicalPartitions here.
+      auto queryIvar = this->assembleComputeIVarToQueryIVar.at(forall.getIndexVar());
+      auto assembleQueryLogicalPartitions = this->assembleQueryPartitions.at(queryIvar);
+      if (util::contains(assembleQueryLogicalPartitions, tv)) {
+        continue;
+      }
+    }
+
     // TODO (rohany): Fully understand how to pick which dimensions to do the partitioning on.
     // TODO (rohany): For now, we assume that we're only going to create the initial partitions on
     //  dense runs, and on the first run only. We'll leave it up to later to figure out how to implement
@@ -5562,22 +5651,6 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       partKind = disjointPart;
     }
 
-    // TODO (rohany): We need to communicate this data structure of the partitions of each level
-    //  to later passes that lower index launches / serial task launches. An example data structure
-    //  for this can be as follows:
-    //  * Map<TensorVar, map<int, vector<Expr>>>, where we maintain a map from each TensorVar to
-    //    a map from each level to a list of partition objects for that level. This list corresponds
-    //    to the regions contained in that level. The partition of the values will be at level = TensorVar.order().
-
-    // We'll do the initial partition of the first dense run.
-    // TODO (rohany): Figure out how to take partitions of not the first dense run too.
-    auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
-    taco_iassert(!runs.runs.empty());
-    auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
-    // Partition the dense run using the coloring. Record the partition of the dense
-    // index space that we created.
-    tensorDenseRunPartitions[tv][0] = part;
-
     // If we have some index variables defined already, then this isn't a top level partition,
     // meaning that we need to tag it with an ID.
     ir::Expr partitionColor;
@@ -5594,7 +5667,39 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       return args;
     };
 
-    // TODO (rohany): Extract this into a helper method?
+    // For now, query results are just entirely dense, and don't have any dense format runs.
+    // So, we'll just partition them directly, rather than using the mode function infra.
+    if (util::contains(this->assembleQueryResults, tv)) {
+      auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
+      auto ispace = ir::MethodCall::make(vals, "get_index_space", {}, false /* deref */, Auto);
+      auto ipart = ir::Var::make(tv.getName() + "_index_partition", IndexPartition);
+      auto makeIpart = ir::Call::make("runtime->create_index_partition", {ctx, ispace, domain, coloring, partKind}, Auto);
+      result.push_back(ir::VarDecl::make(ipart, makeIpart));
+      auto lpart = ir::Var::make(tv.getName() + "_logical_partition", LogicalPartition);
+      auto makeLpart = ir::Call::make("runtime->get_logical_partition", {ctx, vals, ipart}, Auto);
+      result.push_back(ir::VarDecl::make(lpart, makeLpart));
+      tensorLogicalPartitions[tv][tv.getOrder()].push_back(lpart);
+      continue;
+    }
+
+    // If we already partitioned this tensor in the query phase of assembly, then we don't
+    // need to repartition it for the compute phase.
+    if (!this->loweringAssembleQueries && this->assembleIsomorphicQueryAndCompute && !util::contains(this->resultTensors, tv)) {
+      // There must be an entry in the old tensorLogicalPartitions here.
+      auto queryIvar = this->assembleComputeIVarToQueryIVar.at(forall.getIndexVar());
+      auto assembleQueryLogicalPartitions = this->assembleQueryPartitions.at(queryIvar);
+      tensorLogicalPartitions[tv] = assembleQueryLogicalPartitions[tv];
+      continue;
+    }
+
+    // We'll do the initial partition of the first dense run.
+    // TODO (rohany): Figure out how to take partitions of not the first dense run too.
+    auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
+    taco_iassert(!runs.runs.empty());
+    auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+    // Partition the dense run using the coloring. Record the partition of the dense
+    // index space that we created.
+    tensorDenseRunPartitions[tv][0] = part;
 
     // We don't need to mark the index partitions of the denseRuns with colors, since
     // we aren't going to actually look up the denseLevelRun partitions directly.
@@ -5726,6 +5831,18 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     auto indicesPriv = readOnly;
     auto indicesAccessMode = exclusive;
 
+    // If we're using Assemble on a tensor, we're going to need to read/write on
+    // the indices to fill them in.
+    if (this->isAssembledByUngroupedInsertion(it)) {
+      indicesPriv = readWrite;
+    }
+
+    // If we're lowering the query phase of an Assemble, we don't need the actual
+    // result tensor in the output yet.
+    if (this->loweringAssembleQueries && this->isAssembledByUngroupedInsertion(it)) {
+      continue;
+    }
+
     // TODO (rohany): It seems like we're going to want to wrap up this stuff into a helper method
     //  that lets us nicely apply a function to each level (+ dense run) in a tensor.
     // Let's get all of the regions involved with this tensor.
@@ -5855,6 +5972,40 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     // Remember the order in which we are packing regions.
     packedTensorData.push_back(ir::GetProperty::make(tvIR, TensorProperty::Values));
     packedTensorDataParents.push_back(ir::GetProperty::make(tvIR, TensorProperty::ValuesParent));
+  }
+
+  // Add all of the query results that are being transferred at this level.
+  for (auto t : forall.getTransfers()) {
+    auto tv = t.getAccess().getTensorVar();
+    if (!util::contains(this->assembleQueryResults, tv)) continue;
+    auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
+    auto valsParent = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::ValuesParent);
+    std::vector<ir::Expr> regionReqArgs;
+    if (util::contains(tensorLogicalPartitions, tv)) {
+      taco_iassert(util::contains(tensorLogicalPartitions[tv], tv.getOrder()));
+      taco_iassert(tensorLogicalPartitions[tv][tv.getOrder()].size() == 1);
+      auto lpart = tensorLogicalPartitions[tv][tv.getOrder()][0];
+      regionReqArgs = {
+        lpart,
+        0,
+        readWrite,
+        exclusive,
+        vals,
+      };
+    } else {
+      regionReqArgs = {
+        getLogicalRegion(vals),
+        readWrite,
+        exclusive,
+        getLogicalRegion(vals),
+      };
+    }
+    auto req = ir::makeConstructor(RegionRequirement, regionReqArgs);
+    req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
+    regionReqs.push_back(req);
+
+    packedTensorData.push_back(vals);
+    packedTensorDataParents.push_back(valsParent);
   }
 
   // These args have to be for each of the subtasks.
@@ -6605,6 +6756,19 @@ bool LowererImpl::stmtHasTasks(ir::Stmt stmt) {
   };
   TaskFinder tf; stmt.accept(&tf);
   return tf.hasTasks;
+}
+
+bool LowererImpl::stmtHasAssemble(IndexStmt stmt) {
+  struct AssembleFinder : public IndexNotationVisitor {
+    void visit(const AssembleNode* node) {
+      taco_iassert(!this->hasAssemble);
+      this->hasAssemble = true;
+      node->queries.accept(this);
+      node->compute.accept(this);
+    }
+    bool hasAssemble = false;
+  } af; stmt.accept(&af);
+  return af.hasAssemble;
 }
 
 bool LowererImpl::loweringToGPU() {

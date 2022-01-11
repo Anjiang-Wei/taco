@@ -181,10 +181,10 @@ void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   Point<1> upperBound = Point<1>((pieces - 1));
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
-  task_1Args taskArgsRaw;
-  taskArgsRaw.B1_dimension = B1_dimension;
-  taskArgsRaw.pieces = pieces;
-  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_1Args));
+  task_1Args taskArgsRaw1;
+  taskArgsRaw1.B1_dimension = B1_dimension;
+  taskArgsRaw1.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
@@ -376,10 +376,10 @@ void computeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   Point<1> upperBound = Point<1>((pieces - 1));
   auto fposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
-  task_2Args taskArgsRaw;
-  taskArgsRaw.B2Size = B2Size;
-  taskArgsRaw.pieces = pieces;
-  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_2Args));
+  task_2Args taskArgsRaw2;
+  taskArgsRaw2.B2Size = B2Size;
+  taskArgsRaw2.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
   IndexLauncher launcher = IndexLauncher(taskID(2), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
@@ -584,10 +584,10 @@ void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, Le
   Point<1> upperBound = Point<1>((pieces - 1));
   auto fposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
-  task_3Args taskArgsRaw;
-  taskArgsRaw.B2Size = B2Size;
-  taskArgsRaw.pieces = pieces;
-  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_3Args));
+  task_3Args taskArgsRaw3;
+  taskArgsRaw3.B2Size = B2Size;
+  taskArgsRaw3.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw3, sizeof(task_3Args));
   IndexLauncher launcher = IndexLauncher(taskID(3), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(
@@ -766,9 +766,9 @@ void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   Point<1> upperBound = Point<1>((pieces - 1));
   auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
-  task_4Args taskArgsRaw;
-  taskArgsRaw.pieces = pieces;
-  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_4Args));
+  task_4Args taskArgsRaw4;
+  taskArgsRaw4.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw4, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(get_logical_region(a_vals), LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));

@@ -120,6 +120,7 @@ add_app_folder(spttv)
 add_app_folder(spmm)
 add_app_folder(sddmm)
 add_app_folder(spmttkrp)
+add_app_folder(spadd3)
 
 # Add a variety of tests for the generated code.
 
@@ -247,6 +248,9 @@ set_tests_properties(legion-sparse-sddmm-basic PROPERTIES DEPENDS "legion-sparse
 
 add_basic_legion_sparse_test(spmttkrp basic -tensor ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-3-tensor.dss.hdf5 -pieces 4 -dump)
 set_tests_properties(legion-sparse-spmttkrp-basic PROPERTIES DEPENDS "legion-sparse-format-converter-3-tensor-dss")
+
+add_basic_legion_sparse_test(spadd3 basic -tensorB ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -tensorC ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -tensorD ${CMAKE_CURRENT_SOURCE_DIR}/tensors/test-mat-holes.csr.hdf5 -pieces 4 -dump)
+set_tests_properties(legion-sparse-spadd3-basic PROPERTIES DEPENDS "legion-sparse-format-converter-basic")
 
 # Use GoogleTest to write some test cases that utilize Legion.
 # First, create a library for GoogleTest itself.
