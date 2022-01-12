@@ -66,7 +66,8 @@ ir::Stmt lowerNoWait(IndexStmt stmt, std::string name, Lowerer lowerer) {
 }
 
 ir::Stmt lowerLegion(IndexStmt stmt, std::string name,
-                     bool partition, bool compute, bool waitOnFuture, bool setPlacementPrivilege,
+                     bool partition, bool compute, bool waitOnFuture,
+                     bool setPlacementPrivilege, bool assemble,
                      Lowerer lowerer) {
   string reason;
   taco_iassert(isLowerable(stmt, &reason))
@@ -74,7 +75,7 @@ ir::Stmt lowerLegion(IndexStmt stmt, std::string name,
   return lowerer.getLowererImpl()->lower(
       stmt,
       name,
-      false /* assemble */,
+      assemble /* assemble */,
       compute /* compute */,
       false /* pack */,
       false /* unpack */,
@@ -103,9 +104,9 @@ ir::Stmt lowerLegionAssemble(IndexStmt stmt, std::string name,
   );
 }
 
-ir::Stmt lowerLegionSeparatePartitionCompute(IndexStmt stmt, std::string name, bool waitOnFuture, bool setPlacementPrivilege) {
-  auto part = lowerLegion(stmt, "partitionFor" + name, true /* partition */, false /* compute */, waitOnFuture);
-  auto compute = lowerLegion(stmt, name, false /* partition */, true /* compute */, waitOnFuture, setPlacementPrivilege);
+ir::Stmt lowerLegionSeparatePartitionCompute(IndexStmt stmt, std::string name, bool waitOnFuture, bool assemble, bool setPlacementPrivilege) {
+  auto part = lowerLegion(stmt, "partitionFor" + name, true /* partition */, false /* compute */, waitOnFuture, false /* setPlacementPrivilege */, assemble);
+  auto compute = lowerLegion(stmt, name, false /* partition */, true /* compute */, waitOnFuture, setPlacementPrivilege, assemble);
   return ir::Block::make({part, compute});
 }
 

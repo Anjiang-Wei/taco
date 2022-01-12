@@ -1865,7 +1865,7 @@ TEST(distributed, legionSpFormatConverterLib) {
   ir::CodegenLegionC::compileToDirectory("../legion/format-converter/", ir::Block::make(converters));
 }
 
-TEST(distributed, SpAdd3) {
+TEST(distributed, legionSpAdd3) {
   int dim = 50;
   Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
   Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
@@ -1910,8 +1910,8 @@ TEST(distributed, SpAdd3) {
   // The lowering infrastructure does not understand this, so we can apply
   // a simple hoisting step to bring all relations to the top level.
   stmt = hoistSuchThats(stmt);
-  // TODO (rohany): Figure out how partitioning of this might work.
-  auto lowered = lowerLegionAssemble(stmt, "computeLegion", true, true, false /* waitOnFutureMap */);
+
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */, true /* assemble */);
   ir::CodegenLegionC::compileToDirectory("../legion/spadd3/", lowered);
 }
 

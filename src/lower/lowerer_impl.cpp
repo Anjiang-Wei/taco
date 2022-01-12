@@ -2450,6 +2450,100 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // the necessary partitions.
     if (this->legionLoweringKind != COMPUTE_ONLY) {
       util::append(transfers, partitioningStmts);
+    } else if (this->legionLoweringKind == COMPUTE_ONLY && (this->loweringAssembleQueries || this->loweringAssembleCompute)) {
+      // If we're lowering a distributed assembly operation and in COMPUTE_ONLY,
+      // we can't just not include any partitioning operations. This is because
+      // the partitions of the query result and the compute result must be computed
+      // at runtime, rather than ahead of time.
+
+      // First, we figure out the set of tensors that we must partition even in
+      // the COMPUTE_ONLY phase.
+      std::set<TensorVar> tensorsToPartition;
+      if (this->loweringAssembleQueries) {
+        tensorsToPartition = this->assembleQueryResults;
+      } else if (this->loweringAssembleCompute) {
+        tensorsToPartition = this->resultTensors;
+      }
+      // Filter out any tensors that are not communicated at this forall.
+      std::vector<TensorVar> toRemove;
+      for (auto it : tensorsToPartition) {
+        auto found = false;
+        for (auto tx : forall.getTransfers()) {
+          if (tx.getAccess().getTensorVar() == it) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          toRemove.push_back(it);
+        }
+      }
+      for (auto it : toRemove) {
+        tensorsToPartition.erase(it);
+      }
+
+      // Only proceed further if there are tensors left to partition.
+      if (!tensorsToPartition.empty()) {
+        // These steps slightly replicate the steps from above, but there
+        // doesn't seem like that clean of a way to pull them out, so we
+        // just replicate the code here.
+        std::vector<ir::Stmt> extraPartitioningStmts;
+
+        // Create colorings for each of the target tensors.
+        std::vector<Expr> colorings;
+        for (auto tv : tensorsToPartition) {
+          ir::Expr ispace;
+          // If the TensorVar being transferred is a query result, it won't have
+          // an dense run to operate on.
+          if (util::contains(this->assembleQueryResults, tv)) {
+            auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
+            ispace = ir::MethodCall::make(vals, "get_index_space", {}, false /* deref */, Auto);
+          } else {
+            // TODO (rohany): We'll assume for now that we want just the domains for the first level dense index space run.
+            ispace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+          }
+          extraPartitioningStmts.push_back(
+              ir::VarDecl::make(domains[tv], ir::Call::make("runtime->get_index_space_domain", {ctx, ispace}, Auto)));
+
+          auto c = ir::Var::make(tv.getName() + "Coloring", DomainPointColoring);
+          extraPartitioningStmts.push_back(ir::VarDecl::make(c, ir::makeConstructor(DomainPointColoring, {})));
+          colorings.push_back(c);
+        }
+
+        // Construct the point colorings for the output tensors.
+        std::vector<Stmt> partStmts;
+        for (size_t i = 0; i < distIvars.size(); i++) {
+          auto ivar = distIvars[i];
+          auto ivarExpr = this->indexVarToExprMap[ivar];
+          partStmts.push_back(
+              ir::VarDecl::make(ivarExpr, ir::Load::make(ir::Deref::make(domainIter, pointT), int32_t(i))));
+        }
+        std::set<TensorVar> fullyReplicatedTensors;
+        for (auto tv : tensorsToPartition) {
+          util::append(partStmts,
+                       this->createDomainPointColorings(forall, domainIter, domains, fullyReplicatedTensors, colorings,
+                                                        tv));
+        }
+        auto l = ir::For::make(
+            domainIter,
+            ir::Call::make(pointInDimT.getName(), {domain}, pointInDimT),
+            ir::MethodCall::make(domainIter, "valid", {}, false /* deref */, Datatype::Bool),
+            1 /* increment -- hack to get ++ */,
+            ir::Block::make(partStmts)
+        );
+        extraPartitioningStmts.push_back(l);
+
+        // Create IndexPartition objects from each of the colorings created.
+        for (auto tv : tensorsToPartition) {
+          util::append(extraPartitioningStmts,
+                       this->createIndexPartitions(forall, domain, tensorLogicalPartitions,
+                                                   tensorDenseRunPartitions, fullyReplicatedTensors, colorings,
+                                                   distIvars, tv));
+        }
+
+        // Append all of the extra statements to the task headers.
+        util::append(transfers, extraPartitioningStmts);
+      }
     }
 
     // If we're emitting partitioning code, then this is all we care about. Package
@@ -3760,6 +3854,12 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
     if (this->assembleIsomorphicQueryAndCompute) {
       this->assembleComputeIVarToQueryIVar = getIsomorphicForallStructureIndexVarMapping(assemble.getCompute(), assemble.getQueries());
     }
+    // If we are going to pre-compute some partitions, then the query and the compute should
+    // be using the same schedule.
+    if (this->legionLoweringKind != PARTITION_AND_COMPUTE) {
+      taco_uassert(this->assembleIsomorphicQueryAndCompute);
+    }
+
     // Mark that we are lowering assemble queries.
     this->loweringAssembleQueries = true;
     queries = lower(assemble.getQueries());
@@ -3865,7 +3965,15 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
 
   guardedTemps = util::toSet(getTemporaries(assemble.getCompute()));
 
-  Stmt compute = lower(assemble.getCompute());
+  // Mark that we are starting to lower the compute phase of an Assemble operation.
+  // We only want to run the compute phase of an assemble if we were not instructed
+  // to only partition the inputs.
+  this->loweringAssembleCompute = true;
+  Stmt compute;
+  if (this->legionLoweringKind != PARTITION_ONLY) {
+    compute = lower(assemble.getCompute());
+  }
+  this->loweringAssembleCompute = false;
 
   // The regions we just constructed might need to be malloc'ed if the
   // body of the compute statement doesn't launch any tasks. We collect
@@ -3914,13 +4022,27 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
   }
   Stmt finalizeAssemble = Block::make(finalizeAssembleStmts);
 
-  return Block::blanks(queries,
-                       initAssemble,
-                       ir::Block::make(resultAllocStmts),
-                       compute,
-                       ir::Block::make(resultUnmapStmts),
-                       finalizeAssemble,
-                       freeQueryResults);
+  // The LegionLoweringKind affects what this assemble should compute.
+  // If we are computing or partitioning and computing, then we want to
+  // do everything. If we are only partitioning, then we care only about
+  // running the query phase of the computation, which will be restricted
+  // to creating partitions only.
+  switch (this->legionLoweringKind) {
+    case PARTITION_AND_COMPUTE:
+    case COMPUTE_ONLY:
+      return Block::blanks(queries,
+                           initAssemble,
+                           ir::Block::make(resultAllocStmts),
+                           compute,
+                           ir::Block::make(resultUnmapStmts),
+                           finalizeAssemble,
+                           freeQueryResults);
+    case PARTITION_ONLY:
+      return queries;
+    default:
+      taco_iassert(false) << "unreachable";
+      return Stmt();
+  }
 }
 
 
@@ -5492,9 +5614,10 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
     ir::Expr domainIter,
     std::map<TensorVar, ir::Expr> domains,
     std::set<TensorVar>& fullyReplicatedTensors,
-    std::vector<ir::Expr> colorings
+    std::vector<ir::Expr> colorings,
+    TensorVar tvMask
 ) {
-  taco_iassert(colorings.size() == forall.getTransfers().size());
+  taco_iassert(colorings.size() == forall.getTransfers().size() || tvMask.defined());
 
   std::vector<ir::Stmt> result;
   // Add a dummy partition object for each transfer.
@@ -5502,6 +5625,12 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
     auto& t = forall.getTransfers()[idx];
     auto& tv = t.getAccess().getTensorVar();
     auto n = tv.getName();
+
+    // If we have a mask, break out if the current variable is not the
+    // masked tensor.
+    if (tvMask.defined() && tv != tvMask) {
+      continue;
+    }
 
     // If this tensor isn't partitioned by any variables in the current loop,
     // then the full thing is going to be replicated. In this case, it's better
@@ -5579,8 +5708,9 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
     std::set<TensorVar> fullyReplicatedTensors,
     std::vector<Expr> colorings,
-    const std::vector<IndexVar>& distIvars) {
-  taco_iassert(colorings.size() == forall.getTransfers().size());
+    const std::vector<IndexVar>& distIvars,
+    TensorVar tvMask) {
+  taco_iassert(colorings.size() == forall.getTransfers().size() || tvMask.defined());
 
   std::vector<ir::Stmt> result;
 
@@ -5590,6 +5720,12 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
 
     // Skip fully replicated tensors.
     if (util::contains(fullyReplicatedTensors, tv)) {
+      continue;
+    }
+
+    // If we have a mask, break out if the current variable is not the
+    // masked tensor.
+    if (tvMask.defined() && tv != tvMask) {
       continue;
     }
 
@@ -5678,7 +5814,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       auto lpart = ir::Var::make(tv.getName() + "_logical_partition", LogicalPartition);
       auto makeLpart = ir::Call::make("runtime->get_logical_partition", {ctx, vals, ipart}, Auto);
       result.push_back(ir::VarDecl::make(lpart, makeLpart));
-      tensorLogicalPartitions[tv][tv.getOrder()].push_back(lpart);
+      tensorLogicalPartitions[tv][tv.getOrder()] = {lpart};
       continue;
     }
 
@@ -5745,6 +5881,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
           currentLevelPartition = partFunc.getResults().back();
           // Remember all of the partition variables so that we can use them when
           // constructing region requirements later.
+          tensorLogicalPartitions[tv][level] = {};
           for (size_t i = 0; i < partFunc.numResults() - 1; i++) {
             tensorLogicalPartitions[tv][level].push_back(partFunc[i]);
           }
@@ -5766,7 +5903,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     );
     auto valsPart = ir::Var::make(tv.getName() + "_vals_partition", Auto);
     result.push_back(ir::VarDecl::make(valsPart, partitionVals));
-    tensorLogicalPartitions[tv][tv.getOrder()].push_back(valsPart);
+    tensorLogicalPartitions[tv][tv.getOrder()] = {valsPart};
   }
   return result;
 }
@@ -5873,9 +6010,12 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
           // Logic to select the partition that we should use for the index launch.
           auto getPartition = [&](size_t idx) {
             // The proper partition depends on what the LegionLoweringKind is.
-            if (this->legionLoweringKind == COMPUTE_ONLY) {
+            if (this->legionLoweringKind == COMPUTE_ONLY &&
+                !(this->loweringAssembleCompute && util::contains(this->resultTensors, tv))) {
               // If we're in COMPUTE_ONLY, then we've already created all the partitions
               // that we need. So, we need to look up the partition with the right identifier.
+              // However, we can't do this step if we're lowering the compute phase of an assemble
+              // command -- in that case, the output is data dependent and cannot be precomputed.
               if (this->definedIndexVarsExpanded.empty()) {
                 // If we're at the top level, then we need to look in the pack for this partition.
                 auto partField = this->getTopLevelTensorPartition(tv);
@@ -5935,7 +6075,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
       ir::Expr valsPartition;
       // The logic to select valsPartition is similar to the logic above to select the partitions
       // for the indices arrays.
-      if (this->legionLoweringKind == COMPUTE_ONLY) {
+      if (this->legionLoweringKind == COMPUTE_ONLY &&
+          !(this->loweringAssembleCompute && util::contains(this->resultTensors, tv))) {
         if (this->definedIndexVarsExpanded.empty()) {
           auto partField = this->getTopLevelTensorPartition(tv);
           valsPartition = ir::FieldAccess::make(partField, "valsPartition", false /* isDeref */, Auto);
@@ -6721,6 +6862,7 @@ void LowererImpl::BoundsInferenceExprRewriter::visit(const GetProperty* gp) {
 }
 
 std::vector<ir::Expr> LowererImpl::getAllAccessors(ir::Stmt stmt) {
+  if (!stmt.defined()) return {};
   struct AccessorFinder : public IRVisitor {
     void visit(const GetProperty* node) {
       switch (node->property) {
@@ -6747,6 +6889,7 @@ std::vector<ir::Expr> LowererImpl::getAllAccessors(ir::Stmt stmt) {
 }
 
 bool LowererImpl::stmtHasTasks(ir::Stmt stmt) {
+  if (!stmt.defined()) return false;
   struct TaskFinder : public IRVisitor {
     void visit(const For *node) {
       this->hasTasks |= node->isTask;
@@ -6759,6 +6902,7 @@ bool LowererImpl::stmtHasTasks(ir::Stmt stmt) {
 }
 
 bool LowererImpl::stmtHasAssemble(IndexStmt stmt) {
+  if (!stmt.defined()) return false;
   struct AssembleFinder : public IndexNotationVisitor {
     void visit(const AssembleNode* node) {
       taco_iassert(!this->hasAssemble);

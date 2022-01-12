@@ -41,7 +41,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   std::tie(D, Dex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameD, {Dense, Sparse});
   auto A = createSparseTensorForPack<double>(ctx, runtime, {Dense, Sparse}, B.dims, FID_RECT_1, FID_COORD, FID_VAL);
 
-  // auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
+  auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) {
@@ -49,7 +49,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
       runtime->fill_field(ctx, A.indices[1][1], A.indicesParents[1][1], FID_COORD, int32_t(0));
       runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
     }
-    computeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
+    computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 

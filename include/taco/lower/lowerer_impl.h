@@ -453,17 +453,22 @@ protected:
 
   // createDomainPointColorings generates code that colors a point in the launch domain
   // based on the current value of domainIter. It modifies fullyReplicatedTensors with
-  // tensors that are fully replicated across the domain.
+  // tensors that are fully replicated across the domain. It also takes in a parameter
+  // tvMask, which if defined, restricts the generated operations to be specific to
+  // tvMask only.
   std::vector<ir::Stmt> createDomainPointColorings(
       Forall forall,
       ir::Expr domainIter,
       std::map<TensorVar, ir::Expr> domains,
       std::set<TensorVar>& fullyReplicatedTensors,
-      std::vector<ir::Expr> colorings
+      std::vector<ir::Expr> colorings,
+      TensorVar tvMask = TensorVar()
   );
 
   // createIndexPartitions creates IndexPartitions from constructed point colorings
-  // of each tensor being transferred at the current level.
+  // of each tensor being transferred at the current level. It also takes in a parameter
+  // tvMask, which if defined, restricts the generated operations to be specific to
+  // tvMask only.
   std::vector<ir::Stmt> createIndexPartitions(
       Forall forall,
       ir::Expr domain,
@@ -471,7 +476,8 @@ protected:
       std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
       std::set<TensorVar> fullyReplicatedTensors,
       std::vector<ir::Expr> colorings,
-      const std::vector<IndexVar>& distIvars
+      const std::vector<IndexVar>& distIvars,
+      TensorVar tvMask = TensorVar()
   );
 
   // getPrivilegeForTensor returns the Legion privilege and coherence mode to access
@@ -547,6 +553,9 @@ private:
   // loweringAssembleQueries is set to true if we are currently lowering
   // an assemble query.
   bool loweringAssembleQueries = false;
+  // loweringAssembleCompute is set to true if we are currently lowering
+  // the compute phase of an assemble operation.
+  bool loweringAssembleCompute = false;
   // assembleQueryIndexSpace is an expression of an index space used by an
   // attribute query to launch tasks over. It is intended to be reused by
   // some assembly functions to distribute over the same space as the compute.
