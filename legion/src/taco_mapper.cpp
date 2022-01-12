@@ -2,6 +2,7 @@
 #include "mappers/logging_wrapper.h"
 #include "error.h"
 #include "realm/logging.h"
+#include "legion_tensor.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -156,6 +157,105 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
   // Mark that we want profiling from this task if we're supposed to backpressure it.
   if ((task.tag & BACKPRESSURE_TASK) != 0 && this->enableBackpressure) {
     output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
+  }
+}
+
+// default_policy_select_instance_region selects the region to actually allocate
+// when given a request to map an instance. The DefaultMapper's policy here is
+// generally good, except that it sometimes attempts to allocate instances of the
+// root region, which in many cases for DISTAL is of size 2^63. This method is a
+// slightly modified version of the DefaultMapper's implementation that makes sure
+// to not perform such an allocation.
+Legion::LogicalRegion TACOMapper::default_policy_select_instance_region(Legion::Mapping::MapperContext ctx,
+                                                                        Legion::Memory target_memory,
+                                                                        const Legion::RegionRequirement &req,
+                                                                        const Legion::LayoutConstraintSet &constraints,
+                                                                        bool force_new_instances,
+                                                                        bool meets_constraints) {
+  // If it is not something we are making a big region for just
+  // return the region that is actually needed.
+  LogicalRegion result = req.region;
+  if (!meets_constraints || (req.privilege == LEGION_REDUCE))
+    return result;
+
+  // If the application requested that we use the exact region requested,
+  // then honor that.
+  if (exact_region || constraints.specialized_constraint.is_exact() ||
+      (req.tag & DefaultMapper::EXACT_REGION) != 0)
+    return result;
+
+  // Heuristically use the exact region if the target memory is either a GPU
+  // framebuffer or a zero copy memory.
+  if (target_memory.kind() == Memory::GPU_FB_MEM ||
+      target_memory.kind() == Memory::Z_COPY_MEM)
+    return result;
+
+  // Simple heuristic here, if we are on a single node, we go all the
+  // way to the root since the first-level partition is likely just
+  // across processors in the node, however, if we are on multiple nodes
+  // we try to find the first level that effectively partitions the root
+  // into one subregion per node.
+  if (total_nodes == 1)
+  {
+    while (runtime->has_parent_logical_partition(ctx, result))
+    {
+      LogicalPartition parent =
+          runtime->get_parent_logical_partition(ctx, result);
+      auto parentRegion = runtime->get_parent_logical_region(ctx, parent);
+      auto parentRegionBounds = runtime->get_index_space_domain(ctx, parentRegion.get_index_space());
+      bool isInfty = false;
+      for (int i = 0; i < parentRegionBounds.dim; i++) {
+        if (parentRegionBounds.hi() == LEGION_TENSOR_INFTY) {
+          isInfty = true;
+          break;
+        }
+      }
+      // If the parent region is infinitely sized, then we don't want to
+      // go up the region tree anymore.
+      if (isInfty) return result;
+      result = parentRegion;
+    }
+    return result;
+  }
+  else
+  {
+    // Fall through if the application actually asked for the root.
+    if (!runtime->has_parent_logical_partition(ctx, result))
+      return result;
+
+    std::vector<LogicalRegion> path;
+    std::vector<size_t> volumes;
+
+    path.push_back(result);
+    volumes.push_back(runtime->get_index_space_domain(ctx,
+                                                      result.get_index_space()).get_volume());
+
+    // Collect the size of subregion at each level.
+    LogicalRegion next = result;
+    while (runtime->has_parent_logical_partition(ctx, next))
+    {
+      LogicalPartition parent =
+          runtime->get_parent_logical_partition(ctx, next);
+      next = runtime->get_parent_logical_region(ctx, parent);
+      path.push_back(next);
+      volumes.push_back(
+          runtime->get_index_space_domain(ctx, next.get_index_space()).get_volume());
+    }
+
+    // Accumulate the "effective" fan-out at each level and
+    // stop the search once we have one subregion per node.
+    double effective_fanout = 1.0;
+    for (off_t idx = (off_t)path.size() - 2; idx >= 0; --idx)
+    {
+      effective_fanout *= (double)volumes[idx + 1] / volumes[idx];
+      if ((unsigned)effective_fanout >= total_nodes)
+        return path[idx];
+    }
+
+    // If we reached this point, the partitions were not meant to assign
+    // one subregion per node. So, stop pretending to be smart and
+    // just return the exact target.
+    return result;
   }
 }
 

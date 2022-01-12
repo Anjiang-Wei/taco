@@ -152,21 +152,22 @@ ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vecto
   return {};
 }
 
-ir::Stmt RectCompressedModeFormat::getSeqInsertEdges(ir::Expr parentPos, std::vector<ir::Expr> parentDims, std::vector<ir::Expr> coords,
-                                                    std::vector<AttrQueryResult> queries, Mode mode) const {
+ir::Stmt RectCompressedModeFormat::getSeqInsertEdges(ir::Expr parentPos, std::vector<ir::Expr> parentDims, ir::Expr colorSpace,
+                                                     std::vector<ir::Expr> coords, std::vector<AttrQueryResult> queries, Mode mode) const {
 
   // As with getFinalizeYieldPositions, we have a task to perform this computation in
   // a distributed manner, so we just launch it here.
   taco_iassert(coords.size() == parentDims.size());
-  // TODO (rohany): This needs a color space threaded through here. We can do
-  //  something like if the input colorSpace is not defined, then replace it
-  //  with the singleton color space.
+  // If the input color space is undefined, then create a dummy size 1 color space.
+  if (!colorSpace.defined()) {
+    colorSpace = ir::Call::make("runtime->create_index_space", {ir::ctx, ir::makeConstructor(Rect(1), {0, 0})}, Auto);
+  }
   auto call = ir::Call::make(
     "RectCompressedGetSeqInsertEdges::compute",
     {
       ir::ctx,
       ir::runtime,
-      ir::Call::make("runtime->create_index_space", {ir::ctx, ir::makeConstructor(Rect(1), {0, 0})}, Auto),
+      colorSpace,
       this->getRegion(mode.getModePack(), POS),
       this->fidRect1,
       queries[0].getResult({}, "nnz"),

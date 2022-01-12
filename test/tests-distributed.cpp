@@ -1865,6 +1865,56 @@ TEST(distributed, legionSpFormatConverterLib) {
   ir::CodegenLegionC::compileToDirectory("../legion/format-converter/", ir::Block::make(converters));
 }
 
+TEST(distributed, SpAdd3) {
+  int dim = 50;
+  Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> C("C", {dim, dim}, LgFormat({Dense, LgSparse}));
+  Tensor<double> D("D", {dim, dim}, LgFormat({Dense, LgSparse}));
+
+  IndexVar i("i"), j("j");
+  A(i, j) = B(i, j) + C(i, j) + D(i, j);
+
+  // Schedule the statement.
+  auto stmt = A.getAssignment()
+      .concretize()
+      .assemble(A.getTensorVar(), AssembleStrategy::Insert)
+  ;
+
+  // Split out the assemble into the query and compute to schedule each one.
+  auto assemble = to<Assemble>(stmt);
+  auto query = assemble.getQueries();
+  auto compute = assemble.getCompute();
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+
+  // Schedule the query.
+  auto ivars = getIndexVars(query);
+  auto qi = ivars[0], qj = ivars[1];
+  auto nnzQ = getNNZQueryAccess(query);
+  IndexVar qio("qio"), qii("qii");
+  query = query.distribute({qi}, {qio}, {qii}, Grid(pieces))
+               // TODO (rohany): I don't like that I have to index these by qi and qj...
+               .communicate({nnzQ, B(qi, qj), C(qi, qj), D(qi, qj)}, qio)
+               ;
+
+  // Schedule the compute.
+  IndexVar io("io"), ii("ii");
+  compute = compute.distribute({i}, {io}, {ii}, Grid(pieces))
+                   .communicate({A(i, j), B(i, j), C(i, j), D(i, j)}, io)
+                   ;
+
+  // Put it all back together.
+  stmt = Assemble(query, compute, assemble.getAttrQueryResults());
+
+  // Separate scheduling results in SuchThat nodes not at the top level.
+  // The lowering infrastructure does not understand this, so we can apply
+  // a simple hoisting step to bring all relations to the top level.
+  stmt = hoistSuchThats(stmt);
+  // TODO (rohany): Figure out how partitioning of this might work.
+  auto lowered = lowerLegionAssemble(stmt, "computeLegion", true, true, false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spadd3/", lowered);
+}
+
 TEST(distributed, preserveNonZeros) {
   auto makeDims = [](int n) {
     return std::vector<int>(n, 5);

@@ -224,7 +224,9 @@ Stmt CompressedModeFormat::getSeqInitEdges(Expr prevSize, std::vector<ir::Expr>,
 }
 
 Stmt CompressedModeFormat::getSeqInsertEdges(Expr,
-                                             std::vector<ir::Expr> parentDims, std::vector<Expr> coords,
+                                             std::vector<ir::Expr> parentDims,
+                                             Expr,
+                                             std::vector<Expr> coords,
                                              std::vector<AttrQueryResult> queries,
                                              Mode mode) const {
   taco_iassert(parentDims.size() == 1);

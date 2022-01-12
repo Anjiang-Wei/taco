@@ -79,6 +79,13 @@ public:
                                                      const Legion::RegionRequirement &req,
                                                      Legion::MemoryConstraint mc = Legion::MemoryConstraint()) override;
 
+  Legion::LogicalRegion default_policy_select_instance_region(Legion::Mapping::MapperContext ctx,
+                                                              Legion::Memory target_memory,
+                                                              const Legion::RegionRequirement &req,
+                                                              const Legion::LayoutConstraintSet &constraints,
+                                                              bool force_new_instances,
+                                                              bool meets_constraints) override;
+
   void report_profiling(const Legion::Mapping::MapperContext ctx,
                         const Legion::Task& task,
                         const TaskProfilingInfo& input) override;

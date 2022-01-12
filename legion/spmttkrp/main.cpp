@@ -30,8 +30,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
-    // We want to do a piece for each OpenMP processor.
-    pieces = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+    pieces = getNumPieces(ctx, runtime);
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
 

@@ -366,7 +366,7 @@ void CodegenLegionCuda::visit(const PackTaskArgs *node) {
   auto stname = taskArgsName(func->name);
 
   // Make a variable for the raw allocation of the arguments.
-  auto tempVar = node->var.as<Var>()->name + "Raw";
+  auto tempVar = node->var.as<Var>()->name + "Raw" + util::toString(node->forTaskID);
   out << stname << " " << tempVar << ";\n";
 
   // First emit mandatory prefix arguments.
@@ -382,7 +382,9 @@ void CodegenLegionCuda::visit(const PackTaskArgs *node) {
 
   // Construct the actual TaskArgument from this packed data.
   doIndent();
-  out << "TaskArgument " << node->var << " = TaskArgument(&" << tempVar << ", sizeof(" << stname << "));\n";
+  out << "TaskArgument ";
+  node->var.accept(this);
+  out << " = TaskArgument(&" << tempVar << ", sizeof(" << stname << "));\n";
 }
 
 void CodegenLegionCuda::visit(const For* node) {

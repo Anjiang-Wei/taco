@@ -179,9 +179,10 @@ public:
                            const std::vector<ir::Expr>& parentDims,
                            const std::vector<AttrQueryResult>& queries) const;
   ir::Stmt getSeqInsertEdges(const ir::Expr& parentPos,
-      const std::vector<ir::Expr>& parentDims,
-      const std::vector<ir::Expr>& coords,
-      const std::vector<AttrQueryResult>& queries) const;
+                             const std::vector<ir::Expr>& parentDims,
+                             const ir::Expr& colorSpace,
+                             const std::vector<ir::Expr>& coords,
+                             const std::vector<AttrQueryResult>& queries) const;
   ir::Stmt getInitCoords(const ir::Expr& prevSize, 
       const std::vector<AttrQueryResult>& queries) const;
   ir::Stmt getInitYieldPos(const ir::Expr& prevSize) const;

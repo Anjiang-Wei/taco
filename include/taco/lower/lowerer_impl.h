@@ -540,9 +540,31 @@ private:
   };
   std::map<TensorVar, TemporaryArrays> temporaryArrays;
 
-  // TODO (rohany): This maybe should maintain some information about what
-  //  privilege we want to access each query result with.
+  // This set of fields is used by distributed assembly.
+  // assembleQueryResults is a set of TensorVars that contain the result
+  // of attribute queries for assemble.
   std::set<TensorVar> assembleQueryResults;
+  // loweringAssembleQueries is set to true if we are currently lowering
+  // an assemble query.
+  bool loweringAssembleQueries = false;
+  // assembleQueryIndexSpace is an expression of an index space used by an
+  // attribute query to launch tasks over. It is intended to be reused by
+  // some assembly functions to distribute over the same space as the compute.
+  ir::Expr assembleQueryIndexSpace;
+  // assembleIsomorphicQueryAndCompute marks whether or not the structure of the
+  // assemble attribute queries and compute statements are the same.
+  bool assembleIsomorphicQueryAndCompute = false;
+  // assembleComputeIVarToQueryIVar is a mapping of IndexVars in the compute
+  // statement to IndexVars in the attribute queries. It is only set if
+  // assembleIsomorphicQueryAndCompute is true.
+  std::map<IndexVar, IndexVar> assembleComputeIVarToQueryIVar;
+  // assembleQueryPartitions is a map of expressions used to partition
+  // tensors in the query phase. These partitions can then be reused by
+  // the compute phase.
+  // TODO (rohany): I don't think that this will work when there are nested
+  //  distributions. In that case, we'll need to mark the partitions with
+  //  colors, and then look up the right colors in the subtasks.
+  std::map<IndexVar, std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>> assembleQueryPartitions;
 
   /// Map form temporary to indexList var if accelerating dense workspace
   std::map<TensorVar, ir::Expr> tempToIndexList;
@@ -757,6 +779,10 @@ private:
   // stmtHasTasks returns whether or not the input statement contains any
   // for loops that are tasks.
   bool stmtHasTasks(ir::Stmt stmt);
+
+  // stmtHasAssemble returns whether or not the input IndexNotation statement contains
+  // any AssembleNodes.
+  bool stmtHasAssemble(IndexStmt stmt);
 
   // BoundsInferenceExprRewriter rewrites an expression by replacing Var's corresponding
   // to IndexVariable's with their upper and lower bounds, if those variables are not

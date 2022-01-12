@@ -272,7 +272,7 @@ Stmt ModeFormatImpl::getSeqInitEdges(Expr prevSize, std::vector<ir::Expr> parent
   return Stmt();
 }
 
-Stmt ModeFormatImpl::getSeqInsertEdges(Expr parentPos, std::vector<Expr> parentDims,
+Stmt ModeFormatImpl::getSeqInsertEdges(Expr parentPos, std::vector<Expr> parentDims, Expr colorSpace,
                                        std::vector<Expr> coords, std::vector<AttrQueryResult> queries,
                                        Mode mode) const {
   return Stmt();

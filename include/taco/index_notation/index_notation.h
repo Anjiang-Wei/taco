@@ -181,6 +181,17 @@ public:
 /// Check if two index expressions are isomorphic.
 bool isomorphic(IndexExpr, IndexExpr);
 
+/// Check if two index expressions have an isomorphic forall structure.
+/// This is weaker than isomorphic as it will not check things inside the
+/// statement like accesses etc -- it only considers the forall structure.
+bool isomorphicForallStructure(IndexStmt, IndexStmt);
+
+/// If two statements have an isomorphic forall structure, then we can
+/// construct a mapping between the index variables of each statement.
+/// This function returns a mapping of the index variables in the first
+/// IndexStmt to the second IndexStmt.
+std::map<IndexVar, IndexVar> getIsomorphicForallStructureIndexVarMapping(IndexStmt, IndexStmt);
+
 /// Compare two index expressions by value.
 bool equals(IndexExpr, IndexExpr);
 
@@ -1192,6 +1203,10 @@ std::vector<TensorVar> getTensorVars(IndexStmt stmt);
 /// Returns the result accesses, in the order they appear, as well as the set of
 /// result accesses that are reduced into.
 std::pair<std::vector<Access>,std::set<Access>> getResultAccesses(IndexStmt stmt);
+
+/// Returns the access corresponding to the NNZ attribute query. This is
+/// intended to be used when scheduling computations that use assemble.
+Access getNNZQueryAccess(IndexStmt stmt);
 
 /// Returns the input accesses, in the order they appear.
 std::vector<Access> getArgumentAccesses(IndexStmt stmt);
