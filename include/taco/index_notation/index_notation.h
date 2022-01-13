@@ -646,7 +646,10 @@ public:
   /// assume that no data races will occur. For all other strategies other than Atomics,
   /// there is the precondition
   /// that the racing reduction must be over the index variable being parallelized.
+  /// Parallelize also takes in a tensor that is currently being assembled. This tensor
+  /// is allowed to bypass the standard race-detection tests.
   IndexStmt parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy) const;
+  IndexStmt parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy, TensorVar assembling) const;
 
   // TODO (rohany): Comment this up later.
   IndexStmt distribute(std::vector<IndexVar> original, std::vector<IndexVar> outerVars, std::vector<IndexVar> innerVars, Grid g, ParallelUnit parUnit = ParallelUnit::DistributedNode);

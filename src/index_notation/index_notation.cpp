@@ -1687,8 +1687,12 @@ IndexStmt IndexStmt::reorder(std::vector<IndexVar> reorderedvars) const {
 }
 
 IndexStmt IndexStmt::parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy) const {
+  return this->parallelize(i, parallel_unit, output_race_strategy, TensorVar());
+}
+
+IndexStmt IndexStmt::parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy, TensorVar assembling) const {
   string reason;
-  IndexStmt transformed = Parallelize(i, parallel_unit, output_race_strategy).apply(*this, &reason);
+  IndexStmt transformed = Parallelize(i, parallel_unit, output_race_strategy, assembling).apply(*this, &reason);
   if (!transformed.defined()) {
     taco_uerror << reason;
   }

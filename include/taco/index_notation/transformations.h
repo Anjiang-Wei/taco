@@ -310,6 +310,7 @@ public:
   Parallelize();
   Parallelize(IndexVar i);
   Parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy);
+  Parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy, TensorVar assembling);
 
   IndexVar geti() const;
   ParallelUnit getParallelUnit() const;

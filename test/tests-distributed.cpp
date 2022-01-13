@@ -1893,6 +1893,7 @@ TEST(distributed, legionSpAdd3) {
   auto nnzQ = getNNZQueryAccess(query);
   IndexVar qio("qio"), qii("qii");
   query = query.distribute({qi}, {qio}, {qii}, Grid(pieces))
+               .parallelize(qii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
                // TODO (rohany): I don't like that I have to index these by qi and qj...
                .communicate({nnzQ, B(qi, qj), C(qi, qj), D(qi, qj)}, qio)
                ;
@@ -1900,6 +1901,7 @@ TEST(distributed, legionSpAdd3) {
   // Schedule the compute.
   IndexVar io("io"), ii("ii");
   compute = compute.distribute({i}, {io}, {ii}, Grid(pieces))
+                   .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces, A.getTensorVar())
                    .communicate({A(i, j), B(i, j), C(i, j), D(i, j)}, io)
                    ;
 

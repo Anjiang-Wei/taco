@@ -453,6 +453,7 @@ struct Parallelize::Content {
   IndexVar i;
   ParallelUnit  parallel_unit;
   OutputRaceStrategy output_race_strategy;
+  TensorVar assembling;
 };
 
 
@@ -461,10 +462,13 @@ Parallelize::Parallelize() : content(nullptr) {
 
 Parallelize::Parallelize(IndexVar i) : Parallelize(i, ParallelUnit::DefaultUnit, OutputRaceStrategy::NoRaces) {}
 
-Parallelize::Parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy) : content(new Content) {
+Parallelize::Parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy) : Parallelize(i, parallel_unit, output_race_strategy, TensorVar()) {}
+
+Parallelize::Parallelize(IndexVar i, ParallelUnit parallel_unit, OutputRaceStrategy output_race_strategy, TensorVar assembling) : content(new Content) {
   content->i = i;
   content->parallel_unit = parallel_unit;
   content->output_race_strategy = output_race_strategy;
+  content->assembling = assembling;
 }
 
 
@@ -505,6 +509,9 @@ IndexStmt Parallelize::apply(IndexStmt stmt, std::string* reason) const {
       {
         NonZeroAnalyzerResult res;
         this->preservesNonZeroOutputStructure = preservesNonZeroStructure(stmt, res);
+      }
+      if (this->parallelize.content->assembling.defined()) {
+        assembledByUngroupedInsert.push_back(tensorVars[this->parallelize.content->assembling]);
       }
       return rewrite(stmt);
     }
