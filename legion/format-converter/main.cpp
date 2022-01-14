@@ -5,6 +5,7 @@
 #include "realm/cmdline.h"
 #include "error.h"
 #include "taco-generated.h"
+#include <stdlib.h>
 
 using namespace Legion;
 
@@ -15,7 +16,7 @@ enum TaskIDs {
 Realm::Logger logApp("app");
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  bool roundTrip = false, dump = false;
+  bool roundTrip = false, dump = false, h5dump = false;
   std::string outputFormat, cooFile, outputFile, outputModeOrdering;
   Realm::CommandLineParser parser;
   parser.add_option_string("-coofile", cooFile);
@@ -23,6 +24,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_string("-o", outputFile);
   parser.add_option_bool("-roundTrip", roundTrip);
   parser.add_option_bool("-dump", dump);
+  parser.add_option_bool("-h5dump", h5dump);
   parser.add_option_string("-mode_ordering", outputModeOrdering);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
@@ -90,6 +92,14 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (dump) {
     // Dump out the packed tensor to stdout.
     printLegionTensor<double>(ctx, runtime, output);
+  }
+  // If requested, dump data to a textual version of the HDF5 file. We do
+  // this to avoid regressing.
+  if (h5dump) {
+    std::stringstream cmdSS;
+    auto h5dumpFile = outputFile + ".h5dump";
+    cmdSS << "h5dump -O -o " << h5dumpFile << " " << outputFile;
+    taco_iassert(system(cmdSS.str().c_str()) == 0);
   }
 }
 

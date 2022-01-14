@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "mappers/default_mapper.h"
 #include "error.h"
+#include <stdlib.h>
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -396,11 +397,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   std::string tensorFile;
   std::string hdf5Filename;
   std::string dumpFile;
+  bool h5dump = false;
 
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensor", tensorFile);
   parser.add_option_string("-o", hdf5Filename);
   parser.add_option_string("-dump", dumpFile);
+  parser.add_option_bool("-h5dump", h5dump);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "parse failed";
 
@@ -535,6 +538,15 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   runtime->detach_external_resource(ctx, pmemDim).wait();
   runtime->detach_external_resource(ctx, pdiskDim).wait();
   std::cout << "Complete!" << std::endl;
+
+  // If requested, dump data to a textual version of the HDF5 file. We do
+  // this to avoid regressing.
+  if (h5dump) {
+    std::stringstream cmdSS;
+    auto h5dumpFile = hdf5Filename + ".h5dump";
+    cmdSS << "h5dump -O -o " << h5dumpFile << " " << hdf5Filename;
+    taco_iassert(system(cmdSS.str().c_str()) == 0);
+  }
 }
 
 int main(int argc, char** argv) {
