@@ -120,7 +120,6 @@ void spadd3(Mat B, Mat C, Mat D, int warmup, int niter) {
   Mat A;
   PetscInt i, j;
   MatGetSize(B, &i, &j);
-  PetscPrintf(PETSC_COMM_WORLD, "i: %d, j: %d\n", i, j);
   MatCreate(PETSC_COMM_WORLD, &A);
   MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, i, j);
   MatSetFromOptions(A);
@@ -138,12 +137,24 @@ void spadd3(Mat B, Mat C, Mat D, int warmup, int niter) {
   });
 
   PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
-  // dump(A);
-  // dump(B);
+
+  // Validation code.
+  // {
+  //   Vec norms;
+  //   VecCreate(PETSC_COMM_WORLD, &norms);
+  //   VecSetFromOptions(norms);
+  //   VecSetSizes(norms, PETSC_DECIDE, i);
+  //   VecSet(norms, 0.0);
+  //   MatGetRowSum(A, norms);
+  //   PetscScalar sum;
+  //   VecSum(norms, &sum);
+  //   PetscPrintf(PETSC_COMM_WORLD, "Element sum: %lf.\n", sum);
+  // }
 }
 
 int loadMatrixFromFile(Mat* A, char* filename) {
   auto ierr = MatCreate(PETSC_COMM_WORLD, A); CHKERRQ(ierr);
+  MatSetFromOptions(*A);
   PetscViewer viewer;
   PetscViewerCreate(PETSC_COMM_WORLD, &viewer);
   PetscViewerSetType(viewer, PETSCVIEWERBINARY);
