@@ -3803,12 +3803,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
         auto cast = ir::Cast::make(0, queryResult.getType().getDataType());
         allocStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->fill_field", {ctx, queryResultExpr, queryResultExpr, fidVal, cast}, Auto)));
 
-        // We'll always physically map this for now. When we start thinking about distributed
-        // assembly, we'll have to do some analysis to maybe map the region or not.
-        allocStmts.push_back(ir::Assign::make(queryResultExpr, ir::Call::make("legionMalloc", {ctx, runtime, queryResultExpr, queryResultExpr, fidVal, readWrite}, Auto)));
-        allocStmts.push_back(ir::Assign::make(values, ir::makeCreateAccessor(values, queryResultExpr, fidVal)));
         // Destroy all of the temporary resources that we created here.
-        freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, queryResultExpr}, Auto)));
         freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_field_space", {ctx, fspace}, Auto)));
         freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_index_space", {ctx, ispace}, Auto)));
         freeStmts.push_back(ir::SideEffect::make(ir::Call::make("runtime->destroy_logical_region", {ctx, queryResultExpr}, Auto)));
@@ -3844,10 +3839,6 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
         freeStmts.push_back(freeResult);
       }
     }
-    Stmt allocResults = Block::make(allocStmts);
-    freeQueryResults = Block::make(freeStmts);
-
-
     // See whether the compute and queries have the same structure. If they do, this allows
     // us to avoid repartitioning the data in the exact same way.
     this->assembleIsomorphicQueryAndCompute = isomorphicForallStructure(assemble.getQueries(), assemble.getCompute());
@@ -3864,6 +3855,32 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
     this->loweringAssembleQueries = true;
     queries = lower(assemble.getQueries());
     this->loweringAssembleQueries = false;
+
+    // We might have to inline map the query results if the queries directly
+    // write to the result instead of launching any tasks.
+    auto queriesAccessors = this->getAllAccessors(queries);
+    auto queriesHaveTasks = this->stmtHasTasks(queries);
+    if (this->legion && !queriesHaveTasks && !queriesAccessors.empty()) {
+      std::vector<Stmt> inlineMapResults, inlineUnmapResults;
+      for (auto accExpr : queriesAccessors) {
+        auto acc = accExpr.as<GetProperty>();
+        if (util::contains(this->assembleQueryResults, this->exprToTensorVar[acc->tensor])) {
+          auto values = ir::GetProperty::make(acc->tensor, TensorProperty::Values);
+          inlineMapResults.push_back(ir::Assign::make(values, ir::Call::make("legionMalloc", {ctx, runtime, values, values, fidVal, readWrite}, Auto)));
+          inlineMapResults.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, values, fidVal)));
+          inlineUnmapResults.push_back(ir::SideEffect::make(ir::Call::make("runtime->unmap_region", {ctx, values}, Auto)));
+        }
+      }
+      // Update allocStmts with the new allocations.
+      util::append(allocStmts, inlineMapResults);
+      // We'll prepend these free operations to the freeResultStmts.
+      util::append(inlineUnmapResults, freeStmts);
+      freeStmts = inlineUnmapResults;
+    }
+
+    // Finally construct the result queries statement.
+    Stmt allocResults = Block::make(allocStmts);
+    freeQueryResults = Block::make(freeStmts);
     queries = Block::blanks(allocResults, queries);
   }
 

@@ -50,7 +50,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   RegionWrapper D_vals = D->vals;
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
   RegionWrapper A2_nnz_vals;
-  auto A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
 
   int64_t A2Size = runtime->get_index_space_domain(ctx, get_index_space(A2_crd)).hi()[0] + 1;
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
@@ -61,8 +60,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
   A2_nnz_vals = runtime->create_logical_region(ctx, A2_nnzispace, A2_nnzfspace);
   runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int32_t)0);
-  A2_nnz_vals = legionMalloc(ctx, runtime, A2_nnz_vals, A2_nnz_vals, FID_VAL, READ_WRITE);
-  A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
@@ -140,8 +137,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   computePartitions.DPartition.indicesPartitions[1].push_back(crdPartD2);
   computePartitions.DPartition.valsPartition = D_vals_partition;
   computePartitions.DPartition.denseLevelRunPartitions[0] = D_dense_run_0_Partition;
-
-  runtime->unmap_region(ctx, A2_nnz_vals);
 
   return computePartitions;
 }
@@ -587,7 +582,6 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto D2_crd_parent = D->indicesParents[1][1];
   auto D_vals_parent = D->valsParent;
   RegionWrapper A2_nnz_vals;
-  auto A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
 
   int64_t A2Size = runtime->get_index_space_domain(ctx, get_index_space(A2_crd)).hi()[0] + 1;
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
@@ -598,8 +592,6 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
   A2_nnz_vals = runtime->create_logical_region(ctx, A2_nnzispace, A2_nnzfspace);
   runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int32_t)0);
-  A2_nnz_vals = legionMalloc(ctx, runtime, A2_nnz_vals, A2_nnz_vals, FID_VAL, READ_WRITE);
-  A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
@@ -702,12 +694,9 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   RectCompressedFinalizeYieldPositions A2_finalize_yield_pos_launcher = RectCompressedFinalizeYieldPositions(ctx, runtime, A2_pos, A2_seq_insert_edges_result.partition, FID_RECT_1);
   runtime->execute_index_space(ctx, A2_finalize_yield_pos_launcher);
 
-  runtime->unmap_region(ctx, A2_nnz_vals);
   runtime->destroy_field_space(ctx, A2_nnzfspace);
   runtime->destroy_index_space(ctx, A2_nnzispace);
   runtime->destroy_logical_region(ctx, A2_nnz_vals);
-
-  runtime->unmap_region(ctx, A2_nnz_vals);
 }
 void registerTacoTasks() {
   {
