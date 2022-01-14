@@ -154,6 +154,7 @@ void spadd3(Mat B, Mat C, Mat D, int warmup, int niter) {
 
 int loadMatrixFromFile(Mat* A, char* filename) {
   auto ierr = MatCreate(PETSC_COMM_WORLD, A); CHKERRQ(ierr);
+  MatSetFromOptions(*A);
   PetscViewer viewer;
   PetscViewerCreate(PETSC_COMM_WORLD, &viewer);
   PetscViewerSetType(viewer, PETSCVIEWERBINARY);
