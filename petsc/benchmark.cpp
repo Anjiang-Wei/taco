@@ -159,6 +159,42 @@ void spadd3(Mat B, Mat C, Mat D, int warmup, int niter) {
   // }
 }
 
+void sddmm(Mat B, int warmup, int niter, int jdim) {
+  PetscInt i, j = jdim, k;
+  MatGetSize(B, &i, &k);
+  Mat A, C, D;
+  // Create the dense C and D matrices.
+  if (GPUENABLED) {
+    MatCreateDenseCUDA(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i, j, NULL, &C);
+    MatCreateDenseCUDA(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, j, k, NULL, &D);
+  } else {
+    MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i, j, NULL, &C);
+    MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, j, k, NULL, &D);
+  }
+  // Create the output A matrix.
+  MatCreate(PETSC_COMM_WORLD, &A);
+  MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, i, k);
+  MatSetFromOptions(A);
+  MatSetUp(A);
+  MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+
+  // Initialize entries in the inputs.
+  setMatToConstant(C, 1.0);
+  setMatToConstant(D, 1.0);
+  // We have to use MAT_INITIAL_MATRIX on the first call, and after that
+  // we can reuse the matrix since the non-zero pattern will be the same.
+  bool isFirst = true;
+  auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
+    if (isFirst) {
+      MatMatMatMult(B, C, D, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &A);
+    } else {
+      MatMatMatMult(B, C, D, MAT_REUSE_MATRIX, PETSC_DEFAULT, &A);
+    }
+  });
+  PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
+}
+
 int loadMatrixFromFile(Mat* A, char* filename) {
   auto ierr = MatCreate(PETSC_COMM_WORLD, A); CHKERRQ(ierr);
   MatSetFromOptions(*A);
@@ -180,6 +216,7 @@ int main(int argc, char** argv) {
   char add3MatrixInputFileD[PETSC_MAX_PATH_LEN]; PetscBool add3MatrixInputFileDSet;
   PetscInt warmup = 5, nIter = 10; PetscBool warmupSet, nIterSet;
   PetscInt spmmJdim = 32; PetscBool spmmJdimSet;
+  PetscInt sddmmJdim = 128; PetscBool sddmmJdimSet;
   const int BENCHMARK_NAME_MAX_LEN = 20;
   char benchmarkKindInput[BENCHMARK_NAME_MAX_LEN]; PetscBool benchmarkKindNameSet;
 
@@ -191,6 +228,7 @@ int main(int argc, char** argv) {
   ierr = PetscOptionsGetInt(NULL, NULL, "-n", &nIter, &nIterSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetString(NULL, PETSC_NULL, "-bench", benchmarkKindInput, BENCHMARK_NAME_MAX_LEN - 1, &benchmarkKindNameSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL, NULL, "-spmmJdim", &spmmJdim, &spmmJdimSet); CHKERRQ(ierr);
+  ierr = PetscOptionsGetInt(NULL, NULL, "-sddmmJdim", &sddmmJdim, &sddmmJdimSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetBool(NULL, NULL, "-enable_gpu", &GPUENABLED, &GPUENABLED_SET); CHKERRQ(ierr);
 
   std::string benchmark = "spmv";
@@ -218,8 +256,10 @@ int main(int argc, char** argv) {
     ierr = loadMatrixFromFile(&C, add3MatrixInputFileC); CHKERRQ(ierr);
     ierr = loadMatrixFromFile(&D, add3MatrixInputFileD); CHKERRQ(ierr);
     spadd3(B, C, D, warmup, nIter);
+  } else if (benchmark == "sddmm") {
+    sddmm(A, warmup, nIter, sddmmJdim);
   } else {
-    PetscPrintf(PETSC_COMM_WORLD, "Invalid benchmark name, choose one of spmv,spmm,spadd3.\n");
+    PetscPrintf(PETSC_COMM_WORLD, "Invalid benchmark name, choose one of spmv,spmm,spadd3,sddmm.\n");
     PetscFinalize();
     return -1;
   }
