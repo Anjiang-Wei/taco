@@ -14,6 +14,8 @@
 
 static const char help[] = "Petsc benchmark utility";
 
+PetscBool GPUENABLED = PETSC_FALSE; PetscBool GPUENABLED_SET = PETSC_FALSE;
+
 void dump(Mat A) {
   MatView(A, PETSC_VIEWER_STDOUT_WORLD);
 }
@@ -89,8 +91,13 @@ void spmm(Mat B, int warmup, int niter, int jdim) {
   PetscInt i, j = jdim, k;
   MatGetSize(B, &i, &k);
   // Create the other matrices.
-  MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i, j, NULL, &A);
-  MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, k, j, NULL, &C);
+  if (GPUENABLED) {
+    MatCreateDenseCUDA(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i, j, NULL, &A);
+    MatCreateDenseCUDA(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, k, j, NULL, &C);
+  } else {
+    MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i, j, NULL, &A);
+    MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, k, j, NULL, &C);
+  }
   // Initialize entries in the output.
   MatZeroEntries(A);
   setMatToConstant(C, 1.0);
@@ -184,6 +191,7 @@ int main(int argc, char** argv) {
   ierr = PetscOptionsGetInt(NULL, NULL, "-n", &nIter, &nIterSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetString(NULL, PETSC_NULL, "-bench", benchmarkKindInput, BENCHMARK_NAME_MAX_LEN - 1, &benchmarkKindNameSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL, NULL, "-spmmJdim", &spmmJdim, &spmmJdimSet); CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL, NULL, "-enable_gpu", &GPUENABLED, &GPUENABLED_SET); CHKERRQ(ierr);
 
   std::string benchmark = "spmv";
   if (benchmarkKindNameSet) {
