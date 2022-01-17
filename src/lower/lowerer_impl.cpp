@@ -291,6 +291,27 @@ LowererImpl::lower(IndexStmt stmt, string name,
     this->exprToTensorVar[it.second] = it.first;
   }
 
+  // Define and initialize scalar results and arguments.
+  if (generateComputeCode()) {
+    for (auto& result : results) {
+      if (isScalar(result.getType())) {
+        taco_iassert(!util::contains(scalars, result));
+        taco_iassert(util::contains(tensorVars, result));
+        scalars.insert({result, tensorVars.at(result)});
+        header.push_back(defineScalarVariable(result, true));
+      }
+    }
+    for (auto& argument : arguments) {
+      if (isScalar(argument.getType())) {
+        taco_iassert(!util::contains(scalars, argument));
+        taco_iassert(util::contains(tensorVars, argument));
+        scalars.insert({argument, tensorVars.at(argument)});
+        header.push_back(defineScalarVariable(argument, false));
+      }
+    }
+  }
+
+
   // Figure out whether we are going to generate some GPU code.
   {
     struct GPULoopFinder : public IndexNotationVisitor {
@@ -465,26 +486,6 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
     dimensions.insert({indexVar, dimension});
     underivedBounds.insert({indexVar, {ir::Literal::make(0), dimension}});
-  }
-
-  // Define and initialize scalar results and arguments
-  if (generateComputeCode()) {
-    for (auto& result : results) {
-      if (isScalar(result.getType())) {
-        taco_iassert(!util::contains(scalars, result));
-        taco_iassert(util::contains(tensorVars, result));
-        scalars.insert({result, tensorVars.at(result)});
-        header.push_back(defineScalarVariable(result, true));
-      }
-    }
-    for (auto& argument : arguments) {
-      if (isScalar(argument.getType())) {
-        taco_iassert(!util::contains(scalars, argument));
-        taco_iassert(util::contains(tensorVars, argument));
-        scalars.insert({argument, tensorVars.at(argument)});
-        header.push_back(defineScalarVariable(argument, false));
-      }
-    }
   }
 
   // Allocate memory for scalar results
@@ -931,10 +932,14 @@ LowererImpl::lower(IndexStmt stmt, string name,
     for (auto& result : results) {
       if (isScalar(result.getType())) {
         if (this->legion) {
-          taco_iassert(util::contains(scalars, result));
-          returnType = result.getType().getDataType();
-          Expr varValueIR = tensorVars.at(result);
-          footer.push_back(ir::Return::make(varValueIR));
+          // We don't want to return a scalar if we're just creating a partition for
+          // this computation.
+          if (this->legionLoweringKind != PARTITION_ONLY) {
+            taco_iassert(util::contains(scalars, result));
+            returnType = result.getType().getDataType();
+            Expr varValueIR = tensorVars.at(result);
+            footer.push_back(ir::Return::make(varValueIR));
+          }
         } else {
           taco_iassert(util::contains(scalars, result));
           taco_iassert(util::contains(tensorVars, result));
@@ -1973,15 +1978,25 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // Now, rewrite body so that writes into the scalar result are replaced
     // by writes into this buffer.
     struct ScalarReductionRewriter : public IRRewriter {
-      void visit(const Assign* node) {
-        if (node->lhs == this->target) {
-          this->stmt = ir::Store::make(result, 0, node->rhs, true /* useAtomics */);
+      void visit(const Var* node) {
+        if (node == this->target) {
+          this->expr = ir::Load::make(result, this->zeroLocExpr);
         } else {
-          this->stmt = node;
+          this->expr = node;
+        }
+      }
+
+      void visit(const Assign* node) {
+        auto rhs = this->rewrite(node->rhs);
+        if (node->lhs == this->target) {
+          this->stmt = ir::Store::make(result, this->zeroLocExpr, rhs, true /* useAtomics */);
+        } else {
+          this->stmt = ir::Assign::make(node->lhs, rhs, node->use_atomics, node->atomic_parallel_unit);
         }
       }
       ir::Expr target;
       ir::Expr result;
+      ir::Expr zeroLocExpr = 0;
     };
     ScalarReductionRewriter rw;
     rw.target = this->scalarReductionResult; rw.result = bufPtr;
@@ -3533,6 +3548,11 @@ vector<Stmt> LowererImpl::codeToInitializeDenseAcceleratorArrays(Where where) {
 //       CUDA so in that case, we'd probably need to include the CUB headers in 
 //       the generated code.
 std::pair<bool,bool> LowererImpl::canAccelerateDenseTemp(Where where) {
+  // This function is generally broken and does not work most of
+  // the time. It's not critical for any of my benchmarks, so I'll
+  // go ahead and disable it.
+  return {false, false};
+
   // TODO: TEMPORARY -- Needs to be removed
   if(this->loweringToGPU()) {
     return std::make_pair(false, false);
@@ -3725,7 +3745,11 @@ Stmt LowererImpl::lowerWhere(Where where) {
   whereConsumers.pop_back();
   whereTemps.pop_back();
   whereTempsToResult.erase(where.getTemporary());
-  return Block::make(initializeTemporary, producer, markAssignsAtomicDepth > 0 ? capturedLocatePos : ir::Stmt(), consumer,  freeTemporary);
+  return Block::make(initializeTemporary, producer,
+                     // We need captured locators if we're assigning with atomics
+                     // and the result tensor is not a scalar.
+                     (markAssignsAtomicDepth > 0 && !this->performingScalarReduction) ? capturedLocatePos : ir::Stmt(),
+                     consumer, freeTemporary);
 }
 
 
@@ -4804,7 +4828,7 @@ Stmt LowererImpl::declLocatePosVars(vector<Iterator> locators) {
         ModeFunction locate = locateIterator.locate(coords);
         taco_iassert(isValue(locate.getResults()[1], true));
         Stmt declarePosVar = VarDecl::make(locateIterator.getPosVar(),
-                                           locate.getResults()[0]);
+                                           ir::simplify(locate.getResults()[0]));
         result.push_back(declarePosVar);
 
         if (locateIterator.isLeaf()) {
@@ -6562,11 +6586,10 @@ LowererImpl::DenseFormatRuns::DenseFormatRuns(const Access& a, const Iterators& 
 }
 
 void LowererImpl::ValuesAnalyzer::addAccess(const Access& access, const Iterators &iterators, const std::map<IndexVar, ir::Expr>& indexVarToExprMap) {
-  // TODO (rohany): What do we want to know / how do we want to organize it.
-  //  * Information about each tensorvar -- the dimensionality of the values
-  //    array. That can be stored in a map<tensorvar, {info}>.
-  //  * Information about how to actually access the values array, this is specific
-  //    to each access, as the access point depends on the variables in the access.
+  // No-op for scalars without any index variables.
+  if (access.getIndexVars().empty()) {
+    return;
+  }
 
   auto tv = access.getTensorVar();
   DenseFormatRuns runs(access, iterators);

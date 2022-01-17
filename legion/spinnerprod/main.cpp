@@ -12,13 +12,12 @@ using namespace Legion;
 typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  std::string fileNameB, fileNameC, fileNameD;
+  std::string fileNameB, fileNameC;
   bool dump = false;
   int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensorB", fileNameB);
   parser.add_option_string("-tensorC", fileNameC);
-  parser.add_option_string("-tensorD", fileNameD);
   parser.add_option_bool("-dump", dump);
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
@@ -27,7 +26,6 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!fileNameB.empty()) << "Provide the B matrix with -tensorB";
   taco_uassert(!fileNameC.empty()) << "Provide the C matrix with -tensorC";
-  taco_uassert(!fileNameD.empty()) << "Provide the D matrix with -tensorD";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -35,30 +33,23 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
 
-  LegionTensor B, C, D; ExternalHDF5LegionTensor Bex, Cex, Dex;
-  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameB, {Dense, Sparse});
-  std::tie(C, Cex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameC, {Dense, Sparse});
-  std::tie(D, Dex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameD, {Dense, Sparse});
-  auto A = createSparseTensorForPack<double>(ctx, runtime, {Dense, Sparse}, B.dims, FID_RECT_1, FID_COORD, FID_VAL);
+  LegionTensor B, C; ExternalHDF5LegionTensor Bex, Cex;
+  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameB, {Dense, Sparse, Sparse});
+  std::tie(C, Cex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameC, {Dense, Sparse, Sparse});
 
-  auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
+  auto pack = partitionForcomputeLegion(ctx, runtime, &B, &C, pieces);
 
+  valType a = 0;
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
-    if (dump) {
-      runtime->fill_field(ctx, A.indices[1][0], A.indicesParents[1][0], FID_RECT_1, Rect<1>({0, 0}));
-      runtime->fill_field(ctx, A.indices[1][1], A.indicesParents[1][1], FID_COORD, int32_t(0));
-      runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
-    }
-    computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
+    a = computeLegion(ctx, runtime, &B, &C, &pack, pieces);
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
   if (dump) {
-    printLegionTensor<valType>(ctx, runtime, A);
+    LEGION_PRINT_ONCE(runtime, ctx, stdout, "Result: %lf\n", a);
   }
   Bex.destroy(ctx, runtime);
   Cex.destroy(ctx, runtime);
-  Dex.destroy(ctx, runtime);
 }
 
 int main(int argc, char** argv) {

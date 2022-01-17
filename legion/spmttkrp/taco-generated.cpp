@@ -12,12 +12,9 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t A1_dimension;
   int32_t A2_dimension;
   int64_t B3Size;
-  int32_t C1_dimension;
   int32_t C2_dimension;
-  int32_t D1_dimension;
   int32_t D2_dimension;
   int32_t pieces;
 };
@@ -104,12 +101,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int32_t fposo = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t A1_dimension = args->A1_dimension;
   int32_t A2_dimension = args->A2_dimension;
   int64_t B3Size = args->B3Size;
-  int32_t C1_dimension = args->C1_dimension;
   int32_t C2_dimension = args->C2_dimension;
-  int32_t D1_dimension = args->D1_dimension;
   int32_t D2_dimension = args->D2_dimension;
   int32_t pieces = args->pieces;
 
@@ -164,9 +158,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         }
       }
       int32_t jB = j_pos;
-      int32_t iA = 0 * A1_dimension + i;
-      int32_t jC = 0 * C1_dimension + j;
-      int32_t kD = 0 * D1_dimension + k;
+      int32_t iA = i;
+      int32_t jC = j;
+      int32_t kD = k;
       for (int32_t l = 0; l < C2_dimension; l++) {
         int64_t pointID3 = pointID2 * C2_dimension + l;
         int32_t lA = iA * A2_dimension + l;
@@ -179,7 +173,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 }
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
-  int A1_dimension = A->dims[0];
   int A2_dimension = A->dims[1];
   auto A_vals_parent = A->valsParent;
   RegionWrapper B2_crd = B->indices[1][1];
@@ -189,11 +182,9 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B3_pos_parent = B->indicesParents[2][0];
   auto B3_crd_parent = B->indicesParents[2][1];
   auto B_vals_parent = B->valsParent;
-  int C1_dimension = C->dims[0];
   int C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
-  int D1_dimension = D->dims[0];
   int D2_dimension = D->dims[1];
   RegionWrapper D_vals = D->vals;
   auto D_vals_parent = D->valsParent;
@@ -206,12 +197,9 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto fposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
   task_1Args taskArgsRaw1;
-  taskArgsRaw1.A1_dimension = A1_dimension;
   taskArgsRaw1.A2_dimension = A2_dimension;
   taskArgsRaw1.B3Size = B3Size;
-  taskArgsRaw1.C1_dimension = C1_dimension;
   taskArgsRaw1.C2_dimension = C2_dimension;
-  taskArgsRaw1.D1_dimension = D1_dimension;
   taskArgsRaw1.D2_dimension = D2_dimension;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
