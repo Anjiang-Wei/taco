@@ -15,35 +15,25 @@ typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,
 
 struct task_1Args {
   int32_t B1_dimension;
-  int32_t a1_dimension;
-  int32_t c1_dimension;
   int32_t pieces;
 };
 
 struct task_2Args {
   int64_t B2Size;
-  int32_t a1_dimension;
-  int32_t c1_dimension;
   int32_t pieces;
 };
 
 struct task_3Args {
   int64_t B2Size;
-  int32_t a1_dimension;
-  int32_t c1_dimension;
   int32_t pieces;
 };
 
 struct task_4Args {
   int32_t B2_dimension;
-  int32_t a1_dimension;
-  int32_t c1_dimension;
   int32_t pieces;
 };
 
 struct task_5Args {
-  int32_t B2_dimension;
-  int32_t a1_dimension;
   int32_t pieces;
 };
 
@@ -124,8 +114,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
   int32_t B1_dimension = args->B1_dimension;
-  int32_t a1_dimension = args->a1_dimension;
-  int32_t c1_dimension = args->c1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -145,25 +133,23 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int32_t ia = 0 * a1_dimension + i;
-    int32_t iB = 0 * B1_dimension + i;
+    int32_t ia = i;
+    int32_t iB = i;
     for (int32_t jB = B2_pos_accessor[Point<1>(i)].lo; jB < (B2_pos_accessor[Point<1>(i)].hi + 1); jB++) {
       int32_t j = B2_crd_accessor[(jB * 1)];
-      int32_t jc = 0 * c1_dimension + j;
+      int32_t jc = j;
       a_vals_rw_accessor[Point<1>(i)] = a_vals_rw_accessor[Point<1>(i)] + B_vals_ro_accessor[Point<1>(jB)] * c_vals_ro_accessor[Point<1>(j)];
     }
   }
 }
 
 void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces) {
-  int a1_dimension = a->dims[0];
   auto a_vals_parent = a->valsParent;
   int B1_dimension = B->dims[0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int c1_dimension = c->dims[0];
   RegionWrapper c_vals = c->vals;
   auto c_vals_parent = c->valsParent;
 
@@ -175,8 +161,6 @@ void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   task_1Args taskArgsRaw1;
   taskArgsRaw1.B1_dimension = B1_dimension;
-  taskArgsRaw1.a1_dimension = a1_dimension;
-  taskArgsRaw1.c1_dimension = c1_dimension;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
@@ -255,8 +239,6 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t fposo = task->index_point[0];
   task_2Args* args = (task_2Args*)(task->args);
   int64_t B2Size = args->B2Size;
-  int32_t a1_dimension = args->a1_dimension;
-  int32_t c1_dimension = args->c1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -295,21 +277,19 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         i_pos = i_pos + 1;
         i = i_pos;
       }
-      int32_t ia = 0 * a1_dimension + i;
-      int32_t jc = 0 * c1_dimension + j;
+      int32_t ia = i;
+      int32_t jc = j;
       a_vals_red_accessor_non_excl[Point<1>(i)] <<= B_vals_ro_accessor[Point<1>(fposB)] * c_vals_ro_accessor[Point<1>(j)];
     }
   }
 }
 
 void computeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplit* partitionPack, int32_t pieces) {
-  int a1_dimension = a->dims[0];
   auto a_vals_parent = a->valsParent;
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int c1_dimension = c->dims[0];
   RegionWrapper c_vals = c->vals;
   auto c_vals_parent = c->valsParent;
 
@@ -321,8 +301,6 @@ void computeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
   task_2Args taskArgsRaw2;
   taskArgsRaw2.B2Size = B2Size;
-  taskArgsRaw2.a1_dimension = a1_dimension;
-  taskArgsRaw2.c1_dimension = c1_dimension;
   taskArgsRaw2.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
   IndexLauncher launcher = IndexLauncher(taskID(2), domain, taskArgs, ArgumentMap());
@@ -404,8 +382,6 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t fposo = task->index_point[0];
   task_3Args* args = (task_3Args*)(task->args);
   int64_t B2Size = args->B2Size;
-  int32_t a1_dimension = args->a1_dimension;
-  int32_t c1_dimension = args->c1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -446,15 +422,14 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         i = B1_crd_accessor[i_pos];
       }
       int32_t iB = i_pos;
-      int32_t ia = 0 * a1_dimension + i;
-      int32_t jc = 0 * c1_dimension + j;
+      int32_t ia = i;
+      int32_t jc = j;
       a_vals_red_accessor_non_excl[Point<1>(i)] <<= B_vals_ro_accessor[Point<1>(fposB)] * c_vals_ro_accessor[Point<1>(j)];
     }
   }
 }
 
 void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionPosSplitDCSR* partitionPack, int32_t pieces) {
-  int a1_dimension = a->dims[0];
   RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
   RegionWrapper B1_crd = B->indices[0][1];
@@ -464,7 +439,6 @@ void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, Le
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int c1_dimension = c->dims[0];
   RegionWrapper c_vals = c->vals;
   auto c_vals_parent = c->valsParent;
 
@@ -477,8 +451,6 @@ void computeLegionPosSplitDCSR(Legion::Context ctx, Legion::Runtime* runtime, Le
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
   task_3Args taskArgsRaw3;
   taskArgsRaw3.B2Size = B2Size;
-  taskArgsRaw3.a1_dimension = a1_dimension;
-  taskArgsRaw3.c1_dimension = c1_dimension;
   taskArgsRaw3.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw3, sizeof(task_3Args));
   IndexLauncher launcher = IndexLauncher(taskID(3), domain, taskArgs, ArgumentMap());
@@ -564,8 +536,6 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t fposo = task->index_point[0];
   task_4Args* args = (task_4Args*)(task->args);
   int32_t B2_dimension = args->B2_dimension;
-  int32_t a1_dimension = args->a1_dimension;
-  int32_t c1_dimension = args->c1_dimension;
   int32_t pieces = args->pieces;
 
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
@@ -588,25 +558,23 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
     int32_t i = B1_crd_accessor[fposB];
     int64_t pointID2 = pointID1 * ((((B1_pos_accessor[Point<1>(0)].hi + 1) - B1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + fposi;
-    int32_t ia = 0 * a1_dimension + i;
+    int32_t ia = i;
     for (int32_t j = 0; j < B2_dimension; j++) {
       int64_t pointID3 = pointID2 * B2_dimension + j;
       int32_t jB = fposB * B2_dimension + j;
-      int32_t jc = 0 * c1_dimension + j;
+      int32_t jc = j;
       a_vals_red_accessor[Point<1>(i)] <<= B_vals_ro_accessor[Point<2>(fposB, j)] * c_vals_ro_accessor[Point<1>(j)];
     }
   }
 }
 
 void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionSparseDensePosParallelize* partitionPack, int32_t pieces) {
-  int a1_dimension = a->dims[0];
   auto a_vals_parent = a->valsParent;
   int B2_dimension = B->dims[1];
   RegionWrapper B1_crd = B->indices[0][1];
   auto B1_pos_parent = B->indicesParents[0][0];
   auto B1_crd_parent = B->indicesParents[0][1];
   auto B_vals_parent = B->valsParent;
-  int c1_dimension = c->dims[0];
   RegionWrapper c_vals = c->vals;
   auto c_vals_parent = c->valsParent;
 
@@ -618,8 +586,6 @@ void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
   task_4Args taskArgsRaw4;
   taskArgsRaw4.B2_dimension = B2_dimension;
-  taskArgsRaw4.a1_dimension = a1_dimension;
-  taskArgsRaw4.c1_dimension = c1_dimension;
   taskArgsRaw4.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw4, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
@@ -713,8 +679,6 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int32_t jposo = task->index_point[0];
   task_5Args* args = (task_5Args*)(task->args);
-  int32_t B2_dimension = args->B2_dimension;
-  int32_t a1_dimension = args->a1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -740,20 +704,18 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
     int32_t j = c1_crd_accessor[jposc];
     int64_t pointID2 = pointID1 * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi;
-    int32_t jB = 0 * B2_dimension + j;
+    int32_t jB = j;
     for (int32_t iB = B2_pos_accessor[Point<1>(j)].lo; iB < (B2_pos_accessor[Point<1>(j)].hi + 1); iB++) {
       int32_t i = B2_crd_accessor[(iB * 1)];
-      int32_t ia = 0 * a1_dimension + i;
+      int32_t ia = i;
       a_vals_red_accessor_non_excl[Point<1>(i)] <<= B_vals_ro_accessor[Point<1>(iB)] * c_vals_ro_accessor[Point<1>(jposc)];
     }
   }
 }
 
 void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionCSCMSpV* partitionPack, int32_t pieces) {
-  int a1_dimension = a->dims[0];
   RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
-  int B2_dimension = B->dims[1];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
@@ -771,8 +733,6 @@ void computeLegionCSCMSpV(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   auto jposoIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(jposoIndexSpace));
   task_5Args taskArgsRaw5;
-  taskArgsRaw5.B2_dimension = B2_dimension;
-  taskArgsRaw5.a1_dimension = a1_dimension;
   taskArgsRaw5.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw5, sizeof(task_5Args));
   IndexLauncher launcher = IndexLauncher(taskID(5), domain, taskArgs, ArgumentMap());

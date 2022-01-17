@@ -1489,14 +1489,8 @@ void CodeGen_CUDA::visit(const Store* op) {
         stream << ");" << endl;
       } else if (isa<Add>(op->data)) {
         auto add = to<Add>(op->data);
-        // TODO (rohany): These assertions will fail (again) when we have a code that performs
-        //  a reduction into a scalar. I don't have any of these now in sparse-land, so I'm going
-        //  to include these assertions and we can tackle them again when we run into a problem.
         taco_iassert(isa<Load>(add->a));
-        taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc);
-        // TODO (rohany): I don't think that there is a case in which we don't want to use
-        //  atomicAddWarp over atomicAdd. Being able to avoid some atomic operations at the
-        //  cost of a few warp-wide collectives seems worth it to me.
+        taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc) << (ir::Stmt(op));
         if (lhsIsAccessor) {
           // We implement a slightly different atomicAddWarp for the Legion backend. It does
           // pretty much the same thing but flattens the Point<DIM> object into an index for
@@ -1515,14 +1509,13 @@ void CodeGen_CUDA::visit(const Store* op) {
           stream << ");" << endl;
         } else {
           doIndent();
-          stream << "atomicAdd(&";
-
+          stream << "atomicAddWarp(&";
           op->arr.accept(this);
           stream << "[";
           parentPrecedence = Precedence::TOP;
           op->loc.accept(this);
-          stream << "]";
-
+          stream << "], ";
+          op->loc.accept(this);
           stream << ", ";
           add->b.accept(this);
           stream << ");" << endl;

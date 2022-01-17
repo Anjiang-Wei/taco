@@ -329,7 +329,6 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
 }
 
 void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
-  int T1_dimension = T->dims[0];
   RegionWrapper T2_pos = T->indices[1][0];
   RegionWrapper T2_crd = T->indices[1][1];
   RegionWrapper T3_pos = T->indices[2][0];
@@ -409,7 +408,7 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
     while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
-    int32_t iT = 0 * T1_dimension + i;
+    int32_t iT = i;
     int32_t pT2_begin = jT;
 
     int32_t jTCOO = iTCOO;

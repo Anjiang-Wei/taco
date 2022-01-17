@@ -1917,6 +1917,47 @@ TEST(distributed, legionSpAdd3) {
   ir::CodegenLegionC::compileToDirectory("../legion/spadd3/", lowered);
 }
 
+TEST(distributed, legionSpInnerProd) {
+  int dim = 50;
+  Tensor<double> a("a");
+  Tensor<double> B("B", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
+  Tensor<double> C("C", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
+
+  IndexVar i("i"), j("j"), k("k"), io("io"), ii("ii"), iio("iio"), iii("iii");
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  IndexStmt cpuStmt, gpuStmt;
+  {
+    auto CHUNK_SIZE= 1024;
+    a() = B(i, j, k) * C(i, j, k);
+    cpuStmt = a.getAssignment().concretize()
+               .distribute({i}, {io}, {ii}, Grid(pieces))
+               .split(ii, iio, iii, CHUNK_SIZE)
+               .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+               .communicate({B(i, j, k), C(i, j, k)}, io)
+               ;
+  }
+  {
+    auto BLOCK_SIZE=256;
+    IndexVar block("block"), thread("thread");
+    a() = B(i, j, k) * C(i, j, k);
+    gpuStmt = a.getAssignment().concretize()
+               .distribute({i}, {io}, {ii}, Grid(pieces))
+               .split(ii, block, thread, BLOCK_SIZE)
+               // Note that we have to first apply the thread parallelization before
+               // the block parallelization to get around a quirk in the parallelize
+               // command that incorrectly hoists scalars out of GPU parallel loops.
+               .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::ParallelReduction)
+               .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::Atomics)
+               .communicate({B(i, j, k), C(i, j, k)}, io)
+               ;
+  }
+
+  auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spinnerprod/", loweredCPU);
+  auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spinnerprod/", loweredGPU);
+}
+
 TEST(distributed, preserveNonZeros) {
   auto makeDims = [](int n) {
     return std::vector<int>(n, 5);

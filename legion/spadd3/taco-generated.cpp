@@ -16,8 +16,6 @@ typedef FieldAccessor<READ_WRITE,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>
 struct task_2Args {
   int32_t A1_dimension;
   int32_t B1_dimension;
-  int32_t C1_dimension;
-  int32_t D1_dimension;
   int32_t pieces;
 };
 
@@ -25,8 +23,6 @@ struct task_1Args {
   int32_t A1_dimension;
   IndexSpace A_dense_run_0;
   int32_t B1_dimension;
-  int32_t C1_dimension;
-  int32_t D1_dimension;
   int32_t pieces;
 };
 
@@ -171,8 +167,6 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   task_2Args* args = (task_2Args*)(task->args);
   int32_t A1_dimension = args->A1_dimension;
   int32_t B1_dimension = args->B1_dimension;
-  int32_t C1_dimension = args->C1_dimension;
-  int32_t D1_dimension = args->D1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -199,10 +193,10 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int32_t iB = 0 * B1_dimension + i;
-    int32_t iC = 0 * C1_dimension + i;
-    int32_t iD = 0 * D1_dimension + i;
-    int32_t iA = 0 * A1_dimension + i;
+    int32_t iB = i;
+    int32_t iC = i;
+    int32_t iD = i;
+    int32_t iA = i;
     int32_t jB = B2_pos_accessor[Point<1>(i)].lo;
     int32_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
     int32_t jC = C2_pos_accessor[Point<1>(i)].lo;
@@ -428,8 +422,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t A1_dimension = args->A1_dimension;
   IndexSpace A_dense_run_0 = args->A_dense_run_0;
   int32_t B1_dimension = args->B1_dimension;
-  int32_t C1_dimension = args->C1_dimension;
-  int32_t D1_dimension = args->D1_dimension;
   int32_t pieces = args->pieces;
 
   auto A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
@@ -451,9 +443,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + qii;
-    int32_t qiB = 0 * B1_dimension + qi;
-    int32_t qiC = 0 * C1_dimension + qi;
-    int32_t qiD = 0 * D1_dimension + qi;
+    int32_t qiB = qi;
+    int32_t qiC = qi;
+    int32_t qiD = qi;
     int32_t qjB = B2_pos_accessor[Point<1>(qi)].lo;
     int32_t pB2_end = B2_pos_accessor[Point<1>(qi)].hi + 1;
     int32_t qjC = C2_pos_accessor[Point<1>(qi)].lo;
@@ -571,12 +563,10 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int C1_dimension = C->dims[0];
   RegionWrapper C2_crd = C->indices[1][1];
   auto C2_pos_parent = C->indicesParents[1][0];
   auto C2_crd_parent = C->indicesParents[1][1];
   auto C_vals_parent = C->valsParent;
-  int D1_dimension = D->dims[0];
   RegionWrapper D2_crd = D->indices[1][1];
   auto D2_pos_parent = D->indicesParents[1][0];
   auto D2_crd_parent = D->indicesParents[1][1];
@@ -615,8 +605,6 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   taskArgsRaw1.A1_dimension = A1_dimension;
   taskArgsRaw1.A_dense_run_0 = A_dense_run_0;
   taskArgsRaw1.B1_dimension = B1_dimension;
-  taskArgsRaw1.C1_dimension = C1_dimension;
-  taskArgsRaw1.D1_dimension = D1_dimension;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
@@ -671,8 +659,6 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   task_2Args taskArgsRaw2;
   taskArgsRaw2.A1_dimension = A1_dimension;
   taskArgsRaw2.B1_dimension = B1_dimension;
-  taskArgsRaw2.C1_dimension = C1_dimension;
-  taskArgsRaw2.D1_dimension = D1_dimension;
   taskArgsRaw2.pieces = pieces;
   TaskArgument taskArgs0 = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
   IndexLauncher launcher0 = IndexLauncher(taskID(2), domain0, taskArgs0, ArgumentMap());
