@@ -662,6 +662,9 @@ int main(int argc, char* argv[]) {
 
   vector<vector<string>> scheduleCommands;
 
+  // Utilities for generating input files for CTF.
+  std::string mtxInputFile, ctfOutputFile;
+
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
     if(arg.rfind("--", 0) == 0) {
@@ -979,6 +982,11 @@ int main(int argc, char* argv[]) {
     else if ("-prefix" == argName) {
       prefix = argValue;
     }
+    else if ("-ctfMtxInput" == argName) {
+      mtxInputFile = argValue;
+    } else if ("-ctfMtxOutput" == argName) {
+      ctfOutputFile = argValue;
+    }
     else {
       if (exprStr.size() != 0) {
         printUsageInfo();
@@ -986,6 +994,17 @@ int main(int argc, char* argv[]) {
       }
       exprStr = argv[i];
     }
+  }
+
+  if (!mtxInputFile.empty()) {
+    taco_uassert(!ctfOutputFile.empty());
+    taco_uassert(ctfOutputFile.find(".tns") != std::string::npos);
+    std::cout << "Loading matrix." << std::endl;
+    Tensor<double> matrix = taco::read(mtxInputFile, {Dense, Sparse}, true /* pack */);
+    std::cout << "Writing out matrix in .tns format" << std::endl;
+    taco::write(ctfOutputFile, matrix);
+    std::cout << "Done!" << std::endl;
+    return 0;
   }
 
   // Print compute is the default if nothing else was asked for
