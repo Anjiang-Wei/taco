@@ -87,6 +87,42 @@ void spmm(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsM
   out << "Average time: " << avg << " ms." << std::endl;
 }
 
+void spadd3(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsMatrix<double>> B, Teuchos::RCP<Tpetra::CrsMatrix<double>> C, Teuchos::RCP<Tpetra::CrsMatrix<double>> D,
+            int warmup, int niter, Teuchos::FancyOStream& out) {
+  auto work = [&]() {
+    return Tpetra::MatrixMatrix::add(
+      1.0,
+      false /* transpose */,
+      *B,
+      1.0,
+      false /* transpose */,
+      *Tpetra::MatrixMatrix::add(
+         1.0,
+         false /* transpose */,
+         *C,
+         1.0,
+         false /* transpose */,
+         *D
+       )
+    );
+  };
+  // Warmup iterations.
+  for (int i = 0; i < warmup; i++) {
+    work();
+  }
+  auto timer = Teuchos::TimeMonitor::getNewCounter("SpAdd3");
+  auto start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < niter; i++) {
+    Teuchos::TimeMonitor timeMon(*timer);
+    work();
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  auto avg = double(ms) / double(niter);
+  Teuchos::TimeMonitor::summarize(comm.ptr(), out);
+  out << "Average time: " << avg << " ms." << std::endl;
+}
+
 int main(int argc, char** argv) {
 
   Tpetra::ScopeGuard tpetraScope (&argc, &argv);
@@ -114,10 +150,14 @@ int main(int argc, char** argv) {
   cmdp.setOption("n", &niter, "Number of timed iterations to run");
 
   std::string benchKind = "spmv";
-  cmdp.setOption("bench", &benchKind, "Benchmark kind to run. One of {spmv,spmm}.");
+  cmdp.setOption("bench", &benchKind, "Benchmark kind to run. One of {spmv,spmm,spadd3}.");
 
   int spmmKDim = 32;
   cmdp.setOption("spmmkdim", &spmmKDim, "K-dimension value for SpMM benchmark");
+
+  std::string add3TensorC, add3TensorD;
+  cmdp.setOption("add3TensorC", &add3TensorC, "C tensor to use in SpAdd3 benchmark");
+  cmdp.setOption("add3TensorD", &add3TensorD, "D tensor to use in SpAdd3 benchmark");
 
   if (cmdp.parse(argc, argv) != Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL) {
     std::cout << "Command line parse unsuccessful" << std::endl;
@@ -148,6 +188,14 @@ int main(int argc, char** argv) {
     spmv(comm, A, warmup, niter, out);
   } else if (benchKind == "spmm") {
     spmm(comm, A, warmup, niter, spmmKDim, out);
+  } else if (benchKind == "spadd3") {
+    if (add3TensorC.empty() || add3TensorD.empty()) {
+      std::cout << "Must specify C and D tensors for SpAdd3." << std::endl;
+      return 1;
+    }
+    auto C = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(add3TensorC, comm, params);
+    auto D = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(add3TensorD, comm, params);
+    spadd3(comm, A, C, D, warmup, niter, out);
   } else {
     std::cout << "Invalid benchmark kind" << std::endl;
     return 1;
