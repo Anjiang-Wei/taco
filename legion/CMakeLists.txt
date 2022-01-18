@@ -8,7 +8,7 @@ endif(OPENMP)
 find_package(HDF5 REQUIRED)
 
 # Include the headers and supporting source files.
-include_directories(include/ OpenBLAS/install/include "${CMAKE_BINARY_DIR}/include")
+include_directories(include/ OpenBLAS/install/include "${CMAKE_BINARY_DIR}/include" cub/)
 link_directories(OpenBLAS/install/lib)
 file(GLOB LG_SOURCES src/*.cpp)
 file(GLOB LG_CU_SOURCES src/*.cu)
@@ -265,7 +265,28 @@ target_include_directories(distal-gtest PRIVATE ../test/)
 # Next, create a executable for DISTAL tests that links against GoogleTest.
 file(GLOB DISTAL_TEST_HEADERS test/*.h)
 file(GLOB DISTAL_TEST_SOURCES test/*.cpp)
-add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
+if (Legion_USE_CUDA)
+    # We can't add the DISTAL runtime test as a cuda executable, as that confuses
+    # the gtest test discovery utility. So, we'll add all of the cuda files as
+    # a library and link that into the test.
+    cuda_add_library(distal-runtime-cuda-lib ${LG_CU_SOURCES})
+    # For some reason, cuda_add_library does not pick up on the includes we get
+    # from importing Legion. So, we'll ask for a pointer to the installation directory
+    # directly. This can be removed if Legion exported these variables.
+    if (NOT DEFINED LEGION_INSTALL_DIR)
+      message(ERROR "Please set LEGION_INSTALL_DIR to the Legion installation directory.")
+    endif()
+    target_include_directories(distal-runtime-cuda-lib PRIVATE ${LEGION_INSTALL_DIR}/include/)
+    target_compile_definitions(distal-runtime-cuda-lib PUBLIC TACO_USE_CUDA)
+    target_compile_options(distal-runtime-cuda-lib PRIVATE "-g3" "-O0" "-ggdb")
+
+    cuda_add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
+    target_compile_definitions(distal-runtime-test PUBLIC TACO_USE_CUDA)
+    target_compile_options(distal-runtime-test PRIVATE "-g3" "-O0" "-ggdb")
+    target_link_libraries(distal-runtime-test distal-runtime-cuda-lib)
+else()
+    add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
+endif()
 # Compile distal-runtime-test with OpenMP if we're configured with it.
 if (OPENMP)
   target_compile_options(distal-runtime-test PRIVATE ${OpenMP_CXX_FLAGS})

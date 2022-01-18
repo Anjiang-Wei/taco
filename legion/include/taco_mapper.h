@@ -53,6 +53,13 @@ public:
                           const MapTaskOutput& default_output,
                           MapReplicateTaskOutput& output) override;
 
+  virtual Legion::LayoutConstraintID default_policy_select_layout_constraints(Legion::Mapping::MapperContext ctx,
+                                                                              Legion::Memory target_memory,
+                                                                              const Legion::RegionRequirement &req,
+                                                                              MappingKind mapping_kind,
+                                                                              bool needs_field_constraint_check,
+                                                                              bool &force_new_instances);
+
   void default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
                                          Legion::LayoutConstraintSet &constraints,
                                          Legion::Memory target_memory,
@@ -200,6 +207,13 @@ private:
 
   // localCPUMems is a cached value for the tunable call TUNABLE_LOCAL_CPU_MEMS.
   size_t localCPUMems;
+
+  // distalLayoutConstraintCache is a different version of DefaultMapper::layout_constraint_cache
+  // due to a bug where the DefaultMapper assigns the same constraints to different regions with the
+  // same field space, when the constraints should be recalculated for field spaces and index spaces.
+  std::map<std::tuple<Legion::Memory::Kind, Legion::IndexSpace, Legion::FieldSpace>, Legion::LayoutConstraintID> distalLayoutConstraintCache;
+  // distalReductionConstraintCache is similar to distalLayoutConstraintCache for reduction constraints.
+  std::map<std::tuple<Legion::Memory::Kind, Legion::IndexSpace, Legion::FieldSpace, Legion::ReductionOpID>, Legion::LayoutConstraintID> distalReductionConstraintCache;
 
   // TODO (rohany): It may end up being necessary that we need to explicitly map
   //  regions for placement tasks. If so, Manolis says the following approach

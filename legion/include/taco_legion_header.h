@@ -5,6 +5,7 @@
 #include "mappers/default_mapper.h"
 #include "legion_tensor.h"
 #include "error.h"
+#include <tuple>
 
 // Fields used by the generated TACO code.
 enum TensorFields {
@@ -55,6 +56,8 @@ struct RegionWrapper {
       case UNSET:
         return Legion::PhysicalRegion();
     }
+    taco_iassert(false) << "unreachable";
+    return Legion::PhysicalRegion(); // Keep the compiler happy.
   }
 
   operator Legion::LogicalRegion() {
@@ -67,6 +70,8 @@ struct RegionWrapper {
       case UNSET:
         return Legion::LogicalRegion();
     }
+    taco_iassert(false) << "unreachable";
+    return Legion::LogicalRegion(); // Keep the compiler happy.
   }
 };
 
@@ -160,6 +165,9 @@ T createAccessor(Legion::PhysicalRegion&& r, Legion::FieldID fid, Legion::Reduct
 // before the current point in the current rectangle. It is the inverse of
 // the step function defined in legion/runtime/realm/point.inl.
 template<int DIM>
+#if defined (__CUDACC__)
+__host__ __device__
+#endif
 Legion::Point<DIM> getPreviousPoint(Legion::Point<DIM> point, Legion::Rect<DIM> bounds) {
   for (int i = DIM - 1; i >= 0; i--) {
     // If this dimension of the point is greater than the lower bound,
@@ -282,6 +290,9 @@ private:
                    Legion::Rect<DIM> fullBounds, Legion::Rect<DIM> iterBounds,
                    Accessor<DIM, READ_WRITE> output, Accessor<DIM, READ_ONLY> ghost);
   static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#ifdef TACO_USE_CUDA
+  static void gputask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
   static const int taskID;
 };
 
@@ -313,12 +324,22 @@ private:
   template<int DIM>
   static int32_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
   static int32_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static std::pair<Legion::FieldID, Legion::FieldID> unpackScanTaskArgs(const Legion::Task* task);
+#ifdef TACO_USE_CUDA
+  template<int DIM>
+  static int32_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int32_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
   static const int scanTaskID;
 
   // applyPartialResults{Body,Task} are the implementations of the second step.
   template<int DIM>
   static void applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, READ_WRITE> output, int32_t value);
   static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static std::pair<Legion::FieldID, int32_t> unpackApplyPartialResultsTaskArgs(const Legion::Task* task);
+#ifdef TACO_USE_CUDA
+  static void applyPartialResultsTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
   static const int applyPartialResultsTaskID;
 };
 

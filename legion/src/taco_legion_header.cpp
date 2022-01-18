@@ -555,13 +555,23 @@ void RectCompressedFinalizeYieldPositions::registerTasks() {
   {
     TaskVariantRegistrar registrar(RectCompressedFinalizeYieldPositions::taskID, "rectCompressedFinalizeYieldPositions");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<RectCompressedFinalizeYieldPositions::task>(registrar, "rectCompressedFinalizeYieldPositions");
   }
   {
     TaskVariantRegistrar registrar(RectCompressedFinalizeYieldPositions::taskID, "rectCompressedFinalizeYieldPositions");
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<RectCompressedFinalizeYieldPositions::task>(registrar, "rectCompressedFinalizeYieldPositions");
   }
+#ifdef TACO_USE_CUDA
+  {
+    TaskVariantRegistrar registrar(RectCompressedFinalizeYieldPositions::taskID, "rectCompressedFinalizeYieldPositions");
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<RectCompressedFinalizeYieldPositions::gputask>(registrar, "rectCompressedFinalizeYieldPositions");
+  }
+#endif
 }
 
 RectCompressedGetSeqInsertEdges::ResultValuePack
@@ -732,9 +742,7 @@ int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
 
   // Unpack arguments for the task.
   FieldID outputField, inputField;
-  Deserializer derez(task->args, task->arglen);
-  derez.deserialize(outputField);
-  derez.deserialize(inputField);
+  std::tie(outputField, inputField) = RectCompressedGetSeqInsertEdges::unpackScanTaskArgs(task);
 
   // Figure out what kind of memory body should allocate its temporary within.
   Memory::Kind tmpMemKind;
@@ -768,6 +776,15 @@ int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
   }
 }
 
+std::pair<Legion::FieldID, Legion::FieldID> RectCompressedGetSeqInsertEdges::unpackScanTaskArgs(
+    const Legion::Task *task) {
+  FieldID outputField, inputField;
+  Deserializer derez(task->args, task->arglen);
+  derez.deserialize(outputField);
+  derez.deserialize(inputField);
+  return {outputField, inputField};
+}
+
 template<int DIM>
 void RectCompressedGetSeqInsertEdges::applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime,
                                                               Legion::Rect<DIM> iterBounds,
@@ -785,15 +802,8 @@ void RectCompressedGetSeqInsertEdges::applyPartialResultsTask(const Legion::Task
                                                               const std::vector<Legion::PhysicalRegion> &regions,
                                                               Legion::Context ctx, Legion::Runtime *runtime) {
   FieldID outputField;
-  {
-    Deserializer derez(task->args, task->arglen);
-    derez.deserialize(outputField);
-  }
   int32_t value;
-  {
-    Deserializer derez(task->local_args, task->local_arglen);
-    derez.deserialize(value);
-  }
+  std::tie(outputField, value) = RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(task);
 
   auto output = regions[0];
   auto outputlr = output.get_logical_region();
@@ -812,29 +822,64 @@ void RectCompressedGetSeqInsertEdges::applyPartialResultsTask(const Legion::Task
   }
 }
 
+std::pair<Legion::FieldID, int32_t> RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(
+    const Legion::Task *task) {
+  FieldID outputField;
+  {
+    Deserializer derez(task->args, task->arglen);
+    derez.deserialize(outputField);
+  }
+  int32_t value;
+  {
+    Deserializer derez(task->local_args, task->local_arglen);
+    derez.deserialize(value);
+  }
+  return {outputField, value};
+}
+
 const int RectCompressedGetSeqInsertEdges::scanTaskID = TID_RECT_COMPRESSED_GET_SEQ_INSERT_EDGES_LOCAL_SCAN;
 const int RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID = TID_RECT_COMPRESSED_GET_SEQ_INSERT_EDGES_APPLY_PARTIAL_RESULTS;
 void RectCompressedGetSeqInsertEdges::registerTasks() {
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
   }
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
   }
+#ifdef TACO_USE_CUDA
+  {
+    TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTaskGPU>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
+  }
+#endif
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<RectCompressedGetSeqInsertEdges::applyPartialResultsTask>(registrar, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
   }
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<RectCompressedGetSeqInsertEdges::applyPartialResultsTask>(registrar, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
   }
+#ifdef TACO_USE_CUDA
+  {
+    TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::applyPartialResultsTaskID, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<RectCompressedGetSeqInsertEdges::applyPartialResultsTaskGPU>(registrar, "rectCompressedGetSeqInsertEdgesApplyPartialResults");
+  }
+#endif
 }
 
 void registerTacoRuntimeLibTasks() {

@@ -36,18 +36,22 @@ void DISTALRuntime::TearDownTestCase() {
 
 DISTALRuntimeTestMapper::DISTALRuntimeTestMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &machine,
                                                  const Legion::Processor &local, const char *name)
-    : Mapping::DefaultMapper(rt, machine, local, name) {}
+    : TACOMapper(rt, machine, local, name) {}
 
 Legion::Memory DISTALRuntimeTestMapper::default_policy_select_target_memory(Legion::Mapping::MapperContext ctx,
                                                                             Legion::Processor target_proc,
                                                                             const Legion::RegionRequirement &req,
                                                                             Legion::MemoryConstraint mc) {
-  // Return the first CPU memory. If we have OpenMP though, then use NUMA memories.
+  if (target_proc == Realm::Processor::NO_PROC) {
+    // Return the first CPU memory. If we have OpenMP though, then use NUMA memories.
 #ifdef REALM_USE_OPENMP
-  return Machine::MemoryQuery(this->machine).only_kind(Realm::Memory::SOCKET_MEM).first();
+    return Machine::MemoryQuery(this->machine).only_kind(Realm::Memory::SOCKET_MEM).first();
 #else
-  return Machine::MemoryQuery(this->machine).only_kind(Realm::Memory::SYSTEM_MEM).first();
+    return Machine::MemoryQuery(this->machine).only_kind(Realm::Memory::SYSTEM_MEM).first();
 #endif
+  } else {
+    return TACOMapper::default_policy_select_target_memory(ctx, target_proc, req, mc);
+  }
 }
 
 // Redeclarations of the extern variables so that everything links.
@@ -55,17 +59,24 @@ int my_argc;
 char** my_argv;
 
 int main(int argc, char **argv) {
+  std::vector<std::string> extraArguments = {
+    "-lg:partcheck",
+    "-lg:eager_alloc_percentage", "50",
+    "-ll:csize", "3G",
   // If we have OpenMP-enabled Legion, we'll include some extra arguments to the runtime to
   // enable use of the OpenMP processors and memories. We have to do it this way because ctest
   // does not allow for passing custom arguments to tests.
 #ifdef REALM_USE_OPENMP
-  std::vector<std::string> extraArguments = {
-    "-ll:onuma", "1",
     "-ll:ocpu", "1",
     "-ll:othr", "10",
     "-ll:nsize", "15G",
     "-ll:ncsize", "0",
-    "-lg:eager_alloc_percentage", "50",
+#endif
+#ifdef TACO_USE_CUDA
+    "-ll:gpu", "1",
+    "-ll:fsize", "5G",
+    "-ll:zsize", "0",
+#endif
   };
   std::vector<char*> newArgv;
   for (int i = 0; i < argc; i++) {
@@ -76,7 +87,6 @@ int main(int argc, char **argv) {
   }
   argc = newArgv.size();
   argv = newArgv.data();
-#endif
 
   // If there is just one argument and it is not a gtest option, then filter
   // the tests using that argument surrounded by wildcards.

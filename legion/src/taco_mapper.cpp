@@ -294,6 +294,85 @@ void TACOMapper::map_replicate_task(const Legion::Mapping::MapperContext ctx, co
   }
 }
 
+LayoutConstraintID TACOMapper::default_policy_select_layout_constraints(
+    MapperContext ctx, Memory target_memory,
+    const RegionRequirement &req,
+    MappingKind mapping_kind,
+    bool needs_field_constraint_check,
+    bool &force_new_instances) {
+  // Do something special for reductions and
+  // it is not an explicit region-to-region copy
+  if ((req.privilege == LEGION_REDUCE) && (mapping_kind != COPY_MAPPING)) {
+    // Always make new reduction instances
+    force_new_instances = true;
+    std::tuple<Memory::Kind, IndexSpace, FieldSpace, ReductionOpID> constraint_key(target_memory.kind(),
+                                                                                   req.region.get_index_space(),
+                                                                                   req.region.get_field_space(),
+                                                                                   req.redop);
+    auto finder = this->distalReductionConstraintCache.find(constraint_key);
+    // No need to worry about field constraint checks here
+    // since we don't actually have any field constraints
+    if (finder != this->distalReductionConstraintCache.end())
+      return finder->second;
+    LayoutConstraintSet constraints;
+    default_policy_select_constraints(ctx, constraints, target_memory, req);
+    LayoutConstraintID result =
+        runtime->register_layout(ctx, constraints);
+    // Save the result
+    this->distalReductionConstraintCache[constraint_key] = result;
+    return result;
+  }
+  // We always set force_new_instances to false since we are
+  // deciding to optimize for minimizing memory usage instead
+  // of avoiding Write-After-Read (WAR) dependences
+  force_new_instances = false;
+  // See if we've already made a constraint set for this layout
+  std::tuple<Memory::Kind, IndexSpace, FieldSpace> constraint_key(target_memory.kind(), req.region.get_index_space(),
+                                                                  req.region.get_field_space());
+  auto finder = this->distalLayoutConstraintCache.find(constraint_key);
+  if (finder != this->distalLayoutConstraintCache.end()) {
+    // If we don't need a constraint check we are already good
+    if (!needs_field_constraint_check)
+      return finder->second;
+    // Check that the fields still are the same, if not, fall through
+    // so that we make a new set of constraints
+    const LayoutConstraintSet &old_constraints =
+        runtime->find_layout_constraints(ctx, finder->second);
+    // Should be only one unless things have changed
+    const std::vector<FieldID> &old_set =
+        old_constraints.field_constraint.get_field_set();
+    // Check to make sure the field sets are still the same
+    std::vector<FieldID> new_fields;
+    runtime->get_field_space_fields(ctx, std::get<2>(constraint_key), new_fields);
+    if (new_fields.size() == old_set.size()) {
+      std::set<FieldID> old_fields(old_set.begin(), old_set.end());
+      bool still_equal = true;
+      for (unsigned idx = 0; idx < new_fields.size(); idx++) {
+        if (old_fields.find(new_fields[idx]) == old_fields.end()) {
+          still_equal = false;
+          break;
+        }
+      }
+      if (still_equal)
+        return finder->second;
+    }
+    // Otherwise we fall through and make a new constraint which
+    // will also update the cache
+  }
+  // Fill in the constraints
+  LayoutConstraintSet constraints;
+  default_policy_select_constraints(ctx, constraints, target_memory, req);
+  // Do the registration
+  LayoutConstraintID result =
+      runtime->register_layout(ctx, constraints);
+  // Record our results, there is a benign race here as another mapper
+  // call could have registered the exact same registration constraints
+  // here if we were preempted during the registration call. The
+  // constraint sets are identical though so it's all good.
+  this->distalLayoutConstraintCache[constraint_key] = result;
+  return result;
+}
+
 void TACOMapper::default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
                                                    Legion::LayoutConstraintSet &constraints,
                                                    Legion::Memory target_memory,

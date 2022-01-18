@@ -13,3 +13,6 @@
 [submodule "petsc/petsc"]
 	path = petsc/petsc
 	url = https://gitlab.com/petsc/petsc.git
+[submodule "legion/cub"]
+	path = legion/cub
+	url = https://github.com/NVIDIA/cub.git
