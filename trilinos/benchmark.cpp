@@ -2,17 +2,26 @@
 #include <Tpetra_Version.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <MatrixMarket_Tpetra.hpp>
-
-#include <Xpetra_Matrix.hpp>
-#include <Xpetra_CrsMatrix.hpp>
-#include <Xpetra_IO.hpp>
+#include <TpetraExt_MatrixMatrix_decl.hpp>
 
 #include <iostream>
 #include <string>
 #include <chrono>
 
-typedef int32_t OrdinalType;
-typedef double ScalarType;
+// Define the types used in all of the Trilinos types. This lets us
+// use the same build of Trilinos for OpenMP and GPUs.
+typedef int32_t LO;
+typedef long long GO;
+typedef double S;
+#ifdef ENABLE_CUDA
+typedef Kokkos::Compat::KokkosCudaWrapperNode Node;
+#else
+typedef Kokkos::Compat::KokkosOpenMPWrapperNode Node;
+#endif
+
+typedef Tpetra::CrsMatrix<S, LO, GO, Node> Mat;
+typedef Tpetra::Vector<S, LO, GO, Node> Vec;
+typedef Tpetra::MultiVector<S, LO, GO, Node> MultiVec;
 
 bool endsWith(std::string const &fullString, std::string const &ending) {
   if (fullString.length() >= ending.length()) {
@@ -35,10 +44,10 @@ Teuchos::RCP<Teuchos::FancyOStream> getOutputStream(const Teuchos::Comm<int>& co
   }
 }
 
-void spmv(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsMatrix<double>> A, int warmup, int niter, Teuchos::FancyOStream& out) {
+void spmv(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Mat> A, int warmup, int niter, Teuchos::FancyOStream& out) {
   // Create the x and y vectors.
-  Tpetra::Vector<double> x(A->getDomainMap());
-  Tpetra::Vector<double> y(A->getRangeMap()); 
+  Vec x(A->getDomainMap());
+  Vec y(A->getRangeMap()); 
   // Fill the vectors with values.
   x.putScalar(1.0);
   y.putScalar(0.0);
@@ -61,11 +70,11 @@ void spmv(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsM
   out << "Average time: " << avg << " ms." << std::endl;
 }
 
-void spmm(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsMatrix<double>> B, int warmup, int niter, int kDim, Teuchos::FancyOStream& out) {
+void spmm(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Mat> B, int warmup, int niter, int kDim, Teuchos::FancyOStream& out) {
   // TODO (rohany): I'm not sure what the best assignment of Domain and Range maps
   //  are here for this operation.
-  Tpetra::MultiVector<double> A(B->getDomainMap(), kDim);
-  Tpetra::MultiVector<double> C(B->getRangeMap(), kDim);
+  MultiVec A(B->getDomainMap(), kDim);
+  MultiVec C(B->getRangeMap(), kDim);
   A.putScalar(0.0);
   C.putScalar(1.0);
   
@@ -87,7 +96,7 @@ void spmm(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsM
   out << "Average time: " << avg << " ms." << std::endl;
 }
 
-void spadd3(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Tpetra::CrsMatrix<double>> B, Teuchos::RCP<Tpetra::CrsMatrix<double>> C, Teuchos::RCP<Tpetra::CrsMatrix<double>> D,
+void spadd3(Teuchos::RCP<const Teuchos::Comm<int>> comm, Teuchos::RCP<Mat> B, Teuchos::RCP<Mat> C, Teuchos::RCP<Mat> D,
             int warmup, int niter, Teuchos::FancyOStream& out) {
   auto work = [&]() {
     return Tpetra::MatrixMatrix::add(
@@ -180,7 +189,7 @@ int main(int argc, char** argv) {
   Teuchos::ParameterList params;
   params.set("distribution", distribution);
   params.set("chunkSize", size_t(chunkSize));
-  auto A = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(filename, comm, params);
+  auto A = Tpetra::MatrixMarket::Reader<Mat>::readSparseFile(filename, comm, params);
   // Teuchos::FancyOStream foo(Teuchos::rcp(&std::cout, false));
   // A->describe(foo, Teuchos::VERB_EXTREME);
 
@@ -190,14 +199,14 @@ int main(int argc, char** argv) {
     spmm(comm, A, warmup, niter, spmmKDim, out);
   } else if (benchKind == "spadd3") {
     if (add3TensorC.empty() || add3TensorD.empty()) {
-      std::cout << "Must specify C and D tensors for SpAdd3." << std::endl;
+      out << "Must specify C and D tensors for SpAdd3." << std::endl;
       return 1;
     }
-    auto C = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(add3TensorC, comm, params);
-    auto D = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<double>>::readSparseFile(add3TensorD, comm, params);
+    auto C = Tpetra::MatrixMarket::Reader<Mat>::readSparseFile(add3TensorC, comm, params);
+    auto D = Tpetra::MatrixMarket::Reader<Mat>::readSparseFile(add3TensorD, comm, params);
     spadd3(comm, A, C, D, warmup, niter, out);
   } else {
-    std::cout << "Invalid benchmark kind" << std::endl;
+    out << "Invalid benchmark kind" << std::endl;
     return 1;
   }
 
