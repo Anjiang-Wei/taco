@@ -11,10 +11,17 @@
 #include <cassert>
 #include <vector>
 #include <functional>
+#include <cuda_runtime_api.h>
 
 static const char help[] = "Petsc benchmark utility";
 
 PetscBool GPUENABLED = PETSC_FALSE; PetscBool GPUENABLED_SET = PETSC_FALSE;
+
+void maybeSyncDevice() {
+  if (GPUENABLED) {
+    cudaDeviceSynchronize();
+  }
+}
 
 void dump(Mat A) {
   MatView(A, PETSC_VIEWER_STDOUT_WORLD);
@@ -41,10 +48,12 @@ double benchmarkWithWarmup(int warmup, int numIter, std::function<void(void)> f)
   for (int i = 0; i < warmup; i++) {
     f();
   }
+  maybeSyncDevice();
   PetscTime(&start);
   for (int i = 0; i < numIter; i++) {
     f();
   }
+  maybeSyncDevice();
   PetscTime(&end);
   auto sec = end - start;
   return double(sec) / double(numIter);
@@ -55,12 +64,15 @@ double benchmarkWithWarmupAndSetup(int warmup, int numIter, std::function<void(v
     setup();
     work();
   }
+  maybeSyncDevice();
   PetscLogDouble total = 0;
   PetscLogDouble start, end;
   for (int i = 0; i < numIter; i++) {
     setup();
+    maybeSyncDevice();
     PetscTime(&start);
     work();
+    maybeSyncDevice();
     PetscTime(&end);
     total += (end - start);
   }
@@ -82,7 +94,13 @@ void spmv(Mat A, int warmup, int niter) {
   VecSet(y, zero);
   auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
     MatMult(A, x, y);
-  });
+  }); 
+  
+  // Validation code.
+  // PetscScalar val;
+  // VecSum(y, &val);
+  // PetscPrintf(PETSC_COMM_WORLD, "Sum: %lf\n", val);
+  
   PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
 }
 
