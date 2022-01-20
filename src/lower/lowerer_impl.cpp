@@ -3712,12 +3712,44 @@ Stmt LowererImpl::lowerWhere(Where where) {
     //      1) We use the temporary multiple times
     //      2) The PRODUCER RHS is sparse(not full). (Guarantees that old values are overwritten before consuming)
 
-    Expr p = Var::make("p" + temporary.getName(), Int());
+    Stmt initializeTemporaryLoop;
+
+    Access temporaryAccess = getResultAccesses(where.getProducer()).first[0];
     auto values = this->temporaryArrays.at(temporary).values;
-    Expr size = getTemporarySize(where);
-    Stmt zeroInit = Store::make(values, p, ir::Literal::zero(temporary.getType().getDataType()));
-    Stmt loopInit = For::make(p, 0, size, 1, zeroInit, LoopKind::Serial);
-    initializeTemporary = Block::make(initializeTemporary, loopInit);
+
+    // Find the forall that has this index variable.
+    if (temporaryAccess.getIndexVars().size() == 1) {
+      auto ivar = temporaryAccess.getIndexVars()[0];
+      Forall matchedForall;
+      match(where.getProducer(), std::function<void(const ForallNode*, Matcher*)>([&](const ForallNode* node, Matcher *m) {
+        if (node->indexVar == ivar) {
+          taco_iassert(!matchedForall.defined());
+          matchedForall = node;
+        } else {
+          m->match(node->stmt);
+        }
+      }));
+      if (matchedForall.getParallelUnit() == ParallelUnit::GPUThread && util::contains(this->parallelUnitSizes, ParallelUnit::GPUWarp)) {
+        // TODO (rohany): This is a HUGE hack. I'm not sure how to get the expression right
+        //  for this store, as trying to use the variable in the indexVarToExprMap results in
+        //  the declared thread variable by the code generator being duplicated. The problem is
+        //  that referencing the thread variable before the thread loop gets processed causes
+        //  the actual thread loop to get tricked into needing a fresh variable.
+        auto varName = this->indexVarToExprMap[matchedForall.getIndexVar()].as<Var>();
+        auto var = ir::Symbol::make(varName->name);
+        initializeTemporaryLoop = ir::Store::make(values, var, ir::Literal::zero(temporary.getType().getDataType()));
+      }
+    }
+
+    if (!initializeTemporaryLoop.defined()) {
+      Expr p = Var::make("p" + temporary.getName(), Int());
+      Expr size = getTemporarySize(where);
+      Stmt zeroInit = Store::make(values, p, ir::Literal::zero(temporary.getType().getDataType()));
+      Stmt loopInit = For::make(p, 0, size, 1, zeroInit, LoopKind::Serial);
+      initializeTemporaryLoop = loopInit;
+    }
+
+    initializeTemporary = Block::make(initializeTemporary, initializeTemporaryLoop);
   }
 
   whereConsumers.push_back(consumer);

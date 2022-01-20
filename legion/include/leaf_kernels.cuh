@@ -29,6 +29,20 @@ __device__ inline void atomicAddWarp(T *output, int index, T val)
   }
 }
 
+// Reduce warp reduces the values of a warp into an output location.
+template<typename T>
+__device__ inline void reduceWarp(T* output, T val) {
+  __syncwarp();
+  val += __shfl_down_sync(__activemask(), val, 16);
+  val += __shfl_down_sync(__activemask(), val, 8);
+  val += __shfl_down_sync(__activemask(), val, 4);
+  val += __shfl_down_sync(__activemask(), val, 2);
+  val += __shfl_down_sync(__activemask(), val, 1);
+  if (threadIdx.x % 32 == 0) {
+    *output += val;
+  }
+}
+
 template<typename T>
 __global__
 void contractInter(MTTKRPPack pack, T* A, const T* C, const T* inter){
