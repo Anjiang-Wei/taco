@@ -879,16 +879,30 @@ void CodeGen_CUDA::visit(const For* op) {
     indent--;
     op->contents.accept(this);
     indent++;
+
+    // Undo the addition of this parallel unit for the early return.
+    if (op->parallel_unit != ParallelUnit::NotParallel) {
+      parentParallelUnits.erase(op->parallel_unit);
+    }
+    return;
+  }
+
+  // If we're performing a GPU warp reduction, then we want to not emit the resulting loop
+  // over all threads and use an intrinsic to perform the warp level reduction.
+  if (!isHostFunction && op->parallel_unit == ParallelUnit::GPUWarpReduction) {
+    indent--;
+    op->contents.accept(this);
+    indent++;
+    // Undo the addition of this parallel unit for the early return.
+    if (op->parallel_unit != ParallelUnit::NotParallel) {
+      parentParallelUnits.erase(op->parallel_unit);
+    }
     return;
   }
 
   // only first thread
-  if (!isHostFunction && (op->parallel_unit == ParallelUnit::GPUWarpReduction || op->parallel_unit == ParallelUnit::GPUBlockReduction)) {
-    doIndent();
-    if (op->parallel_unit == ParallelUnit::GPUWarpReduction) {
-      stream << "__syncwarp();" << endl;
-    }
-    else if (op->parallel_unit == ParallelUnit::GPUBlockReduction) {
+  if (!isHostFunction && op->parallel_unit == ParallelUnit::GPUBlockReduction) {
+    if (op->parallel_unit == ParallelUnit::GPUBlockReduction) {
       stream << "__syncthreads();" << endl;
     }
     doIndent();
@@ -974,7 +988,7 @@ void CodeGen_CUDA::visit(const For* op) {
   stream << "}";
   stream << endl;
 
-  if (!isHostFunction && (op->parallel_unit == ParallelUnit::GPUWarpReduction || op->parallel_unit == ParallelUnit::GPUBlockReduction)) {
+  if (!isHostFunction && op->parallel_unit == ParallelUnit::GPUBlockReduction) {
     indent--;
     doIndent();
     stream << "}" << endl;
@@ -1541,12 +1555,29 @@ void CodeGen_CUDA::visit(const Store* op) {
         taco_ierror;
       }
     }
-  }
-  else {
+  } else if (util::contains(this->parentParallelUnits, ParallelUnit::GPUWarpReduction)) {
+    // If we're supposed to be doing a warp-level reduction, call the appropriate intrinsic.
+    auto arrGP = op->arr.as<GetProperty>();
+    auto lhsIsAccessor = arrGP != nullptr && arrGP->isAccessor();
+    taco_iassert(lhsIsAccessor);
+    taco_iassert(isa<Add>(op->data));
+    auto add = to<Add>(op->data);
+    taco_iassert(isa<Load>(add->a));
+    taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc) << (ir::Stmt(op));
+    doIndent();
+    stream << "reduceWarp(";
+    op->arr.accept(this);
+    stream << ".ptr(";
+    parentPrecedence = Precedence::TOP;
+    op->loc.accept(this);
+    stream << "), ";
+    add->b.accept(this);
+    stream << ");" << endl;
+  } else {
     IRPrinter::visit(op);
   }
 }
-  
+
 void CodeGen_CUDA::generateShim(const Stmt& func, stringstream &ret) {
   const Function *funcPtr = func.as<Function>();
   ret << "extern \"C\" {\n";
