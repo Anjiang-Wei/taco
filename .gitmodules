@@ -13,3 +13,6 @@
 [submodule "trilinos/Trilinos"]
 	path = trilinos/Trilinos
 	url = git@github.com:rohany/Trilinos.git
+[submodule "legion/cub"]
+	path = legion/cub
+	url = https://github.com/NVIDIA/cub.git

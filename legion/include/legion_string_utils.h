@@ -21,6 +21,7 @@ void printPhysicalRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::
   switch (reg.get_logical_region().get_dim()) {
     case 1: PhysicalRegionPrinter<T, 1>().printPhysicalRegion(ctx, runtime, reg, fid); break;
     case 2: PhysicalRegionPrinter<T, 2>().printPhysicalRegion(ctx, runtime, reg, fid); break;
+    case 3: PhysicalRegionPrinter<T, 3>().printPhysicalRegion(ctx, runtime, reg, fid); break;
     default:
       taco_iassert(false);
   }
@@ -50,6 +51,24 @@ struct PhysicalRegionPrinter<T, 2> {
         std::cout << acc[Point<2>(i, j)] << " ";
       }
       std::cout << std::endl;
+    }
+  }
+};
+
+template <typename T>
+struct PhysicalRegionPrinter<T, 3> {
+  void printPhysicalRegion(Legion::Context ctx, Legion::Runtime* runtime, Legion::PhysicalRegion reg, Legion::FieldID fid) {
+    using namespace Legion;
+    FieldAccessor<READ_ONLY,T,3,coord_t, Realm::AffineAccessor<T, 3, coord_t>> acc(reg, fid);
+    auto dom = runtime->get_index_space_domain<3>(IndexSpaceT<3>(reg.get_logical_region().get_index_space()));
+    for (int i = dom.bounds.lo[0]; i <= dom.bounds.hi[0]; i++) {
+      std::cout << "Slice: " << i << std::endl;
+      for (int j = dom.bounds.lo[1]; j <= dom.bounds.hi[1]; j++) {
+        for (int k = dom.bounds.lo[2]; k <= dom.bounds.hi[2]; k++) {
+          std::cout << acc[Point<3>(i, j, k)] << " ";
+        }
+        std::cout << std::endl;
+      }
     }
   }
 };

@@ -1875,9 +1875,9 @@ TEST(distributed, legionSpAdd3) {
 
   // Schedule the statement.
   auto stmt = A.getAssignment()
-      .concretize()
-      .assemble(A.getTensorVar(), AssembleStrategy::Insert)
-  ;
+               .concretize()
+               .assemble(A.getTensorVar(), AssembleStrategy::Insert)
+               ;
 
   // Split out the assemble into the query and compute to schedule each one.
   auto assemble = to<Assemble>(stmt);
@@ -1888,31 +1888,64 @@ TEST(distributed, legionSpAdd3) {
   // Schedule the query.
   auto ivars = getIndexVars(query);
   auto qi = ivars[0], qj = ivars[1];
-  auto nnzQ = getNNZQueryAccess(query);
   IndexVar qio("qio"), qii("qii");
-  query = query.distribute({qi}, {qio}, {qii}, Grid(pieces))
-               .parallelize(qii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-               // TODO (rohany): I don't like that I have to index these by qi and qj...
-               .communicate({nnzQ, B(qi, qj), C(qi, qj), D(qi, qj)}, qio)
-               ;
-
-  // Schedule the compute.
   IndexVar io("io"), ii("ii");
-  compute = compute.distribute({i}, {io}, {ii}, Grid(pieces))
-                   .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces, A.getTensorVar())
-                   .communicate({A(i, j), B(i, j), C(i, j), D(i, j)}, io)
-                   ;
+  auto nnzQ = getNNZQueryAccess(query);
+  {
+    auto squery = query.distribute({qi}, {qio}, {qii}, Grid(pieces))
+                       .parallelize(qii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+                       // TODO (rohany): I don't like that I have to index these by qi and qj...
+                       .communicate({nnzQ, B(qi, qj), C(qi, qj), D(qi, qj)}, qio)
+                       ;
 
-  // Put it all back together.
-  stmt = Assemble(query, compute, assemble.getAttrQueryResults());
+    // Schedule the compute.
+    auto scompute = compute.distribute({i}, {io}, {ii}, Grid(pieces))
+                           .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces, A.getTensorVar())
+                           .communicate({A(i, j), B(i, j), C(i, j), D(i, j)}, io)
+                           ;
 
-  // Separate scheduling results in SuchThat nodes not at the top level.
-  // The lowering infrastructure does not understand this, so we can apply
-  // a simple hoisting step to bring all relations to the top level.
-  stmt = hoistSuchThats(stmt);
+    // Put it all back together.
+    stmt = Assemble(squery, scompute, assemble.getAttrQueryResults());
 
-  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */, true /* assemble */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spadd3/", lowered);
+    // Separate scheduling results in SuchThat nodes not at the top level.
+    // The lowering infrastructure does not understand this, so we can apply
+    // a simple hoisting step to bring all relations to the top level.
+    stmt = hoistSuchThats(stmt);
+
+    auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */, true /* assemble */);
+    ir::CodegenLegionC::compileToDirectory("../legion/spadd3/", lowered);
+  }
+  // Do the same thing for GPUs.
+  {
+    const int THREADS_PER_BLOCK = 256;
+    IndexVar block("block"), thread("thread"), qblock("qblock"), qthread("qthread");
+    auto squery = query.distribute({qi}, {qio}, {qii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+                       .split(qii, qblock, qthread, THREADS_PER_BLOCK)
+                       .parallelize(qthread, taco::ParallelUnit::GPUThread, taco::OutputRaceStrategy::NoRaces)
+                       .parallelize(qblock, taco::ParallelUnit::GPUBlock, taco::OutputRaceStrategy::NoRaces)
+                       // TODO (rohany): I don't like that I have to index these by qi and qj...
+                       .communicate({nnzQ, B(qi, qj), C(qi, qj), D(qi, qj)}, qio)
+                       ;
+
+    // Schedule the compute.
+    auto scompute = compute.distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+                           .split(ii, block, thread, THREADS_PER_BLOCK)
+                           .parallelize(thread, taco::ParallelUnit::GPUThread, taco::OutputRaceStrategy::NoRaces, A.getTensorVar())
+                           .parallelize(block, taco::ParallelUnit::GPUBlock, taco::OutputRaceStrategy::NoRaces, A.getTensorVar())
+                           .communicate({A(i, j), B(i, j), C(i, j), D(i, j)}, io)
+                           ;
+
+    // Put it all back together.
+    stmt = Assemble(squery, scompute, assemble.getAttrQueryResults());
+
+    // Separate scheduling results in SuchThat nodes not at the top level.
+    // The lowering infrastructure does not understand this, so we can apply
+    // a simple hoisting step to bring all relations to the top level.
+    stmt = hoistSuchThats(stmt);
+
+    auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */, true /* assemble */);
+    ir::CodegenLegionCuda::compileToDirectory("../legion/spadd3/", lowered);
+  }
 }
 
 TEST(distributed, legionSpInnerProd) {

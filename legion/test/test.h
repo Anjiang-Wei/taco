@@ -3,9 +3,9 @@
 
 #include "gtest/gtest.h"
 #include "legion.h"
-#include "mappers/default_mapper.h"
 #include "task_ids.h"
 #include "legion_string_utils.h"
+#include "taco_mapper.h"
 
 // Nasty global variables to get access to argc and argv.
 extern int my_argc;
@@ -24,7 +24,7 @@ public:
 // DISTALRuntimeTestMapper is a mapper that maps all regions in
 // SYSTEM_MEMORY to allow for inline mappings performed by the
 // implicit top level task.
-class DISTALRuntimeTestMapper : public Legion::Mapping::DefaultMapper {
+class DISTALRuntimeTestMapper : public TACOMapper {
 public:
   DISTALRuntimeTestMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &machine, const Legion::Processor &local, const char* name);
   Legion::Memory default_policy_select_target_memory(Legion::Mapping::MapperContext ctx,
