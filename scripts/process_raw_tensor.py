@@ -88,7 +88,7 @@ def main():
 
     if dims == 2 and "tns" not in path:
         print("Converting COO to TNS.")
-        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+        with tempfile.NamedTemporaryFile(delete=True, suffix='.tns') as tmp:
             cmds = cooToTns(tensor, path, tmp.name)
             for cmd in cmds:
                 executeCmd(cmd, args.dry_run)
