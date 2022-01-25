@@ -217,7 +217,34 @@ class PETScBenchmark(Benchmark):
 
 class TrilinosBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
-        pass
+        args = {
+            BenchmarkKind.SpMV: ["--bench=spmv"],
+            # TODO (rohany): Support passing through the JDim value.
+            BenchmarkKind.SpMM: ["--bench=spmm"],
+            # TODO (rohany): Support getting the rotated tensors.
+            BenchmarkKind.SpAdd3: ["--bench=spadd3",
+                                   f"--add3MatrixC={self.getShiftedMatrix(tensor)}",
+                                   f"--add3MatrixD={self.getShiftedMatrix(tensor)}"]
+        }
+        if benchKind not in args:
+            raise AssertionError(f"Unsupported Trilinos benchmark: {benchKind}")
+        # TODO (rohany): Experiment with the optimal run configuration.
+        lassenPrefix = ["jsrun", "-n", str(2 * nodes), "-r", "2", "-c", "20", "-b", "rs"]
+        commonArgs = [f"--file={self.getTrilinosMatrix(tensor)}", f"--n={self.niter}", f"--warmup={self.warmup}"]
+        trilinosDir = os.environ.get("TRILINOS_BUILD_DIR")
+        if (trilinosDir is None):
+            raise AssertionError("TRILINOS_BUILD_DIR must be defined in environment.")
+        binary = Path(trilinosDir, "bin", "benchmark")
+        assert(binary.exists())
+        return lassenPrefix + [str(binary)] + commonArgs + args[benchKind]
+
+    def getTrilinosMatrix(self, tensor):
+        name = f"{tensor.name}.mtx"
+        path = Path(getTensorDir(), "coo-txt", name)
+        return str(path)
+
+    def getShiftedMatrix(self, tensor):
+        return self.getTrilinosMatrix(tensor)
 
 def executeCmd(cmd):
     cmdStr = " ".join(cmd)
