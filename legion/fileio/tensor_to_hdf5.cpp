@@ -474,11 +474,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   auto coordFieldIDs = fieldIDs(order);
 
   PhysicalRegion pmem;
-  // Get the local CPU memory.
-  Memory sysmem = Machine::MemoryQuery(Machine::get_machine())
-      .has_affinity_to(runtime->get_executing_processor(ctx))
-      .only_kind(Memory::SYSTEM_MEM)
-      .first();
+  // We use Memory::NO_MEMORY so that Realm suggests the appropriate memory
+  // for the attach operation.
+  Memory sysmem = Memory::NO_MEMORY;
+
   // Attach the in-memory data to the memory region.
   {
     AttachLauncher al(LEGION_EXTERNAL_INSTANCE, mem, mem);
