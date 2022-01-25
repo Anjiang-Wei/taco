@@ -315,5 +315,30 @@ void fillTensor3(TensorBase& tens, const FillMethod& fill, double fillValue) {
   }
 }
 
+template<typename T>
+taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T> original) {
+  taco::Tensor<T> result(name, original.getDimensions(), original.getFormat());
+  std::vector<int> coords(original.getOrder());
+  for (auto& value : taco::iterate<T>(original)) {
+    for (int i = 0; i < original.getOrder(); i++) {
+      coords[i] = value.first[i];
+    }
+    int lastMode = original.getOrder() - 1;
+    // For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
+    // that have even last coordinates. This ensures that there is at least some overlap
+    // between the original tensor and its shifted counter part.
+    if (original.getOrder() <= 2 || (coords[lastMode] % 2 == 0)) {
+      coords[lastMode] = (coords[lastMode] + 1) % original.getDimension(lastMode);
+    }
+    result.insert(coords, value.second);
+  }
+  for (int i = 0; i < original.getOrder(); i++) {
+    coords[i] = original.getDimension(i) - 1;
+  }
+  result.insert(coords, T(0));
+  result.pack();
+  return result;
+}
+
 }}
 #endif

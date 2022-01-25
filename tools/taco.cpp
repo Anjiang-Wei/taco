@@ -670,6 +670,10 @@ int main(int argc, char* argv[]) {
   double uniformVecPercentage = 0;
   std::string uniformVecOutput;
 
+  // Utility for generating rotated tensors.
+  std::string rotateInput, rotateOutput;
+  int rotateTensorOrder = 0;
+
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
     if(arg.rfind("--", 0) == 0) {
@@ -997,6 +1001,12 @@ int main(int argc, char* argv[]) {
       uniformVecPercentage = stod(argValue);
     } else if ("-uniformVecOutput" == argName) {
       uniformVecOutput = argValue;
+    } else if ("-rotateInput" == argName) {
+      rotateInput = argValue;
+    } else if ("-rotateOutput" == argName) {
+      rotateOutput = argValue;
+    } else if ("-rotateTensorOrder" == argName) {
+      rotateTensorOrder = stoi(argValue);
     } else {
       if (exprStr.size() != 0) {
         printUsageInfo();
@@ -1024,6 +1034,16 @@ int main(int argc, char* argv[]) {
     Tensor<double> vec("vec", {uniformVecDim}, {Sparse});
     util::fillVector(vec, util::FillMethod::Sparse, uniformVecPercentage, 1.0, 1.0);
     taco::write(uniformVecOutput, vec);
+    return 0;
+  }
+
+  if (!rotateInput.empty()) {
+    taco_uassert(!rotateOutput.empty());
+    taco_uassert(rotateTensorOrder != 0);
+    std::vector<ModeFormatPack> format(rotateTensorOrder, Sparse);
+    Tensor<double> tensor = taco::read(rotateInput, format, true /* pack */);
+    auto rotated = util::shiftLastMode("result", tensor);
+    taco::write(rotateOutput, rotated);
     return 0;
   }
 
