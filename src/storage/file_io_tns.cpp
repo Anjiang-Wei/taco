@@ -107,7 +107,7 @@ static void writeTypedTNS(std::ostream& stream, const TensorBase& tensor) {
     for (int k = 0; k < tensor.getOrder(); ++k) {
       stream << value.first[k]+1 << " ";
     }
-    stream << value.second << endl;
+    stream << value.second << "\n";
   }
 }
 
@@ -117,7 +117,7 @@ static void writeCharTNS(std::ostream& stream, const TensorBase& tensor) {
     for (int k = 0; k < tensor.getOrder(); ++k) {
       stream << value.first[k]+1 << " ";
     }
-    stream << static_cast<int>(value.second) << endl;
+    stream << static_cast<int>(value.second) << "\n";
   }
 }
 
