@@ -41,7 +41,7 @@ const int blockDimension=4;
 const FillMethod blockFillMethod=FillMethod::FEM;
 
 void fillTensor(TensorBase& tens, const FillMethod& fill, double fillValue=-1.0);
-void fillVector(TensorBase& tens, const FillMethod& fill, double fillValue);
+void fillVector(TensorBase& tens, const FillMethod& fill, double fillValue, double lower = doubleLowerBound, double upper = doubleUpperBound);
 void fillMatrix(TensorBase& tens, const FillMethod& fill, double fillValue);
 void fillTensor3(TensorBase& tens, const FillMethod& fill, double fillValue);
 
@@ -70,10 +70,9 @@ void fillTensor(TensorBase& tens, const FillMethod& fill, double fillValue/*=-1.
   }
 }
 
-void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue) {
+void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue, double lower, double upper) {
   // Random values
-  std::uniform_real_distribution<double> unif(doubleLowerBound,
-                                              doubleUpperBound);
+  std::uniform_real_distribution<double> unif(lower, upper);
   std::default_random_engine re;
 
   std::random_device rd;
@@ -122,6 +121,7 @@ void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue) {
       break;
     }
   }
+  tensor.insert({vectorSize - 1}, double(0));
   tensor.pack();
 }
 
