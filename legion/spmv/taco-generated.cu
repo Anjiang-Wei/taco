@@ -102,7 +102,7 @@ partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::
 }
 
 __global__
-void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorRWdouble1 a_vals_rw_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
+void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorRWdouble1 a_vals_rw_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -113,6 +113,10 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
 
   int64_t pointID2 = io * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
+  double* w_GPUThread = 0;
+  __shared__ double w_GPUThread_ALL[256];
+  w_GPUThread = w_GPUThread_ALL + warp * 32;
+
   for (int32_t warp_row = 0; warp_row < 32; warp_row++) {
     int32_t block_row = warp_row * 8 + warp;
     int32_t ii = block * 256 + block_row;
@@ -124,6 +128,7 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
       break;
 
     int64_t pointID4 = pointID3 * 32 + warp_row;
+    w_GPUThread[thread] = 0.0;
     int64_t pointID5 = pointID4 * 32 + thread;
     for (int32_t thread_nz = 0; thread_nz < ((((B2_pos_accessor[Point<1>(i)].hi + 1) - B2_pos_accessor[Point<1>(i)].lo) + 31) / 32); thread_nz++) {
       int32_t jposB = (thread_nz * 32 + thread) + B2_pos_accessor[Point<1>(i)].lo;
@@ -131,9 +136,11 @@ void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 
         break;
 
       int32_t j = B2_crd_accessor[jposB];
-      atomicAddWarp(a_vals_rw_accessor.ptr(Point<1>(i)), flattenPoint(a_vals_rw_accessor, Point<1>(i)), (B_vals_ro_accessor[Point<1>(jposB)] * c_vals_ro_accessor[Point<1>(j)]));
+      w_GPUThread[thread] = w_GPUThread[thread] + B_vals_ro_accessor[Point<1>(jposB)] * c_vals_ro_accessor[Point<1>(j)];
     }
+    reduceWarp(a_vals_rw_accessor.ptr(Point<1>(i)), w_GPUThread[thread]);
   }
+
 }
 
 void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
@@ -162,8 +169,11 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
     return ;
 
+  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
+    return ;
+
   if (((((B1_dimension + (pieces - 1)) / pieces + 255) / 256)) > 0) {
-    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, a_vals_rw_accessor, B_vals_ro_accessor, c_vals_ro_accessor, B1_dimension, pieces, io);
+    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, a_vals_rw_accessor, B1_dimension, pieces, io);
   }
 }
 

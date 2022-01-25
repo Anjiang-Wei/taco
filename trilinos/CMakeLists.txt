@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17.1)
 project(TrilinosBenchmarks NONE)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
-find_package(Trilinos REQUIRED COMPONENTS Tpetra Xpetra)
+find_package(Trilinos REQUIRED COMPONENTS Tpetra)
 
 # Use the same compilers and flags as Trilinos.
 set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
@@ -16,8 +16,13 @@ set(EXECUTABLE_OUTPUT_PATH "bin")
 
 enable_language(CXX)
 
+# Add a binary for the CUDA and OMP versions of Trilinos.
 add_executable(benchmark benchmark.cpp)
 target_include_directories(benchmark PRIVATE ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
 target_link_libraries(benchmark ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+add_executable(benchmark-cuda benchmark.cpp)
+target_include_directories(benchmark-cuda PRIVATE ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
+target_compile_definitions(benchmark-cuda PRIVATE ENABLE_CUDA)
+target_link_libraries(benchmark-cuda ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
 
 add_executable(convert ascii2binary.cpp)

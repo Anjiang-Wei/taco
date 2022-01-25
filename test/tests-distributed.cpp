@@ -1626,9 +1626,7 @@ TEST(distributed, legionSpMV) {
            .reorder({block, warp, warp_row, thread, thread_nz})
            .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
            .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
-           // The schedule with atomics ends up being faster than the one with temporaries due
-           // to the coalescing of atomic operations into warp-local operations by atomicAddWarp.
-           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Temporary)
            .communicate(a(i), io)
            .communicate(B(i, j), io)
            .communicate(c(j), io)

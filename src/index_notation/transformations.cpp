@@ -615,13 +615,11 @@ IndexStmt Parallelize::apply(IndexStmt stmt, std::string* reason) const {
 
             // build consumer that writes from temporary to output, mark consumer as parallel reduction
             ParallelUnit reductionUnit = ParallelUnit::CPUThreadGroupReduction;
-            if (should_use_CUDA_codegen()) {
-              if (parentParallelUnits.count(ParallelUnit::GPUWarp)) {
-                reductionUnit = ParallelUnit::GPUWarpReduction;
-              }
-              else {
-                reductionUnit = ParallelUnit::GPUBlockReduction;
-              }
+            if (parentParallelUnits.count(ParallelUnit::GPUWarp)) {
+              reductionUnit = ParallelUnit::GPUWarpReduction;
+            }
+            else {
+              reductionUnit = ParallelUnit::GPUBlockReduction;
             }
             IndexStmt consumer = forall(i, Assignment(assignment->lhs, w(i), assignment->op), reductionUnit, OutputRaceStrategy::ParallelReduction, node->transfers, node->computingOn);
             precomputed_stmt = where(consumer, producer);

@@ -7,12 +7,12 @@
 [submodule "legion/OpenBLAS"]
 	path = legion/OpenBLAS
 	url = https://github.com/xianyi/OpenBLAS.git
-[submodule "trilinos/Trilinos"]
-	path = trilinos/Trilinos
-	url = https://github.com/trilinos/Trilinos.git
 [submodule "petsc/petsc"]
 	path = petsc/petsc
 	url = https://gitlab.com/petsc/petsc.git
+[submodule "trilinos/Trilinos"]
+	path = trilinos/Trilinos
+	url = git@github.com:rohany/Trilinos.git
 [submodule "legion/cub"]
 	path = legion/cub
 	url = https://github.com/NVIDIA/cub.git
