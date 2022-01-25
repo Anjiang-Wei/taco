@@ -776,7 +776,23 @@ IndexStmt Distribute::apply(IndexStmt stmt, std::string* reason) const {
     }
     // If the forall has a fused position space, then it's probably going to require a reduction as well.
     if (pg.getParentPosRel(target.getIndexVar()) != nullptr) {
-      raceStrategy = OutputRaceStrategy::ParallelReduction;
+      auto posrel = pg.getParentPosRel(target.getIndexVar());
+      auto underiveds = pg.getUnderivedAncestors(target.getIndexVar());
+      auto resultAccesses = getResultAccesses(stmt).first;
+      taco_iassert(resultAccesses.size() == 1);
+      auto result = resultAccesses[0];
+      taco_iassert(posrel->getAccess().getTensorVar() != result.getTensorVar());
+      // If the result access has all of the same index variables as the input
+      // tensor who's position space we are iterating over, then we don't need
+      // to do a reduction, as each non-zero will be processed by a unique processor.
+      // Another way of saying this is that each output position will be handled
+      // by a unique processor if the input and output are accessed by the same fused
+      // index variables.
+      for (auto var : underiveds) {
+        if (!util::contains(result.getIndexVars(), var) || !util::contains(posrel->getAccess().getIndexVars(), var)){
+          raceStrategy = OutputRaceStrategy::ParallelReduction;
+        }
+      }
     }
   }
 

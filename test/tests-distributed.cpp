@@ -1723,7 +1723,7 @@ TEST(distributed, legionSpTTV) {
         .pos(f, ffpos, B(i, j, k))
         .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
         .split(ffposi, ffposio, ffposii, chunkSize)
-        .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+        .parallelize(ffposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
         .communicate(B(i, j, k), ffposo)
         .communicate(A(i, j), ffposo)
         .communicate(c(k), ffposo)

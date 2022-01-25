@@ -41,7 +41,7 @@ const int blockDimension=4;
 const FillMethod blockFillMethod=FillMethod::FEM;
 
 void fillTensor(TensorBase& tens, const FillMethod& fill, double fillValue=-1.0);
-void fillVector(TensorBase& tens, const FillMethod& fill, double fillValue);
+void fillVector(TensorBase& tens, const FillMethod& fill, double fillValue, double lower = doubleLowerBound, double upper = doubleUpperBound);
 void fillMatrix(TensorBase& tens, const FillMethod& fill, double fillValue);
 void fillTensor3(TensorBase& tens, const FillMethod& fill, double fillValue);
 
@@ -70,10 +70,9 @@ void fillTensor(TensorBase& tens, const FillMethod& fill, double fillValue/*=-1.
   }
 }
 
-void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue) {
+void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue, double lower, double upper) {
   // Random values
-  std::uniform_real_distribution<double> unif(doubleLowerBound,
-                                              doubleUpperBound);
+  std::uniform_real_distribution<double> unif(lower, upper);
   std::default_random_engine re;
 
   std::random_device rd;
@@ -122,6 +121,7 @@ void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue) {
       break;
     }
   }
+  tensor.insert({vectorSize - 1}, double(0));
   tensor.pack();
 }
 
@@ -313,6 +313,31 @@ void fillTensor3(TensorBase& tens, const FillMethod& fill, double fillValue) {
       break;
     }
   }
+}
+
+template<typename T>
+taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T> original) {
+  taco::Tensor<T> result(name, original.getDimensions(), original.getFormat());
+  std::vector<int> coords(original.getOrder());
+  for (auto& value : taco::iterate<T>(original)) {
+    for (int i = 0; i < original.getOrder(); i++) {
+      coords[i] = value.first[i];
+    }
+    int lastMode = original.getOrder() - 1;
+    // For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
+    // that have even last coordinates. This ensures that there is at least some overlap
+    // between the original tensor and its shifted counter part.
+    if (original.getOrder() <= 2 || (coords[lastMode] % 2 == 0)) {
+      coords[lastMode] = (coords[lastMode] + 1) % original.getDimension(lastMode);
+    }
+    result.insert(coords, value.second);
+  }
+  for (int i = 0; i < original.getOrder(); i++) {
+    coords[i] = original.getDimension(i) - 1;
+  }
+  result.insert(coords, T(0));
+  result.pack();
+  return result;
 }
 
 }}
