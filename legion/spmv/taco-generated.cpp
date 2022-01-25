@@ -8,7 +8,6 @@ using namespace Legion;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
-typedef ReductionAccessor<SumReduction<double>,true,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReducedouble1;
 typedef ReductionAccessor<SumReduction<double>,false,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReduceNonExcldouble1;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
@@ -540,7 +539,7 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble2>(B_vals, FID_VAL);
-  auto a_vals_red_accessor = createAccessor<AccessorReducedouble1>(a_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
   auto B1_pos_accessor = createAccessor<AccessorRORect_1_1>(B1_pos, FID_RECT_1);
   auto B1_crd_accessor = createAccessor<AccessorROint32_t1>(B1_crd, FID_COORD);
 
@@ -563,7 +562,7 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       int64_t pointID3 = pointID2 * B2_dimension + j;
       int32_t jB = fposB * B2_dimension + j;
       int32_t jc = j;
-      a_vals_red_accessor[Point<1>(i)] <<= B_vals_ro_accessor[Point<2>(fposB, j)] * c_vals_ro_accessor[Point<1>(j)];
+      a_vals_rw_accessor[Point<1>(i)] = a_vals_rw_accessor[Point<1>(i)] + B_vals_ro_accessor[Point<2>(fposB, j)] * c_vals_ro_accessor[Point<1>(j)];
     }
   }
 }
@@ -589,7 +588,7 @@ void computeLegionSparseDensePosParallelize(Legion::Context ctx, Legion::Runtime
   taskArgsRaw4.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw4, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, a_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, a_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B1_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B1_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));

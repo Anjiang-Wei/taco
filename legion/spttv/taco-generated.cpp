@@ -496,7 +496,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
-  auto A_vals_red_accessor_non_excl = createAccessor<AccessorReduceNonExcldouble1>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto A_vals_rw_accessor = createAccessor<AccessorRWdouble1>(A_vals, FID_VAL);
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
   auto B3_pos_accessor = createAccessor<AccessorRORect_1_1>(B3_pos, FID_RECT_1);
@@ -537,7 +537,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       for (int32_t kB = B3_pos_accessor[Point<1>(ffposB)].lo; kB < (B3_pos_accessor[Point<1>(ffposB)].hi + 1); kB++) {
         int32_t k = B3_crd_accessor[(kB * 1)];
         int32_t kc = k;
-        A_vals_red_accessor_non_excl[Point<1>(jA)] <<= B_vals_ro_accessor[Point<1>(kB)] * c_vals_ro_accessor[Point<1>(k)];
+        A_vals_rw_accessor[Point<1>(jA)] = A_vals_rw_accessor[Point<1>(jA)] + B_vals_ro_accessor[Point<1>(kB)] * c_vals_ro_accessor[Point<1>(k)];
       }
     }
   }
@@ -573,7 +573,7 @@ void computeLegionDSSPartialPosSplit(Legion::Context ctx, Legion::Runtime* runti
   IndexLauncher launcher = IndexLauncher(taskID(3), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_crd_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_COORD));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, A_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, A_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[2][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B3_pos_parent)).add_field(FID_RECT_1));
