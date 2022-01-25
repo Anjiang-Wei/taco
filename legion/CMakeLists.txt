@@ -270,15 +270,9 @@ if (Legion_USE_CUDA)
     # the gtest test discovery utility. So, we'll add all of the cuda files as
     # a library and link that into the test.
     cuda_add_library(distal-runtime-cuda-lib ${LG_CU_SOURCES})
-    # For some reason, cuda_add_library does not pick up on the includes we get
-    # from importing Legion. So, we'll ask for a pointer to the installation directory
-    # directly. This can be removed if Legion exported these variables.
-    if (NOT DEFINED LEGION_INSTALL_DIR)
-      message(ERROR "Please set LEGION_INSTALL_DIR to the Legion installation directory.")
-    endif()
-    target_include_directories(distal-runtime-cuda-lib PRIVATE ${LEGION_INSTALL_DIR}/include/)
     target_compile_definitions(distal-runtime-cuda-lib PUBLIC TACO_USE_CUDA)
     target_compile_options(distal-runtime-cuda-lib PRIVATE "-g3" "-O0" "-ggdb")
+    target_link_libraries(distal-runtime-cuda-lib Legion::Legion)
 
     cuda_add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS} ${LG_SOURCES})
     target_compile_definitions(distal-runtime-test PUBLIC TACO_USE_CUDA)
