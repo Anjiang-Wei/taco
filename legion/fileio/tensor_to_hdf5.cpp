@@ -11,6 +11,8 @@
 using namespace Legion;
 using namespace Legion::Mapping;
 
+Realm::Logger logApp("app");
+
 /*
  * This tool is used for converting .tns files into HDF5 files that can easily
  * be loaded into Legion through attach operations. This tool as two uses:
@@ -217,7 +219,7 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
     // Print out a message at checkpoints through the file. Print before adding
     // symmetric points so that the output looks sane.
     if (buf.getCount() % 1000000 == 0) {
-      printf("Read %ld out of %ld lines of %s.\n", buf.getCount(), lines, fileName.c_str());
+      logApp.info() << "Read " << buf.getCount() << " out of " << lines << " lines of " << fileName << ".";
     }
 
     // For symmetric matrices, add the opposite coordinate.
@@ -232,15 +234,17 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   // Record the total number of coordinates.
   nnz = buf.getCount();
 
+  logApp.print() << "Read " << nnz << " nonzeros.";
+
   // Clean up.
   file.close();
 
   // Now, let's sort the coordinates before dumping them. We'll use the qsort
   // function with a custom comparator.
   numIntsToCompare = order;
-  std::cout << "Beginning sort." << std::endl;
+  logApp.info() << "Beginning sort.";
   qsort(buf.getBuffer(), buf.getCount(), buf.getRowSize(), lexComp);
-  std::cout << "Completed sort." << std::endl;
+  logApp.info() << "Completed sort.";
   return buf.getBuffer();
 }
 
@@ -285,6 +289,8 @@ void* readTNSFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
 
   // Clean up.
   file.close();
+
+  logApp.print() << "Read " << buf.getCount() << " nonzeros.";
 
   // Now, let's sort the coordinates before dumping them. We'll use the qsort
   // function with a custom comparator.
@@ -446,8 +452,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
 
   // Read in the .tns file into raw data in memory.
   std::vector<int32_t> dimensions;
-  size_t nnz;
-  void* buf;
+  size_t nnz = 0;
+  void* buf = nullptr;
   // Dispatch to the right file reader.
   if (endsWith(tensorFile, ".mtx")) {
     buf = readMTXFile(tensorFile, dimensions, nnz);
@@ -458,7 +464,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   }
   size_t order = dimensions.size();
 
-  std::cout << "Completed reading tensor file." << std::endl;
+  logApp.info() << "Completed reading tensor file.";
 
   auto regions = createRegions(ctx, runtime, order, nnz);
   auto mem = regions.mem;
@@ -480,12 +486,12 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
     pmem = runtime->attach_external_resource(ctx, al);
   }
 
-  std::cout << "Attached in-memory data to region." << std::endl;
+  logApp.info() << "Attached in-memory data to region.";
 
   // Create the HDF5 file.
   generateCoordListHDF5(hdf5Filename, order, nnz);
 
-  std::cout << "Generated HDF5 output file." << std::endl;
+  logApp.info() << "Generated HDF5 output file.";
 
   // Now, open up and attach the output hdf5 file.
   auto fieldMap = constructFieldMap(coordFieldIDs);
@@ -512,7 +518,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   runtime->detach_external_resource(ctx, pmem).wait();
   runtime->detach_external_resource(ctx, pdisk).wait();
 
-  std::cout << "Finished attaching main tensor data." << std::endl;
+  logApp.info() << "Finished attaching main tensor data.";
 
   // Free the buffer holding the data.
   free(buf);
@@ -537,7 +543,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>&, Contex
   }
   runtime->detach_external_resource(ctx, pmemDim).wait();
   runtime->detach_external_resource(ctx, pdiskDim).wait();
-  std::cout << "Complete!" << std::endl;
+  logApp.info() << "Complete!";
 
   // If requested, dump data to a textual version of the HDF5 file. We do
   // this to avoid regressing.
