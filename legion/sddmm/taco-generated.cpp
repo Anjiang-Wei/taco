@@ -7,7 +7,7 @@ using namespace Legion;
 #include "taco-generated.h"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
-typedef ReductionAccessor<SumReduction<double>,true,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorReducedouble1;
+typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
@@ -116,7 +116,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto C_vals_ro_accessor = createAccessor<AccessorROdouble2>(C_vals, FID_VAL);
   auto D_vals_ro_accessor = createAccessor<AccessorROdouble2>(D_vals, FID_VAL);
-  auto A_vals_red_accessor = createAccessor<AccessorReducedouble1>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto A_vals_rw_accessor = createAccessor<AccessorRWdouble1>(A_vals, FID_VAL);
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
@@ -158,7 +158,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         int32_t jC = iC * C2_dimension + j;
         int32_t jD = j;
         int32_t kD = jD * D2_dimension + k;
-        A_vals_red_accessor[Point<1>(kA)] <<= (B_vals_ro_accessor[Point<1>(kposB)] * C_vals_ro_accessor[Point<2>(i, j)]) * D_vals_ro_accessor[Point<2>(j, k)];
+        A_vals_rw_accessor[Point<1>(kA)] = A_vals_rw_accessor[Point<1>(kA)] + (B_vals_ro_accessor[Point<1>(kposB)] * C_vals_ro_accessor[Point<2>(i, j)]) * D_vals_ro_accessor[Point<2>(j, k)];
       }
     }
   }
@@ -195,7 +195,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(A2_crd_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_COORD));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, A_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, A_vals_parent).add_field(FID_VAL));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
