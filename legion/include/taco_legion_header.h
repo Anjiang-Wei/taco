@@ -212,6 +212,26 @@ private:
   std::vector<int> projs;
 };
 
+// Helper class to perform partitions for the downwards partition path for
+// RectCompressed modes. It has a special case to avoid an element-wise operation
+// for single-dimensional position regions.
+class RectCompressedPosPartitionDownwards {
+public:
+  static Legion::IndexPartition
+  apply(Legion::Context ctx, Legion::Runtime *runtime, Legion::IndexSpace ispace, Legion::LogicalPartition part,
+        Legion::LogicalRegion parent, Legion::FieldID fid, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+
+  // Register all tasks used by the operation.
+  static void registerTasks();
+private:
+  using Accessor = Legion::FieldAccessor<READ_ONLY, Legion::Rect<1>, 1, Legion::coord_t, Realm::AffineAccessor<Legion::Rect<1>, 1, Legion::coord_t>>;
+  static Legion::Domain task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#ifdef TACO_USE_CUDA
+  static Legion::Domain gputask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
+  static const int taskID;
+};
+
 // SparseGatherProjection represents a projection from a sparse level's coordinates
 // into coordinates of a dense level. This allows for position space loops over
 // a sparse level to select only the subtrees of tensors that will actually be

@@ -6,6 +6,21 @@ using namespace Legion;
 
 const int THREADS_PER_BLOCK = 256;
 
+Domain RectCompressedPosPartitionDownwards::gputask(const Task *task, const std::vector<Legion::PhysicalRegion> &regions,
+                                                    Legion::Context ctx, Runtime *runtime) {
+  FieldID field = *(FieldID*)(task->args);
+  Accessor acc(regions[0], field);
+  auto dom = runtime->get_index_space_domain(ctx, regions[0].get_logical_region().get_index_space());
+  taco_iassert(dom.dense());
+  if (dom.empty()) {
+    return Rect<1>::make_empty();
+  }
+  Rect<1> lo, hi;
+  cudaMemcpy(&lo, acc.ptr(dom.lo()), sizeof(Rect<1>), cudaMemcpyHostToDevice);
+  cudaMemcpy(&hi, acc.ptr(dom.hi()), sizeof(Rect<1>), cudaMemcpyHostToDevice);
+  return Rect<1>{lo.lo, hi.hi};
+}
+
 template<int DIM, Legion::PrivilegeMode MODE>
 using RCFYPAccessor = Legion::FieldAccessor<MODE, Legion::Rect<1>, DIM, Legion::coord_t, Realm::AffineAccessor<Legion::Rect<1>, DIM, Legion::coord_t>>;
 template<int DIM>

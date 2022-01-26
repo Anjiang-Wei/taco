@@ -67,42 +67,42 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   }
   auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_ALIASED_COMPLETE_KIND);
   LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
-  LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, runtime->create_partition_by_image_range(
+  LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(
     ctx,
+    runtime,
     B2_crd.get_index_space(),
     posPartB2,
     B2_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, posPartB2.get_index_partition())
+    FID_RECT_1
   ));
   LogicalPartition posPartB3 = copyPartition(ctx, runtime, crdPartB2, B3_pos);
-  LogicalPartition crdPartB3 = runtime->get_logical_partition(ctx, B3_crd, runtime->create_partition_by_image_range(
+  LogicalPartition crdPartB3 = runtime->get_logical_partition(ctx, B3_crd, RectCompressedPosPartitionDownwards::apply(
     ctx,
+    runtime,
     B3_crd.get_index_space(),
     posPartB3,
     B3_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, posPartB3.get_index_partition())
+    FID_RECT_1
   ));
   auto B_vals_partition = copyPartition(ctx, runtime, crdPartB3, get_logical_region(B_vals));
   auto C_dense_run_0_Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_ALIASED_COMPLETE_KIND);
   LogicalPartition posPartC2 = copyPartition(ctx, runtime, C_dense_run_0_Partition, C2_pos);
-  LogicalPartition crdPartC2 = runtime->get_logical_partition(ctx, C2_crd, runtime->create_partition_by_image_range(
+  LogicalPartition crdPartC2 = runtime->get_logical_partition(ctx, C2_crd, RectCompressedPosPartitionDownwards::apply(
     ctx,
+    runtime,
     C2_crd.get_index_space(),
     posPartC2,
     C2_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, posPartC2.get_index_partition())
+    FID_RECT_1
   ));
   LogicalPartition posPartC3 = copyPartition(ctx, runtime, crdPartC2, C3_pos);
-  LogicalPartition crdPartC3 = runtime->get_logical_partition(ctx, C3_crd, runtime->create_partition_by_image_range(
+  LogicalPartition crdPartC3 = runtime->get_logical_partition(ctx, C3_crd, RectCompressedPosPartitionDownwards::apply(
     ctx,
+    runtime,
     C3_crd.get_index_space(),
     posPartC3,
     C3_pos_parent,
-    FID_RECT_1,
-    runtime->get_index_partition_color_space_name(ctx, posPartC3.get_index_partition())
+    FID_RECT_1
   ));
   auto C_vals_partition = copyPartition(ctx, runtime, crdPartC3, get_logical_region(C_vals));
   auto computePartitions = partitionPackForcomputeLegion();

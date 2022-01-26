@@ -637,14 +637,14 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
   auto crdPart = ir::Var::make("crdPart" + mode.getName(), LogicalPartition);
   auto posIndexPart = ir::MethodCall::make(posPart, "get_index_partition", {}, false /* deref */, Auto);
   auto createCrdPartCall = ir::Call::make(
-    "runtime->create_partition_by_image_range",
+    "RectCompressedPosPartitionDownwards::apply",
     maybeAddColor({
       ir::ctx,
+      ir::runtime,
       ir::MethodCall::make(this->getRegion(pack, CRD), "get_index_space", {}, false /* deref */, Auto),
       posPart,
       this->getRegion(pack, POS_PARENT),
       fidRect1,
-      ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, posIndexPart}, Auto),
     }),
     Auto
   );
