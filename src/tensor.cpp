@@ -44,6 +44,9 @@
 #include "taco/cuda.h"
 #include "lower/iteration_graph.h"
 
+#include "taco/lower/mode_format_dense.h"
+#include "taco/lower/mode_format_compressed.h"
+
 using namespace std;
 using namespace taco::ir;
 
@@ -962,6 +965,14 @@ TensorBase::getHelperFunctions(const Format& format, Datatype ctype,
       int mode = format.getModeOrdering()[i];
       packStmt = forall(indexVars[mode], packStmt);
       iterateStmt = forall(indexVars[mode], iterateStmt);
+    }
+    bool isCSR = false;
+    if (format.getModeFormats().size() == 2) {
+      auto formats = format.getModeFormats();
+      if (formats[0].is<DenseModeFormat>() && formats[1].is<CompressedModeFormat>()) {
+        // If we have a CSR matrix, use Assemble.
+        packStmt = packStmt.concretize().assemble(packedTensor, AssembleStrategy::Insert);
+      }
     }
 
     // Lower packing and iterator code.
