@@ -58,7 +58,7 @@ public:
                                                                               const Legion::RegionRequirement &req,
                                                                               MappingKind mapping_kind,
                                                                               bool needs_field_constraint_check,
-                                                                              bool &force_new_instances);
+                                                                              bool &force_new_instances) override;
 
   void default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
                                          Legion::LayoutConstraintSet &constraints,

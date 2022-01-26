@@ -25,14 +25,17 @@ TensorBase readMTX(std::istream& stream, const ModeFormat& modetype,
 /// Read an mtx matrix from a stream.
 TensorBase readMTX(std::istream& stream, const Format& format, bool pack=true);
 
-TensorBase readSparse(std::istream& stream, const ModeFormat& modetype, 
-                      bool symm = false, bool real = true);
-TensorBase readDense(std::istream& stream, const ModeFormat& modetype, 
+// An enum to describe what kind of .mtx file we are reading.
+enum MtxValueKind {
+  REAL,
+  PATTERN,
+  INTEGER,
+};
+TensorBase readSparse(std::istream& stream, const ModeFormat& modetype, MtxValueKind valueKind, bool symm = false);
+TensorBase readSparse(std::istream& stream, const Format& format, MtxValueKind valueKind, bool symm = false);
+TensorBase readDense(std::istream& stream, const ModeFormat& modetype,
                      bool symm = false);
-
-TensorBase readSparse(std::istream& stream, const Format& format, 
-                      bool symm = false, bool real = true);
-TensorBase readDense(std::istream& stream, const Format& format, 
+TensorBase readDense(std::istream& stream, const Format& format,
                      bool symm = false);
 
 /// Write an mtx matrix to a file.
