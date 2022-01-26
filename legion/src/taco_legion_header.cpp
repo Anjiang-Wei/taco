@@ -288,6 +288,89 @@ Legion::DomainPoint AffineProjection::apply(Legion::DomainPoint point, Legion::D
   return res;
 }
 
+const int RectCompressedPosPartitionDownwards::taskID = TID_RECT_COMPRESSED_POS_PARTITION_DOWNWARDS;
+
+Legion::IndexPartition RectCompressedPosPartitionDownwards::apply(Legion::Context ctx, Legion::Runtime *runtime,
+                                                                  Legion::IndexSpace ispace,
+                                                                  Legion::LogicalPartition part,
+                                                                  Legion::LogicalRegion parent, Legion::FieldID fid,
+                                                                  Legion::Color color) {
+  // If we are deriving a partition from a multi-dimensional region, then we
+  // will just fall back to using the partition_by_image_range operation.
+  auto colorSpace = runtime->get_index_partition_color_space_name(ctx, part.get_index_partition());
+  auto colorSpaceDomain = runtime->get_index_space_domain(ctx, colorSpace);
+  if (parent.get_index_space().get_dim() != 1) {
+    return runtime->create_partition_by_image_range(ctx, ispace, part, parent, fid, colorSpace, LEGION_COMPUTE_KIND, color);
+  }
+
+  // If the partition contains any sparse index spaces, we can't apply the optimization either.
+  bool containsSparse = false;
+  switch (colorSpace.get_dim()) {
+#define BLOCK(DIM) \
+    case DIM: {    \
+      for (PointInDomainIterator<DIM> itr(colorSpaceDomain); itr(); itr++) { \
+        auto subreg = runtime->get_index_subspace(ctx, part.get_index_partition(), DomainPoint(*itr)); \
+        if (!runtime->get_index_space_domain(ctx, subreg).dense()) {         \
+          containsSparse = true;                                             \
+          break;\
+        }\
+      }             \
+      break;       \
+    }
+    LEGION_FOREACH_N(BLOCK)
+#undef BLOCK
+    default:
+      taco_iassert(false);
+  }
+  if (containsSparse) {
+    return runtime->create_partition_by_image_range(ctx, ispace, part, parent, fid, colorSpace, LEGION_COMPUTE_KIND, color);
+  }
+
+  // Otherwise, we can be a bit smarter and calculate the partitions symbolically, rather than
+  // doing operations per element.
+  IndexLauncher launcher(RectCompressedPosPartitionDownwards::taskID, colorSpaceDomain, TaskArgument(&fid, sizeof(FieldID)), ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, parent).add_field(fid));
+  auto domains = runtime->execute_index_space(ctx, launcher);
+  return runtime->create_partition_by_domain(ctx, ispace, domains, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
+}
+
+Domain RectCompressedPosPartitionDownwards::task(const Task *task, const std::vector<Legion::PhysicalRegion> &regions,
+                                                 Legion::Context ctx, Runtime *runtime) {
+  FieldID field = *(FieldID*)(task->args);
+  Accessor acc(regions[0], field);
+  auto dom = runtime->get_index_space_domain(ctx, regions[0].get_logical_region().get_index_space());
+  taco_iassert(dom.dense());
+  if (dom.empty()) {
+    return Rect<1>::make_empty();
+  }
+  auto lo = acc[dom.lo()].lo;
+  auto hi = acc[dom.hi()].hi;
+  return Rect<1>{lo, hi};
+}
+
+void RectCompressedPosPartitionDownwards::registerTasks() {
+  {
+    TaskVariantRegistrar registrar(RectCompressedPosPartitionDownwards::taskID, "rectCompressedPosPartitionDownwards");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<Domain, RectCompressedPosPartitionDownwards::task>(registrar, "rectCompressedPosPartitionDownwards");
+  }
+  {
+    TaskVariantRegistrar registrar(RectCompressedPosPartitionDownwards::taskID, "rectCompressedPosPartitionDownwards");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<Domain, RectCompressedPosPartitionDownwards::task>(registrar, "rectCompressedPosPartitionDownwards");
+  }
+#ifdef TACO_USE_CUDA
+  {
+    TaskVariantRegistrar registrar(RectCompressedPosPartitionDownwards::taskID, "rectCompressedPosPartitionDownwards");
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<Domain, RectCompressedPosPartitionDownwards::gputask>(registrar, "rectCompressedPosPartitionDownwards");
+  }
+#endif
+}
+
 SparseGatherProjection::SparseGatherProjection(int mapTo) : mapTo(mapTo) {}
 
 Legion::IndexPartition SparseGatherProjection::apply(Legion::Context ctx, Legion::Runtime *runtime,
@@ -886,4 +969,5 @@ void registerTacoRuntimeLibTasks() {
   SparseGatherProjection::registerTasks();
   RectCompressedFinalizeYieldPositions::registerTasks();
   RectCompressedGetSeqInsertEdges::registerTasks();
+  RectCompressedPosPartitionDownwards::registerTasks();
 }
