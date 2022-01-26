@@ -51,17 +51,26 @@ TensorBase dispatchReadMTX(std::istream& stream, const T& format, bool pack) {
                                        << "Unknown type of MatrixMarket";
   // formats = [coordinate array]
   // field = [real integer complex pattern]
-  taco_uassert(field=="real" || field == "pattern")          << "MatrixMarket field not available";
+  taco_uassert(field=="real" || field == "pattern" || field == "integer")          << "MatrixMarket field not available";
   // symmetry = [general symmetric skew-symmetric Hermitian]
   taco_uassert((symmetry=="general") || (symmetry=="symmetric"))
                                        << "MatrixMarket symmetry not available";
 
   bool symm = (symmetry=="symmetric");
-  bool real = (field == "real");
+
+  MtxValueKind valueKind;
+  if (field == "real") {
+    valueKind = REAL;
+  } else if (field == "pattern") {
+    valueKind = PATTERN;
+  } else {
+    taco_uassert(field == "integer");
+    valueKind = INTEGER;
+  }
 
   TensorBase tensor;
   if (formats=="coordinate")
-    tensor = readSparse(stream, format, symm, real);
+    tensor = readSparse(stream, format, valueKind, symm);
   else if (formats=="array")
     tensor = readDense(stream,format,symm);
   else
@@ -83,8 +92,7 @@ TensorBase readMTX(std::istream& stream, const Format& format, bool pack) {
 }
 
 template <typename T>
-TensorBase dispatchReadSparse(std::istream& stream, const T& format, 
-                              bool symm, bool real) {
+TensorBase dispatchReadSparse(std::istream& stream, const T& format, MtxValueKind valueKind, bool symm) {
   string line;
   std::getline(stream,line);
 
@@ -127,8 +135,10 @@ TensorBase dispatchReadSparse(std::istream& stream, const T& format,
       coord[i] = static_cast<int>(index) - 1;
     }
     double val;
-    if (real) {
+    if (valueKind == REAL) {
       val = strtod(linePtr, &linePtr);
+    } else if (valueKind == INTEGER) {
+      val = strtol(linePtr, &linePtr, 10);
     } else {
       val = 1.0;
     }
@@ -144,13 +154,12 @@ TensorBase dispatchReadSparse(std::istream& stream, const T& format,
   return tensor;
 }
 
-TensorBase readSparse(std::istream& stream, const ModeFormat& modetype, 
-                      bool symm, bool real) {
-  return dispatchReadSparse(stream, modetype, symm, real);
+TensorBase readSparse(std::istream& stream, const ModeFormat& modetype, MtxValueKind valueKind, bool symm) {
+  return dispatchReadSparse(stream, modetype, valueKind, symm);
 }
 
-TensorBase readSparse(std::istream& stream, const Format& format, bool symm, bool real) {
-  return dispatchReadSparse(stream, format, symm, real);
+TensorBase readSparse(std::istream& stream, const Format& format, MtxValueKind valueKind, bool symm) {
+  return dispatchReadSparse(stream, format, valueKind, symm);
 }
 
 template <typename T>

@@ -152,12 +152,15 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
   enum ValueKind {
     REAL,
     PATTERN,
+    INTEGER,
   };
   ValueKind valueKind;
   if (field == "real") {
     valueKind = REAL;
   } else if (field == "pattern") {
     valueKind = PATTERN;
+  } else if (field == "integer") {
+    valueKind = INTEGER;
   } else {
     taco_uassert(false) << "unknown field";
   }
@@ -210,6 +213,8 @@ void* readMTXFile(std::string fileName, std::vector<int32_t>& dimensions, size_t
     double val;
     if (valueKind == PATTERN) {
       val = 1.0;
+    } else if (valueKind == INTEGER) {
+      val = strtol(linePtr, &linePtr, 10);
     } else {
       val = strtod(linePtr, &linePtr);
     }
