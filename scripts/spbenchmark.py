@@ -40,7 +40,7 @@ class SparseTensorRegistry:
         # TODO (rohany): Register all of the sparse tensors that we are considering.
         registry.addAll([
             # 3-tensors.
-            SparseTensor("amazon-reviews", [4821207, 1774269, 1805187], 465410904),
+            SparseTensor("amazon-reviews", [4821207, 1774269, 1805187], 1741809018),
             SparseTensor("nell-1", [2902330, 2143368, 25495389], 143599552),
             SparseTensor("nell-2", [12092, 9184, 28818], 76879419),
             # TODO (rohany): We'll want to load patents into a DDS format for some benchmarks.
@@ -49,6 +49,7 @@ class SparseTensorRegistry:
             # Matrices.
             SparseTensor("arabic-2005", [22744080, 22744080], 639999458),
             SparseTensor("it-2004", [41291594, 41291494], 1150725436),
+            SparseTensor("kmer_A2a", [170728175, 170728175], 360585172),
             SparseTensor("kmer_V1r", [214005017, 214005017], 465410904),
             SparseTensor("mawi_201512020330", [226196185, 226196185], 480047894),
             SparseTensor("mycielskian19", [393215, 393215], 903194710),
@@ -266,8 +267,7 @@ def main():
     parser.add_argument("system", type=str, choices=["DISTAL", "CTF", "PETSc", "Trilinos"])
     # TODO (rohany): Have option to run all benchmarks.
     parser.add_argument("bench", type=str, choices=BenchmarkKind.names())
-    # TODO (rohany): Have option to run all tensors.
-    parser.add_argument("tensor", type=str, choices=registry.getAllNames())
+    parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors"])
     parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run out", default=[1])
     parser.add_argument("--n", type=int, default=20)
     parser.add_argument("--warmup", type=int, default=10)
@@ -286,15 +286,24 @@ def main():
         assert(False)
 
     benchKind = BenchmarkKind.getByName(args.bench)
-    tensor = registry.getByName(args.tensor)
 
-    for n in args.nodes:
-        cmd = bencher.getCommand(tensor, benchKind, n)
-        if (args.dry_run):
-            print(" ".join(cmd))
-        else:
-            print(serializeBenchmark(benchKind, tensor, n))
-            executeCmd(cmd)
+    if args.tensor == "all":
+        tensors = registry.getAll()
+    elif args.tensor == "all-matrices":
+        tensors = [t for t in registry.getAll() if t.order == 2]
+    elif args.tensor == "all-3-tensors":
+        tensors = [t for t in registry.getAll() if t.order == 3]
+    else:
+        tensors = [registry.getByName(args.tensor)]
+
+    for tensor in tensors:
+        for n in args.nodes:
+            cmd = bencher.getCommand(tensor, benchKind, n)
+            if (args.dry_run):
+                print(" ".join(cmd))
+            else:
+                print(serializeBenchmark(benchKind, tensor, n))
+                executeCmd(cmd)
 
 if __name__ == '__main__':
     main()
