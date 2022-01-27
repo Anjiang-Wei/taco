@@ -52,6 +52,8 @@ void packLegionCOOToCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
+
 
   IndexSpace T2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((TCOO1_dimension - 1))));
   FieldSpace T2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
@@ -185,6 +187,8 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO3_crd_accessor = createAccessor<AccessorROint32_t1>(TCOO3_crd, FID_COORD);
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
+
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
   int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
   int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
@@ -371,6 +375,8 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
+
   int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
   int64_t T3Size = runtime->get_index_space_domain(ctx, get_index_space(T3_crd)).hi()[0] + 1;
   int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
@@ -529,6 +535,8 @@ void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
+
 
   IndexSpace T3_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<2>((TCOO1_dimension - 1), (TCOO2_dimension - 1))));
   FieldSpace T3_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
@@ -678,6 +686,8 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO3_crd_accessor = createAccessor<AccessorROint32_t1>(TCOO3_crd, FID_COORD);
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
+
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
   int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
   int64_t T3Size = runtime->get_index_space_domain(ctx, get_index_space(T3_crd)).hi()[0] + 1;
@@ -839,6 +849,8 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
+
   int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
   int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
   int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
@@ -968,6 +980,8 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
+
   int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
   int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
@@ -1070,6 +1084,8 @@ void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO2_crd_accessor = createAccessor<AccessorROint32_t1>(TCOO2_crd, FID_COORD);
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
+
+  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
 
   IndexSpace T2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((TCOO2_dimension - 1))));

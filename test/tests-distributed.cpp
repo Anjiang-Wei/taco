@@ -1989,6 +1989,23 @@ TEST(distributed, legionSpInnerProd) {
   ir::CodegenLegionCuda::compileToDirectory("../legion/spinnerprod/", loweredGPU);
 }
 
+TEST(distributed, legionSpVecAdd) {
+  int dim = 50;
+  Tensor<double> a("a", {dim}, {Dense});
+  Tensor<double> b("b", {dim}, LgFormat({LgSparse}));
+  Tensor<double> c("c", {dim}, LgFormat({LgSparse}));
+
+  IndexVar i("i"), io("io"), ii("ii");
+  auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  a(i) = b(i) + c(i);
+  auto stmt = a.getAssignment().concretize();
+  stmt = stmt.distribute({i}, {io}, {ii}, Grid(pieces))
+             .communicate({a(i), b(i), c(i)}, io)
+             ;
+  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spvecadd/", lowered);
+}
+
 TEST(distributed, preserveNonZeros) {
   auto makeDims = [](int n) {
     return std::vector<int>(n, 5);

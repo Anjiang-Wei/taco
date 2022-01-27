@@ -317,6 +317,11 @@ ModeFunction ModeFormatImpl::getCreatePartitionWithPosColoring(Mode mode, Expr d
   return ModeFunction();
 }
 
+ModeFunction ModeFormatImpl::getCreatePartitionWithCoordinateColoring(Mode mode, ir::Expr colorSpace,
+                                                                      ir::Expr coloring, ir::Expr partitionColor) const {
+  return ModeFunction();
+}
+
 ModeFunction ModeFormatImpl::getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr) const {
   return ModeFunction();
 }

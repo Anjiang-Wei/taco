@@ -59,6 +59,7 @@ public:
   // Similarly to the compressed level, this format supports position iterate.
   ModeFunction posIterBounds(std::vector<ir::Expr> parentPos, Mode mode) const override;
   ModeFunction posIterAccess(ir::Expr pos, std::vector<ir::Expr> coords, Mode mode) const override;
+  ModeFunction coordBounds(ir::Expr parentPos, Mode mode) const override;
 
   // Definitions for insertion into a tensor level.
   ir::Stmt getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mode) const override;
@@ -73,6 +74,7 @@ public:
   ir::Stmt getFinalizePosColoring(Mode mode) const override;
   ir::Stmt getCreatePosColoringEntry(Mode mode, ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const override;
   ModeFunction getCreatePartitionWithPosColoring(Mode mode, ir::Expr domain, ir::Expr partitionColor) const override;
+  ModeFunction getCreatePartitionWithCoordinateColoring(Mode mode, ir::Expr colorSpace, ir::Expr coloring, ir::Expr partitionColor) const override;
   ModeFunction getPartitionFromParent(ir::Expr parentPartition, Mode mode, ir::Expr partitionColor) const override;
   ModeFunction getPartitionFromChild(ir::Expr childPartition, Mode mode, ir::Expr partitionColor) const override;
 

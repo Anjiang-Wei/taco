@@ -232,6 +232,7 @@ public:
   ir::Stmt getCreatePosColoringEntry(ir::Expr domainPoint, ir::Expr lowerBound, ir::Expr upperBound) const;
   ir::Stmt getFinalizePosColoring() const;
   ModeFunction getCreatePartitionWithPosColoring(ir::Expr domain, ir::Expr partitionColor) const;
+  ModeFunction getCreatePartitionWithCoordinateColoring(ir::Expr colorSpace, ir::Expr coloring, ir::Expr partitionColor) const;
   ModeFunction getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const;
   ModeFunction getPartitionFromChild(ir::Expr childPartition, ir::Expr partitionColor) const;
 

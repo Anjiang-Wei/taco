@@ -71,7 +71,7 @@ struct IndexVarRelNode : public util::Manageable<IndexVarRelNode>,
   virtual ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
 
   /// Recover a child index variable expression as a function of all other variables (parents and siblings) in the relationship
-  virtual ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  virtual ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
   IndexVarRelType relType;
 };
 
@@ -104,7 +104,7 @@ struct SplitRelNode : public IndexVarRelNode {
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
 
   /// outerVar = parentVar - innerVar, innerVar = parentVar - outerVar * splitFactor
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 
 private:
   struct Content;
@@ -155,9 +155,7 @@ struct DivideRelNode : public IndexVarRelNode {
                            ProvenanceGraph provGraph) const;
 
   /// outerVar = parentVar / (parentBounds / divFactor), innerVar = parentVar - outerVar * (parentBounds / divFactor).
-  ir::Stmt
-  recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators,
-               ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 
 private:
   struct Content;
@@ -197,9 +195,7 @@ struct DivideOntoPartition : public IndexVarRelNode {
                            std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds,
                            ProvenanceGraph provGraph) const;
 
-  ir::Stmt
-  recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators,
-               ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 
 private:
   struct Content;
@@ -230,7 +226,7 @@ struct PosRelNode : public IndexVarRelNode {
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
 
   /// Search for position based on coordinate of parentVar
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 
 private:
   /// Gets the coord array for the access iterator
@@ -274,7 +270,7 @@ struct FuseRelNode : public IndexVarRelNode {
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
 
   /// outerParentVar * innerSize + innerParentVar
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 private:
   /// returns combined parent var bounds taking into account both min and max bounds
   std::vector<ir::Expr> combineParentBounds(std::vector<ir::Expr> outerParentBound, std::vector<ir::Expr> innerParentBound) const;
@@ -295,7 +291,7 @@ struct MultiFuseRelNode : public IndexVarRelNode {
   std::vector<ir::Expr> computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const;
   std::vector<ir::Expr> deriveIterBounds(IndexVar indexVar, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, std::map<taco::IndexVar, taco::ir::Expr> variableNames, Iterators iterators, ProvenanceGraph provGraph) const;
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 private:
   struct Content;
   std::shared_ptr<Content> content;
@@ -328,7 +324,7 @@ struct BoundRelNode : public IndexVarRelNode {
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
 
   /// boundVar = parentVar
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 private:
   struct Content;
   std::shared_ptr<Content> content;
@@ -354,7 +350,7 @@ struct PrecomputeRelNode : public IndexVarRelNode {
   std::vector<ir::Expr> computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const;
   std::vector<ir::Expr> deriveIterBounds(IndexVar indexVar, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, std::map<taco::IndexVar, taco::ir::Expr> variableNames, Iterators iterators, ProvenanceGraph provGraph) const;
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 private:
   struct Content;
   std::shared_ptr<Content> content;
@@ -375,7 +371,7 @@ struct StaggerRelNode : public IndexVarRelNode {
   std::vector<ir::Expr> computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const;
   std::vector<ir::Expr> deriveIterBounds(IndexVar indexVar, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, std::map<taco::IndexVar, taco::ir::Expr> variableNames, Iterators iterators, ProvenanceGraph provGraph) const;
   ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl, ProvenanceGraph provGraph) const;
 private:
   struct Content;
   std::shared_ptr<Content> content;
@@ -482,7 +478,7 @@ public:
 
   /// Recover a child from other variables in relationship ex. split inner from parent and outer
   /// emitVarDecl = whether to emit new variables or just assign values to existing variables.
-  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators) const;
+  ir::Stmt recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder, std::map<IndexVar, std::vector<ir::Expr>> underivedBounds, std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl) const;
 
   /// Retrieves set of all index variables
   std::set<IndexVar> getAllIndexVars() const;

@@ -78,6 +78,11 @@ ModeFunction RectCompressedModeFormat::posIterAccess(ir::Expr pos, std::vector<i
   return ModeFunction(ir::Stmt(), {idx, true});
 }
 
+ModeFunction RectCompressedModeFormat::coordBounds(ir::Expr parentPos, Mode mode) const {
+  taco_not_supported_yet;
+  return ModeFunction();
+}
+
 std::vector<AttrQuery> RectCompressedModeFormat::attrQueries(std::vector<IndexVar> parentCoords,
                                                              std::vector<IndexVar> childCoords) const {
   std::vector<IndexVar> groupBy(parentCoords.begin(), parentCoords.end() - 1);
@@ -612,6 +617,41 @@ ModeFunction RectCompressedModeFormat::getCreatePartitionWithPosColoring(Mode mo
   stmts.push_back(ir::VarDecl::make(crdIndexPart, createCrdIndexPart));
   auto crdPart = ir::Var::make(mode.getName() + "_crd_part", LogicalPartition);
   stmts.push_back(ir::VarDecl::make(crdPart, ir::Call::make("runtime->get_logical_partition", {ir::ctx, crd, crdIndexPart}, Auto)));
+  auto posPartition = this->partitionPosFromCrd(mode, crdIndexPart, maybeAddColor);
+  auto posPart = posPartition[0];
+  stmts.push_back(posPartition.compute());
+  return ModeFunction(ir::Block::make(stmts), {posPart, crdPart, posPart, crdPart});
+}
+
+ModeFunction RectCompressedModeFormat::getCreatePartitionWithCoordinateColoring(Mode mode, ir::Expr colorSpace,
+                                                                                ir::Expr coloring, ir::Expr partitionColor) const {
+  // We'll use the RectCompressedCoordinatePartition utility to create a
+  // partition of the crd region according to the input coloring of the
+  // coordinate space.
+  auto maybeAddColor = [&](std::vector<ir::Expr> args) {
+    if (!partitionColor.defined()) {
+      return args;
+    }
+    args.push_back(partitionColor);
+    return args;
+  };
+  auto pack = mode.getModePack();
+  std::vector<ir::Stmt> stmts;
+  auto crdPart = ir::Var::make(mode.getName() + "_crd_part", LogicalPartition);
+  stmts.push_back(ir::VarDecl::make(crdPart, ir::Call::make(
+    "RectCompressedCoordinatePartition::apply",
+    maybeAddColor({
+      ir::ctx,
+      ir::runtime,
+      this->getRegion(pack, CRD),
+      this->getRegion(pack, CRD_PARENT),
+      fidCoord,
+      coloring,
+      colorSpace,
+    }),
+    Auto
+  )));
+  auto crdIndexPart = ir::MethodCall::make(crdPart, "get_index_partition", {}, false /* deref */, Auto);
   auto posPartition = this->partitionPosFromCrd(mode, crdIndexPart, maybeAddColor);
   auto posPart = posPartition[0];
   stmts.push_back(posPartition.compute());

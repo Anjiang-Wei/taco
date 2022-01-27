@@ -12,6 +12,7 @@ enum TensorFields {
   FID_VAL,
   FID_RECT_1,
   FID_COORD,
+  FID_POINT_1,
 };
 const int TACO_TASK_BASE_ID = 10000;
 const int TACO_SHARD_BASE_ID = 1000;
@@ -232,6 +233,25 @@ private:
   static const int taskID;
 };
 
+// RectCompressedCoordinatePartition creates a partition of a RectCompressedModeFormat
+// given a coloring of the dimension's coordinate space.
+class RectCompressedCoordinatePartition {
+public:
+  // TODO (rohany): I'm not sure yet whether this should operate on the full region or a subset only.
+  //  It's likely that this isn't something we have to support right now though (i.e. nested position space distributions),
+  //  so we can probably punt on it to later.
+  static Legion::LogicalPartition
+  apply(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion region, Legion::LogicalRegion parent,
+        Legion::FieldID fid, Legion::DomainPointColoring buckets, Legion::IndexSpace colorSpace,
+        Legion::Color color = LEGION_AUTO_GENERATE_ID);
+  static void registerTasks();
+private:
+  template<typename T, Legion::PrivilegeMode MODE>
+  using Accessor = Legion::FieldAccessor<MODE, T, 1, Legion::coord_t, Realm::AffineAccessor<T, 1, Legion::coord_t>>;
+  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static const int taskID;
+};
+
 // SparseGatherProjection represents a projection from a sparse level's coordinates
 // into coordinates of a dense level. This allows for position space loops over
 // a sparse level to select only the subtrees of tensors that will actually be
@@ -294,6 +314,30 @@ int taco_binarySearchBefore(T posArray, int arrayStart, int arrayEnd, int target
     else { upperBound = mid; }
   }
   return lowerBound;
+}
+
+template<typename T>
+#if defined (__CUDACC__)
+__host__ __device__
+#endif
+int taco_binarySearchAfter(T array, int arrayStart, int arrayEnd, int target) {
+  if (array[arrayStart] >= target) {
+    return arrayStart;
+  }
+  int lowerBound = arrayStart; // always < target
+  int upperBound = arrayEnd; // always >= target
+  while (upperBound - lowerBound > 1) {
+    int mid = (upperBound + lowerBound) / 2;
+    int midValue = array[mid];
+    if (midValue < target) {
+      lowerBound = mid;
+    } else if (midValue > target) {
+      upperBound = mid;
+    } else {
+      return mid;
+    }
+  }
+  return upperBound;
 }
 
 // A set of tasks and methods for distributed-parallel construction of sparse tensors.

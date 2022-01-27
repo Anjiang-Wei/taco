@@ -216,6 +216,10 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   auto B3_crd_accessor = createAccessor<AccessorROint32_t1>(B3_crd, FID_COORD);
   auto C3_crd_accessor = createAccessor<AccessorROint32_t1>(C3_crd, FID_COORD);
 
+  DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
+  DomainT<1> C2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C2_crd));
+  DomainT<1> B3_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B3_crd));
+  DomainT<1> C3_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C3_crd));
   double init = 0;
   Legion::DeferredBuffer<double, 1> buf = Legion::DeferredBuffer<double, 1>(Legion::Memory::Kind::GPU_FB_MEM, DomainT<1>(Rect<1>(0, 0)), &(init));
   double* bufPtr = buf.ptr(0);
