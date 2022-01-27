@@ -255,7 +255,7 @@ def executeCmd(cmd):
     proc.wait()
     sys.stdout.flush()
 
-def serializeBenchmark(benchKind, tensor, nodes):
+def serializeBenchmark(system, benchKind, tensor, nodes):
     return f"BENCHID++{benchKind}++{tensor.name}++{nodes}"
 
 def main():
@@ -302,7 +302,7 @@ def main():
             if (args.dry_run):
                 print(" ".join(cmd))
             else:
-                print(serializeBenchmark(benchKind, tensor, n))
+                print(serializeBenchmark(args.system, benchKind, tensor, n))
                 executeCmd(cmd)
 
 if __name__ == '__main__':

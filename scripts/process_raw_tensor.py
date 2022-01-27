@@ -58,6 +58,7 @@ def cooToPetsc(name, path):
 def executeCmd(cmd, dry_run):
     cmdStr = " ".join(cmd)
     print("Executing command: {}".format(cmdStr))
+    sys.stdout.flush()
     if dry_run:
         return
     proc = subprocess.Popen(cmd)
