@@ -20,9 +20,9 @@ struct task_1Args {
 
 
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, int32_t pieces) {
-  RegionWrapper A2_pos = A->indices[1][0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
+  auto A2_crd_parent = A->indicesParents[1][1];
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   RegionWrapper B2_pos = B->indices[1][0];
@@ -60,10 +60,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, B_vals);
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   LogicalPartition AValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, A_vals);
-  LogicalPartition crdPartA2 = copyPartition(ctx, runtime, AValsLogicalPart, A2_crd);
-  IndexPartition posSparsePartA2 = runtime->create_partition_by_preimage_range(ctx, crdPartA2.get_index_partition(), A2_pos, A2_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, crdPartA2.get_index_partition()));
-  IndexPartition posIndexPartA2 = densifyPartition(ctx, runtime, get_index_space(A2_pos), posSparsePartA2);
-  LogicalPartition posPartA2 = runtime->get_logical_partition(ctx, A2_pos, posIndexPartA2);
+  LogicalPartition posPartA2 = copyPartition(ctx, runtime, posPartB2, A2_pos_parent);
+  LogicalPartition crdPartA2 = copyPartition(ctx, runtime, B2_crd_part, A2_crd_parent);
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
   IndexPartition CDenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, C_dense_run_0);
   auto C_vals_partition = copyPartition(ctx, runtime, CDenseRun0Partition, get_logical_region(C_vals));
