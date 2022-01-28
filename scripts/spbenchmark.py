@@ -251,12 +251,13 @@ class TrilinosBenchmark(Benchmark):
 def executeCmd(cmd):
     cmdStr = " ".join(cmd)
     print("Executing command: {}".format(cmdStr))
+    sys.stdout.flush()
     proc = subprocess.Popen(cmd)
     proc.wait()
     sys.stdout.flush()
 
 def serializeBenchmark(system, benchKind, tensor, nodes):
-    return f"BENCHID++{benchKind}++{tensor.name}++{nodes}"
+    return f"BENCHID++{system}++{benchKind}++{tensor.name}++{nodes}"
 
 def main():
     # Initialize the sparse tensor registry.
