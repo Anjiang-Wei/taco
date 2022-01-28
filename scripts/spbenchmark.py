@@ -55,7 +55,7 @@ class SparseTensorRegistry:
             SparseTensor("mycielskian19", [393215, 393215], 903194710),
             # These appear to be to too easy of problems?
             # SparseTensor("nlpkkt200", [16240000, 16240000], 440225632),
-            # SparseTensor("nlpkkt240", [27993600, 27993600], 760648352),
+            SparseTensor("nlpkkt240", [27993600, 27993600], 760648352),
             SparseTensor("sk-2005", [50636154, 50636154], 1949412601),
             SparseTensor("twitter7", [41652230, 41652230], 1468365182),
             SparseTensor("uk-2005", [39459925, 39459925], 936364282),
