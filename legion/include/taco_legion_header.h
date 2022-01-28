@@ -288,14 +288,13 @@ private:
   static const int taskID;
 };
 
-// TODO (rohany): Double check these integer types.
 // arrayEnd is inclusive (i.e. we must be able to access posArray[arrayEnd] safely.
 // We'll also generate device code for this if we're going to run on GPUs.
 template<typename T>
 #if defined (__CUDACC__)
 __host__ __device__
 #endif
-int taco_binarySearchBefore(T posArray, int arrayStart, int arrayEnd, int target) {
+int64_t taco_binarySearchBefore(T posArray, int64_t arrayStart, int64_t arrayEnd, int32_t target) {
   if (posArray[arrayEnd].hi < target) {
     return arrayEnd;
   }
@@ -320,7 +319,7 @@ template<typename T>
 #if defined (__CUDACC__)
 __host__ __device__
 #endif
-int taco_binarySearchAfter(T array, int arrayStart, int arrayEnd, int target) {
+int64_t taco_binarySearchAfter(T array, int64_t arrayStart, int64_t arrayEnd, int32_t target) {
   if (array[arrayStart] >= target) {
     return arrayStart;
   }
@@ -363,7 +362,7 @@ private:
 class RectCompressedGetSeqInsertEdges {
 public:
   struct ResultValuePack {
-    int32_t scanResult;
+    int64_t scanResult;
     Legion::LogicalPartition partition;
   };
   static ResultValuePack compute(Legion::Context ctx, Legion::Runtime *runtime,
@@ -386,21 +385,21 @@ private:
 
   // scan{Body,Task} are the implementations of the first step.
   template<int DIM>
-  static int32_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
-  static int32_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static int64_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int64_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
   static std::pair<Legion::FieldID, Legion::FieldID> unpackScanTaskArgs(const Legion::Task* task);
 #ifdef TACO_USE_CUDA
   template<int DIM>
-  static int32_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
-  static int32_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int64_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #endif
   static const int scanTaskID;
 
   // applyPartialResults{Body,Task} are the implementations of the second step.
   template<int DIM>
-  static void applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, READ_WRITE> output, int32_t value);
+  static void applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, READ_WRITE> output, int64_t value);
   static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
-  static std::pair<Legion::FieldID, int32_t> unpackApplyPartialResultsTaskArgs(const Legion::Task* task);
+  static std::pair<Legion::FieldID, int64_t> unpackApplyPartialResultsTaskArgs(const Legion::Task* task);
 #ifdef TACO_USE_CUDA
   static void applyPartialResultsTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #endif

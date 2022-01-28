@@ -13,8 +13,8 @@ typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,
 
 struct task_1Args {
   int64_t B2Size;
-  int32_t C2_dimension;
-  int32_t D2_dimension;
+  int64_t C2_dimension;
+  int64_t D2_dimension;
   int32_t pieces;
 };
 
@@ -43,7 +43,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
   DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t ko = (*itr)[0];
+    int64_t ko = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((ko * ((B2Size + (pieces - 1)) / pieces)));
     Point<1> B2CrdEnd = Point<1>(TACO_MIN((ko * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)), B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
@@ -104,11 +104,11 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion D_vals = regions[7];
   LogicalRegion D_vals_parent = regions[7].get_logical_region();
 
-  int32_t ko = task->index_point[0];
+  int64_t ko = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
   int64_t B2Size = args->B2Size;
-  int32_t C2_dimension = args->C2_dimension;
-  int32_t D2_dimension = args->D2_dimension;
+  int64_t C2_dimension = args->C2_dimension;
+  int64_t D2_dimension = args->D2_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -123,39 +123,39 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  int32_t pB2_begin = B2PosDomain.bounds.lo;
-  int32_t pB2_end = B2PosDomain.bounds.hi;
+  int64_t pB2_begin = B2PosDomain.bounds.lo;
+  int64_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ko;
   #pragma omp parallel for schedule(static)
-  for (int32_t kio = 0; kio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); kio++) {
+  for (int64_t kio = 0; kio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); kio++) {
     int64_t pointID2 = pointID1 * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + kio;
-    int32_t ki = kio * 2048;
-    int32_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, kposB);
-    int32_t i = i_pos;
-    for (int32_t kii = 0; kii < 2048; kii++) {
-      int32_t ki = kio * 2048 + kii;
-      int32_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
+    int64_t ki = kio * 2048;
+    int64_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
+    int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, kposB);
+    int64_t i = i_pos;
+    for (int64_t kii = 0; kii < 2048; kii++) {
+      int64_t ki = kio * 2048 + kii;
+      int64_t kposB = ko * ((B2Size + (pieces - 1)) / pieces) + ki;
       if (kposB >= (ko + 1) * ((B2Size + (pieces - 1)) / pieces))
         continue;
 
       if (kposB >= B2Size)
         continue;
 
-      int32_t f = B2_crd_accessor[kposB];
-      int32_t k = f;
+      int64_t f = B2_crd_accessor[kposB];
+      int64_t k = f;
       while (!(B2_pos_accessor[i_pos].contains(kposB))) {
         i_pos = i_pos + 1;
         i = i_pos;
       }
-      int32_t iA = i;
-      int32_t iC = i;
-      int32_t kA = kposB;
-      for (int32_t j = 0; j < C2_dimension; j++) {
+      int64_t iA = i;
+      int64_t iC = i;
+      int64_t kA = kposB;
+      for (int64_t j = 0; j < C2_dimension; j++) {
         int64_t pointID3 = pointID2 * C2_dimension + j;
-        int32_t jC = iC * C2_dimension + j;
-        int32_t jD = j;
-        int32_t kD = jD * D2_dimension + k;
+        int64_t jC = iC * C2_dimension + j;
+        int64_t jD = j;
+        int64_t kD = jD * D2_dimension + k;
         A_vals_rw_accessor[Point<1>(kA)] = A_vals_rw_accessor[Point<1>(kA)] + (B_vals_ro_accessor[Point<1>(kposB)] * C_vals_ro_accessor[Point<2>(i, j)]) * D_vals_ro_accessor[Point<2>(j, k)];
       }
     }

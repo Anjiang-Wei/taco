@@ -12,9 +12,9 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t A2_dimension;
+  int64_t A2_dimension;
   int64_t B2Size;
-  int32_t C2_dimension;
+  int64_t C2_dimension;
   int32_t gx;
 };
 
@@ -37,7 +37,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
   DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t ko = (*itr)[0];
+    int64_t ko = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((ko * ((B2Size + (gx - 1)) / gx)));
     Point<1> B2CrdEnd = Point<1>(TACO_MIN((ko * ((B2Size + (gx - 1)) / gx) + ((B2Size + (gx - 1)) / gx - 1)), B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
@@ -82,11 +82,11 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion C_vals = regions[4];
   LogicalRegion C_vals_parent = regions[4].get_logical_region();
 
-  int32_t ko = task->index_point[0];
+  int64_t ko = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t A2_dimension = args->A2_dimension;
+  int64_t A2_dimension = args->A2_dimension;
   int64_t B2Size = args->B2Size;
-  int32_t C2_dimension = args->C2_dimension;
+  int64_t C2_dimension = args->C2_dimension;
   int32_t gx = args->gx;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -100,37 +100,37 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  int32_t pB2_begin = B2PosDomain.bounds.lo;
-  int32_t pB2_end = B2PosDomain.bounds.hi;
+  int64_t pB2_begin = B2PosDomain.bounds.lo;
+  int64_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ko;
   #pragma omp parallel for schedule(static)
-  for (int32_t iio = 0; iio < (((B2Size + (gx - 1)) / gx + 2047) / 2048); iio++) {
+  for (int64_t iio = 0; iio < (((B2Size + (gx - 1)) / gx + 2047) / 2048); iio++) {
     int64_t pointID2 = pointID1 * (((B2Size + (gx - 1)) / gx + 2047) / 2048) + iio;
-    int32_t ki = iio * 2048;
-    int32_t kposB = ko * ((B2Size + (gx - 1)) / gx) + ki;
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, kposB);
-    int32_t i = i_pos;
-    for (int32_t iii = 0; iii < 2048; iii++) {
-      int32_t ki = iio * 2048 + iii;
-      int32_t kposB = ko * ((B2Size + (gx - 1)) / gx) + ki;
+    int64_t ki = iio * 2048;
+    int64_t kposB = ko * ((B2Size + (gx - 1)) / gx) + ki;
+    int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, kposB);
+    int64_t i = i_pos;
+    for (int64_t iii = 0; iii < 2048; iii++) {
+      int64_t ki = iio * 2048 + iii;
+      int64_t kposB = ko * ((B2Size + (gx - 1)) / gx) + ki;
       if (kposB >= (ko + 1) * ((B2Size + (gx - 1)) / gx))
         continue;
 
       if (kposB >= B2Size)
         continue;
 
-      int32_t f = B2_crd_accessor[kposB];
-      int32_t k = f;
+      int64_t f = B2_crd_accessor[kposB];
+      int64_t k = f;
       while (!(B2_pos_accessor[i_pos].contains(kposB))) {
         i_pos = i_pos + 1;
         i = i_pos;
       }
-      int32_t iA = i;
-      int32_t kC = k;
-      for (int32_t j = 0; j < C2_dimension; j++) {
+      int64_t iA = i;
+      int64_t kC = k;
+      for (int64_t j = 0; j < C2_dimension; j++) {
         int64_t pointID3 = pointID2 * C2_dimension + j;
-        int32_t jA = iA * A2_dimension + j;
-        int32_t jC = kC * C2_dimension + j;
+        int64_t jA = iA * A2_dimension + j;
+        int64_t jC = kC * C2_dimension + j;
         A_vals_red_accessor[Point<2>(i, j)] <<= B_vals_ro_accessor[Point<1>(kposB)] * C_vals_ro_accessor[Point<2>(k, j)];
       }
     }

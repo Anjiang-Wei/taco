@@ -1,6 +1,8 @@
 #include "test.h"
 #include "taco_legion_header.h"
 #include <random>
+#include <cstring>
+#include "logging_wrapper.h"
 
 using namespace Legion;
 
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < argc; i++) {
     newArgv.push_back(argv[i]);
   }
-  for (auto it : extraArguments) {
+  for (const auto& it : extraArguments) {
     newArgv.push_back(const_cast<char*>(it.c_str()));
   }
   argc = newArgv.size();

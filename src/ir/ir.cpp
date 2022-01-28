@@ -247,7 +247,41 @@ bool Literal::equalsScalar(double scalar) const {
   return false;
 }
 
-Expr Var::make(std::string name, Datatype type, 
+template <>
+TypedComponentVal toTypedComponentVal(std::complex<float> val, Datatype type) {
+  switch (type.getKind()) {
+    case Datatype::Complex64: {
+      auto res = std::complex<float>(val);
+      return TypedComponentVal(type, &res);
+    }
+    case Datatype::Complex128: {
+      auto res = std::complex<double>(val);
+      return TypedComponentVal(type, &res);
+    }
+    default:
+      taco_ierror;
+      return TypedComponentVal();
+  }
+}
+
+template <>
+TypedComponentVal toTypedComponentVal(std::complex<double> val, Datatype type) {
+  switch (type.getKind()) {
+    case Datatype::Complex64: {
+      auto res = std::complex<float>(val);
+      return TypedComponentVal(type, &res);
+    }
+    case Datatype::Complex128: {
+      auto res = std::complex<double>(val);
+      return TypedComponentVal(type, &res);
+    }
+    default:
+      taco_ierror;
+      return TypedComponentVal();
+  }
+}
+
+Expr Var::make(std::string name, Datatype type,
                bool is_ptr, bool is_tensor, bool is_parameter) {
   Var *var = new Var;
   var->type = type;
@@ -985,11 +1019,14 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode,
   gp->index = index;
   
   //TODO: deal with the fact that some of these are pointers
-  if (property == TensorProperty::Values)
+  if (property == TensorProperty::Values) {
     gp->type = tensor.type();
-  else
-    gp->type = Int();
-  
+  } else {
+    // Importantly, we don't use the default Int() here, as indices arrays right now
+    // _must_ be 32 bits.
+    gp->type = Int32;
+  }
+
   return gp;
 }
 

@@ -102,8 +102,8 @@ int32_t RectCompressedGetSeqInsertEdges::scanBodyGPU(Context ctx, Runtime *runti
     return 0;
   }
 
-  int32_t initVal = 0;
-  DeferredBuffer<int32_t, DIM> scanBuf(iterBounds, tmpMemKind, &initVal);
+  int64_t initVal = 0;
+  DeferredBuffer<int64_t, DIM> scanBuf(iterBounds, tmpMemKind, &initVal);
 
   auto inputPtrBot = input.ptr(iterBounds.lo);
   auto bufPtrBot = scanBuf.ptr(iterBounds.lo);
@@ -122,8 +122,8 @@ int32_t RectCompressedGetSeqInsertEdges::scanBodyGPU(Context ctx, Runtime *runti
   }
 
   // Return the result of the scan.
-  int32_t scanVal;
-  cudaMemcpy(&scanVal, scanBuf.ptr(iterBounds.hi), sizeof(int32_t), cudaMemcpyHostToDevice);
+  int64_t scanVal;
+  cudaMemcpy(&scanVal, scanBuf.ptr(iterBounds.hi), sizeof(int64_t), cudaMemcpyHostToDevice);
   return scanVal;
 }
 
@@ -146,7 +146,7 @@ int32_t RectCompressedGetSeqInsertEdges::scanTaskGPU(const Legion::Task *task,
     case DIM: {    \
       Rect<DIM> iterBounds = runtime->get_index_space_domain(ctx, outputlr.get_index_space()).bounds<DIM, coord_t>();     \
       Accessor<Rect<1>, DIM, WRITE_ONLY> outAcc(output, outputField); \
-      Accessor<int32_t, DIM, READ_ONLY> inAcc(input, inputField); \
+      Accessor<int64_t, DIM, READ_ONLY> inAcc(input, inputField); \
       return RectCompressedGetSeqInsertEdges::scanBodyGPU<DIM>(ctx, runtime, iterBounds, outAcc, inAcc, tmpMemKind); \
     }
     LEGION_FOREACH_N(BLOCK)
@@ -175,7 +175,7 @@ void RectCompressedGetSeqInsertEdges::applyPartialResultsTaskGPU(const Legion::T
                                                                  const std::vector<Legion::PhysicalRegion> &regions,
                                                                  Legion::Context ctx, Legion::Runtime *runtime) {
   FieldID outputField;
-  int32_t value;
+  int64_t value;
   std::tie(outputField, value) = RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(task);
 
   auto output = regions[0];

@@ -109,7 +109,7 @@ Stmt SingletonModeFormat::getAppendInitLevel(Expr parentSize, Expr size,
     return Stmt();
   }
 
-  Expr defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32); 
+  Expr defaultCapacity = ir::Literal::make(allocSize, Int());
   Expr crdCapacity = getCoordCapacity(mode);
   Expr crdArray = getCoordArray(mode.getModePack());
   Stmt initCrdCapacity = VarDecl::make(crdCapacity, defaultCapacity);

@@ -676,7 +676,7 @@ void Iterators::createAccessIterators(Access access, Format format, Expr tensorI
     int counter = 0;
     for (auto modeTypePack : format.getModeFormatPacks()) {
       taco_iassert(modeTypePack.getModeFormats().size() == 1);
-      for (auto& modeType : modeTypePack.getModeFormats()) {
+      for (size_t i = 0; i < modeTypePack.getModeFormats().size(); i++) {
         int modeNumber = format.getModeOrdering()[counter];
         IndexVar indexVar = access.getIndexVars()[modeNumber];
         IndexVar iteratorIndexVar;

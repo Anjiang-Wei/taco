@@ -12,10 +12,10 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t A2_dimension;
+  int64_t A2_dimension;
   int64_t B3Size;
-  int32_t C2_dimension;
-  int32_t D2_dimension;
+  int64_t C2_dimension;
+  int64_t D2_dimension;
   int32_t pieces;
 };
 
@@ -42,7 +42,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainT<1> B3_crd_domain = runtime->get_index_space_domain(ctx, B3_crd.get_index_space());
   DomainPointColoring B3_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t fposo = (*itr)[0];
+    int64_t fposo = (*itr)[0];
     Point<1> B3CrdStart = Point<1>((fposo * ((B3Size + (pieces - 1)) / pieces)));
     Point<1> B3CrdEnd = Point<1>(TACO_MIN((fposo * ((B3Size + (pieces - 1)) / pieces) + ((B3Size + (pieces - 1)) / pieces - 1)), B3_crd_domain.bounds.hi[0]));
     Rect<1> B3CrdRect = Rect<1>(B3CrdStart, B3CrdEnd);
@@ -99,12 +99,12 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion D_vals = regions[7];
   LogicalRegion D_vals_parent = regions[7].get_logical_region();
 
-  int32_t fposo = task->index_point[0];
+  int64_t fposo = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t A2_dimension = args->A2_dimension;
+  int64_t A2_dimension = args->A2_dimension;
   int64_t B3Size = args->B3Size;
-  int32_t C2_dimension = args->C2_dimension;
-  int32_t D2_dimension = args->D2_dimension;
+  int64_t C2_dimension = args->C2_dimension;
+  int64_t D2_dimension = args->D2_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -121,34 +121,34 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B3PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_pos));
   DomainT<1> B3CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_crd));
-  int32_t pB3_begin = B3PosDomain.bounds.lo;
-  int32_t pB3_end = B3PosDomain.bounds.hi;
+  int64_t pB3_begin = B3PosDomain.bounds.lo;
+  int64_t pB3_end = B3PosDomain.bounds.hi;
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  int32_t pB2_begin = B2PosDomain.bounds.lo;
-  int32_t pB2_end = B2PosDomain.bounds.hi;
+  int64_t pB2_begin = B2PosDomain.bounds.lo;
+  int64_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = fposo;
   #pragma omp parallel for schedule(static)
-  for (int32_t fposio = 0; fposio < (((B3Size + (pieces - 1)) / pieces + 2047) / 2048); fposio++) {
+  for (int64_t fposio = 0; fposio < (((B3Size + (pieces - 1)) / pieces + 2047) / 2048); fposio++) {
     int64_t pointID2 = pointID1 * (((B3Size + (pieces - 1)) / pieces + 2047) / 2048) + fposio;
-    int32_t fposi = fposio * 2048;
-    int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
-    int32_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, fposB);
-    int32_t j = B2_crd_accessor[j_pos];
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
-    int32_t i = i_pos;
-    for (int32_t fposii = 0; fposii < 2048; fposii++) {
-      int32_t fposi = fposio * 2048 + fposii;
-      int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
+    int64_t fposi = fposio * 2048;
+    int64_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
+    int64_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, fposB);
+    int64_t j = B2_crd_accessor[j_pos];
+    int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
+    int64_t i = i_pos;
+    for (int64_t fposii = 0; fposii < 2048; fposii++) {
+      int64_t fposi = fposio * 2048 + fposii;
+      int64_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
       if (fposB >= (fposo + 1) * ((B3Size + (pieces - 1)) / pieces))
         continue;
 
       if (fposB >= B3Size)
         continue;
 
-      int32_t f2 = B3_crd_accessor[fposB];
-      int32_t f1 = f2;
-      int32_t k = f1;
+      int64_t f2 = B3_crd_accessor[fposB];
+      int64_t f1 = f2;
+      int64_t k = f1;
       if (!(B3_pos_accessor[j_pos].contains(fposB))) {
         j_pos = j_pos + 1;
         j = B2_crd_accessor[j_pos];
@@ -157,15 +157,15 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
           i = i_pos;
         }
       }
-      int32_t jB = j_pos;
-      int32_t iA = i;
-      int32_t jC = j;
-      int32_t kD = k;
-      for (int32_t l = 0; l < C2_dimension; l++) {
+      int64_t jB = j_pos;
+      int64_t iA = i;
+      int64_t jC = j;
+      int64_t kD = k;
+      for (int64_t l = 0; l < C2_dimension; l++) {
         int64_t pointID3 = pointID2 * C2_dimension + l;
-        int32_t lA = iA * A2_dimension + l;
-        int32_t lC = jC * C2_dimension + l;
-        int32_t lD = kD * D2_dimension + l;
+        int64_t lA = iA * A2_dimension + l;
+        int64_t lC = jC * C2_dimension + l;
+        int64_t lD = kD * D2_dimension + l;
         A_vals_red_accessor[Point<2>(i, l)] <<= (B_vals_ro_accessor[Point<1>(fposB)] * C_vals_ro_accessor[Point<2>(j, l)]) * D_vals_ro_accessor[Point<2>(k, l)];
       }
     }

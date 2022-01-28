@@ -6,7 +6,7 @@ using namespace Legion;
 
 #include "taco-generated.h"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
-typedef FieldAccessor<READ_WRITE,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorRWint32_t1;
+typedef FieldAccessor<READ_WRITE,int64_t,1,coord_t,Realm::AffineAccessor<int64_t,1,coord_t>> AccessorRWint64_t1;
 typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorRWdouble1;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_WRITE,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorRWint32_t1;
@@ -14,15 +14,15 @@ typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,
 typedef FieldAccessor<READ_WRITE,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRWRect_1_1;
 
 struct task_2Args {
-  int32_t A1_dimension;
-  int32_t B1_dimension;
+  int64_t A1_dimension;
+  int64_t B1_dimension;
   int32_t pieces;
 };
 
 struct task_1Args {
-  int32_t A1_dimension;
+  int64_t A1_dimension;
   IndexSpace A_dense_run_0;
-  int32_t B1_dimension;
+  int64_t B1_dimension;
   int32_t pieces;
 };
 
@@ -53,9 +53,9 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   int64_t D2Size = runtime->get_index_space_domain(ctx, get_index_space(D2_crd)).hi()[0] + 1;
 
   IndexSpace A2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((B1_dimension - 1))));
-  FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
+  FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
   A2_nnz_vals = runtime->create_logical_region(ctx, A2_nnzispace, A2_nnzfspace);
-  runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int32_t)0);
+  runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int64_t)0);
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
@@ -70,7 +70,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainPointColoring CColoring = DomainPointColoring();
   DomainPointColoring DColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t qio = (*itr)[0];
+    int64_t qio = (*itr)[0];
     Point<1> A2_nnzStart = Point<1>((qio * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> A2_nnzEnd = Point<1>(TACO_MIN((qio * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), A2_nnzDomain.hi()[0]));
     Rect<1> A2_nnzRect = Rect<1>(A2_nnzStart, A2_nnzEnd);
@@ -163,10 +163,10 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion D_vals = regions[11];
   LogicalRegion D_vals_parent = regions[11].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_2Args* args = (task_2Args*)(task->args);
-  int32_t A1_dimension = args->A1_dimension;
-  int32_t B1_dimension = args->B1_dimension;
+  int64_t A1_dimension = args->A1_dimension;
+  int64_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -184,8 +184,8 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t pointID1 = io;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int32_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
-    int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
+  for (int64_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
+    int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
     if (i >= B1_dimension)
       continue;
 
@@ -193,201 +193,201 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int32_t iB = i;
-    int32_t iC = i;
-    int32_t iD = i;
-    int32_t iA = i;
-    int32_t jB = B2_pos_accessor[Point<1>(i)].lo;
-    int32_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
-    int32_t jC = C2_pos_accessor[Point<1>(i)].lo;
-    int32_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
-    int32_t jD = D2_pos_accessor[Point<1>(i)].lo;
-    int32_t pD2_end = D2_pos_accessor[Point<1>(i)].hi + 1;
+    int64_t iB = i;
+    int64_t iC = i;
+    int64_t iD = i;
+    int64_t iA = i;
+    int64_t jB = B2_pos_accessor[Point<1>(i)].lo;
+    int64_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
+    int64_t jC = C2_pos_accessor[Point<1>(i)].lo;
+    int64_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
+    int64_t jD = D2_pos_accessor[Point<1>(i)].lo;
+    int64_t pD2_end = D2_pos_accessor[Point<1>(i)].hi + 1;
 
     while ((jB < pB2_end && jC < pC2_end) && jD < pD2_end) {
-      int32_t jB0 = B2_crd_accessor[(jB * 1)];
-      int32_t jC0 = C2_crd_accessor[(jC * 1)];
-      int32_t jD0 = D2_crd_accessor[(jD * 1)];
-      int32_t j = TACO_MIN(jB0, TACO_MIN(jC0, jD0));
+      int64_t jB0 = B2_crd_accessor[(jB * 1)];
+      int64_t jC0 = C2_crd_accessor[(jC * 1)];
+      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t j = TACO_MIN(jB0, TACO_MIN(jC0, jD0));
       if ((jB0 == j && jC0 == j) && jD0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA2 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA2 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA2;
+        int64_t jA = pA2;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = (B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)]) + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j && jD0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA20 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA20 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA20;
+        int64_t jA = pA20;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jC0 == j && jD0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA21 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA21 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA21;
+        int64_t jA = pA21;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j && jC0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA22 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA22 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA22;
+        int64_t jA = pA22;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
       }
       else if (jB0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA23 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA23 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA23;
+        int64_t jA = pA23;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else if (jC0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA24 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA24 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA24;
+        int64_t jA = pA24;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
       }
       else {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA25 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA25 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA25;
+        int64_t jA = pA25;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
       }
-      jB = jB + (int32_t)(jB0 == j);
-      jC = jC + (int32_t)(jC0 == j);
-      jD = jD + (int32_t)(jD0 == j);
+      jB = jB + (int64_t)(jB0 == j);
+      jC = jC + (int64_t)(jC0 == j);
+      jD = jD + (int64_t)(jD0 == j);
     }
     while (jB < pB2_end && jD < pD2_end) {
-      int32_t jB0 = B2_crd_accessor[(jB * 1)];
-      int32_t jD0 = D2_crd_accessor[(jD * 1)];
-      int32_t j = TACO_MIN(jB0, jD0);
+      int64_t jB0 = B2_crd_accessor[(jB * 1)];
+      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t j = TACO_MIN(jB0, jD0);
       if (jB0 == j && jD0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA26 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA26 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA26;
+        int64_t jA = pA26;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA27 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA27 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA27;
+        int64_t jA = pA27;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA28 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA28 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA28;
+        int64_t jA = pA28;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
       }
-      jB = jB + (int32_t)(jB0 == j);
-      jD = jD + (int32_t)(jD0 == j);
+      jB = jB + (int64_t)(jB0 == j);
+      jD = jD + (int64_t)(jD0 == j);
     }
     while (jC < pC2_end && jD < pD2_end) {
-      int32_t jC0 = C2_crd_accessor[(jC * 1)];
-      int32_t jD0 = D2_crd_accessor[(jD * 1)];
-      int32_t j = TACO_MIN(jC0, jD0);
+      int64_t jC0 = C2_crd_accessor[(jC * 1)];
+      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t j = TACO_MIN(jC0, jD0);
       if (jC0 == j && jD0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA29 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA29 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA29;
+        int64_t jA = pA29;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jC0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA210 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA210 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA210;
+        int64_t jA = pA210;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
       }
       else {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA211 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA211 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA211;
+        int64_t jA = pA211;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
       }
-      jC = jC + (int32_t)(jC0 == j);
-      jD = jD + (int32_t)(jD0 == j);
+      jC = jC + (int64_t)(jC0 == j);
+      jD = jD + (int64_t)(jD0 == j);
     }
     while (jB < pB2_end && jC < pC2_end) {
-      int32_t jB0 = B2_crd_accessor[(jB * 1)];
-      int32_t jC0 = C2_crd_accessor[(jC * 1)];
-      int32_t j = TACO_MIN(jB0, jC0);
+      int64_t jB0 = B2_crd_accessor[(jB * 1)];
+      int64_t jC0 = C2_crd_accessor[(jC * 1)];
+      int64_t j = TACO_MIN(jB0, jC0);
       if (jB0 == j && jC0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA212 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA212 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA212;
+        int64_t jA = pA212;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
       }
       else if (jB0 == j) {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA213 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA213 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA213;
+        int64_t jA = pA213;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else {
-        int32_t iA = 0 * A1_dimension + i;
-        int32_t pA214 = A2_pos_accessor[Point<1>(i)].lo;
+        int64_t iA = 0 * A1_dimension + i;
+        int64_t pA214 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int32_t jA = pA214;
+        int64_t jA = pA214;
         A2_crd_accessor[jA * 1] = j;
         A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
       }
-      jB = jB + (int32_t)(jB0 == j);
-      jC = jC + (int32_t)(jC0 == j);
+      jB = jB + (int64_t)(jB0 == j);
+      jC = jC + (int64_t)(jC0 == j);
     }
     while (jB < pB2_end) {
-      int32_t j = B2_crd_accessor[(jB * 1)];
-      int32_t iA = 0 * A1_dimension + i;
-      int32_t pA215 = A2_pos_accessor[Point<1>(i)].lo;
+      int64_t j = B2_crd_accessor[(jB * 1)];
+      int64_t iA = 0 * A1_dimension + i;
+      int64_t pA215 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int32_t jA = pA215;
+      int64_t jA = pA215;
       A2_crd_accessor[jA * 1] = j;
       A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
       jB = jB + 1;
     }
     while (jC < pC2_end) {
-      int32_t j = C2_crd_accessor[(jC * 1)];
-      int32_t iA = 0 * A1_dimension + i;
-      int32_t pA216 = A2_pos_accessor[Point<1>(i)].lo;
+      int64_t j = C2_crd_accessor[(jC * 1)];
+      int64_t iA = 0 * A1_dimension + i;
+      int64_t pA216 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int32_t jA = pA216;
+      int64_t jA = pA216;
       A2_crd_accessor[jA * 1] = j;
       A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
       jC = jC + 1;
     }
     while (jD < pD2_end) {
-      int32_t j = D2_crd_accessor[(jD * 1)];
-      int32_t iA = 0 * A1_dimension + i;
-      int32_t pA217 = A2_pos_accessor[Point<1>(i)].lo;
+      int64_t j = D2_crd_accessor[(jD * 1)];
+      int64_t iA = 0 * A1_dimension + i;
+      int64_t pA217 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int32_t jA = pA217;
+      int64_t jA = pA217;
       A2_crd_accessor[jA * 1] = j;
       A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
       jD = jD + 1;
@@ -417,14 +417,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion A2_nnz_vals = regions[9];
   LogicalRegion A2_nnz_vals_parent = regions[9].get_logical_region();
 
-  int32_t qio = task->index_point[0];
+  int64_t qio = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t A1_dimension = args->A1_dimension;
+  int64_t A1_dimension = args->A1_dimension;
   IndexSpace A_dense_run_0 = args->A_dense_run_0;
-  int32_t B1_dimension = args->B1_dimension;
+  int64_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
 
-  auto A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint32_t1>(A2_nnz_vals, FID_VAL);
+  auto A2_nnz_vals_rw_accessor = createAccessor<AccessorRWint64_t1>(A2_nnz_vals, FID_VAL);
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto C2_pos_accessor = createAccessor<AccessorRORect_1_1>(C2_pos, FID_RECT_1);
   auto D2_pos_accessor = createAccessor<AccessorRORect_1_1>(D2_pos, FID_RECT_1);
@@ -437,8 +437,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   DomainT<1> D2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(D2_crd));
   int64_t pointID1 = qio;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int32_t qii = 0; qii < ((B1_dimension + (pieces - 1)) / pieces); qii++) {
-    int32_t qi = qio * ((B1_dimension + (pieces - 1)) / pieces) + qii;
+  for (int64_t qii = 0; qii < ((B1_dimension + (pieces - 1)) / pieces); qii++) {
+    int64_t qi = qio * ((B1_dimension + (pieces - 1)) / pieces) + qii;
     if (qi >= B1_dimension)
       continue;
 
@@ -446,107 +446,107 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + qii;
-    int32_t qiB = qi;
-    int32_t qiC = qi;
-    int32_t qiD = qi;
-    int32_t qjB = B2_pos_accessor[Point<1>(qi)].lo;
-    int32_t pB2_end = B2_pos_accessor[Point<1>(qi)].hi + 1;
-    int32_t qjC = C2_pos_accessor[Point<1>(qi)].lo;
-    int32_t pC2_end = C2_pos_accessor[Point<1>(qi)].hi + 1;
-    int32_t qjD = D2_pos_accessor[Point<1>(qi)].lo;
-    int32_t pD2_end = D2_pos_accessor[Point<1>(qi)].hi + 1;
+    int64_t qiB = qi;
+    int64_t qiC = qi;
+    int64_t qiD = qi;
+    int64_t qjB = B2_pos_accessor[Point<1>(qi)].lo;
+    int64_t pB2_end = B2_pos_accessor[Point<1>(qi)].hi + 1;
+    int64_t qjC = C2_pos_accessor[Point<1>(qi)].lo;
+    int64_t pC2_end = C2_pos_accessor[Point<1>(qi)].hi + 1;
+    int64_t qjD = D2_pos_accessor[Point<1>(qi)].lo;
+    int64_t pD2_end = D2_pos_accessor[Point<1>(qi)].hi + 1;
 
     while ((qjB < pB2_end && qjC < pC2_end) && qjD < pD2_end) {
-      int32_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int32_t qjC0 = C2_crd_accessor[(qjC * 1)];
-      int32_t qjD0 = D2_crd_accessor[(qjD * 1)];
-      int32_t qj = TACO_MIN(qjB0, TACO_MIN(qjC0, qjD0));
+      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
+      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
+      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qj = TACO_MIN(qjB0, TACO_MIN(qjC0, qjD0));
       if ((qjB0 == qj && qjC0 == qj) && qjD0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjB0 == qj && qjD0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjC0 == qj && qjD0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjB0 == qj && qjC0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjB0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjC0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
-      qjB = qjB + (int32_t)(qjB0 == qj);
-      qjC = qjC + (int32_t)(qjC0 == qj);
-      qjD = qjD + (int32_t)(qjD0 == qj);
+      qjB = qjB + (int64_t)(qjB0 == qj);
+      qjC = qjC + (int64_t)(qjC0 == qj);
+      qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjB < pB2_end && qjD < pD2_end) {
-      int32_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int32_t qjD0 = D2_crd_accessor[(qjD * 1)];
-      int32_t qj = TACO_MIN(qjB0, qjD0);
+      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
+      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qj = TACO_MIN(qjB0, qjD0);
       if (qjB0 == qj && qjD0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjB0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
-      qjB = qjB + (int32_t)(qjB0 == qj);
-      qjD = qjD + (int32_t)(qjD0 == qj);
+      qjB = qjB + (int64_t)(qjB0 == qj);
+      qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjC < pC2_end && qjD < pD2_end) {
-      int32_t qjC0 = C2_crd_accessor[(qjC * 1)];
-      int32_t qjD0 = D2_crd_accessor[(qjD * 1)];
-      int32_t qj = TACO_MIN(qjC0, qjD0);
+      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
+      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qj = TACO_MIN(qjC0, qjD0);
       if (qjC0 == qj && qjD0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjC0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
-      qjC = qjC + (int32_t)(qjC0 == qj);
-      qjD = qjD + (int32_t)(qjD0 == qj);
+      qjC = qjC + (int64_t)(qjC0 == qj);
+      qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjB < pB2_end && qjC < pC2_end) {
-      int32_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int32_t qjC0 = C2_crd_accessor[(qjC * 1)];
-      int32_t qj = TACO_MIN(qjB0, qjC0);
+      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
+      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
+      int64_t qj = TACO_MIN(qjB0, qjC0);
       if (qjB0 == qj && qjC0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else if (qjB0 == qj) {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
       else {
-        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+        A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       }
-      qjB = qjB + (int32_t)(qjB0 == qj);
-      qjC = qjC + (int32_t)(qjC0 == qj);
+      qjB = qjB + (int64_t)(qjB0 == qj);
+      qjC = qjC + (int64_t)(qjC0 == qj);
     }
     while (qjB < pB2_end) {
-      int32_t qj = B2_crd_accessor[(qjB * 1)];
-      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+      int64_t qj = B2_crd_accessor[(qjB * 1)];
+      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjB = qjB + 1;
     }
     while (qjC < pC2_end) {
-      int32_t qj = C2_crd_accessor[(qjC * 1)];
-      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+      int64_t qj = C2_crd_accessor[(qjC * 1)];
+      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjC = qjC + 1;
     }
     while (qjD < pD2_end) {
-      int32_t qj = D2_crd_accessor[(qjD * 1)];
-      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int32_t)1;
+      int64_t qj = D2_crd_accessor[(qjD * 1)];
+      A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjD = qjD + 1;
     }
   }
@@ -582,9 +582,9 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   int64_t D2Size = runtime->get_index_space_domain(ctx, get_index_space(D2_crd)).hi()[0] + 1;
 
   IndexSpace A2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((B1_dimension - 1))));
-  FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
+  FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
   A2_nnz_vals = runtime->create_logical_region(ctx, A2_nnzispace, A2_nnzfspace);
-  runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int32_t)0);
+  runtime->fill_field(ctx, A2_nnz_vals, A2_nnz_vals, FID_VAL, (int64_t)0);
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
@@ -593,7 +593,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto A2_nnzDomain = runtime->get_index_space_domain(ctx, A2_nnz_vals.get_index_space());
   DomainPointColoring A2_nnzColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t qio = (*itr)[0];
+    int64_t qio = (*itr)[0];
     Point<1> A2_nnzStart = Point<1>((qio * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> A2_nnzEnd = Point<1>(TACO_MIN((qio * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), A2_nnzDomain.hi()[0]));
     Rect<1> A2_nnzRect = Rect<1>(A2_nnzStart, A2_nnzEnd);
@@ -646,7 +646,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto ADomain = runtime->get_index_space_domain(ctx, A_dense_run_0);
   DomainPointColoring AColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr0 = PointInDomainIterator<1>(domain0); itr0.valid(); itr0++) {
-    int32_t io = (*itr0)[0];
+    int64_t io = (*itr0)[0];
     Point<1> AStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> AEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), ADomain.hi()[0]));
     Rect<1> ARect = Rect<1>(AStart, AEnd);

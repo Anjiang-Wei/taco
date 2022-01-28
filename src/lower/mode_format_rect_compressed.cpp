@@ -62,8 +62,8 @@ ModeFunction RectCompressedModeFormat::posIterBounds(std::vector<ir::Expr> paren
   // TODO (rohany): It seems like we might need to avoid just accessing the final element
   //  in the region if that isn't part of our partition.
   auto posRegAcc = this->getAccessor(pack, POS);
-  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(posRegAcc, accessPoint), "lo", false, Int64);
-  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posRegAcc, accessPoint), "hi", false, Int64), 1);
+  ir::Expr pBegin = ir::FieldAccess::make(ir::Load::make(posRegAcc, accessPoint), "lo", false, Int());
+  ir::Expr pEnd = ir::Add::make(ir::FieldAccess::make(ir::Load::make(posRegAcc, accessPoint), "hi", false, Int()), 1);
   return ModeFunction(ir::Stmt(), {pBegin, pEnd});
 }
 
@@ -120,7 +120,7 @@ ModeFunction RectCompressedModeFormat::getYieldPos(ir::Expr parentPos, std::vect
   }
   auto posAcc = this->getAccessor(mode.getModePack(), POS, ir::RW);
   auto point = this->packToPoint(pointArgs);
-  auto lo = ir::FieldAccess::make(ir::Load::make(posAcc, point), "lo", false /* deref */, Int64);
+  auto lo = ir::FieldAccess::make(ir::Load::make(posAcc, point), "lo", false /* deref */, Int());
   auto pVar = ir::Var::make("p" + mode.getName(), Int());
   auto getPtr = ir::VarDecl::make(pVar, lo);
   auto incPtr = ir::Assign::make(lo, ir::Add::make(lo, 1));
@@ -286,8 +286,8 @@ ir::Stmt RectCompressedModeFormat::getAppendEdges(std::vector<ir::Expr> parentPo
   auto parentPos = this->packToPoint(parentPositions);
   auto posArray = this->getAccessor(mode.getModePack(), POS, ir::RW);
   ModeFormat parentModeType = mode.getParentModeType();
-  auto lo = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "lo", false /* deref */, Int64);
-  auto hi = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "hi", false /* deref */, Int64);
+  auto lo = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "lo", false /* deref */, Int());
+  auto hi = ir::FieldAccess::make(ir::Load::make(posArray, parentPos), "hi", false /* deref */, Int());
 
   // We need to keep around the code that performs a scan over empty cells for
   // position splits -- without the intermediate rectangles filled, we cannot
@@ -318,10 +318,10 @@ ir::Stmt RectCompressedModeFormat::declareModeVariables(Mode& mode) const {
 
   auto sizeVarName = this->getModeSizeVarName(mode);
   if (!mode.hasVar(sizeVarName)) {
-    auto var = ir::Var::make(sizeVarName, Int64);
+    auto var = ir::Var::make(sizeVarName, Int());
     mode.addVar(sizeVarName, var);
     auto call = ir::Call::make("runtime->get_index_space_domain", {ir::ctx, ir::getIndexSpace(this->getRegion(mode.getModePack(), CRD))}, Auto);
-    auto hi = ir::MethodCall::make(call, "hi", {}, false /* deref */, Int64);
+    auto hi = ir::MethodCall::make(call, "hi", {}, false /* deref */, Int());
     auto size = ir::Add::make(ir::Load::make(hi, 0), 1);
     results.push_back(ir::VarDecl::make(var, size));
   }
@@ -374,7 +374,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
                             to<ir::Literal>(szPrev)->equalsScalar(0);
 
   auto pack = mode.getModePack();
-  ir::Expr defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32);
+  ir::Expr defaultCapacity = ir::Literal::make(allocSize, Int());
   auto posArray = this->getRegion(pack, POS);
   auto posParent = this->getRegion(pack, POS_PARENT);
   ir::Expr initCapacity = szPrevIsZero ? defaultCapacity : szPrev;
