@@ -16,7 +16,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   bool dump = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
-  int n = 10, pieces = 0, warmup = 5, jDim = 128;
+  int n = 10, pieces = 0, warmup = 5, jDim = 32;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
   parser.add_option_bool("-dump", dump);
