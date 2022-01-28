@@ -533,7 +533,10 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto C2_crd_accessor = createAccessor<AccessorROint32_t1>(C2_crd, FID_COORD);
   auto D2_crd_accessor = createAccessor<AccessorROint32_t1>(D2_crd, FID_COORD);
 
-  if ((((B1_dimension + (pieces - 1)) / pieces + 255) / 256) > 0) {
+  DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
+  DomainT<1> C2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C2_crd));
+  DomainT<1> D2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(D2_crd));
+  if (((((B1_dimension + (pieces - 1)) / pieces + 255) / 256)) > 0) {
     task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), 256>>>(B2_pos_accessor, C2_pos_accessor, D2_pos_accessor, B2_crd_accessor, C2_crd_accessor, D2_crd_accessor, A2_nnz_vals_rw_accessor, A_dense_run_0, B1_dimension, pieces, qio);
   }
 }

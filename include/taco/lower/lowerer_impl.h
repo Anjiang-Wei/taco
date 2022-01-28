@@ -375,7 +375,7 @@ protected:
   ir::Stmt codeToIncIteratorVars(ir::Expr coordinate, IndexVar coordinateVar,
           std::vector<Iterator> iterators, std::vector<Iterator> mergers);
 
-  ir::Stmt codeToLoadCoordinatesFromPosIterators(std::vector<Iterator> iterators, bool declVars);
+  ir::Stmt codeToLoadCoordinatesFromPosIterators(std::vector<Iterator> iterators, bool declVars, bool boundsChecks = false);
 
   /// Create statements to append coordinate to result modes.
   ir::Stmt appendCoordinate(std::vector<Iterator> appenders, ir::Expr coord);
@@ -440,7 +440,9 @@ protected:
   // Helper methods for lowering Legion code.
 
   // declareLaunchDomain declares the index space domain for a distributed task launch.
-  std::vector<ir::Stmt> declareLaunchDomain(ir::Expr domain, Forall forall, const std::vector<IndexVar>& distVars);
+  // It returns the statements to assign a result to domain, and also returns the color
+  // space itself.
+  ModeFunction declareLaunchDomain(ir::Expr domain, Forall forall, const std::vector<IndexVar>& distVars);
 
   // statementAccessesRegion returns true if an ir statement reads or writes
   // a region component of a tensor. The input expression target must be a
@@ -472,6 +474,7 @@ protected:
   std::vector<ir::Stmt> createIndexPartitions(
       Forall forall,
       ir::Expr domain,
+      ir::Expr colorSpace,
       std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
       std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
       std::set<TensorVar> fullyReplicatedTensors,
@@ -675,6 +678,16 @@ private:
   std::map<IndexVar, std::shared_ptr<LeafCallInterface>> calls;
 
   bool waitOnFutureMap;
+
+  // rcmfCrdDomains contains variables that hold the domains of RectCompressedModeFormat's
+  // that are needed to sometimes override the position bounds computed by modes.
+  std::map<TensorVar, std::map<int, ir::Expr>> rcmfCrdDomains;
+  // getOverridenPosBounds returns bounds on the position variable
+  // in cases where the real position bounds may be tighter than the
+  // bounds returned by the posIterator. This can happen when a merger
+  // loop is strip mined and distributed. If the pos bounds are not
+  // overridden, then an empty vector is returned.
+  std::vector<ir::Expr> getOveriddenPosBounds(Iterator it);
 
   // setPlacementPrivilege controls whether or not the generated placement code
   // has a parameter to control the privilege to launch placement tasks with.

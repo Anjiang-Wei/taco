@@ -432,6 +432,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto C2_crd_accessor = createAccessor<AccessorROint32_t1>(C2_crd, FID_COORD);
   auto D2_crd_accessor = createAccessor<AccessorROint32_t1>(D2_crd, FID_COORD);
 
+  DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
+  DomainT<1> C2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C2_crd));
+  DomainT<1> D2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(D2_crd));
   int64_t pointID1 = qio;
   #pragma omp parallel for schedule(dynamic, 1024)
   for (int32_t qii = 0; qii < ((B1_dimension + (pieces - 1)) / pieces); qii++) {

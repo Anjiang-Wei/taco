@@ -371,6 +371,102 @@ void RectCompressedPosPartitionDownwards::registerTasks() {
 #endif
 }
 
+Legion::LogicalPartition RectCompressedCoordinatePartition::apply(Legion::Context ctx, Legion::Runtime *runtime,
+                                                                  Legion::LogicalRegion region,
+                                                                  Legion::LogicalRegion parent, Legion::FieldID fid,
+                                                                  Legion::DomainPointColoring buckets,
+                                                                  Legion::IndexSpace colorSpace, Legion::Color color) {
+  taco_iassert(colorSpace.get_dim() == 1);
+  taco_iassert(region.get_index_space().get_dim() == 1);
+  auto colorSpaceDomain = runtime->get_index_space_domain(ctx, colorSpace);
+  taco_iassert(colorSpaceDomain.lo()[0] == 0 && colorSpaceDomain.hi()[0] == coord_t(colorSpaceDomain.get_volume() - 1));
+
+  // Create a temporary region to use as the target for a partition_by_field operation.
+  auto fspace = runtime->create_field_space(ctx);
+  {
+    auto falloc = runtime->create_field_allocator(ctx, fspace);
+    falloc.allocate_field(sizeof(Point<1>), FID_POINT_1);
+  }
+  auto tempReg = runtime->create_logical_region(ctx, region.get_index_space(), fspace);
+
+  // Create an equal partition of the input region and temporary region to perform the
+  // bucketing operation on.
+  auto ipart = runtime->create_equal_partition(ctx, region.get_index_space(), colorSpace);
+  auto regLpart = runtime->get_logical_partition(ctx, region, ipart);
+  auto tempLpart = runtime->get_logical_partition(ctx, tempReg, ipart);
+
+  Serializer ser;
+  ser.serialize(fid);
+  ser.serialize(colorSpace);
+  // Serialize the buckets into arguments for the tasks.
+  for (PointInDomainIterator<1> itr(colorSpaceDomain); itr(); itr++) {
+    ser.serialize(Rect<1>(buckets[*itr]));
+  }
+
+  IndexTaskLauncher launcher(RectCompressedCoordinatePartition::taskID, colorSpaceDomain,
+                             TaskArgument(ser.get_buffer(), ser.get_used_bytes()), ArgumentMap());
+  launcher.add_region_requirement(RegionRequirement(regLpart, 0, READ_ONLY, EXCLUSIVE, parent).add_field(fid));
+  launcher.add_region_requirement(RegionRequirement(tempLpart, 0, WRITE_ONLY, EXCLUSIVE, tempReg).add_field(FID_POINT_1));
+  runtime->execute_index_space(ctx, launcher);
+
+  // Perform the partition op.
+  auto result = runtime->create_partition_by_field(ctx, tempReg, tempReg, FID_POINT_1, colorSpace, color);
+
+  // Clean up after ourselves.
+  runtime->destroy_logical_region(ctx, tempReg);
+  runtime->destroy_field_space(ctx, fspace);
+
+  return runtime->get_logical_partition(ctx, parent, result);
+}
+
+const int RectCompressedCoordinatePartition::taskID = TID_RECT_COMPRESSED_COORDINATE_PARTITION;
+void RectCompressedCoordinatePartition::task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime) {
+  FieldID fid;
+  IndexSpace colorSpace;
+  std::vector<Rect<1>> buckets;
+  Deserializer derez(task->args, task->arglen);
+  derez.deserialize(fid);
+  derez.deserialize(colorSpace);
+  for (PointInDomainIterator<1> itr(runtime->get_index_space_domain(ctx, colorSpace)); itr(); itr++) {
+    Rect<1> bucket;
+    derez.deserialize(bucket);
+    buckets.push_back(bucket);
+  }
+
+  // TODO (rohany): This assumes that coordinates are int32_t's.
+  Accessor<int32_t, READ_ONLY> input(regions[0], fid);
+  Accessor<Point<1>, WRITE_ONLY> output(regions[1], FID_POINT_1);
+
+  auto domain = runtime->get_index_space_domain(ctx, regions[0].get_logical_region().get_index_space());
+  #pragma omp parallel for schedule(static)
+  for (coord_t i = domain.lo()[0]; i <= domain.hi()[0]; i++) {
+    bool found = false;
+    for (size_t j = 0; j < buckets.size(); j++) {
+      if (buckets[j].contains(input[i])) {
+        output[i] = j;
+        found = true;
+        break;
+      }
+    }
+    taco_iassert(found);
+  }
+}
+
+void RectCompressedCoordinatePartition::registerTasks() {
+  {
+    TaskVariantRegistrar registrar(RectCompressedCoordinatePartition::taskID, "rectCompressedCoordinatePartition");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<RectCompressedCoordinatePartition::task>(registrar, "rectCompressedCoordinatePartition");
+  }
+  {
+    TaskVariantRegistrar registrar(RectCompressedCoordinatePartition::taskID, "rectCompressedCoordinatePartition");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<RectCompressedCoordinatePartition::task>(registrar, "rectCompressedCoordinatePartition");
+  }
+}
+
 SparseGatherProjection::SparseGatherProjection(int mapTo) : mapTo(mapTo) {}
 
 Legion::IndexPartition SparseGatherProjection::apply(Legion::Context ctx, Legion::Runtime *runtime,
@@ -474,11 +570,13 @@ void SparseGatherProjection::registerTasks() {
   {
     TaskVariantRegistrar registrar(SparseGatherProjection::taskID, "sparseGatherWrite");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<SparseGatherProjection::task>(registrar, "sparseGatherWrite");
   }
   {
     TaskVariantRegistrar registrar(SparseGatherProjection::taskID, "sparseGatherWrite");
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
     Runtime::preregister_task_variant<SparseGatherProjection::task>(registrar, "sparseGatherWrite");
   }
 }
@@ -967,6 +1065,7 @@ void RectCompressedGetSeqInsertEdges::registerTasks() {
 
 void registerTacoRuntimeLibTasks() {
   SparseGatherProjection::registerTasks();
+  RectCompressedCoordinatePartition::registerTasks();
   RectCompressedFinalizeYieldPositions::registerTasks();
   RectCompressedGetSeqInsertEdges::registerTasks();
   RectCompressedPosPartitionDownwards::registerTasks();

@@ -298,6 +298,11 @@ public:
   // for now, the Lowerer handles these cases explicitly, but in a different implementation
   // this indirection could be used.
 
+  // getCreatePartitionWithCoordinateColoring is a mode function that abstracts how
+  // to partition a mode given a coloring of the coordinates in a mode. It is the
+  // dual of getCreatePartitionWithPosColoring.
+  virtual ModeFunction getCreatePartitionWithCoordinateColoring(Mode mode, ir::Expr colorSpace, ir::Expr coloring, ir::Expr partitionColor) const;
+
   // The idea here is that given an IndexPartition of an object, the resulting
   // ModeFunction computes a partition of each array in the mode, and returns
   // the partition to use to partition the lower levels of the tree.

@@ -267,3 +267,45 @@ TEST_F(DISTALRuntime, RectCompressedGetSeqInsertEdges) {
   runtime->destroy_field_space(ctx, rectfspace);
   runtime->destroy_field_space(ctx, i32fspace);
 }
+
+TEST_F(DISTALRuntime, RectCompressedCoordinatePartition) {
+  auto pieces = 4;
+  auto colorSpace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
+  auto i32fspace = createFieldSpaceWithSize(ctx, runtime, FID_COORD, sizeof(int32_t));
+  auto n = 10;
+  auto ispace = runtime->create_index_space(ctx, Rect<1>{0, n - 1});
+  auto reg = runtime->create_logical_region(ctx, ispace, i32fspace);
+  {
+    auto preg = legionMalloc(ctx, runtime, reg, reg, FID_COORD, WRITE_ONLY);
+    Accessor<int32_t, 1, WRITE_ONLY> acc(preg, FID_COORD);
+    acc[0] = 0;
+    acc[1] = 1;
+    acc[2] = 2;
+    acc[3] = 5;
+    acc[4] = 8;
+    acc[5] = 10;
+    acc[6] = 15;
+    acc[7] = 16;
+    acc[8] = 20;
+    acc[9] = 21;
+    runtime->unmap_region(ctx, preg);
+  }
+  DomainPointColoring coloring;
+  coloring[0] = Rect<1>(0, 5);
+  coloring[1] = Rect<1>(6, 11);
+  coloring[2] = Rect<1>(12, 17);
+  coloring[3] = Rect<1>(18, 23);
+
+  auto result = RectCompressedCoordinatePartition::apply(ctx, runtime, reg, reg, FID_COORD, coloring, colorSpace).get_index_partition();
+  std::vector<Rect<1>> expected = {
+      {0, 3},
+      {4, 5},
+      {6, 7},
+      {8, 9},
+  };
+  for (int i = 0; i < pieces; i++) {
+    auto subspace = runtime->get_index_subspace(ctx, result, i);
+    auto bounds = runtime->get_index_space_domain(ctx, subspace).bounds<1, Legion::coord_t>();
+    EXPECT_EQ(expected[i], bounds);
+  }
+}

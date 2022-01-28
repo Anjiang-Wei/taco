@@ -2090,7 +2090,9 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     }
 
     // Declare the launch domain for the current task launch.
-    util::append(transfers, this->declareLaunchDomain(domain, forall, distIvars));
+    auto declLaunchDomain = this->declareLaunchDomain(domain, forall, distIvars);
+    auto colorSpace = declLaunchDomain[0];
+    transfers.push_back(declLaunchDomain.compute());
 
     // Figure out what tensors are being partitioned at this loop. We collect the statements
     // in a separate vector because depending on the lowering kind we may or may not want to
@@ -2395,18 +2397,32 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       }
     } else {
       // If we aren't in a pos split, then we'll construct partitions in a standard top-down manner.
+      auto defaultIspace = ir::Var::make("coordDomain", IndexSpace);
+      bool constructedDefaultIspace = false;
       for (auto& t : forall.getTransfers()) {
         auto tv = t.getAccess().getTensorVar();
         auto domain = ir::Var::make(tv.getName() + "Domain", Auto);
+        auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
         ir::Expr ispace;
         // If the TensorVar being transferred is a query result, it won't have
         // an dense run to operate on.
         if (util::contains(this->assembleQueryResults, tv)) {
           auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
           ispace = ir::MethodCall::make(vals, "get_index_space", {}, false /* deref */, Auto);
-        } else {
+        } else if (!runs.runs.empty()) {
           // TODO (rohany): We'll assume for now that we want just the domains for the first level dense index space run.
           ispace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+        } else {
+          // If we don't have any dense level runs, we'll use the default domain, and initialize it as well.
+          ispace = defaultIspace;
+          if (!constructedDefaultIspace) {
+            taco_iassert(distIvars.size() == 1);
+            auto underiveds = this->provGraph.getUnderivedAncestors(distIvars[0]);
+            taco_iassert(underiveds.size() == 1);
+            auto coordBounds = this->underivedBounds[underiveds[0]];
+            partitioningStmts.push_back(ir::VarDecl::make(defaultIspace, ir::Call::make("runtime->create_index_space", {ctx, ir::makeConstructor(Rect(1), coordBounds)}, Auto)));
+            constructedDefaultIspace = true;
+          }
         }
         partitioningStmts.push_back(ir::VarDecl::make(domain, ir::Call::make("runtime->get_index_space_domain", {ctx, ispace}, Auto)));
         domains[t.getAccess().getTensorVar()] = domain;
@@ -2451,7 +2467,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
       // Create IndexPartition objects from each of the colorings created.
       util::append(partitioningStmts,
-                   this->createIndexPartitions(forall, domain,tensorLogicalPartitions,
+                   this->createIndexPartitions(forall, domain, colorSpace, tensorLogicalPartitions,
                                                tensorDenseRunPartitions, fullyReplicatedTensors, colorings, distIvars));
 
       // After we've created all of the partitions in the query phase, remember those
@@ -2551,7 +2567,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         // Create IndexPartition objects from each of the colorings created.
         for (auto tv : tensorsToPartition) {
           util::append(extraPartitioningStmts,
-                       this->createIndexPartitions(forall, domain, tensorLogicalPartitions,
+                       this->createIndexPartitions(forall, domain, colorSpace, tensorLogicalPartitions,
                                                    tensorDenseRunPartitions, fullyReplicatedTensors, colorings,
                                                    distIvars, tv));
         }
@@ -3158,6 +3174,27 @@ Stmt LowererImpl::lowerMergeLattice(MergeLattice lattice, IndexVar coordinateVar
                                       [](Iterator it){return it.hasAppend();});
 
   vector<Iterator> mergers = lattice.points()[0].mergers();
+
+  // Initialize the domains for all RectCompressedModeFormat crd regions. The merge
+  // lattice generated code may use these variables.
+  for (auto it : lattice.iterators()) {
+    if (it.getMode().defined() && it.getMode().getModeFormat().is<RectCompressedModeFormat>()) {
+      auto pack = it.getMode().getModePack();
+      auto rcmf = it.getMode().getModeFormat().as<RectCompressedModeFormat>();
+      auto crdReg = rcmf->getRegion(pack, RectCompressedModeFormat::CRD);
+      auto getDomain = ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(crdReg)}, Auto);
+      auto domain = ir::Var::make(it.getMode().getName() + "_crd_domain", Domain(1));
+      auto tv = this->exprToTensorVar[it.getTensor()];
+      auto level = it.getMode().getLevel();
+      auto key = std::make_pair(tv, level);
+      // Only emit the domain initialization once.
+      if (!this->rcmfCrdDomains[tv][level].defined()) {
+        this->taskHeader.push_back(ir::VarDecl::make(domain, getDomain));
+        this->rcmfCrdDomains[tv][level] = domain;
+      }
+    }
+  }
+
   Stmt iteratorVarInits = codeToInitializeIteratorVars(lattice.iterators(), lattice.points()[0].rangers(), mergers, coordinate, coordinateVar);
 
   // if modeiteratornonmerger then will be declared in codeToInitializeIteratorVars
@@ -4950,8 +4987,33 @@ Stmt LowererImpl::codeToInitializeIteratorVar(Iterator iterator, vector<Iterator
     auto parentPos = parentPositions.back();
     if (iterator.getParent().isRoot() || iterator.getParent().isUnique()) {
       // E.g. a compressed mode without duplicates
-      ModeFunction bounds = iterator.posBounds(parentPositions);
-      result.push_back(bounds.compute());
+      ModeFunction posBounds = iterator.posBounds(parentPositions);
+      result.push_back(posBounds.compute());
+      std::vector<ir::Expr> bounds = {posBounds[0], posBounds[1]};
+
+      // If this level is a RectCompressedModeFormat, then there is some extra
+      // book keeping that we might have to do.
+      ir::Expr array;
+      auto pack = iterator.getMode().getModePack();
+      bool guardBinarySearch = false;
+      if (iterator.getMode().getModeFormat().is<RectCompressedModeFormat>()) {
+        // First, we'll need to modify the arguments we pass into the binary
+        // search to use the accessor and to maybe add a guard around the
+        // binary search.
+        auto rcmf = iterator.getMode().getModeFormat().as<RectCompressedModeFormat>();
+        array = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO);
+        guardBinarySearch = true;
+        // Next, it's possible that we may have stricter bounds on what indices
+        // can be accessed than described by the pos bounds. If we do, update the
+        // pos bounds to reflect this.
+        auto overrides = this->getOveriddenPosBounds(iterator);
+        if (!overrides.empty()) {
+          bounds = overrides;
+        }
+      } else {
+        array = pack.getArray(1);
+      }
+
       // if has a coordinate ranger then need to binary search
       if (any(rangers,
               [](Iterator it){ return it.isDimensionIterator(); })) {
@@ -4966,13 +5028,29 @@ Stmt LowererImpl::codeToInitializeIteratorVar(Iterator iterator, vector<Iterator
           result.push_back(VarDecl::make(iterator.getBeginVar(), binarySearchTarget));
 
           vector<Expr> binarySearchArgs = {
-                  iterator.getMode().getModePack().getArray(1), // array
-                  bounds[0], // arrayStart
-                  bounds[1], // arrayEnd
-                  iterator.getBeginVar() // target
+            array,
+            bounds[0], // arrayStart
+            bounds[1], // arrayEnd
+            iterator.getBeginVar() // target
           };
-          result.push_back(
-                  VarDecl::make(iterVar, Call::make("taco_binarySearchAfter", binarySearchArgs, iterVar.type())));
+          // We might need to guard the binary search to avoid accessing an empty region.
+          if (guardBinarySearch) {
+            // Here, we have to guard the binary search in case the current task does
+            // not have any coordinates assigned to it. We'll initially declare the
+            // result variable, and then set it equal to our upper bound if the
+            // coordinate domain is empty.
+            result.push_back(VarDecl::make(iterVar, 0));
+            auto domain = this->rcmfCrdDomains[this->exprToTensorVar[iterator.getTensor()]][iterator.getMode().getLevel()];
+            auto upper = ir::Add::make(1, ir::FieldAccess::make(domain, "bounds.hi", false /* deref */, Int64));
+            result.push_back(ir::IfThenElse::make(
+              ir::MethodCall::make(domain, "empty", {}, false /* deref */, Bool),
+              ir::Block::make(ir::Assign::make(iterVar, upper)),
+              ir::Assign::make(iterVar, Call::make("taco_binarySearchAfter", binarySearchArgs, iterVar.type())))
+            );
+          } else {
+            result.push_back(
+                VarDecl::make(iterVar, Call::make("taco_binarySearchAfter", binarySearchArgs, iterVar.type())));
+          }
         }
         else {
           result.push_back(VarDecl::make(iterVar, bounds[0]));
@@ -5024,21 +5102,24 @@ Stmt LowererImpl::codeToInitializeIteratorVar(Iterator iterator, vector<Iterator
       result.push_back(VarDecl::make(coord, 0));
     }
     else {
-      result.push_back(codeToLoadCoordinatesFromPosIterators(iterators, true));
+      result.push_back(codeToLoadCoordinatesFromPosIterators(iterators, true, true /* boundsChecks */));
 
       Stmt stmt = resolveCoordinate(mergers, coordinate, true);
       taco_iassert(stmt != Stmt());
       result.push_back(stmt);
       result.push_back(codeToRecoverDerivedIndexVar(coordinateVar, iterator.getIndexVar(), true));
 
+      // TODO (rohany): This appears to be dead code that is unused if the below TODO
+      //  is commented out. We can re-enable it and implement coord bounds for LgSparse
+      //  modes if needed when the time comes.
       // emit bound for ranger too
-      vector<Expr> startBounds;
-      vector<Expr> endBounds;
-      for (Iterator merger : mergers) {
-        ModeFunction coordBounds = merger.coordBounds(merger.getParent().getPosVar());
-        startBounds.push_back(coordBounds[0]);
-        endBounds.push_back(coordBounds[1]);
-      }
+      // vector<Expr> startBounds;
+      // vector<Expr> endBounds;
+      // for (Iterator merger : mergers) {
+      //   ModeFunction coordBounds = merger.coordBounds(merger.getParent().getPosVar());
+      //   startBounds.push_back(coordBounds[0]);
+      //   endBounds.push_back(coordBounds[1]);
+      // }
       //TODO: maybe needed after split reorder? underivedBounds[coordinateVar] = {ir::Max::make(startBounds), ir::Min::make(endBounds)};
       Stmt end_decl = VarDecl::make(iterator.getEndVar(), provGraph.deriveIterBounds(iterator.getIndexVar(), definedIndexVarsOrdered, underivedBounds, indexVarToExprMap, this->iterators)[1]);
       result.push_back(end_decl);
@@ -5071,7 +5152,7 @@ Stmt LowererImpl::codeToRecoverDerivedIndexVar(IndexVar underived, IndexVar inde
     vector<Stmt> recoverySteps;
     for (const IndexVar& varToRecover : provGraph.derivationPath(underived, indexVar)) {
       if(varToRecover == underived) continue;
-      recoverySteps.push_back(provGraph.recoverChild(varToRecover, indexVarToExprMap, emitVarDecl, iterators));
+      recoverySteps.push_back(provGraph.recoverChild(varToRecover, this->definedIndexVarsOrdered, this->underivedBounds, indexVarToExprMap, this->iterators, emitVarDecl));
     }
     return Block::make(recoverySteps);
   }
@@ -5125,7 +5206,10 @@ Stmt LowererImpl::codeToIncIteratorVars(Expr coordinate, IndexVar coordinateVar,
       result.push_back(compoundAssign(ivar, 1));
     }
     else {
-      result.push_back(codeToLoadCoordinatesFromPosIterators(iterators, false));
+      // Here we ask the load operation to add bounds checks for us. This is because
+      // after incrementing the iterator variables our next accesses from the pos
+      // iterators could lead to out of bounds accesses.
+      result.push_back(codeToLoadCoordinatesFromPosIterators(iterators, false, true /* boundsChecks */));
       Stmt stmt = resolveCoordinate(mergers, coordinate, false);
       taco_iassert(stmt != Stmt());
       result.push_back(stmt);
@@ -5136,7 +5220,7 @@ Stmt LowererImpl::codeToIncIteratorVars(Expr coordinate, IndexVar coordinateVar,
   return Block::make(result);
 }
 
-Stmt LowererImpl::codeToLoadCoordinatesFromPosIterators(vector<Iterator> iterators, bool declVars) {
+Stmt LowererImpl::codeToLoadCoordinatesFromPosIterators(vector<Iterator> iterators, bool declVars, bool boundsChecks) {
   // Load coordinates from position iterators
   Stmt loadPosIterCoordinates;
   if (iterators.size() > 1) {
@@ -5147,6 +5231,7 @@ Stmt LowererImpl::codeToLoadCoordinatesFromPosIterators(vector<Iterator> iterato
       ModeFunction posAccess = posIter.posAccess(posIter.getPosVar(),
                                                  coordinates(posIter));
       loadPosIterCoordinateStmts.push_back(posAccess.compute());
+      bool isRCMF = posIter.getMode().defined() && posIter.getMode().getModeFormat().is<RectCompressedModeFormat>();
       auto access = posAccess[0];
       // If this iterator is windowed, then it needs to be projected down to
       // recover the coordinate variable.
@@ -5171,10 +5256,32 @@ Stmt LowererImpl::codeToLoadCoordinatesFromPosIterators(vector<Iterator> iterato
         access = this->projectWindowedPositionToCanonicalSpace(posIter, access);
       }
       if (declVars) {
-        loadPosIterCoordinateStmts.push_back(VarDecl::make(posIter.getCoordVar(), access));
+        // We may have been asked to add bounds checks around the position variable
+        // load operations. If so, just check that the accessed index is contained
+        // within the iteration bounds we have for this level.
+        if (isRCMF && boundsChecks) {
+          auto bounds = this->rcmfCrdDomains[this->exprToTensorVar[posIter.getTensor()]][posIter.getMode().getLevel()];
+          loadPosIterCoordinateStmts.push_back(VarDecl::make(posIter.getCoordVar(), 0));
+          loadPosIterCoordinateStmts.push_back(ir::IfThenElse::make(
+            ir::MethodCall::make(bounds, "contains", {posIter.getPosVar()}, false /* deref */, Bool),
+            ir::Block::make(ir::Assign::make(posIter.getCoordVar(), access)),
+            ir::Assign::make(posIter.getCoordVar(), this->underivedBounds[posIter.getIndexVar()][1])
+          ));
+        } else {
+          loadPosIterCoordinateStmts.push_back(VarDecl::make(posIter.getCoordVar(), access));
+        }
       }
       else {
-        loadPosIterCoordinateStmts.push_back(Assign::make(posIter.getCoordVar(), access));
+        if (isRCMF && boundsChecks) {
+          auto bounds = this->rcmfCrdDomains[this->exprToTensorVar[posIter.getTensor()]][posIter.getMode().getLevel()];
+          loadPosIterCoordinateStmts.push_back(ir::IfThenElse::make(
+              ir::MethodCall::make(bounds, "contains", {posIter.getPosVar()}, false /* deref */, Bool),
+              ir::Block::make(ir::Assign::make(posIter.getCoordVar(), access)),
+              ir::Assign::make(posIter.getCoordVar(), this->underivedBounds[posIter.getIndexVar()][1])
+          ));
+        } else {
+          loadPosIterCoordinateStmts.push_back(Assign::make(posIter.getCoordVar(), access));
+        }
       }
       if (posIter.isWindowed()) {
         loadPosIterCoordinateStmts.push_back(this->upperBoundGuardForWindowPosition(posIter, posIter.getCoordVar()));
@@ -5542,20 +5649,22 @@ bool LowererImpl::anyParentInSet(IndexVar var, std::set<IndexVar>& s) {
   return false;
 }
 
-std::vector<ir::Stmt> LowererImpl::declareLaunchDomain(ir::Expr domain, Forall forall, const std::vector<IndexVar>& distVars) {
+ModeFunction LowererImpl::declareLaunchDomain(ir::Expr domain, Forall forall, const std::vector<IndexVar>& distVars) {
   std::vector<ir::Stmt> result;
   auto dim = distVars.size();
   auto pointT = Point(dim);
   auto indexSpaceT = IndexSpaceT(dim);
   auto rectT = Rect(dim);
+  auto varIspace = ir::Var::make(forall.getIndexVar().getName() + "IndexSpace", Auto);
   // If we're computing on a tensor, then use the domain of the partition as the
   // launch domain for the task launch.
   if (!forall.getComputingOn().empty()) {
     auto getDomain = ir::Call::make("runtime->get_index_partition_color_space", {ctx, ir::Call::make("get_index_partition", {this->computingOnPartition[*forall.getComputingOn().begin()]}, Auto)}, Auto);
+    auto getIspaceName = ir::Call::make("runtime->get_index_partition_color_space_name", {ctx, ir::Call::make("get_index_partition", {this->computingOnPartition[*forall.getComputingOn().begin()]}, Auto)}, Auto);
     result.push_back(ir::VarDecl::make(domain, getDomain));
+    result.push_back(ir::VarDecl::make(varIspace, getIspaceName));
   } else {
     // Otherwise, construct the launch domain from the distribution variables.
-    auto varIspace = ir::Var::make(forall.getIndexVar().getName() + "IndexSpace", Auto);
     auto lowerBound = ir::Var::make("lowerBound", pointT);
     auto upperBound = ir::Var::make("upperBound", pointT);
     std::vector<ir::Expr> lowerBoundExprs;
@@ -5595,7 +5704,7 @@ std::vector<ir::Stmt> LowererImpl::declareLaunchDomain(ir::Expr domain, Forall f
     );
     result.push_back(ir::VarDecl::make(domain, makeDomain));
   }
-  return result;
+  return ModeFunction(ir::Block::make(result), {varIspace});
 }
 
 bool LowererImpl::statementAccessesRegion(ir::Stmt stmt, ir::Expr target) {
@@ -5743,19 +5852,30 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
     //  partitioning a run that nested in other tensors.
 
     auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
-    taco_iassert(runs.runs.size() > 0);
-    // Assume that we're partitioning the first run.
-    auto run = runs.runs[0];
-    // TODO (rohany): Rename these variables later.
-    // The point we're making matches the dimensionality of the run.
-    auto tensorDim = run.modes.size();
-    auto txPoint = Point(tensorDim);
-    auto txRect = Rect(tensorDim);
+
+    // Depending on whether we have any dense runs will let us select how
+    // to create colorings of the coordinate space.
+    int pointDim = 0;
+    std::vector<int> modes;
+    if (runs.runs.empty()) {
+      pointDim = 1;
+      modes = {0};
+    } else {
+      // Assume that we're partitioning the first run.
+      auto run = runs.runs[0];
+      pointDim = run.modes.size();
+      modes = run.modes;
+    }
+
+    // The colorings and points we are making correspond to the dimensionality
+    // of the region (not tensor) that we are partitioning.
+    auto txPoint = Point(pointDim);
+    auto txRect = Rect(pointDim);
     // We need to only partition the modes that are part of the run.
     auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
     auto tbounds = this->derivedBounds[forall.getIndexVar()][tv];
     std::vector<Expr> los, his;
-    for (auto modeIdx : run.modes) {
+    for (auto modeIdx : modes) {
       los.push_back(tbounds[modeIdx][0]);
       auto partUpper = ir::Load::make(ir::MethodCall::make(domains[tv], "hi", {}, false, Int64), int(modeIdx));
       auto upper = ir::Min::make(tbounds[modeIdx][1], partUpper);
@@ -5783,6 +5903,7 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
 std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     Forall forall,
     ir::Expr domain,
+    ir::Expr colorSpace,
     std::map<TensorVar, std::map<int, std::vector<ir::Expr>>>& tensorLogicalPartitions,
     std::map<TensorVar, std::map<int, ir::Expr>>& tensorDenseRunPartitions,
     std::set<TensorVar> fullyReplicatedTensors,
@@ -5910,18 +6031,42 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     // We'll do the initial partition of the first dense run.
     // TODO (rohany): Figure out how to take partitions of not the first dense run too.
     auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
-    taco_iassert(!runs.runs.empty());
-    auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
-    // Partition the dense run using the coloring. Record the partition of the dense
-    // index space that we created.
-    tensorDenseRunPartitions[tv][0] = part;
 
-    // We don't need to mark the index partitions of the denseRuns with colors, since
-    // we aren't going to actually look up the denseLevelRun partitions directly.
-    auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, Auto);
-    result.push_back(ir::VarDecl::make(part, partcall));
-    // Using this initial partition, partition the rest of the tensor.
-    Expr currentLevelPartition = part;
+    // Depending on whether we have any dense runs, we'll have to change how
+    // we take an initial partition of the tensor.
+    Expr currentLevelPartition;
+    int initialLevel;
+    if (runs.runs.empty()) {
+      // If we don't have any dense runs, that means we are distributing over a sparse
+      // sparse level. That means the mode should support partitioning by a coordinate
+      // coloring.
+      // TODO (rohany): Assuming that we are partitioning the first mode.
+      auto mode = t.getAccess().getTensorVar().getFormat().getModeOrdering()[0];
+      auto iter = this->iterators.getLevelIteratorByModeAccess({t.getAccess(), mode + 1});
+      auto modeFunc = iter.getCreatePartitionWithCoordinateColoring(colorSpace, coloring, partitionColor);
+      taco_iassert(modeFunc.defined());
+      result.push_back(modeFunc.compute());
+      tensorLogicalPartitions[tv][0] = {};
+      for (size_t i = 0; i < modeFunc.numResults() - 2; i++) {
+        tensorLogicalPartitions[tv][0].push_back(modeFunc[i]);
+      }
+      currentLevelPartition = modeFunc.getResults().back();
+      // Since we've taken a partition of the first level and not a dense mode,
+      // we'll start the level counter at 1.
+      initialLevel = 1;
+    } else {
+      // Otherwise, go ahead and create a partition of the dense run to start off.
+      auto denseRunIndexSpace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+      // Partition the dense run using the coloring. Record the partition of the dense
+      // index space that we created.
+      tensorDenseRunPartitions[tv][0] = part;
+      // We don't need to mark the index partitions of the denseRuns with colors, since
+      // we aren't going to actually look up the denseLevelRun partitions directly.
+      auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, Auto);
+      result.push_back(ir::VarDecl::make(part, partcall));
+      currentLevelPartition = part;
+      initialLevel = 0;
+    }
 
     // We need to partition each mode in the tensor, but partition all of the dense
     // modes in a dense mode run in an aggregate manner. We do this by maintaining
@@ -5929,7 +6074,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     // modes within the run once we've performed the partitioning operation for
     // the dense run.
     size_t currentDenseRunIndex = 0;
-    for (int level = 0; level < tv.getOrder(); level++) {
+    for (int level = initialLevel; level < tv.getOrder(); level++) {
       // Check if the current level is the start of the current dense run. If it is,
       // then our job is to just partition the dense run by copying the current partition.
       // This is sound because the first sparse region (or values region) after the dense
@@ -6993,8 +7138,33 @@ bool LowererImpl::stmtHasAssemble(IndexStmt stmt) {
   return af.hasAssemble;
 }
 
-bool LowererImpl::loweringToGPU() {
-  return should_use_CUDA_codegen() || this->containsGPULoops;
+std::vector<ir::Expr> LowererImpl::getOveriddenPosBounds(Iterator iterator) {
+  // This checks to see if we've distributed a merger loop. If so, then
+  // we may only be able to access certain coordinates within a pos block,
+  // so those bounds will be tighter than what the pos bounds tell us.
+  // To figure this out, we check:
+  // * If we have a distributed loop,
+  // * and that distributed loop has an underived ancestor,
+  // * and that underived ancestor accesses this iterator,
+  // * and that iterator is a RectCompressedModeFormatLevel.
+  if (this->distLoopDepth > 0) {
+    auto underiveds = this->provGraph.getUnderivedAncestors(this->curDistVar);
+    if (underiveds.size() == 1) {
+      auto underived = underiveds[0];
+      if (underived == iterator.getIndexVar()) {
+        auto domain = this->rcmfCrdDomains[this->exprToTensorVar[iterator.getTensor()]][iterator.getMode().getLevel()];
+        std::vector<ir::Expr> result(2);
+        result[0] = ir::FieldAccess::make(domain, "bounds.lo", false /* deref */, Int64);
+        result[1] = ir::Add::make(1, ir::FieldAccess::make(domain, "bounds.hi", false /* deref */, Int64));
+        return result;
+      }
+    }
+  }
+  return {};
+}
+
+  bool LowererImpl::loweringToGPU() {
+    return should_use_CUDA_codegen() || this->containsGPULoops;
 }
 
 }

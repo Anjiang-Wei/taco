@@ -126,7 +126,10 @@ ir::Expr IndexVarRelNode::recoverVariable(IndexVar indexVar, std::map<IndexVar, 
   return {};
 }
 
-ir::Stmt IndexVarRelNode::recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt IndexVarRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                       std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                       std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl,
+                                       ProvenanceGraph provGraph) const {
   taco_ierror;
   return {};
 }
@@ -259,8 +262,10 @@ ir::Expr SplitRelNode::recoverVariable(taco::IndexVar indexVar,
   );
 }
 
-ir::Stmt SplitRelNode::recoverChild(taco::IndexVar indexVar,
-                                       std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt SplitRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                    std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                    std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, bool emitVarDecl,
+                                    ProvenanceGraph provGraph) const {
   taco_iassert(indexVar == getOuterVar() || indexVar == getInnerVar());
   taco_iassert(variableNames.count(getParentVar()) && variableNames.count(getOuterVar()) && variableNames.count(getInnerVar()));
   Datatype splitFactorType = variableNames[getParentVar()].type();
@@ -423,12 +428,28 @@ ir::Expr DivideRelNode::recoverVariable(taco::IndexVar indexVar,
   return ir::Add::make(ir::Add::make(ir::Mul::make(variableNames[getOuterVar()], bounds), variableNames[getInnerVar()]), parentIterBounds[indexVar][0]);
 }
 
-ir::Stmt DivideRelNode::recoverChild(taco::IndexVar indexVar,
-                                    std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
-  // We need bounds on the parent in order to recover the different
-  // child values, but it doesn't seem like we have access to them here.
-  taco_not_supported_yet;
-  return ir::Stmt();
+ir::Stmt DivideRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                     std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                     std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, bool emitVarDecl,
+                                     ProvenanceGraph provGraph) const {
+  taco_iassert(indexVar == getOuterVar() || indexVar == getInnerVar());
+  taco_iassert(variableNames.count(getParentVar()) && variableNames.count(getOuterVar()) && variableNames.count(getInnerVar()));
+  ir::Expr var, value;
+  if (indexVar == getOuterVar()) {
+    taco_not_supported_yet;
+    return ir::Stmt();
+  } else {
+    // innerVar = parentVar - outerVar * parentBounds.
+    auto bounds = provGraph.deriveIterBounds(getInnerVar(), definedVarOrder, underivedBounds, variableNames, iterators);
+    var = variableNames[getInnerVar()];
+    value = ir::Sub::make(variableNames[getParentVar()], ir::Mul::make(bounds[1], variableNames[getOuterVar()]));
+  }
+
+  if (emitVarDecl) {
+    return ir::VarDecl::make(var, value);
+  } else {
+    return ir::Assign::make(var, value);
+  }
 }
 
 bool operator==(const DivideRelNode& a, const DivideRelNode& b) {
@@ -553,8 +574,10 @@ ir::Expr DivideOntoPartition::recoverVariable(IndexVar indexVar, std::map<IndexV
   return ir::Add::make(variableNames[this->content->innerVar], lo);
 }
 
-ir::Stmt DivideOntoPartition::recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables,
-                                           bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt DivideOntoPartition::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                           std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                           std::map<IndexVar, ir::Expr> relVariables, Iterators iterators,
+                                           bool emitVarDecl, ProvenanceGraph provGraph) const {
   taco_not_supported_yet;
   return ir::Stmt();
 }
@@ -747,8 +770,10 @@ ir::Expr PosRelNode::recoverVariable(taco::IndexVar indexVar,
   return parent_value;
 }
 
-ir::Stmt PosRelNode::recoverChild(taco::IndexVar indexVar,
-                                    std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt PosRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                  std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                  std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, bool emitVarDecl,
+                                  ProvenanceGraph provGraph) const {
   taco_iassert(indexVar == getPosVar());
   taco_iassert(variableNames.count(getParentVar()) && variableNames.count(getPosVar()));
   // locate position var for segment based on coordinate getParentVar()
@@ -854,8 +879,10 @@ ir::Expr FuseRelNode::recoverVariable(taco::IndexVar indexVar,
   }
 }
 
-ir::Stmt FuseRelNode::recoverChild(taco::IndexVar indexVar,
-                                    std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt FuseRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                   std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                   std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl,
+                                   ProvenanceGraph provGraph) const {
 //  taco_iassert(indexVar == fusedVar);
 //  taco_iassert(variableNames.count(indexVar) && variableNames.count(outerParentVar) && variableNames.count(innerParentVar));
 //  taco_iassert(parentCoordBounds.count(innerParentVar));
@@ -949,8 +976,10 @@ ir::Expr MultiFuseRelNode::recoverVariable(IndexVar indexVar, std::map<IndexVar,
   return ir::Call::make("getIndexPoint", {task, idx}, Datatype::Int32);
 }
 
-ir::Stmt MultiFuseRelNode::recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl,
-                                        Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt MultiFuseRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                        std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                        std::map<IndexVar, ir::Expr> relVariables, Iterators iterators,
+                                        bool emitVarDecl, ProvenanceGraph provGraph) const {
   taco_not_supported_yet;
   return ir::Stmt();
 }
@@ -1051,8 +1080,10 @@ ir::Expr BoundRelNode::recoverVariable(taco::IndexVar indexVar,
   return variableNames[getBoundVar()];
 }
 
-ir::Stmt BoundRelNode::recoverChild(taco::IndexVar indexVar,
-                                  std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt BoundRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                    std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                    std::map<IndexVar, ir::Expr> variableNames, Iterators iterators,
+                                    bool emitVarDecl, ProvenanceGraph provGraph) const {
   taco_iassert(indexVar == getBoundVar());
   taco_iassert(variableNames.count(getParentVar()) && variableNames.count(getBoundVar()));
   ir::Expr boundVarExpr = variableNames[getBoundVar()];
@@ -1133,8 +1164,10 @@ ir::Expr PrecomputeRelNode::recoverVariable(taco::IndexVar indexVar,
   return variableNames[getPrecomputeVar()];
 }
 
-ir::Stmt PrecomputeRelNode::recoverChild(taco::IndexVar indexVar,
-                                    std::map<taco::IndexVar, taco::ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt PrecomputeRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                         std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                         std::map<IndexVar, ir::Expr> variableNames, Iterators iterators,
+                                         bool emitVarDecl, ProvenanceGraph provGraph) const {
   taco_iassert(indexVar == getPrecomputeVar());
   taco_iassert(variableNames.count(getParentVar()) && variableNames.count(getPrecomputeVar()));
   ir::Expr boundVarExpr = variableNames[getPrecomputeVar()];
@@ -1207,8 +1240,10 @@ ir::Expr StaggerRelNode::recoverVariable(IndexVar indexVar, std::map<IndexVar, i
   return ir::Rem::make(add, parentIterBounds[this->content->toStagger][1]);
 }
 
-ir::Stmt StaggerRelNode::recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl,
-                                      Iterators iterators, ProvenanceGraph provGraph) const {
+ir::Stmt StaggerRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                      std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                      std::map<IndexVar, ir::Expr> relVariables, Iterators iterators, bool emitVarDecl,
+                                      ProvenanceGraph provGraph) const {
   taco_not_supported_yet;
   return ir::Stmt();
 }
@@ -1705,14 +1740,15 @@ ir::Expr ProvenanceGraph::recoverVariable(taco::IndexVar indexVar,
   return ir::simplify(rel.getNode()->recoverVariable(indexVar, childVariables, iterators, parentIterBounds, parentCoordBounds, *this));
 }
 
-ir::Stmt ProvenanceGraph::recoverChild(taco::IndexVar indexVar,
-                                        std::map<taco::IndexVar, taco::ir::Expr> relVariables, bool emitVarDecl, Iterators iterators) const {
+ir::Stmt ProvenanceGraph::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
+                                       std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                       std::map<IndexVar, ir::Expr> relVariables, Iterators iterators,
+                                       bool emitVarDecl) const {
   if (isUnderived(indexVar)) {
     return ir::Stmt();
   }
-
   IndexVarRel rel = parentRelMap.at(indexVar);
-  return rel.getNode()->recoverChild(indexVar, relVariables, emitVarDecl, iterators, *this);
+  return rel.getNode()->recoverChild(indexVar, definedVarOrder, underivedBounds, relVariables, iterators, emitVarDecl, *this);
 }
 
 std::set<IndexVar> ProvenanceGraph::getAllIndexVars() const {

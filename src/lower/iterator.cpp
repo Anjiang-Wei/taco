@@ -507,6 +507,12 @@ ModeFunction Iterator::getCreatePartitionWithPosColoring(ir::Expr domain, ir::Ex
   return getMode().getModeFormat().impl->getCreatePartitionWithPosColoring(getMode(), domain, partitionColor);
 }
 
+ModeFunction Iterator::getCreatePartitionWithCoordinateColoring(ir::Expr colorSpace, ir::Expr coloring,
+                                                                ir::Expr partitionColor) const {
+  taco_iassert(this->defined());
+  return getMode().getModeFormat().impl->getCreatePartitionWithCoordinateColoring(getMode(), colorSpace, coloring, partitionColor);
+}
+
 ModeFunction Iterator::getPartitionFromParent(ir::Expr parentPartition, ir::Expr partitionColor) const {
   return getMode().getModeFormat().impl->getPartitionFromParent(parentPartition, getMode(), partitionColor);
 }
