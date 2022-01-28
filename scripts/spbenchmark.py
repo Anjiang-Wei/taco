@@ -51,9 +51,11 @@ class SparseTensorRegistry:
             SparseTensor("it-2004", [41291594, 41291494], 1150725436),
             SparseTensor("kmer_A2a", [170728175, 170728175], 360585172),
             SparseTensor("kmer_V1r", [214005017, 214005017], 465410904),
-            SparseTensor("mawi_201512020330", [226196185, 226196185], 480047894),
+            # This tensor is too large (dimension-wise) to be represented in
+            # PETSc and Trilinos with 32-bit indexing.
+            # SparseTensor("mawi_201512020330", [226196185, 226196185], 480047894),
             SparseTensor("mycielskian19", [393215, 393215], 903194710),
-            # These appear to be to too easy of problems?
+            # nlpkkt200 is too small to be an interesting problem.
             # SparseTensor("nlpkkt200", [16240000, 16240000], 440225632),
             SparseTensor("nlpkkt240", [27993600, 27993600], 760648352),
             SparseTensor("sk-2005", [50636154, 50636154], 1949412601),
