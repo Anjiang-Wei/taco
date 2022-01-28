@@ -185,9 +185,12 @@ Legion::LogicalRegion TACOMapper::default_policy_select_instance_region(Legion::
     return result;
 
   // Heuristically use the exact region if the target memory is either a GPU
-  // framebuffer or a zero copy memory.
+  // framebuffer or a zero copy memory. Or, if we are putting data in a numa
+  // local memory when there are multiple numa memories available, the data
+  // is likely partitioned for each numa memory.
   if (target_memory.kind() == Memory::GPU_FB_MEM ||
-      target_memory.kind() == Memory::Z_COPY_MEM)
+      target_memory.kind() == Memory::Z_COPY_MEM ||
+      (target_memory.kind() == Memory::SOCKET_MEM && this->multipleNumaDomainsPresent))
     return result;
 
   // Simple heuristic here, if we are on a single node, we go all the
