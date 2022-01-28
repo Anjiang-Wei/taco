@@ -122,7 +122,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
   int64_t pointID1 = io;
-  #pragma omp parallel for schedule(static)
+  #pragma omp parallel for schedule(dynamic, 1024)
   for (int32_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
     int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
     if (i >= B1_dimension)
