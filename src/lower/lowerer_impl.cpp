@@ -2707,8 +2707,14 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     kind = LoopKind::Vectorized;
   } else if (forall.getParallelUnit() != ParallelUnit::NotParallel
             && forall.getOutputRaceStrategy() != OutputRaceStrategy::ParallelReduction && !ignoreVectorize) {
-    // Realm doesn't support runtime parallel loops yet, so use a static distribution.
-    kind = LoopKind::Static_Chunked;
+    // Position space loops are statically partitioned, so they can be given a static
+    // thread assignment. Other loops are not statically load balanced so we should
+    // use a runtime scheduling system to parallelize them.
+    if (inPosIter) {
+      kind = LoopKind::Static_Chunked;
+    } else {
+      kind = LoopKind::Dynamic;
+    }
   }
 
   if (forall.isDistributed()) {

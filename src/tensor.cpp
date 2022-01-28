@@ -966,7 +966,6 @@ TensorBase::getHelperFunctions(const Format& format, Datatype ctype,
       packStmt = forall(indexVars[mode], packStmt);
       iterateStmt = forall(indexVars[mode], iterateStmt);
     }
-    bool isCSR = false;
     if (format.getModeFormats().size() == 2) {
       auto formats = format.getModeFormats();
       if (formats[0].is<DenseModeFormat>() && formats[1].is<CompressedModeFormat>()) {
