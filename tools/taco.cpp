@@ -1018,10 +1018,9 @@ int main(int argc, char* argv[]) {
 
   if (!mtxInputFile.empty()) {
     taco_uassert(!ctfOutputFile.empty());
-    taco_uassert(ctfOutputFile.find(".tns") != std::string::npos);
     std::cout << "Loading matrix." << std::endl;
     Tensor<double> matrix = taco::read(mtxInputFile, {Dense, Sparse}, true /* pack */);
-    std::cout << "Writing out matrix in .tns format" << std::endl;
+    std::cout << "Writing out matrix." << std::endl;
     taco::write(ctfOutputFile, matrix);
     std::cout << "Done!" << std::endl;
     return 0;
@@ -1041,8 +1040,11 @@ int main(int argc, char* argv[]) {
     taco_uassert(!rotateOutput.empty());
     taco_uassert(rotateTensorOrder != 0);
     std::vector<ModeFormatPack> format(rotateTensorOrder, Sparse);
+    std::cout << "Loading tensor." << std::endl;
     Tensor<double> tensor = taco::read(rotateInput, format, true /* pack */);
+    std::cout << "Beginning rotateion." << std::endl;
     auto rotated = util::shiftLastMode("result", tensor);
+    std::cout << "Dumping to file." << std::endl;
     taco::write(rotateOutput, rotated);
     return 0;
   }

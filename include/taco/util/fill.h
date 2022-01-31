@@ -104,7 +104,8 @@ void fillVector(TensorBase& tensor, const FillMethod& fill, double fillValue, do
       re.seed(std::random_device{}());
 
       // Random positions
-      std::vector<int> positions(vectorSize);
+      std::vector<int> positions;
+      positions.reserve(vectorSize);
       for (int i=0; i<vectorSize; i++) {
         positions.push_back(i);
       }
