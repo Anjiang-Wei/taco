@@ -1039,10 +1039,13 @@ int main(int argc, char* argv[]) {
   if (!rotateInput.empty()) {
     taco_uassert(!rotateOutput.empty());
     taco_uassert(rotateTensorOrder != 0);
+    // Make the format a {Dense, Sparse...} format so that we can
+    // use assemble when possible.
     std::vector<ModeFormatPack> format(rotateTensorOrder, Sparse);
+    format[0] = Dense;
     std::cout << "Loading tensor." << std::endl;
     Tensor<double> tensor = taco::read(rotateInput, format, true /* pack */);
-    std::cout << "Beginning rotateion." << std::endl;
+    std::cout << "Beginning rotation." << std::endl;
     auto rotated = util::shiftLastMode("result", tensor);
     std::cout << "Dumping to file." << std::endl;
     taco::write(rotateOutput, rotated);
