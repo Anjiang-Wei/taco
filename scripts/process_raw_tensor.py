@@ -26,7 +26,7 @@ if None in [tensorDir, petscDir, tacoBuildDir]:
 
 def cooToDISTALCOO(name, path, overwrite):
     tth = Path(tacoBuildDir, "bin", "tensor_to_hdf5")
-    # assert(tth.exists())
+    assert(tth.exists())
     outpath = Path(tensorDir, "coo-hdf5", f"{name}.hdf5")
     if outpath.exists() and not overwrite:
         return []
@@ -36,7 +36,7 @@ def cooToDISTALCOO(name, path, overwrite):
 
 def DISTALCOOToDistalTensor(name, format, format_suffix, overwrite):
     formatconv = Path(tacoBuildDir, "bin", "format-converter")
-    # assert(formatconv.exists())
+    assert(formatconv.exists())
     inpath = Path(tensorDir, "coo-hdf5", f"{name}.hdf5")
     outpath = Path(tensorDir, "distal", f"{name}.{format_suffix}.hdf5")
     if outpath.exists() and not overwrite:
@@ -47,7 +47,7 @@ def DISTALCOOToDistalTensor(name, format, format_suffix, overwrite):
 
 def cooToTns(name, path, tmpPath, overwrite):
     taco = Path(tacoBuildDir, "bin", "taco")
-    # assert(taco.exists())
+    assert(taco.exists())
     # First, we'll output the file to a local, temporary file, and the send
     # the output to the tensor dir.
     genTemp = [str(taco), f"-ctfMtxInput={path}", f"-ctfMtxOutput={tmpPath}"]
@@ -59,7 +59,7 @@ def cooToTns(name, path, tmpPath, overwrite):
 
 def cooToPetsc(name, path, overwrite):
     converter = Path(petscDir, "bin", "petsc-converter")
-    # assert(converter.exists())
+    assert(converter.exists())
     outpath = Path(tensorDir, "petsc", f"{name}.petsc")
     if outpath.exists() and not overwrite:
         return []
@@ -67,7 +67,7 @@ def cooToPetsc(name, path, overwrite):
 
 def rotateTensor(name, path, dims, suffix, overwrite):
     taco = Path(tacoBuildDir, "bin", "taco")
-    # assert(taco.exists())
+    assert(taco.exists())
     outpath = Path(tensorDir, "coo-txt", f"{name}-{suffix}.mtx")
     if outpath.exists() and not overwrite:
         return []
