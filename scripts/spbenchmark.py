@@ -51,7 +51,7 @@ class Benchmark:
         pass
 
 class DISTALBenchmark(Benchmark):
-    def getCommand(self, tensor, benchKind, nodes):
+    def getCommand(self, tensor, benchKind, procs):
         # TODO (rohany): Standardize the DISTAL binary arguments more...
         args = {
             # TODO (rohany): Handle extra arguments...
@@ -72,9 +72,13 @@ class DISTALBenchmark(Benchmark):
             BenchmarkKind.SpInnerProd: ["-tensorB", self.getDISTALTensor(tensor, 'dss'), 
                                         "-tensorC", self.getShiftedTensor(tensor, 'dss', 0)],
         }
+        if self.gpu:
+            # Lassen has 4 GPUs per node.
+            nodes = (procs + 3) // 4
+        else:
+            nodes = procs
         lassenPrefix = ["jsrun", "-b", "none", "-c", "ALL_CPUS", "-g", "ALL_GPUS", "-r", "1", "-n", str(nodes)]
         commonArgs = ["-n", str(self.niter), "-warmup", str(self.warmup)]
-        assert(not self.gpu)
         legionArgs = ["-ll:ocpu", "2",
                       "-ll:othr", "18",
                       "-ll:onuma", "1",
@@ -82,6 +86,16 @@ class DISTALBenchmark(Benchmark):
                       "-ll:ncsize", "0",
                       "-ll:util", "2",
                       "-tm:numa_aware_alloc"]
+        if self.gpu:
+            if nodes == 1:
+                gpus = procs
+            else:
+                gpus = 4
+            legionArgs += [
+                "-ll:gpu", str(gpus),
+                "-ll:fsize", "15G",
+            ]
+
         assert(benchKind in args)
         return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind]
 
@@ -109,6 +123,8 @@ class DISTALBenchmark(Benchmark):
 
 class CTFBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
+        # This will be disabled until CTF supports GPUs.
+        assert(not self.gpu)
         args = {
             BenchmarkKind.SpMV: ["-bench", "spmv"],
             # TODO (rohany): IDK if this benchmark is legit cuz CTF doesn't have CSC.
@@ -153,8 +169,13 @@ class PETScBenchmark(Benchmark):
         }
         if benchKind not in args:
             raise AssertionError(f"Unsupported PETSc benchmark: {benchKind}")
-        lassenPrefix = ["jsrun", "-n", str(40 * nodes), "-r", "40", "-c", "1", "-b", "rs"]
+        if self.gpu:
+            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", "4", "-c", "10", "-b", "rs"]
+        else:
+            lassenPrefix = ["jsrun", "-n", str(40 * nodes), "-r", "40", "-c", "1", "-b", "rs"]
         commonArgs = ["-matrix", self.getPETScMatrix(tensor), "-n", str(self.niter), "-warmup", str(self.warmup)]
+        if self.gpu:
+            commonArgs += ["-enable_gpu", "-vec_type", "cuda", "-mat_type", "aijcusparse"]
         petscDir = os.environ.get("PETSC_BUILD_DIR", None)
         if (petscDir is None):
             raise AssertionError("PETSC_BUILD_DIR must be defined in environment.")
@@ -185,13 +206,19 @@ class TrilinosBenchmark(Benchmark):
         if benchKind not in args:
             raise AssertionError(f"Unsupported Trilinos benchmark: {benchKind}")
         # TODO (rohany): Experiment with the optimal run configuration.
-        lassenPrefix = ["jsrun", "-n", str(2 * nodes), "-r", "2", "-c", "20", "-b", "rs"]
+        if self.gpu:
+            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", "4", "-c", "10", "-b", "rs"]
+        else:
+            lassenPrefix = ["jsrun", "-n", str(2 * nodes), "-r", "2", "-c", "20", "-b", "rs"]
         commonArgs = [f"--file={self.getTrilinosMatrix(tensor)}", f"--n={self.niter}", f"--warmup={self.warmup}"]
         trilinosDir = os.environ.get("TRILINOS_BUILD_DIR")
         if (trilinosDir is None):
             raise AssertionError("TRILINOS_BUILD_DIR must be defined in environment.")
         wrapper = Path(trilinosDir, "..", "trilinos_run_wrapper.sh")
-        binary = Path(trilinosDir, "bin", "benchmark")
+        if self.gpu:
+            binary = Path(trilinosDir, "bin", "benchmark-cuda")
+        else:
+            binary = Path(trilinosDir, "bin", "benchmark")
         assert(binary.exists())
         return lassenPrefix + [str(wrapper), str(binary)] + commonArgs + args[benchKind]
 
@@ -213,18 +240,19 @@ def executeCmd(cmd):
     proc.wait()
     sys.stdout.flush()
 
-def serializeBenchmark(system, benchKind, tensor, nodes):
-    return f"BENCHID++{system}++{benchKind}++{tensor.name}++{nodes}"
+def serializeBenchmark(system, benchKind, tensor, procs, procKind):
+    assert(procKind in ["nodes", "gpus"])
+    return f"BENCHID++{system}++{benchKind}++{tensor.name}++{procs}++{procKind}"
 
-def makeBencher(system, args):
+def makeBencher(system, args, gpu):
     if system == "DISTAL":
-        bencher = DISTALBenchmark(False, args.n, args.warmup)
+        bencher = DISTALBenchmark(gpu, args.n, args.warmup)
     elif system == "CTF":
-        bencher = CTFBenchmark(False, args.n, args.warmup)
+        bencher = CTFBenchmark(gpu, args.n, args.warmup)
     elif system == "PETSc":
-        bencher = PETScBenchmark(False, args.n, args.warmup)
+        bencher = PETScBenchmark(gpu, args.n, args.warmup)
     elif system == "Trilinos":
-        bencher = TrilinosBenchmark(False, args.n, args.warmup)
+        bencher = TrilinosBenchmark(gpu, args.n, args.warmup)
     else:
         assert(False)
     return bencher
@@ -239,18 +267,28 @@ def main():
     # TODO (rohany): Have option to run all benchmarks.
     parser.add_argument("bench", type=str, choices=BenchmarkKind.names())
     parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors"])
-    parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run out", default=[1])
+    parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run on", default=[1])
+    parser.add_argument("--gpus", type=int, nargs='+', help="Number of GPUs to run on", default=[])
     parser.add_argument("--n", type=int, default=20)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--dry-run", default=False, action="store_true")
     args = parser.parse_args()
 
+    if args.gpus is not None and args.nodes != [1]:
+        print("Cannot set both --gpus and --nodes")
+        return
+
+    useGPUs = args.gpus is not None
+    procs = args.nodes
+    if useGPUs:
+        procs = args.gpus
+
     benchers = []
     if args.system == "all":
         for system in systems:
-            benchers.append(makeBencher(system, args))
+            benchers.append(makeBencher(system, args, useGPUs))
     else:
-        benchers.append(makeBencher(args.system, args))
+        benchers.append(makeBencher(args.system, args, useGPUs))
 
     benchKind = BenchmarkKind.getByName(args.bench)
 
@@ -265,12 +303,12 @@ def main():
 
     for bencher in benchers:
         for tensor in tensors:
-            for n in args.nodes:
+            for n in procs:
+                print(serializeBenchmark(args.system, benchKind, tensor, n, "gpus" if useGPUs else "nodes"))
                 cmd = bencher.getCommand(tensor, benchKind, n)
                 if (args.dry_run):
                     print(" ".join(cmd))
                 else:
-                    print(serializeBenchmark(args.system, benchKind, tensor, n))
                     executeCmd(cmd)
 
 if __name__ == '__main__':
