@@ -289,7 +289,7 @@ def main():
         print("Cannot set both --gpus and --nodes")
         return
 
-    useGPUs = args.gpus is not None
+    useGPUs = len(args.gpus) != 0
     procs = args.nodes
     if useGPUs:
         procs = args.gpus
