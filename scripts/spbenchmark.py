@@ -94,6 +94,7 @@ class DISTALBenchmark(Benchmark):
             legionArgs += [
                 "-ll:gpu", str(gpus),
                 "-ll:fsize", "15G",
+                "-pieces", str(procs),
             ]
 
         assert(benchKind in args)
@@ -170,7 +171,12 @@ class PETScBenchmark(Benchmark):
         if benchKind not in args:
             raise AssertionError(f"Unsupported PETSc benchmark: {benchKind}")
         if self.gpu:
-            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", "4", "-c", "10", "-b", "rs"]
+            physNodes = (nodes + 3) // 4
+            if physNodes == 1:
+                rsPerHost = nodes
+            else:
+                rsPerHost = 4
+            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", str(rsPerHost), "-c", "10", "-b", "rs", "-M", "\"-gpu\""]
         else:
             lassenPrefix = ["jsrun", "-n", str(40 * nodes), "-r", "40", "-c", "1", "-b", "rs"]
         commonArgs = ["-matrix", self.getPETScMatrix(tensor), "-n", str(self.niter), "-warmup", str(self.warmup)]
@@ -207,7 +213,12 @@ class TrilinosBenchmark(Benchmark):
             raise AssertionError(f"Unsupported Trilinos benchmark: {benchKind}")
         # TODO (rohany): Experiment with the optimal run configuration.
         if self.gpu:
-            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", "4", "-c", "10", "-b", "rs"]
+            physNodes = (nodes + 3) // 4
+            if physNodes == 1:
+                rsPerHost = nodes
+            else:
+                rsPerHost = 4
+            lassenPrefix = ["jsrun", "-n", str(nodes), "-g", "1", "-r", str(rsPerHost), "-c", "10", "-b", "rs", "-M", "\"-gpu\""]
         else:
             lassenPrefix = ["jsrun", "-n", str(2 * nodes), "-r", "2", "-c", "20", "-b", "rs"]
         commonArgs = [f"--file={self.getTrilinosMatrix(tensor)}", f"--n={self.niter}", f"--warmup={self.warmup}"]
