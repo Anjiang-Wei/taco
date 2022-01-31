@@ -53,7 +53,6 @@ class Benchmark:
 class DISTALBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
         # TODO (rohany): Standardize the DISTAL binary arguments more...
-        # TODO (rohany): Handle getting rotated / input tensors for the multi-tensor arguments.
         args = {
             # TODO (rohany): Handle extra arguments...
             BenchmarkKind.SpMV: ["-csr", self.getDISTALTensor(tensor, "csr")],
@@ -63,15 +62,15 @@ class DISTALBenchmark(Benchmark):
             # TODO (rohany): Thread through the jdim here.
             BenchmarkKind.SDDMM: ["-csr", self.getDISTALTensor(tensor, 'csr')],
             BenchmarkKind.SpAdd3: ["-tensorB", self.getDISTALTensor(tensor, 'csr'), 
-                                   "-tensorC", self.getShiftedTensor(tensor, 'csr'), 
-                                   "-tensorD", self.getShiftedTensor(tensor, 'csr')],
+                                   "-tensorC", self.getShiftedTensor(tensor, 'csr', 0), 
+                                   "-tensorD", self.getShiftedTensor(tensor, 'csr', 1)],
             BenchmarkKind.SpTTV: ["-tensor", self.getDISTALTensor(tensor, 'dss')],
             # TODO (rohany): Pass through the ldim here.
             BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dss')],
             # TODO (rohany): For some tensors, like the patents tensor, we might want to
             #  do a different format here.
             BenchmarkKind.SpInnerProd: ["-tensorB", self.getDISTALTensor(tensor, 'dss'), 
-                                        "-tensorC", self.getShiftedTensor(tensor, 'dss')],
+                                        "-tensorC", self.getShiftedTensor(tensor, 'dss', 0)],
         }
         lassenPrefix = ["jsrun", "-b", "none", "-c", "ALL_CPUS", "-g", "ALL_GPUS", "-r", "1", "-n", str(nodes)]
         commonArgs = ["-n", str(self.niter), "-warmup", str(self.warmup)]
@@ -103,8 +102,10 @@ class DISTALBenchmark(Benchmark):
         path = Path(getTensorDir(), "distal", name)
         return str(path)
 
-    def getShiftedTensor(self, tensor, formatStr):
-        return self.getDISTALTensor(tensor, formatStr)
+    def getShiftedTensor(self, tensor, formatStr, amount):
+        name = f"{tensor.name}-rotated-{amount}.{formatStr}.hdf5"
+        path = Path(getTensorDir(), "distal", name)
+        return str(path)
 
 class CTFBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
@@ -116,11 +117,11 @@ class CTFBenchmark(Benchmark):
             BenchmarkKind.SpMM: ["-bench", "spmm"],
             # TODO (rohany): Thread through the jdim here.
             BenchmarkKind.SDDMM: ["-bench", "sddmm"],
-            BenchmarkKind.SpAdd3: ["-bench", "spadd3", "-tensorC", self.getShiftedTensor(tensor), "-tensorD", self.getShiftedTensor(tensor)],
+            BenchmarkKind.SpAdd3: ["-bench", "spadd3", "-tensorC", self.getShiftedTensor(tensor, 0), "-tensorD", self.getShiftedTensor(tensor, 1)],
             BenchmarkKind.SpTTV: ["-bench", "spttv"],
             # TODO (rohany): Pass through the ldim here.
             BenchmarkKind.SpMTTKRP: ["-bench", "spmttkrp"],
-            BenchmarkKind.SpInnerProd: ["-bench", "spinnerprod", "-tensorC", self.getShiftedTensor(tensor)],
+            BenchmarkKind.SpInnerProd: ["-bench", "spinnerprod", "-tensorC", self.getShiftedTensor(tensor, 0)],
         }
         lassenPrefix = ["jsrun", "-b", "rs", "-c", "1", "-r", "40", "-n", str(40 * nodes)]
         commonArgs = ["-tensor", self.getCTFTensor(tensor), "-dims", ",".join([str(d) for d in tensor.dims]), "-n", str(self.niter), "-warmup", str(self.warmup)]
@@ -135,8 +136,10 @@ class CTFBenchmark(Benchmark):
         path = Path(getTensorDir(), "coo-txt", name)
         return str(path)
 
-    def getShiftedTensor(self, tensor):
-        return self.getCTFTensor(tensor)
+    def getShiftedTensor(self, tensor, amount):
+        name = f"{tensor.name}-rotated-{amount}.tns"
+        path = Path(getTensorDir(), "coo-txt", name)
+        return str(path)
 
 class PETScBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
@@ -144,10 +147,9 @@ class PETScBenchmark(Benchmark):
             BenchmarkKind.SpMV: ["-bench", "spmv"],
             # TODO (rohany): Support passing through the JDim value.
             BenchmarkKind.SpMM: ["-bench", "spmm"],
-            # TODO (rohany): Support getting the rotated tensors.
             BenchmarkKind.SpAdd3: ["-bench", "spadd3", 
-                                   "-add3MatrixC", self.getShiftedMatrix(tensor),
-                                   "-add3MatrixD", self.getShiftedMatrix(tensor)]
+                                   "-add3MatrixC", self.getShiftedMatrix(tensor, 0),
+                                   "-add3MatrixD", self.getShiftedMatrix(tensor, 1)]
         }
         if benchKind not in args:
             raise AssertionError(f"Unsupported PETSc benchmark: {benchKind}")
@@ -165,8 +167,10 @@ class PETScBenchmark(Benchmark):
         path = Path(getTensorDir(), "petsc", name)
         return str(path)
 
-    def getShiftedMatrix(self, tensor):
-        return self.getPETScMatrix(tensor)
+    def getShiftedMatrix(self, tensor, amount):
+        name = f"{tensor.name}-rotated-{amount}.petsc"
+        path = Path(getTensorDir(), "petsc", name)
+        return str(path)
 
 class TrilinosBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):
@@ -174,10 +178,9 @@ class TrilinosBenchmark(Benchmark):
             BenchmarkKind.SpMV: ["--bench=spmv"],
             # TODO (rohany): Support passing through the JDim value.
             BenchmarkKind.SpMM: ["--bench=spmm"],
-            # TODO (rohany): Support getting the rotated tensors.
             BenchmarkKind.SpAdd3: ["--bench=spadd3",
-                                   f"--add3TensorC={self.getShiftedMatrix(tensor)}",
-                                   f"--add3TensorD={self.getShiftedMatrix(tensor)}"]
+                                   f"--add3TensorC={self.getShiftedMatrix(tensor, 0)}",
+                                   f"--add3TensorD={self.getShiftedMatrix(tensor, 1)}"]
         }
         if benchKind not in args:
             raise AssertionError(f"Unsupported Trilinos benchmark: {benchKind}")
@@ -197,8 +200,10 @@ class TrilinosBenchmark(Benchmark):
         path = Path(getTensorDir(), "coo-txt", name)
         return str(path)
 
-    def getShiftedMatrix(self, tensor):
-        return self.getTrilinosMatrix(tensor)
+    def getShiftedMatrix(self, tensor, amount):
+        name = f"{tensor.name}-rotated-{amount}.mtx"
+        path = Path(getTensorDir(), "coo-txt", name)
+        return str(path)
 
 def executeCmd(cmd):
     cmdStr = " ".join(cmd)
@@ -212,13 +217,13 @@ def serializeBenchmark(system, benchKind, tensor, nodes):
     return f"BENCHID++{system}++{benchKind}++{tensor.name}++{nodes}"
 
 def makeBencher(system, args):
-    if args.system == "DISTAL":
+    if system == "DISTAL":
         bencher = DISTALBenchmark(False, args.n, args.warmup)
-    elif args.system == "CTF":
+    elif system == "CTF":
         bencher = CTFBenchmark(False, args.n, args.warmup)
-    elif args.system == "PETSc":
+    elif system == "PETSc":
         bencher = PETScBenchmark(False, args.n, args.warmup)
-    elif args.system == "Trilinos":
+    elif system == "Trilinos":
         bencher = TrilinosBenchmark(False, args.n, args.warmup)
     else:
         assert(False)
