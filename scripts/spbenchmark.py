@@ -211,22 +211,7 @@ def executeCmd(cmd):
 def serializeBenchmark(system, benchKind, tensor, nodes):
     return f"BENCHID++{system}++{benchKind}++{tensor.name}++{nodes}"
 
-def main():
-    # Initialize the sparse tensor registry.
-    registry = SparseTensorRegistry.initialize()
-
-    parser = argparse.ArgumentParser()
-    # TODO (rohany): Have an option to run all systems.
-    parser.add_argument("system", type=str, choices=["DISTAL", "CTF", "PETSc", "Trilinos"])
-    # TODO (rohany): Have option to run all benchmarks.
-    parser.add_argument("bench", type=str, choices=BenchmarkKind.names())
-    parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors"])
-    parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run out", default=[1])
-    parser.add_argument("--n", type=int, default=20)
-    parser.add_argument("--warmup", type=int, default=10)
-    parser.add_argument("--dry-run", default=False, action="store_true")
-    args = parser.parse_args()
-
+def makeBencher(system, args):
     if args.system == "DISTAL":
         bencher = DISTALBenchmark(False, args.n, args.warmup)
     elif args.system == "CTF":
@@ -237,6 +222,30 @@ def main():
         bencher = TrilinosBenchmark(False, args.n, args.warmup)
     else:
         assert(False)
+    return bencher
+
+def main():
+    # Initialize the sparse tensor registry.
+    registry = SparseTensorRegistry.initialize()
+
+    parser = argparse.ArgumentParser()
+    systems = ["DISTAL", "CTF", "PETSc", "Trilinos"]
+    parser.add_argument("system", type=str, choices=systems + ["all"])
+    # TODO (rohany): Have option to run all benchmarks.
+    parser.add_argument("bench", type=str, choices=BenchmarkKind.names())
+    parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors"])
+    parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run out", default=[1])
+    parser.add_argument("--n", type=int, default=20)
+    parser.add_argument("--warmup", type=int, default=10)
+    parser.add_argument("--dry-run", default=False, action="store_true")
+    args = parser.parse_args()
+
+    benchers = []
+    if args.system == "all":
+        for system in systems:
+            benchers.append(makeBencher(system, args))
+    else:
+        benchers.append(makeBencher(args.system, args))
 
     benchKind = BenchmarkKind.getByName(args.bench)
 
@@ -249,14 +258,15 @@ def main():
     else:
         tensors = [registry.getByName(args.tensor)]
 
-    for tensor in tensors:
-        for n in args.nodes:
-            cmd = bencher.getCommand(tensor, benchKind, n)
-            if (args.dry_run):
-                print(" ".join(cmd))
-            else:
-                print(serializeBenchmark(args.system, benchKind, tensor, n))
-                executeCmd(cmd)
+    for bencher in benchers:
+        for tensor in tensors:
+            for n in args.nodes:
+                cmd = bencher.getCommand(tensor, benchKind, n)
+                if (args.dry_run):
+                    print(" ".join(cmd))
+                else:
+                    print(serializeBenchmark(args.system, benchKind, tensor, n))
+                    executeCmd(cmd)
 
 if __name__ == '__main__':
     main()
