@@ -2302,13 +2302,30 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         for (int level = tv.getOrder() - 1; level >= 0; level--) {
           auto iter = this->iterators.getLevelIteratorByLevel(tv, level);
           auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
+          // Copy the level partitions over from the input tensor. We do this instead
+          // of just repeating the partitioning pass to get around a Legion bug found
+          // in SDDMM where some index space disjointness tests were taking minutes.
+          auto regions = iter.getRegions();
           if (modeFunc.defined()) {
-            partitioningStmts.push_back(modeFunc.compute());
             currentPart = modeFunc.getResults().back();
-            for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
-              tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
+            for (size_t i = 0; i < regions.size(); i++) {
+              taco_iassert(modeFunc.defined());
+              auto toCopy = tensorLogicalPartitions[this->nonZeroAnalyzerResult.inputAccess->getTensorVar()][level][i];
+              auto var = modeFunc[i];
+              partitioningStmts.push_back(ir::VarDecl::make(var, ir::Call::make("copyPartition", {ctx, runtime, toCopy, regions[i].regionParent}, Auto)));
+              tensorLogicalPartitions[tv][level].push_back(var);
             }
           }
+
+          // The old code in case the bug ever gets fixed.
+          // auto modeFunc = iter.getPartitionFromChild(currentPart, partitionColor);
+          // if (modeFunc.defined()) {
+          //   partitioningStmts.push_back(modeFunc.compute());
+          //   currentPart = modeFunc.getResults().back();
+          //   for (size_t i = 0; i < modeFunc.numResults() - 1; i++) {
+          //     tensorLogicalPartitions[tv][level].push_back(modeFunc[i]);
+          //   }
+          // }
         }
 
         // TODO (rohany): Again, there's some duplication here...
