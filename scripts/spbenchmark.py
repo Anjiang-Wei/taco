@@ -93,7 +93,8 @@ class DISTALBenchmark(Benchmark):
                 gpus = 4
             legionArgs += [
                 "-ll:gpu", str(gpus),
-                "-ll:fsize", "15G",
+                # Allocate as much GPU memory as physically possible.
+                "-ll:fsize", "15.3G",
                 "-pieces", str(procs),
             ]
 
