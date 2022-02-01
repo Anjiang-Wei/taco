@@ -1504,7 +1504,12 @@ void CodeGen_CUDA::visit(const Store* op) {
       } else if (isa<Add>(op->data)) {
         auto add = to<Add>(op->data);
         taco_iassert(isa<Load>(add->a));
-        taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc) << (ir::Stmt(op));
+        // TODO (rohany): This assertion is good in spirit but has proven to simply
+        //  be too finicky to maintain in all contexts. The pointer based equality
+        //  of the check is not quite it.
+        // taco_iassert(to<Load>(add->a)->arr == op->arr && to<Load>(add->a)->loc == op->loc) << (ir::Stmt(op)) << "; "
+        //              << to<Load>(add->a)->arr << " <-> " << op->arr << "; "
+        //              << to<Load>(add->a)->loc << " <-> " << op->loc;
         if (lhsIsAccessor) {
           // We implement a slightly different atomicAddWarp for the Legion backend. It does
           // pretty much the same thing but flattens the Point<DIM> object into an index for
