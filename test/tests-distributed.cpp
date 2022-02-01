@@ -1745,19 +1745,45 @@ TEST(distributed, legionSpMM) {
   const int CHUNKSIZE = 2048;
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"), iii("iii");
   A(i, j) = B(i, k) * C(k, j);
-  auto stmt = A.getAssignment().concretize()
-               .reorder({i, k, j})
-               .fuse(i, k, f)
-               .pos(f, kpos, B(i, k))
-               .distribute({kpos}, {ko}, {ki}, Grid(gx))
-               .split(ki, iio, iii, CHUNKSIZE)
-               .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-               .communicate(A(i, j), ko)
-               .communicate(B(i, k), ko)
-               .communicate(C(k, j), ko)
-               ;
-  auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", lowered);
+  auto stmt = A.getAssignment().concretize();
+  auto cpuStmt = stmt.reorder({i, k, j})
+                     .fuse(i, k, f)
+                     .pos(f, kpos, B(i, k))
+                     .distribute({kpos}, {ko}, {ki}, Grid(gx))
+                     .split(ki, iio, iii, CHUNKSIZE)
+                     .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+                     .communicate(A(i, j), ko)
+                     .communicate(B(i, k), ko)
+                     .communicate(C(k, j), ko)
+                     ;
+  IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
+           warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
+           dense_ub("dense_ub"), dense_b("dense_b");
+  const int NNZ_PER_WARP = 8;
+  const int BLOCK_SIZE = 256;
+  const int WARP_SIZE = 32;
+  const int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
+  auto gpuStmt = stmt.reorder({i, k, j})
+                     .fuse(i, k, f)
+                     .pos(f, fpos, B(i, k))
+                     .distribute({fpos}, {fposo}, {fposi}, Grid(gx), taco::ParallelUnit::DistributedGPU)
+                     .split(fposi, block, fposi1, NNZ_PER_TB)
+                     .split(fposi1, warp, nnz, NNZ_PER_WARP)
+                     .split(j, dense_ub, thread, WARP_SIZE)
+                     .reorder({block, warp, thread, dense_ub, nnz})
+                     // We can do this because we know that the inputs will have j dimension
+                     // equal to 32. So we can eliminate this loop. However, we can experiment if
+                     // this actually saves anything.
+                     .bound(dense_ub, dense_b, 1, BoundType::MaxExact)
+                     .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+                     .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+                     .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+                     .communicate({A(i, j), B(i, k), C(k, j)}, fposo)
+                     ;
+  auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
+  auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", loweredCPU);
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", loweredGPU);
 }
 
 TEST(distributed, legionSpSDDMM) {
