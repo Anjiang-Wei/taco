@@ -811,7 +811,7 @@ void registerTacoTasks() {
   }
   {
     TaskVariantRegistrar registrar(taskID(4), "task_4");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_4>(registrar, "task_4");
   }

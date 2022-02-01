@@ -1665,7 +1665,7 @@ TEST(distributed, legionSpMV) {
     return stmt
         .reorder({j, i})
         .pos(j, jpos, c(j))
-        .distribute({jpos}, {jposo}, {jposi}, Grid(pieces))
+        .distribute({jpos}, {jposo}, {jposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
         .split(jposi, block, thread, 512)
         .reorder({block, thread, i})
         .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
