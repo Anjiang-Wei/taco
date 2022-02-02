@@ -1814,7 +1814,7 @@ TEST(distributed, legionSpMM) {
   IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
            warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
            dense_ub("dense_ub"), dense_b("dense_b");
-  const int NNZ_PER_WARP = 8;
+  const int NNZ_PER_WARP = 64;
   const int BLOCK_SIZE = 256;
   const int WARP_SIZE = 32;
   const int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
@@ -1824,12 +1824,15 @@ TEST(distributed, legionSpMM) {
                      .distribute({fpos}, {fposo}, {fposi}, Grid(gx), taco::ParallelUnit::DistributedGPU)
                      .split(fposi, block, fposi1, NNZ_PER_TB)
                      .split(fposi1, warp, nnz, NNZ_PER_WARP)
-                     .split(j, dense_ub, thread, WARP_SIZE)
-                     .reorder({block, warp, thread, dense_ub, nnz})
-                     // We can do this because we know that the inputs will have j dimension
-                     // equal to 32. So we can eliminate this loop. However, we can experiment if
-                     // this actually saves anything.
-                     .bound(dense_ub, dense_b, 1, BoundType::MaxExact)
+                     .split(j, dense_b, thread, WARP_SIZE)
+                     .reorder({block, warp, thread, dense_b, nnz})
+                     // If we know the j dimension of the loop we can apply a static bound
+                     // here. This doesn't seem like much, but actually yields a 5% performance
+                     // improvement. This can be uncommented if needed, but I think that the
+                     // chance of accidentally doing some incorrect computation if the dimensions
+                     // change is not worth that improvement. We might need to change it though
+                     // depending on the performance of PETSc and Trilinos.
+                     // .bound(dense_ub, dense_b, 1, BoundType::MaxExact)
                      .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
                      .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
                      .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)

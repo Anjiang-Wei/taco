@@ -16,6 +16,7 @@ typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,
 
 struct task_1Args {
   int64_t B2Size;
+  int32_t C2_dimension;
   int32_t gx;
 };
 
@@ -79,7 +80,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 }
 
 __global__
-void task_1DeviceKernel0(int64_t B2Size, int32_t gx, int32_t* i_blockStarts, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, int32_t fposo) {
+void task_1DeviceKernel0(int64_t B2Size, int32_t gx, int32_t* i_blockStarts, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, int32_t C2_dimension, int32_t fposo) {
 
   int32_t block = blockIdx.x;
   int32_t thread = (threadIdx.x % (32));
@@ -88,21 +89,24 @@ void task_1DeviceKernel0(int64_t B2Size, int32_t gx, int32_t* i_blockStarts, Acc
     return;
   }
 
-  int64_t pointID2 = fposo * (((B2Size + (gx - 1)) / gx + 63) / 64) + block;
+  int64_t pointID2 = fposo * (((B2Size + (gx - 1)) / gx + 511) / 512) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
   int64_t pointID4 = pointID3 * 32 + thread;
-  for (int32_t dense_b = 0; dense_b < 1; dense_b++) {
+  for (int32_t dense_b = 0; dense_b < ((C2_dimension + 31) / 32); dense_b++) {
     int32_t j = dense_b * 32 + thread;
+    if (j >= C2_dimension)
+      break;
+
     int32_t pB2_begin = i_blockStarts[block];
     int32_t pB2_end = i_blockStarts[(block + 1)];
-    int32_t fposi1 = warp * 8;
-    int32_t fposi = block * 64 + fposi1;
+    int32_t fposi1 = warp * 64;
+    int32_t fposi = block * 512 + fposi1;
     int32_t fposB = fposo * ((B2Size + (gx - 1)) / gx) + fposi;
     int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, fposB);
     int32_t i = i_pos;
-    for (int32_t nnz = 0; nnz < 8; nnz++) {
-      int32_t fposi1 = warp * 8 + nnz;
-      int32_t fposi = block * 64 + fposi1;
+    for (int32_t nnz = 0; nnz < 64; nnz++) {
+      int32_t fposi1 = warp * 64 + nnz;
+      int32_t fposi = block * 512 + fposi1;
       int32_t fposB = fposo * ((B2Size + (gx - 1)) / gx) + fposi;
       if (fposB >= (fposo + 1) * ((B2Size + (gx - 1)) / gx))
         break;
@@ -135,6 +139,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t fposo = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
   int64_t B2Size = args->B2Size;
+  int32_t C2_dimension = args->C2_dimension;
   int32_t gx = args->gx;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -148,20 +153,20 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B2Size + (gx - 1)) / gx + 63) / 64)), Legion::Memory::Kind::GPU_FB_MEM);
+  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B2Size + (gx - 1)) / gx + 511) / 512)), Legion::Memory::Kind::GPU_FB_MEM);
   int32_t* i_blockStarts = buf.ptr(0);
   taco_binarySearchBeforeBlockLaunch(
     B2_pos_accessor,
     i_blockStarts,
     B2PosDomain.bounds.lo,
     B2PosDomain.bounds.hi,
-    64,
+    512,
     256,
-    (((B2Size + (gx - 1)) / gx + 63) / 64),
+    (((B2Size + (gx - 1)) / gx + 511) / 512),
     B2CrdDomain.bounds.lo
   );
-  if (((((B2Size + (gx - 1)) / gx + 63) / 64)) > 0) {
-    task_1DeviceKernel0<<<(((B2Size + (gx - 1)) / gx + 63) / 64), (32 * 8)>>>(B2Size, gx, i_blockStarts, B2_pos_accessor, B2_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, fposo);
+  if (((((B2Size + (gx - 1)) / gx + 511) / 512)) > 0) {
+    task_1DeviceKernel0<<<(((B2Size + (gx - 1)) / gx + 511) / 512), (32 * 8)>>>(B2Size, gx, i_blockStarts, B2_pos_accessor, B2_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, C2_dimension, fposo);
   }
 }
 
@@ -171,6 +176,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
+  int C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
@@ -182,6 +188,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(fposoIndexSpace));
   task_1Args taskArgsRaw1;
   taskArgsRaw1.B2Size = B2Size;
+  taskArgsRaw1.C2_dimension = C2_dimension;
   taskArgsRaw1.gx = gx;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
