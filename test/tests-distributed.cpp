@@ -1757,7 +1757,7 @@ TEST(distributed, legionSpTTV) {
     return stmt.fuse(i, j, f)
                .fuse(f, k, ff)
                .pos(ff, ffpos, B(i, j, k))
-               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
+               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces}, taco::ParallelUnit::DistributedGPU)
                .split(ffposi, block, fposi1, NNZ_PER_TB)
                .split(fposi1, warp, fposi2, NNZ_PER_WARP)
                .split(fposi2, thread, thread_nz, NNZ_PER_WARP / WARP_SIZE)
@@ -1773,7 +1773,7 @@ TEST(distributed, legionSpTTV) {
   add("DSSPartialPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
     return stmt.fuse(i, j, f)
                .pos(f, ffpos, B(i, j, k))
-               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
+               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces}, taco::ParallelUnit::DistributedGPU)
                .split(ffposi, block, fposi1, NNZ_PER_TB)
                .split(fposi1, warp, fposi2, NNZ_PER_WARP)
                .split(fposi2, thread, thread_nz, NNZ_PER_WARP / WARP_SIZE)

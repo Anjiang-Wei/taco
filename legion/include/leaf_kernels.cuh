@@ -233,7 +233,6 @@ template<typename T>
 __host__ void taco_binarySearchIndirectBeforeBlockLaunch(T array, int32_t* __restrict__ results, int arrayStart, int arrayEnd, int32_t* __restrict__ targets, int block_size, int num_blocks) {
   int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
   taco_binarySearchIndirectBeforeBlock<<<num_search_blocks, block_size>>>(array, results, arrayStart, arrayEnd, targets, num_blocks);
-  return results;
 }
 
 #endif // TACO_LG_CU_LEAF_KERNELS_H
