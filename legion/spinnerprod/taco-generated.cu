@@ -276,7 +276,7 @@ double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<double,task_1>(registrar, "task_1");
   }

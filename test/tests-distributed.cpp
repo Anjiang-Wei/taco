@@ -2099,7 +2099,7 @@ TEST(distributed, legionSpInnerProd) {
     IndexVar block("block"), thread("thread");
     a() = B(i, j, k) * C(i, j, k);
     gpuStmt = a.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, Grid(pieces))
+               .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
                .split(ii, block, thread, BLOCK_SIZE)
                // Note that we have to first apply the thread parallelization before
                // the block parallelization to get around a quirk in the parallelize
