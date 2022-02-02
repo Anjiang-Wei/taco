@@ -1,0 +1,138 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+BENCHID++Trilinos++spmv++uk-2005++1
+Executing command: jsrun -n 2 -r 2 -c 20 -b rs /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spmv
+
+ 1D Distribution: 
+     np     = 2
+================================================================================================================
+
+                                     TimeMonitor results over 2 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts      
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      124.7 (9.364e+04)    152.3 (9.364e+04)    179.9 (9.364e+04)    0.001627 (9.364e+04)    
+RMM    selectNonzeros    270.7 (9.364e+04)    298.3 (9.364e+04)    325.8 (9.364e+04)    0.003185 (9.364e+04)    
+SpMV                     1.546 (20)           1.546 (20)           1.546 (20)           0.07729 (20)            
+================================================================================================================
+Average time: 77.3 ms.
+BENCHID++Trilinos++spmv++uk-2005++2
+Executing command: jsrun -n 4 -r 2 -c 20 -b rs /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spmv
+
+ 1D Distribution: 
+     np     = 4
+================================================================================================================
+
+                                     TimeMonitor results over 4 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts      
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      144.3 (9.364e+04)    184.5 (9.364e+04)    203.8 (9.364e+04)    0.001971 (9.364e+04)    
+RMM    selectNonzeros    217.6 (9.364e+04)    236.6 (9.364e+04)    276.7 (9.364e+04)    0.002527 (9.364e+04)    
+SpMV                     0.9194 (20)          0.9196 (20)          0.92 (20)            0.04598 (20)            
+================================================================================================================
+Average time: 45.95 ms.
+BENCHID++Trilinos++spmv++uk-2005++4
+Executing command: jsrun -n 8 -r 2 -c 20 -b rs /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spmv
+
+ 1D Distribution: 
+     np     = 8
+================================================================================================================
+
+                                     TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts      
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      177.6 (9.364e+04)    204.2 (9.364e+04)    216.4 (9.364e+04)    0.00218 (9.364e+04)     
+RMM    selectNonzeros    196.8 (9.364e+04)    208.9 (9.364e+04)    235.4 (9.364e+04)    0.002231 (9.364e+04)    
+SpMV                     0.5155 (20)          0.5158 (20)          0.516 (20)           0.02579 (20)            
+================================================================================================================
+Average time: 25.75 ms.
+BENCHID++Trilinos++spmv++uk-2005++8
+Executing command: jsrun -n 16 -r 2 -c 20 -b rs /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spmv
+
+ 1D Distribution: 
+     np     = 16
+================================================================================================================
+
+                                     TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts      
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      197.5 (9.364e+04)    215 (9.364e+04)      223.9 (9.364e+04)    0.002296 (9.364e+04)    
+RMM    selectNonzeros    185.8 (9.364e+04)    194.6 (9.364e+04)    212 (9.364e+04)      0.002079 (9.364e+04)    
+SpMV                     0.3516 (20)          0.3518 (20)          0.352 (20)           0.01759 (20)            
+================================================================================================================
+Average time: 17.55 ms.
+BENCHID++Trilinos++spmv++uk-2005++16
+Executing command: jsrun -n 32 -r 2 -c 20 -b rs /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spmv
+
+ 1D Distribution: 
+     np     = 32
+================================================================================================================
+
+                                     TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts      
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      202.7 (9.364e+04)    214.1 (9.364e+04)    221.9 (9.364e+04)    0.002286 (9.364e+04)    
+RMM    selectNonzeros    182.1 (9.364e+04)    189.7 (9.364e+04)    201.1 (9.364e+04)    0.002026 (9.364e+04)    
+SpMV                     0.3201 (20)          0.3205 (20)          0.3208 (20)          0.01603 (20)            
+================================================================================================================
+Average time: 16 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3207408: <../scripts/spbenchmark.py Trilinos spmv uk-2005 --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py Trilinos spmv uk-2005 --nodes 1 2 4 8 16> was submitted from host <lassen708> by user <yadav2> in cluster <lassen> at Thu Jan 27 23:01:12 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Thu Jan 27 23:08:20 2022
+                            <40*lassen749>
+                            <40*lassen593>
+                            <40*lassen264>
+                            <40*lassen594>
+                            <40*lassen265>
+                            <40*lassen266>
+                            <40*lassen595>
+                            <40*lassen267>
+                            <40*lassen268>
+                            <40*lassen598>
+                            <40*lassen599>
+                            <40*lassen91>
+                            <40*lassen92>
+                            <40*lassen93>
+                            <40*lassen94>
+                            <40*lassen95>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Thu Jan 27 23:08:20 2022
+Terminated at Thu Jan 27 23:49:18 2022
+Results reported at Thu Jan 27 23:49:18 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py Trilinos spmv uk-2005 --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4.00 sec.
+    Max Memory :                                 66 MB
+    Average Memory :                             59.93 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1426 MB
+    Max Processes :                              9
+    Max Threads :                                27
+    Run time :                                   2457 sec.
+    Turnaround time :                            2886 sec.
+
+The output (if any) is above this job summary.
+

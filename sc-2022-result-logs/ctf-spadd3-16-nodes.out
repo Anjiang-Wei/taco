@@ -1,0 +1,359 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++CTF++spadd3++arabic-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.tns
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Average execution time: 16356.4 ms.
+BENCHID++CTF++spadd3++arabic-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.tns
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Average execution time: 8386.45 ms.
+BENCHID++CTF++spadd3++arabic-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.tns
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Average execution time: 4268.1 ms.
+BENCHID++CTF++spadd3++arabic-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.tns
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Average execution time: 2195.5 ms.
+BENCHID++CTF++spadd3++arabic-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.tns
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Read 639999458 non-zero entries from the file.
+Average execution time: 1228.05 ms.
+BENCHID++CTF++spadd3++it-2004++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.tns
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Average execution time: 31281.6 ms.
+BENCHID++CTF++spadd3++it-2004++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.tns
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Average execution time: 15717.2 ms.
+BENCHID++CTF++spadd3++it-2004++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.tns
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Average execution time: 7875.85 ms.
+BENCHID++CTF++spadd3++it-2004++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.tns
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Average execution time: 3997.9 ms.
+BENCHID++CTF++spadd3++it-2004++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.tns
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Read 1150725436 non-zero entries from the file.
+Average execution time: 2667.3 ms.
+BENCHID++CTF++spadd3++kmer_A2a++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.tns
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Average execution time: 9836.65 ms.
+BENCHID++CTF++spadd3++kmer_A2a++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.tns
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Average execution time: 4936.7 ms.
+BENCHID++CTF++spadd3++kmer_A2a++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.tns
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Average execution time: 2515.6 ms.
+BENCHID++CTF++spadd3++kmer_A2a++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.tns
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Average execution time: 1262.85 ms.
+BENCHID++CTF++spadd3++kmer_A2a++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.tns
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Read 360585172 non-zero entries from the file.
+Average execution time: 863.6 ms.
+BENCHID++CTF++spadd3++kmer_V1r++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.tns
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Average execution time: 12713.8 ms.
+BENCHID++CTF++spadd3++kmer_V1r++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.tns
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Average execution time: 6592.05 ms.
+BENCHID++CTF++spadd3++kmer_V1r++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.tns
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Average execution time: 3234.2 ms.
+BENCHID++CTF++spadd3++kmer_V1r++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.tns
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Average execution time: 1607.25 ms.
+BENCHID++CTF++spadd3++kmer_V1r++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.tns
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Read 465410904 non-zero entries from the file.
+Average execution time: 922.1 ms.
+BENCHID++CTF++spadd3++mycielskian19++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.tns
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Average execution time: 24473.5 ms.
+BENCHID++CTF++spadd3++mycielskian19++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.tns
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Average execution time: 12377.3 ms.
+BENCHID++CTF++spadd3++mycielskian19++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.tns
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Average execution time: 6452.75 ms.
+BENCHID++CTF++spadd3++mycielskian19++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.tns
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Average execution time: 3479.35 ms.
+BENCHID++CTF++spadd3++mycielskian19++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.tns
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Read 903194710 non-zero entries from the file.
+Average execution time: 2130.15 ms.
+BENCHID++CTF++spadd3++nlpkkt240++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.tns
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Average execution time: 24132.8 ms.
+BENCHID++CTF++spadd3++nlpkkt240++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.tns
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Average execution time: 12710.6 ms.
+BENCHID++CTF++spadd3++nlpkkt240++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.tns
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Average execution time: 6483 ms.
+BENCHID++CTF++spadd3++nlpkkt240++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.tns
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Average execution time: 3522.4 ms.
+BENCHID++CTF++spadd3++nlpkkt240++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.tns
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Read 774472352 non-zero entries from the file.
+Average execution time: 1898.9 ms.
+BENCHID++CTF++spadd3++sk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.tns
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 25) terminated with signal 9
+BENCHID++CTF++spadd3++sk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.tns
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Average execution time: 28123.1 ms.
+BENCHID++CTF++spadd3++sk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.tns
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Average execution time: 14279.2 ms.
+BENCHID++CTF++spadd3++sk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.tns
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Average execution time: 7836 ms.
+BENCHID++CTF++spadd3++sk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.tns
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Read 1949412601 non-zero entries from the file.
+Average execution time: 4336.55 ms.
+BENCHID++CTF++spadd3++twitter7++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-1.tns
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Average execution time: 38557.6 ms.
+BENCHID++CTF++spadd3++twitter7++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-1.tns
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Average execution time: 20421.3 ms.
+BENCHID++CTF++spadd3++twitter7++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-1.tns
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Average execution time: 10359.2 ms.
+BENCHID++CTF++spadd3++twitter7++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-1.tns
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Average execution time: 5259.7 ms.
+BENCHID++CTF++spadd3++twitter7++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/twitter7-rotated-1.tns
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Read 1468365182 non-zero entries from the file.
+Average execution time: 3133.2 ms.
+BENCHID++CTF++spadd3++uk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.tns
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Average execution time: 25475.7 ms.
+BENCHID++CTF++spadd3++uk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.tns
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Average execution time: 12938 ms.
+BENCHID++CTF++spadd3++uk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.tns
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Average execution time: 6673.45 ms.
+BENCHID++CTF++spadd3++uk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.tns
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Average execution time: 3320.75 ms.
+BENCHID++CTF++spadd3++uk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.tns
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Read 936364282 non-zero entries from the file.
+Average execution time: 1842.55 ms.
+BENCHID++CTF++spadd3++webbase-2001++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.tns
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Average execution time: 27895.8 ms.
+BENCHID++CTF++spadd3++webbase-2001++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.tns
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Average execution time: 13888 ms.
+BENCHID++CTF++spadd3++webbase-2001++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.tns
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Average execution time: 7081.15 ms.
+BENCHID++CTF++spadd3++webbase-2001++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.tns
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Average execution time: 3758.35 ms.
+BENCHID++CTF++spadd3++webbase-2001++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spadd3 -tensorC /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.tns -tensorD /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.tns
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Read 1019903190 non-zero entries from the file.
+Average execution time: 2300.7 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3217660: <../scripts/spbenchmark.py CTF spadd3 all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py CTF spadd3 all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen709> by user <yadav2> in cluster <lassen> at Wed Feb  2 09:17:53 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb  2 09:20:35 2022
+                            <40*lassen118>
+                            <40*lassen448>
+                            <40*lassen465>
+                            <40*lassen794>
+                            <40*lassen796>
+                            <40*lassen799>
+                            <40*lassen525>
+                            <40*lassen207>
+                            <40*lassen381>
+                            <40*lassen209>
+                            <40*lassen539>
+                            <40*lassen215>
+                            <40*lassen549>
+                            <40*lassen396>
+                            <40*lassen399>
+                            <40*lassen225>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb  2 09:20:35 2022
+Terminated at Wed Feb  2 14:02:02 2022
+Results reported at Wed Feb  2 14:02:02 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py CTF spadd3 all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   12.00 sec.
+    Max Memory :                                 130 MB
+    Average Memory :                             103.88 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   16888 sec.
+    Turnaround time :                            17049 sec.
+
+The output (if any) is above this job summary.
+

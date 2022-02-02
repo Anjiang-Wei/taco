@@ -1,0 +1,194 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++PETSc++spadd3++arabic-2005++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-1.petsc
+Average time: 4447.967549 ms.
+BENCHID++PETSc++spadd3++arabic-2005++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-1.petsc
+Average time: 2816.241412 ms.
+BENCHID++PETSc++spadd3++arabic-2005++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-1.petsc
+Average time: 1978.886211 ms.
+BENCHID++PETSc++spadd3++arabic-2005++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-1.petsc
+Average time: 1698.560866 ms.
+BENCHID++PETSc++spadd3++arabic-2005++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/arabic-2005-rotated-1.petsc
+Average time: 1528.519166 ms.
+BENCHID++PETSc++spadd3++it-2004++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-1.petsc
+Average time: 13673.940136 ms.
+BENCHID++PETSc++spadd3++it-2004++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-1.petsc
+Average time: 7864.135942 ms.
+BENCHID++PETSc++spadd3++it-2004++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-1.petsc
+Average time: 4001.288817 ms.
+BENCHID++PETSc++spadd3++it-2004++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-1.petsc
+Average time: 2479.147033 ms.
+BENCHID++PETSc++spadd3++it-2004++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/it-2004-rotated-1.petsc
+Average time: 2159.914810 ms.
+BENCHID++PETSc++spadd3++kmer_A2a++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-1.petsc
+Average time: 11574.127026 ms.
+BENCHID++PETSc++spadd3++kmer_A2a++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-1.petsc
+Average time: 5907.273869 ms.
+BENCHID++PETSc++spadd3++kmer_A2a++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-1.petsc
+Average time: 2894.059307 ms.
+BENCHID++PETSc++spadd3++kmer_A2a++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-1.petsc
+Average time: 1482.197076 ms.
+BENCHID++PETSc++spadd3++kmer_A2a++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_A2a-rotated-1.petsc
+Average time: 840.540433 ms.
+BENCHID++PETSc++spadd3++kmer_V1r++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-1.petsc
+Average time: 15315.034476 ms.
+BENCHID++PETSc++spadd3++kmer_V1r++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-1.petsc
+Average time: 7953.335329 ms.
+BENCHID++PETSc++spadd3++kmer_V1r++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-1.petsc
+Average time: 4090.978449 ms.
+BENCHID++PETSc++spadd3++kmer_V1r++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-1.petsc
+Average time: 1982.932166 ms.
+BENCHID++PETSc++spadd3++kmer_V1r++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/kmer_V1r-rotated-1.petsc
+Average time: 1042.509080 ms.
+BENCHID++PETSc++spadd3++mycielskian19++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-1.petsc
+Average time: 33386.422101 ms.
+BENCHID++PETSc++spadd3++mycielskian19++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-1.petsc
+Average time: 21917.583133 ms.
+BENCHID++PETSc++spadd3++mycielskian19++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-1.petsc
+Average time: 14749.624924 ms.
+BENCHID++PETSc++spadd3++mycielskian19++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-1.petsc
+Average time: 9904.018112 ms.
+BENCHID++PETSc++spadd3++mycielskian19++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/mycielskian19-rotated-1.petsc
+Average time: 6009.509084 ms.
+BENCHID++PETSc++spadd3++nlpkkt240++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-1.petsc
+Average time: 3901.825173 ms.
+BENCHID++PETSc++spadd3++nlpkkt240++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-1.petsc
+Average time: 1939.343650 ms.
+BENCHID++PETSc++spadd3++nlpkkt240++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-1.petsc
+Average time: 1254.339647 ms.
+BENCHID++PETSc++spadd3++nlpkkt240++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-1.petsc
+Average time: 654.477225 ms.
+BENCHID++PETSc++spadd3++nlpkkt240++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/nlpkkt240-rotated-1.petsc
+Average time: 483.934520 ms.
+BENCHID++PETSc++spadd3++sk-2005++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-1.petsc
+Average time: 11867.139250 ms.
+BENCHID++PETSc++spadd3++sk-2005++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-1.petsc
+Average time: 9430.477358 ms.
+BENCHID++PETSc++spadd3++sk-2005++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-1.petsc
+Average time: 6799.207228 ms.
+BENCHID++PETSc++spadd3++sk-2005++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-1.petsc
+Average time: 6358.926874 ms.
+BENCHID++PETSc++spadd3++sk-2005++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/sk-2005-rotated-1.petsc
+Average time: 6086.693738 ms.
+BENCHID++PETSc++spadd3++uk-2005++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-1.petsc
+Average time: 7001.762701 ms.
+BENCHID++PETSc++spadd3++uk-2005++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-1.petsc
+Average time: 4914.301646 ms.
+BENCHID++PETSc++spadd3++uk-2005++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-1.petsc
+Average time: 3220.065491 ms.
+BENCHID++PETSc++spadd3++uk-2005++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-1.petsc
+Average time: 2620.195391 ms.
+BENCHID++PETSc++spadd3++uk-2005++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/uk-2005-rotated-1.petsc
+Average time: 1568.918744 ms.
+BENCHID++PETSc++spadd3++webbase-2001++1++nodes
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
+Average time: 7111.390116 ms.
+BENCHID++PETSc++spadd3++webbase-2001++2++nodes
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
+Average time: 3644.098946 ms.
+BENCHID++PETSc++spadd3++webbase-2001++4++nodes
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
+Average time: 1942.546919 ms.
+BENCHID++PETSc++spadd3++webbase-2001++8++nodes
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
+Average time: 1222.526580 ms.
+BENCHID++PETSc++spadd3++webbase-2001++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
+Average time: 906.974764 ms.
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3217053: <../scripts/spbenchmark.py PETSc spadd3 all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Exited
+
+Job <../scripts/spbenchmark.py PETSc spadd3 all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen407> by user <yadav2> in cluster <lassen> at Tue Feb  1 17:18:12 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Tue Feb  1 17:20:52 2022
+                            <40*lassen548>
+                            <40*lassen392>
+                            <40*lassen393>
+                            <40*lassen394>
+                            <40*lassen395>
+                            <40*lassen396>
+                            <40*lassen397>
+                            <40*lassen398>
+                            <40*lassen220>
+                            <40*lassen221>
+                            <40*lassen551>
+                            <40*lassen222>
+                            <40*lassen223>
+                            <40*lassen553>
+                            <40*lassen224>
+                            <40*lassen554>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Tue Feb  1 17:20:52 2022
+Terminated at Tue Feb  1 23:21:08 2022
+Results reported at Tue Feb  1 23:21:08 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py PETSc spadd3 all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+TERM_RUNLIMIT: job killed after reaching LSF run time limit.
+Exited with exit code 140.
+
+Resource usage summary:
+
+    CPU time :                                   12.00 sec.
+    Max Memory :                                 136 MB
+    Average Memory :                             116.52 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1426 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   21616 sec.
+    Turnaround time :                            21776 sec.
+
+The output (if any) is above this job summary.
+

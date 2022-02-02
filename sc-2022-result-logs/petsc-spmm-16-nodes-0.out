@@ -1,0 +1,175 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+BENCHID++PETSc++spmm++arabic-2005++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 656.961909 ms.
+BENCHID++PETSc++spmm++arabic-2005++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 410.129144 ms.
+BENCHID++PETSc++spmm++arabic-2005++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 282.766400 ms.
+BENCHID++PETSc++spmm++arabic-2005++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 212.721966 ms.
+BENCHID++PETSc++spmm++arabic-2005++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 178.341209 ms.
+BENCHID++PETSc++spmm++it-2004++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1793.491189 ms.
+BENCHID++PETSc++spmm++it-2004++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spmm
+Average time: 992.408342 ms.
+BENCHID++PETSc++spmm++it-2004++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spmm
+Average time: 521.849184 ms.
+BENCHID++PETSc++spmm++it-2004++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spmm
+Average time: 322.143344 ms.
+BENCHID++PETSc++spmm++it-2004++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -bench spmm
+Average time: 266.541706 ms.
+BENCHID++PETSc++spmm++kmer_A2a++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spmm
+ERROR:  One or more process (first noticed rank 14) terminated with signal 9
+BENCHID++PETSc++spmm++kmer_A2a++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spmm
+Average time: 4714.547356 ms.
+BENCHID++PETSc++spmm++kmer_A2a++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spmm
+Average time: 2691.433504 ms.
+BENCHID++PETSc++spmm++kmer_A2a++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1575.061517 ms.
+BENCHID++PETSc++spmm++kmer_A2a++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -bench spmm
+Average time: 829.371920 ms.
+BENCHID++PETSc++spmm++kmer_V1r++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spmm
+ERROR:  One or more process (first noticed rank 39) terminated with signal 9
+BENCHID++PETSc++spmm++kmer_V1r++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spmm
+Average time: 5318.097334 ms.
+BENCHID++PETSc++spmm++kmer_V1r++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spmm
+Average time: 3271.410901 ms.
+BENCHID++PETSc++spmm++kmer_V1r++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1666.885988 ms.
+BENCHID++PETSc++spmm++kmer_V1r++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -bench spmm
+Average time: 938.672873 ms.
+BENCHID++PETSc++spmm++mycielskian19++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spmm
+Average time: 3528.765827 ms.
+BENCHID++PETSc++spmm++mycielskian19++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spmm
+Average time: 2553.741073 ms.
+BENCHID++PETSc++spmm++mycielskian19++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1828.355059 ms.
+BENCHID++PETSc++spmm++mycielskian19++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1357.354393 ms.
+BENCHID++PETSc++spmm++mycielskian19++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1060.139931 ms.
+BENCHID++PETSc++spmm++nlpkkt240++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spmm
+Average time: 925.939264 ms.
+BENCHID++PETSc++spmm++nlpkkt240++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spmm
+Average time: 618.413501 ms.
+BENCHID++PETSc++spmm++nlpkkt240++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spmm
+Average time: 359.748509 ms.
+BENCHID++PETSc++spmm++nlpkkt240++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spmm
+Average time: 280.525227 ms.
+BENCHID++PETSc++spmm++nlpkkt240++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -bench spmm
+Average time: 221.798803 ms.
+BENCHID++PETSc++spmm++sk-2005++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 2037.170628 ms.
+BENCHID++PETSc++spmm++sk-2005++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1280.230809 ms.
+BENCHID++PETSc++spmm++sk-2005++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 857.422912 ms.
+BENCHID++PETSc++spmm++sk-2005++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 775.534027 ms.
+BENCHID++PETSc++spmm++sk-2005++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 719.011475 ms.
+BENCHID++PETSc++spmm++twitter7++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+Average time: 89830.421089 ms.
+BENCHID++PETSc++spmm++twitter7++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++PETSc++spmm++twitter7++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+Average time: 45727.797603 ms.
+BENCHID++PETSc++spmm++twitter7++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+User defined signal 2
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3208134: <../scripts/spbenchmark.py PETSc spmm all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Exited
+
+Job <../scripts/spbenchmark.py PETSc spmm all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen594> by user <yadav2> in cluster <lassen> at Fri Jan 28 11:34:25 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Fri Jan 28 12:32:15 2022
+                            <40*lassen413>
+                            <40*lassen92>
+                            <40*lassen95>
+                            <40*lassen98>
+                            <40*lassen270>
+                            <40*lassen755>
+                            <40*lassen104>
+                            <40*lassen435>
+                            <40*lassen285>
+                            <40*lassen286>
+                            <40*lassen773>
+                            <40*lassen783>
+                            <40*lassen375>
+                            <40*lassen377>
+                            <40*lassen53>
+                            <40*lassen231>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Fri Jan 28 12:32:15 2022
+Terminated at Fri Jan 28 14:32:30 2022
+Results reported at Fri Jan 28 14:32:30 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py PETSc spmm all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+TERM_RUNLIMIT: job killed after reaching LSF run time limit.
+Exited with exit code 140.
+
+Resource usage summary:
+
+    CPU time :                                   4.00 sec.
+    Max Memory :                                 122 MB
+    Average Memory :                             113.00 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   7219 sec.
+    Turnaround time :                            10685 sec.
+
+The output (if any) is above this job summary.
+

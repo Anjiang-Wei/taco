@@ -1,0 +1,73 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+BENCHID++PETSc++spmm++uk-2005++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1777.877628 ms.
+BENCHID++PETSc++spmm++uk-2005++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 816.091293 ms.
+BENCHID++PETSc++spmm++uk-2005++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 551.325718 ms.
+BENCHID++PETSc++spmm++uk-2005++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 425.641682 ms.
+BENCHID++PETSc++spmm++uk-2005++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 196.808851 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3208438: <../scripts/spbenchmark.py PETSc spmm uk-2005 --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py PETSc spmm uk-2005 --nodes 1 2 4 8 16> was submitted from host <lassen708> by user <yadav2> in cluster <lassen> at Fri Jan 28 14:39:35 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Fri Jan 28 14:39:36 2022
+                            <40*lassen581>
+                            <40*lassen408>
+                            <40*lassen252>
+                            <40*lassen738>
+                            <40*lassen582>
+                            <40*lassen409>
+                            <40*lassen253>
+                            <40*lassen739>
+                            <40*lassen583>
+                            <40*lassen584>
+                            <40*lassen585>
+                            <40*lassen586>
+                            <40*lassen587>
+                            <40*lassen588>
+                            <40*lassen589>
+                            <40*lassen80>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Fri Jan 28 14:39:36 2022
+Terminated at Fri Jan 28 14:44:17 2022
+Results reported at Fri Jan 28 14:44:17 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py PETSc spmm uk-2005 --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2.00 sec.
+    Max Memory :                                 81 MB
+    Average Memory :                             64.56 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1426 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   280 sec.
+    Turnaround time :                            282 sec.
+
+The output (if any) is above this job summary.
+

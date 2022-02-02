@@ -1,0 +1,259 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++CTF++spmv++arabic-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmv
+Read 639999458 non-zero entries from the file.
+Average execution time: 9515.8 ms.
+BENCHID++CTF++spmv++arabic-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmv
+Read 639999458 non-zero entries from the file.
+Average execution time: 6484.75 ms.
+BENCHID++CTF++spmv++arabic-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmv
+Read 639999458 non-zero entries from the file.
+Average execution time: 6538.75 ms.
+BENCHID++CTF++spmv++arabic-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmv
+Read 639999458 non-zero entries from the file.
+Average execution time: 5265.65 ms.
+BENCHID++CTF++spmv++arabic-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmv
+Read 639999458 non-zero entries from the file.
+Average execution time: 5528.45 ms.
+BENCHID++CTF++spmv++it-2004++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmv
+Read 1150725436 non-zero entries from the file.
+Average execution time: 17066.5 ms.
+BENCHID++CTF++spmv++it-2004++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmv
+Read 1150725436 non-zero entries from the file.
+Average execution time: 10995 ms.
+BENCHID++CTF++spmv++it-2004++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmv
+Read 1150725436 non-zero entries from the file.
+Average execution time: 9449.85 ms.
+BENCHID++CTF++spmv++it-2004++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmv
+Read 1150725436 non-zero entries from the file.
+Average execution time: 9985.95 ms.
+BENCHID++CTF++spmv++it-2004++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmv
+Read 1150725436 non-zero entries from the file.
+Average execution time: 10150.6 ms.
+BENCHID++CTF++spmv++kmer_A2a++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmv
+Read 360585172 non-zero entries from the file.
+Average execution time: 11480.5 ms.
+BENCHID++CTF++spmv++kmer_A2a++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmv
+Read 360585172 non-zero entries from the file.
+Average execution time: 8235.95 ms.
+BENCHID++CTF++spmv++kmer_A2a++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmv
+Read 360585172 non-zero entries from the file.
+Average execution time: 7453.1 ms.
+BENCHID++CTF++spmv++kmer_A2a++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmv
+Read 360585172 non-zero entries from the file.
+Average execution time: 7010.35 ms.
+BENCHID++CTF++spmv++kmer_A2a++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmv
+Read 360585172 non-zero entries from the file.
+Average execution time: 9564.3 ms.
+BENCHID++CTF++spmv++kmer_V1r++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmv
+Read 465410904 non-zero entries from the file.
+Average execution time: 14473 ms.
+BENCHID++CTF++spmv++kmer_V1r++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmv
+Read 465410904 non-zero entries from the file.
+Average execution time: 10033.5 ms.
+BENCHID++CTF++spmv++kmer_V1r++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmv
+Read 465410904 non-zero entries from the file.
+Average execution time: 8401.05 ms.
+BENCHID++CTF++spmv++kmer_V1r++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmv
+Read 465410904 non-zero entries from the file.
+Average execution time: 8035.3 ms.
+BENCHID++CTF++spmv++kmer_V1r++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmv
+Read 465410904 non-zero entries from the file.
+Average execution time: 10043.5 ms.
+BENCHID++CTF++spmv++mycielskian19++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmv
+Read 903194710 non-zero entries from the file.
+Average execution time: 13786.7 ms.
+BENCHID++CTF++spmv++mycielskian19++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmv
+Read 903194710 non-zero entries from the file.
+Average execution time: 8648.05 ms.
+BENCHID++CTF++spmv++mycielskian19++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmv
+Read 903194710 non-zero entries from the file.
+Average execution time: 7485.6 ms.
+BENCHID++CTF++spmv++mycielskian19++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmv
+Read 903194710 non-zero entries from the file.
+Average execution time: 7989.95 ms.
+BENCHID++CTF++spmv++mycielskian19++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmv
+Read 903194710 non-zero entries from the file.
+Average execution time: 7487 ms.
+BENCHID++CTF++spmv++nlpkkt240++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmv
+Read 774472352 non-zero entries from the file.
+Average execution time: 12132.6 ms.
+BENCHID++CTF++spmv++nlpkkt240++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmv
+Read 774472352 non-zero entries from the file.
+Average execution time: 8081.55 ms.
+BENCHID++CTF++spmv++nlpkkt240++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmv
+Read 774472352 non-zero entries from the file.
+Average execution time: 7149.75 ms.
+BENCHID++CTF++spmv++nlpkkt240++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmv
+Read 774472352 non-zero entries from the file.
+Average execution time: 5806.9 ms.
+BENCHID++CTF++spmv++nlpkkt240++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmv
+Read 774472352 non-zero entries from the file.
+Average execution time: 5285.35 ms.
+BENCHID++CTF++spmv++sk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmv
+Read 1949412601 non-zero entries from the file.
+Average execution time: 30020.8 ms.
+BENCHID++CTF++spmv++sk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmv
+Read 1949412601 non-zero entries from the file.
+Average execution time: 17170.2 ms.
+BENCHID++CTF++spmv++sk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmv
+Read 1949412601 non-zero entries from the file.
+Average execution time: 13807.9 ms.
+BENCHID++CTF++spmv++sk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmv
+Read 1949412601 non-zero entries from the file.
+Average execution time: 13270.5 ms.
+BENCHID++CTF++spmv++sk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmv
+Read 1949412601 non-zero entries from the file.
+Average execution time: 19327 ms.
+BENCHID++CTF++spmv++twitter7++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmv
+Read 1468365182 non-zero entries from the file.
+Average execution time: 24677.2 ms.
+BENCHID++CTF++spmv++twitter7++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmv
+Read 1468365182 non-zero entries from the file.
+Average execution time: 14363.5 ms.
+BENCHID++CTF++spmv++twitter7++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmv
+Read 1468365182 non-zero entries from the file.
+Average execution time: 10946.8 ms.
+BENCHID++CTF++spmv++twitter7++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmv
+Read 1468365182 non-zero entries from the file.
+Average execution time: 10288.1 ms.
+BENCHID++CTF++spmv++twitter7++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmv
+Read 1468365182 non-zero entries from the file.
+Average execution time: 10651 ms.
+BENCHID++CTF++spmv++uk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmv
+Read 936364282 non-zero entries from the file.
+Average execution time: 13911.9 ms.
+BENCHID++CTF++spmv++uk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmv
+Read 936364282 non-zero entries from the file.
+Average execution time: 8994.9 ms.
+BENCHID++CTF++spmv++uk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmv
+Read 936364282 non-zero entries from the file.
+Average execution time: 8942.15 ms.
+BENCHID++CTF++spmv++uk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmv
+Read 936364282 non-zero entries from the file.
+Average execution time: 9654.65 ms.
+BENCHID++CTF++spmv++uk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmv
+Read 936364282 non-zero entries from the file.
+Average execution time: 10287.2 ms.
+BENCHID++CTF++spmv++webbase-2001++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmv
+Read 1019903190 non-zero entries from the file.
+Average execution time: 17343.2 ms.
+BENCHID++CTF++spmv++webbase-2001++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmv
+Read 1019903190 non-zero entries from the file.
+Average execution time: 10953.7 ms.
+BENCHID++CTF++spmv++webbase-2001++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmv
+Read 1019903190 non-zero entries from the file.
+Average execution time: 9661.3 ms.
+BENCHID++CTF++spmv++webbase-2001++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmv
+Read 1019903190 non-zero entries from the file.
+Average execution time: 9303.2 ms.
+BENCHID++CTF++spmv++webbase-2001++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmv
+Read 1019903190 non-zero entries from the file.
+Average execution time: 11604.6 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3217055: <../scripts/spbenchmark.py CTF spmv all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py CTF spmv all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen407> by user <yadav2> in cluster <lassen> at Tue Feb  1 17:19:39 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Tue Feb  1 17:38:14 2022
+                            <40*lassen205>
+                            <40*lassen534>
+                            <40*lassen226>
+                            <40*lassen556>
+                            <40*lassen227>
+                            <40*lassen557>
+                            <40*lassen228>
+                            <40*lassen558>
+                            <40*lassen229>
+                            <40*lassen59>
+                            <40*lassen230>
+                            <40*lassen560>
+                            <40*lassen240>
+                            <40*lassen570>
+                            <40*lassen571>
+                            <40*lassen728>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Tue Feb  1 17:38:14 2022
+Terminated at Tue Feb  1 22:30:44 2022
+Results reported at Tue Feb  1 22:30:44 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py CTF spmv all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   11.00 sec.
+    Max Memory :                                 135 MB
+    Average Memory :                             104.95 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   17550 sec.
+    Turnaround time :                            18665 sec.
+
+The output (if any) is above this job summary.
+
