@@ -131,21 +131,18 @@ ir::Stmt RectCompressedModeFormat::getFinalizeYieldPos(ir::Expr, Mode mode) cons
   // We the RectCompressedFinalizeYieldPositions task to perform this
   // computation, we all we do is launch it using the partition used to
   // perform the scan.
-  std::vector<ir::Stmt> results;
-  auto makeLauncher = ir::makeConstructor(
-    RectCompressedFinalizeYieldPositions,
+  auto call = ir::Call::make(
+    "RectCompressedFinalizeYieldPositions::compute",
     {
       ir::ctx,
       ir::runtime,
       this->getRegion(mode.getModePack(), POS),
       ir::FieldAccess::make(this->getSeqInsertEdgesResultVar(mode), "partition", false /* deref */, Auto),
-      this->fidRect1
-    }
+      this->fidRect1,
+    },
+    Auto
   );
-  auto launcher = ir::Var::make(mode.getName() + "_finalize_yield_pos_launcher", RectCompressedFinalizeYieldPositions);
-  results.push_back(ir::VarDecl::make(launcher, makeLauncher));
-  results.push_back(ir::SideEffect::make(ir::Call::make("runtime->execute_index_space", {ir::ctx, launcher}, Auto)));
-  return ir::Block::make(results);
+  return ir::SideEffect::make(call);
 }
 
 ir::Stmt RectCompressedModeFormat::getSeqInitEdges(ir::Expr prevSize, std::vector<ir::Expr> parentDims,

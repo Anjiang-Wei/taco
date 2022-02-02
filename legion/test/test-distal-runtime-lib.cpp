@@ -134,8 +134,7 @@ TEST_F(DISTALRuntime, RectCompressedFinalizeYieldPos) {
     }
     auto ipart = runtime->create_equal_partition(ctx, ispace, colorSpace);
     auto lpart = runtime->get_logical_partition(ctx, reg, ipart);
-    RectCompressedFinalizeYieldPositions launcher(ctx, runtime, reg, lpart, FID_RECT_1);
-    runtime->execute_index_space(ctx, launcher).wait_all_results();
+    RectCompressedFinalizeYieldPositions::compute(ctx, runtime, reg, lpart, FID_RECT_1);
 
     {
       auto preg = legionMalloc(ctx, runtime, reg, reg, FID_RECT_1, READ_ONLY);
@@ -160,8 +159,7 @@ TEST_F(DISTALRuntime, RectCompressedFinalizeYieldPos) {
     runtime->fill_field(ctx, reg, reg, FID_RECT_1, Rect<1>{0, 1});
     auto ipart = runtime->create_equal_partition(ctx, ispace, colorSpace);
     auto lpart = runtime->get_logical_partition(ctx, reg, ipart);
-    RectCompressedFinalizeYieldPositions launcher(ctx, runtime, reg, lpart, FID_RECT_1);
-    runtime->execute_index_space(ctx, launcher).wait_all_results();
+    RectCompressedFinalizeYieldPositions::compute(ctx, runtime, reg, lpart, FID_RECT_1);
     runtime->destroy_logical_region(ctx, reg);
     runtime->destroy_index_space(ctx, ispace);
   }
@@ -174,8 +172,7 @@ TEST_F(DISTALRuntime, RectCompressedFinalizeYieldPos) {
     runtime->fill_field(ctx, reg, reg, FID_RECT_1, Rect<1>{0, 1});
     auto ipart = runtime->create_equal_partition(ctx, ispace, colorSpace);
     auto lpart = runtime->get_logical_partition(ctx, reg, ipart);
-    RectCompressedFinalizeYieldPositions launcher(ctx, runtime, reg, lpart, FID_RECT_1);
-    runtime->execute_index_space(ctx, launcher).wait_all_results();
+    RectCompressedFinalizeYieldPositions::compute(ctx, runtime, reg, lpart, FID_RECT_1);
     runtime->destroy_logical_region(ctx, reg);
     runtime->destroy_index_space(ctx, ispace);
   }

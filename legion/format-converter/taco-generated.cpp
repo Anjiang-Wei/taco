@@ -121,8 +121,7 @@ void packLegionCOOToCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   runtime->unmap_region(ctx, T2_crd);
   runtime->unmap_region(ctx, T_vals);
 
-  RectCompressedFinalizeYieldPositions T2_finalize_yield_pos_launcher = RectCompressedFinalizeYieldPositions(ctx, runtime, T2_pos, T2_seq_insert_edges_result.partition, FID_RECT_1);
-  runtime->execute_index_space(ctx, T2_finalize_yield_pos_launcher);
+  RectCompressedFinalizeYieldPositions::compute(ctx, runtime, T2_pos, T2_seq_insert_edges_result.partition, FID_RECT_1);
 
   runtime->unmap_region(ctx, T2_nnz_vals);
   runtime->destroy_field_space(ctx, T2_nnzfspace);
@@ -624,8 +623,7 @@ void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   runtime->unmap_region(ctx, T3_crd);
   runtime->unmap_region(ctx, T_vals);
 
-  RectCompressedFinalizeYieldPositions T3_finalize_yield_pos_launcher = RectCompressedFinalizeYieldPositions(ctx, runtime, T3_pos, T3_seq_insert_edges_result.partition, FID_RECT_1);
-  runtime->execute_index_space(ctx, T3_finalize_yield_pos_launcher);
+  RectCompressedFinalizeYieldPositions::compute(ctx, runtime, T3_pos, T3_seq_insert_edges_result.partition, FID_RECT_1);
 
   runtime->unmap_region(ctx, T3_nnz_vals);
   runtime->destroy_field_space(ctx, T3_nnzfspace);
@@ -1155,8 +1153,7 @@ void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   runtime->unmap_region(ctx, T2_crd);
   runtime->unmap_region(ctx, T_vals);
 
-  RectCompressedFinalizeYieldPositions T2_finalize_yield_pos_launcher = RectCompressedFinalizeYieldPositions(ctx, runtime, T2_pos, T2_seq_insert_edges_result.partition, FID_RECT_1);
-  runtime->execute_index_space(ctx, T2_finalize_yield_pos_launcher);
+  RectCompressedFinalizeYieldPositions::compute(ctx, runtime, T2_pos, T2_seq_insert_edges_result.partition, FID_RECT_1);
 
   runtime->unmap_region(ctx, T2_nnz_vals);
   runtime->destroy_field_space(ctx, T2_nnzfspace);

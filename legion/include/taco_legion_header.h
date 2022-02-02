@@ -343,7 +343,7 @@ int taco_binarySearchAfter(T array, int arrayStart, int arrayEnd, int target) {
 // A set of tasks and methods for distributed-parallel construction of sparse tensors.
 class RectCompressedFinalizeYieldPositions : public Legion::IndexLauncher {
 public:
-  RectCompressedFinalizeYieldPositions(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalPartition partition, Legion::FieldID fid);
+  static void compute(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalPartition partition, Legion::FieldID fid);
   static void registerTasks();
 private:
   // Local typedef for Accessors.

@@ -1,10 +1,12 @@
 #include "taco_legion_header.h"
+#include "taco_mapper.h"
 #include "shard.h"
 #include "error.h"
 #include "task_ids.h"
 #include "legion/legion_utilities.h"
 #include "pitches.h"
 #include <mutex>
+#include <legion_utils.h>
 
 #ifdef REALM_USE_OPENMP
 #include <omp.h>
@@ -330,6 +332,7 @@ Legion::IndexPartition RectCompressedPosPartitionDownwards::apply(Legion::Contex
   // doing operations per element.
   IndexLauncher launcher(RectCompressedPosPartitionDownwards::taskID, colorSpaceDomain, TaskArgument(&fid, sizeof(FieldID)), ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, parent).add_field(fid));
+  launcher.tag |= TACOMapper::UNTRACK_VALID_REGIONS;
   auto domains = runtime->execute_index_space(ctx, launcher);
   return runtime->create_partition_by_domain(ctx, ispace, domains, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
@@ -581,12 +584,9 @@ void SparseGatherProjection::registerTasks() {
   }
 }
 
-RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
-    Context ctx, Runtime *runtime, LogicalRegion region,
-    LogicalPartition part,
-    FieldID fid) :
-    IndexLauncher(RectCompressedFinalizeYieldPositions::taskID, Domain(), TaskArgument(), ArgumentMap()) {
-  this->launch_domain = runtime->get_index_partition_color_space(ctx, part.get_index_partition());
+void RectCompressedFinalizeYieldPositions::compute(Context ctx, Runtime *runtime, LogicalRegion region,
+                                                   LogicalPartition part, FieldID fid) {
+  auto launchDomain = runtime->get_index_partition_color_space(ctx, part.get_index_partition());
   auto launchSpace = runtime->get_index_partition_color_space_name(ctx, part.get_index_partition());
 
   // The input partition must be complete and disjoint.
@@ -594,7 +594,7 @@ RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
   taco_iassert(runtime->is_index_partition_disjoint(ctx, part.get_index_partition()));
 
   // TODO (rohany): For now, let's just worry about one-dimensional color spaces.
-  taco_iassert(this->launch_domain.dim == 1);
+  taco_iassert(launchDomain.dim == 1);
   // Create a ghost partition.
   // TODO (rohany): I think that in the general case with this access pattern
   //  only one of the dimensions can be partitioned. This makes sense because
@@ -605,7 +605,7 @@ RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
 #define BLOCK(DIM) \
     case DIM: {    \
       DomainT<DIM> regionBounds = runtime->get_index_space_domain(ctx, region.get_index_space());             \
-      for (PointInDomainIterator<1> itr(this->launch_domain); itr(); itr++) { \
+      for (PointInDomainIterator<1> itr(launchDomain); itr(); itr++) { \
         auto subreg = runtime->get_logical_subregion_by_color(ctx, part, Color(*itr)); \
         DomainT<DIM> bounds = runtime->get_index_space_domain(ctx, subreg.get_index_space());                 \
         taco_iassert(bounds.dense());           \
@@ -633,7 +633,7 @@ RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
   auto tempReg = runtime->create_logical_region(ctx, region.get_index_space(), region.get_field_space());
   auto tempPart = runtime->get_logical_partition(ctx, tempReg, part.get_index_partition());
   {
-    IndexCopyLauncher cl(this->launch_domain);
+    IndexCopyLauncher cl(launchDomain);
     cl.add_copy_requirements(
         RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, region).add_field(fid),
         RegionRequirement(tempPart, 0, WRITE_ONLY, EXCLUSIVE, tempReg).add_field(fid)
@@ -647,9 +647,16 @@ RectCompressedFinalizeYieldPositions::RectCompressedFinalizeYieldPositions(
   auto ghostlp = runtime->get_logical_partition(ctx, tempReg, ghostip);
 
   // Add the regions arguments.
-  this->add_region_requirement(RegionRequirement(part, 0, READ_WRITE, EXCLUSIVE, region).add_field(fid));
-  this->add_region_requirement(
-      RegionRequirement(ghostlp, 0, READ_ONLY, EXCLUSIVE, tempReg).add_field(fid));
+  {
+    IndexLauncher launcher(RectCompressedFinalizeYieldPositions::taskID, launchDomain, TaskArgument(), ArgumentMap());
+    launcher.add_region_requirement(RegionRequirement(part, 0, READ_WRITE, EXCLUSIVE, region).add_field(fid));
+    launcher.add_region_requirement(RegionRequirement(ghostlp, 0, READ_ONLY, EXCLUSIVE, tempReg).add_field(fid));
+    launcher.tag |= TACOMapper::UNTRACK_VALID_REGIONS;
+    runtime->execute_index_space(ctx, launcher);
+  }
+
+  // Clean up after ourselves.
+  runtime->destroy_logical_region(ctx, tempReg);
 }
 
 template<>
@@ -800,6 +807,7 @@ RectCompressedGetSeqInsertEdges::compute(Legion::Context ctx, Legion::Runtime *r
                                   ArgumentMap());
   localScanLauncher.add_region_requirement(RegionRequirement(pospart, 0, WRITE_ONLY, EXCLUSIVE, pos).add_field(posFid));
   localScanLauncher.add_region_requirement(RegionRequirement(nnzpart, 0, READ_ONLY, EXCLUSIVE, nnz).add_field(nnzFid));
+  localScanLauncher.tag |= TACOMapper::UNTRACK_VALID_REGIONS;
   auto localScanResults = runtime->execute_index_space(ctx, localScanLauncher);
   // TODO (rohany): See if there is a more efficient way to not have to
   //  wait on all of these. I think that this is unavoidable though.

@@ -63,7 +63,8 @@ class DISTALBenchmark(Benchmark):
             BenchmarkKind.SDDMM: ["-csr", self.getDISTALTensor(tensor, 'csr')],
             BenchmarkKind.SpAdd3: ["-tensorB", self.getDISTALTensor(tensor, 'csr'), 
                                    "-tensorC", self.getShiftedTensor(tensor, 'csr', 0), 
-                                   "-tensorD", self.getShiftedTensor(tensor, 'csr', 1)],
+                                   "-tensorD", self.getShiftedTensor(tensor, 'csr', 1),
+                                   "-tm:untrack_valid_regions"],
             BenchmarkKind.SpTTV: ["-tensor", self.getDISTALTensor(tensor, 'dss')],
             # TODO (rohany): Pass through the ldim here.
             BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dss')],
@@ -82,7 +83,7 @@ class DISTALBenchmark(Benchmark):
         legionArgs = ["-ll:ocpu", "2",
                       "-ll:othr", "18",
                       "-ll:onuma", "1",
-                      "-ll:nsize", "75G",
+                      "-ll:nsize", "110G",
                       "-ll:ncsize", "0",
                       "-ll:util", "2",
                       "-tm:numa_aware_alloc"]

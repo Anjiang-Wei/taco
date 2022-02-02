@@ -687,8 +687,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   runtime->execute_index_space(ctx, launcher0);
 
 
-  RectCompressedFinalizeYieldPositions A2_finalize_yield_pos_launcher = RectCompressedFinalizeYieldPositions(ctx, runtime, A2_pos, A2_seq_insert_edges_result.partition, FID_RECT_1);
-  runtime->execute_index_space(ctx, A2_finalize_yield_pos_launcher);
+  RectCompressedFinalizeYieldPositions::compute(ctx, runtime, A2_pos, A2_seq_insert_edges_result.partition, FID_RECT_1);
 
   runtime->destroy_field_space(ctx, A2_nnzfspace);
   runtime->destroy_index_space(ctx, A2_nnzispace);
