@@ -1742,16 +1742,29 @@ Stmt LowererImpl::searchForFusedPositionStart(Forall forall, Iterator posIterato
                                                                        getCoordinateVar(underived).type())));
       }
       else {
-        taco_iassert(false) << "Unimplemented. Follow the methodology above to fix this case.";
-        std::vector<Expr> args = {
-                posIteratorLevel.getMode().getModePack().getArray(0), // array
-                blockStarts_temporary, // results
-                ir::Literal::zero(posIteratorLevel.getBeginVar().type()), // arrayStart
-                parentSize, // arrayEnd
-                last_block_start_temporary, // targets
-                blockSize, // block_size
-                parallelUnitSizes[ParallelUnit::GPUBlock] // num_blocks
-        };
+        std::vector<Expr> args;
+        if (legionSparseLevel) {
+          auto acc = legionSparseLevel->getAccessor(posIteratorLevel.getMode().getModePack(), RectCompressedModeFormat::POS);
+          args = {
+              acc, // array
+              blockStarts_temporary, // results
+              ir::FieldAccess::make(domVar, "bounds.lo", false /* deref */, Int()), // Search start.
+              ir::FieldAccess::make(domVar, "bounds.hi", false /* deref */, Int()), // Search end.
+              last_block_start_temporary, // targets
+              blockSize, // block_size
+              parallelUnitSizes[ParallelUnit::GPUBlock], // num_blocks
+          };
+        } else {
+          args = {
+              posIteratorLevel.getMode().getModePack().getArray(0), // array
+              blockStarts_temporary, // results
+              ir::Literal::zero(posIteratorLevel.getBeginVar().type()), // arrayStart
+              parentSize, // arrayEnd
+              last_block_start_temporary, // targets
+              blockSize, // block_size
+              parallelUnitSizes[ParallelUnit::GPUBlock] // num_blocks
+          };
+        }
         this->taskHeader.push_back(
             ir::SideEffect::make(ir::Call::make("taco_binarySearchIndirectBeforeBlockLaunch", args,
                                                 getCoordinateVar(underived).type())));
