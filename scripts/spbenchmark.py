@@ -286,11 +286,11 @@ def main():
     parser.add_argument("--dry-run", default=False, action="store_true")
     args = parser.parse_args()
 
-    if args.gpus is not None and args.nodes != [1]:
+    useGPUs = len(args.gpus) != 0
+    if useGPUs and args.nodes != [1]:
         print("Cannot set both --gpus and --nodes")
         return
 
-    useGPUs = len(args.gpus) != 0
     procs = args.nodes
     if useGPUs:
         procs = args.gpus
