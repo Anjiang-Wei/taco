@@ -1685,13 +1685,18 @@ TEST(distributed, legionSpTTV) {
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ff("ff"), ffpos("ffpos"), ffposo("ffposo"), ffposi("ffposi"), ffposio("ffposio"), ffposii("ffposii");
   std::vector<ir::Stmt> stmts;
-  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched) {
+  std::vector<ir::Stmt> gpuStmts;
+  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> c)> sched, bool cuda = false) {
     Tensor<double> A("A", {dim, dim}, LgFormat({Dense, LgSparse}));
     Tensor<double> B("B", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
     Tensor<double> c("c", {dim}, Format{Dense});
     A(i, j) = B(i, j, k) * c(k);
     auto stmt = sched(A.getAssignment().concretize(), A, B, c);
-    stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+    if (cuda) {
+      gpuStmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+    } else {
+      stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+    }
   };
 
   add("DSS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
@@ -1730,7 +1735,57 @@ TEST(distributed, legionSpTTV) {
         ;
     return stmt;
   });
+
+  IndexVar block("block"), thread("thread"), thread_nz("thread_nz"), warp("warp"), fposi1("fposi1"), fposi2("fposi2"), nnz("nnz");
+  const int WARP_SIZE = 32;
+  const int BLOCK_SIZE = 256;
+  const int ROWS_PER_WARP = 1;
+  const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
+  const int NNZ_PER_WARP = 8 * 32;
+  int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
+
+  add("DSS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    return stmt
+        .distribute({i}, {io}, {ii}, {pieces}, taco::ParallelUnit::DistributedGPU)
+        .split(ii, block, thread, ROWS_PER_TB)
+        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::NoRaces)
+        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::NoRaces)
+        .communicate({A(i, j), B(i, j, k), c(k)}, io)
+        ;
+  }, true /* cuda */);
+  add("DSSPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    return stmt.fuse(i, j, f)
+               .fuse(f, k, ff)
+               .pos(ff, ffpos, B(i, j, k))
+               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
+               .split(ffposi, block, fposi1, NNZ_PER_TB)
+               .split(fposi1, warp, fposi2, NNZ_PER_WARP)
+               .split(fposi2, thread, thread_nz, NNZ_PER_WARP / WARP_SIZE)
+               // TOOD (rohany): Can potentially add a precompute operation to speed things
+               //  up like in the schedule in tests-scheduling-eval.cpp.
+               .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+               .communicate({A(i, j), B(i, j, k), c(k)}, ffposo)
+               ;
+    return stmt;
+  }, true /* cuda */);
+  add("DSSPartialPosSplit", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> c) {
+    return stmt.fuse(i, j, f)
+               .pos(f, ffpos, B(i, j, k))
+               .distribute({ffpos}, {ffposo}, {ffposi}, {pieces})
+               .split(ffposi, block, fposi1, NNZ_PER_TB)
+               .split(fposi1, warp, fposi2, NNZ_PER_WARP)
+               .split(fposi2, thread, thread_nz, NNZ_PER_WARP / WARP_SIZE)
+               .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+               .communicate({A(i, j), B(i, j, k), c(k)}, ffposo)
+               ;
+  }, true /* cuda */);
+
   ir::CodegenLegionC::compileToDirectory("../legion/spttv/", ir::Block::make(stmts));
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spttv/", ir::Block::make(gpuStmts));
 }
 
 TEST(distributed, legionSpMM) {
