@@ -105,44 +105,42 @@ void task_1DeviceKernel0(int64_t B3Size, int32_t* i_blockStarts, int32_t* j_bloc
     return;
   }
 
-  int64_t pointID2 = fposo * (((B3Size + (pieces - 1)) / pieces + 127) / 128) + block;
+  int64_t pointID2 = fposo * (((B3Size + (pieces - 1)) / pieces + 2047) / 2048) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
-  for (int32_t dense_b = 0; dense_b < ((C2_dimension + 31) / 32); dense_b++) {
-    int64_t pointID4 = pointID3 * ((C2_dimension + 31) / 32) + dense_b;
-    int32_t l = dense_b * 32 + thread;
-    if (l >= C2_dimension)
+  int64_t pointID4 = pointID3 * 32 + thread;
+  int32_t pB3_begin = j_blockStarts[block];
+  int32_t pB3_end = j_blockStarts[(block + 1)];
+  int32_t fposi2 = thread * 8;
+  int32_t fposi1 = warp * 256 + fposi2;
+  int32_t fposi = block * 2048 + fposi1;
+  int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
+  int32_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, fposB);
+  int32_t j = B2_crd_accessor[j_pos];
+  int32_t pB2_begin = i_blockStarts[block];
+  int32_t pB2_end = i_blockStarts[(block + 1)];
+  int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
+  int32_t i = i_pos;
+  for (int32_t thread_nz = 0; thread_nz < 8; thread_nz++) {
+    int32_t fposi2 = thread * 8 + thread_nz;
+    int32_t fposi1 = warp * 256 + fposi2;
+    int32_t fposi = block * 2048 + fposi1;
+    int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
+    if (fposB >= (fposo + 1) * ((B3Size + (pieces - 1)) / pieces))
       break;
 
-    int32_t pB3_begin = j_blockStarts[block];
-    int32_t pB3_end = j_blockStarts[(block + 1)];
-    int32_t fposi1 = warp * 16;
-    int32_t fposi = block * 128 + fposi1;
-    int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
-    int32_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, fposB);
-    int32_t j = B2_crd_accessor[j_pos];
-    int32_t pB2_begin = i_blockStarts[block];
-    int32_t pB2_end = i_blockStarts[(block + 1)];
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
-    int32_t i = i_pos;
-    for (int32_t nnz = 0; nnz < 16; nnz++) {
-      int32_t fposi1 = warp * 16 + nnz;
-      int32_t fposi = block * 128 + fposi1;
-      int32_t fposB = fposo * ((B3Size + (pieces - 1)) / pieces) + fposi;
-      if (fposB >= (fposo + 1) * ((B3Size + (pieces - 1)) / pieces))
-        break;
+    if (fposB >= B3Size)
+      break;
 
-      if (fposB >= B3Size)
-        break;
-
-      int32_t f2 = B3_crd_accessor[fposB];
-      if (!(B3_pos_accessor[j_pos].contains(fposB))) {
-        j_pos = j_pos + 1;
-        j = B2_crd_accessor[j_pos];
-        while (!(B2_pos_accessor[i_pos].contains(j_pos))) {
-          i_pos = i_pos + 1;
-          i = i_pos;
-        }
+    int32_t f2 = B3_crd_accessor[fposB];
+    if (!(B3_pos_accessor[j_pos].contains(fposB))) {
+      j_pos = j_pos + 1;
+      j = B2_crd_accessor[j_pos];
+      while (!(B2_pos_accessor[i_pos].contains(j_pos))) {
+        i_pos = i_pos + 1;
+        i = i_pos;
       }
+    }
+    for (int32_t l = 0; l < C2_dimension; l++) {
       atomicAddWarp(A_vals_red_accessor_non_excl.ptr(Point<2>(i, l)), flattenPoint(A_vals_red_accessor_non_excl, Point<2>(i, l)), ((B_vals_ro_accessor[Point<1>(fposB)] * C_vals_ro_accessor[Point<2>(j, l)]) * D_vals_ro_accessor[Point<2>(f2, l)]));
     }
   }
@@ -186,21 +184,21 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B3PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_pos));
   DomainT<1> B3CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_crd));
-  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B3Size + (pieces - 1)) / pieces + 127) / 128)), Legion::Memory::Kind::GPU_FB_MEM);
+  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B3Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
   int32_t* j_blockStarts = buf.ptr(0);
   taco_binarySearchBeforeBlockLaunch(
     B3_pos_accessor,
     j_blockStarts,
     B3PosDomain.bounds.lo,
     B3PosDomain.bounds.hi,
-    128,
+    2048,
     256,
-    (((B3Size + (pieces - 1)) / pieces + 127) / 128),
+    (((B3Size + (pieces - 1)) / pieces + 2047) / 2048),
     B3CrdDomain.bounds.lo
   );
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  Legion::DeferredBuffer<int32_t, 1> buf0 = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B3Size + (pieces - 1)) / pieces + 127) / 128)), Legion::Memory::Kind::GPU_FB_MEM);
+  Legion::DeferredBuffer<int32_t, 1> buf0 = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B3Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
   int32_t* i_blockStarts = buf0.ptr(0);
   taco_binarySearchIndirectBeforeBlockLaunch(
     B2_pos_accessor,
@@ -209,10 +207,10 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     B2PosDomain.bounds.hi,
     j_blockStarts,
     256,
-    (((B3Size + (pieces - 1)) / pieces + 127) / 128)
+    (((B3Size + (pieces - 1)) / pieces + 2047) / 2048)
   );
-  if (((((B3Size + (pieces - 1)) / pieces + 127) / 128)) > 0) {
-    task_1DeviceKernel0<<<(((B3Size + (pieces - 1)) / pieces + 127) / 128), (32 * 8)>>>(B3Size, i_blockStarts, j_blockStarts, pieces, B3_pos_accessor, B2_pos_accessor, B2_crd_accessor, B3_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, C2_dimension, fposo);
+  if (((((B3Size + (pieces - 1)) / pieces + 2047) / 2048)) > 0) {
+    task_1DeviceKernel0<<<(((B3Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B3Size, i_blockStarts, j_blockStarts, pieces, B3_pos_accessor, B2_pos_accessor, B2_crd_accessor, B3_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, C2_dimension, fposo);
   }
 }
 

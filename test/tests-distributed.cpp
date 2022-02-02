@@ -1918,22 +1918,29 @@ TEST(distributed, legionSpMTTKRP) {
                      .communicate(D(k, l), fposo)
                      ;
 
-  const int NNZ_PER_WARP = 16;
+  // Note: we use a different schedule than the one in tests-scheduling-eval.cpp that fully
+  // parallelizes the loop over the non-zeros instead of parallelizing the inner l loop over
+  // the threads. The tradeoff here is for using fewer atomic instructions at the cost of not
+  // being able to coalesce memory loads along the C and D matrices. On our benchmarks this
+  // tradeoff appears to be beneficial.
   const int WARP_SIZE = 32;
   const int BLOCK_SIZE = 256;
-  const int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
-  IndexVar block("block"), fposi1("fposi1"), thread("thread"), warp("warp"),
-           dense_b("dense_b"), nnz("nnz");
+  const int NNZ_PER_THREAD = 8;
+  const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;
+  const int NNZ_PER_BLOCK = NNZ_PER_THREAD * BLOCK_SIZE;
+  IndexVar block("block"), fposi1("fposi1"), fposi2("fposi2"), thread("thread"), warp("warp"),
+           dense_b("dense_b"), nnz("nnz"), thread_nz("thread_nz");
   auto gpuStmt = stmt.reorder({i, j, k, l})
                      .fuse(j, k, f1)
                      .fuse(i, f1, f2)
                      .pos(f2, fpos, B(i, j, k))
                      .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-                     .split(fposi, block, fposi1, NNZ_PER_TB)
-                     .split(fposi1, warp, nnz, NNZ_PER_WARP)
-                     // TODO (rohany): Maybe bound this.
-                     .split(l, dense_b, thread, WARP_SIZE)
-                     .reorder({block, warp, dense_b, thread, nnz})
+                     .split(fposi, block, fposi1, NNZ_PER_BLOCK)
+                     .split(fposi1, warp, fposi2, NNZ_PER_WARP)
+                     .split(fposi2, thread, thread_nz, NNZ_PER_THREAD)
+                     .reorder({block, warp, thread, thread_nz})
+                     // TODO (rohany): A small benefit can be gained by precomputing the result
+                     //  over the l loop into a temporary, but breaks some pieces of TACO.
                      .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
                      .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
                      .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
