@@ -144,7 +144,7 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   DomainT<1> B3_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B3_crd));
   DomainT<1> C3_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C3_crd));
   int64_t pointID1 = io;
-  #pragma omp parallel for schedule(dynamic, 1024)
+  #pragma omp parallel for schedule(dynamic, 128)
   for (int32_t iio = 0; iio < (((B1_dimension + (pieces - 1)) / pieces + 1023) / 1024); iio++) {
     int64_t pointID2 = pointID1 * (((B1_dimension + (pieces - 1)) / pieces + 1023) / 1024) + iio;
     double tiiia_val = 0.0;
