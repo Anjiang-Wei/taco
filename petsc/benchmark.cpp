@@ -15,6 +15,9 @@
 
 static const char help[] = "Petsc benchmark utility";
 
+static const char logStr[] = "Benchmark";
+PetscLogStage logStage;
+
 PetscBool GPUENABLED = PETSC_FALSE; PetscBool GPUENABLED_SET = PETSC_FALSE;
 
 void maybeSyncDevice() {
@@ -49,12 +52,14 @@ double benchmarkWithWarmup(int warmup, int numIter, std::function<void(void)> f)
     f();
   }
   maybeSyncDevice();
+  PetscLogStagePush(logStage);
   PetscTime(&start);
   for (int i = 0; i < numIter; i++) {
     f();
   }
   maybeSyncDevice();
   PetscTime(&end);
+  PetscLogStagePop();
   auto sec = end - start;
   return double(sec) / double(numIter);
 }
@@ -210,6 +215,9 @@ int main(int argc, char** argv) {
   ierr = PetscOptionsGetString(NULL, PETSC_NULL, "-bench", benchmarkKindInput, BENCHMARK_NAME_MAX_LEN - 1, &benchmarkKindNameSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL, NULL, "-spmmJdim", &spmmJdim, &spmmJdimSet); CHKERRQ(ierr);
   ierr = PetscOptionsGetBool(NULL, NULL, "-enable_gpu", &GPUENABLED, &GPUENABLED_SET); CHKERRQ(ierr);
+
+  // Register the benchmark log stage for informative -log_view output.
+  PetscLogStageRegister(logStr, &logStage);
 
   std::string benchmark = "spmv";
   if (benchmarkKindNameSet) {
