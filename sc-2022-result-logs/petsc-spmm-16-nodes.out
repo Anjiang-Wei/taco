@@ -118,8 +118,36 @@ Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/be
 Average time: 45727.797603 ms.
 BENCHID++PETSc++spmm++twitter7++8
 Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
-User defined signal 2
-
+BENCHID++PETSc++spmm++uk-2005++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1777.877628 ms.
+BENCHID++PETSc++spmm++uk-2005++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 816.091293 ms.
+BENCHID++PETSc++spmm++uk-2005++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 551.325718 ms.
+BENCHID++PETSc++spmm++uk-2005++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 425.641682 ms.
+BENCHID++PETSc++spmm++uk-2005++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
+Average time: 196.808851 ms.
+BENCHID++PETSc++spmm++webbase-2001++1
+Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spmm
+Average time: 2061.400488 ms.
+BENCHID++PETSc++spmm++webbase-2001++2
+Executing command: jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spmm
+Average time: 1115.609680 ms.
+BENCHID++PETSc++spmm++webbase-2001++4
+Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spmm
+Average time: 565.470306 ms.
+BENCHID++PETSc++spmm++webbase-2001++8
+Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spmm
+Average time: 324.077753 ms.
+BENCHID++PETSc++spmm++webbase-2001++16
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spmm
+Average time: 202.333017 ms.
 ------------------------------------------------------------
 Sender: LSF System <lsfadmin@lassen710>
 Subject: Job 3208134: <../scripts/spbenchmark.py PETSc spmm all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Exited

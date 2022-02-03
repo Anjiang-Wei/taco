@@ -92,20 +92,12 @@ Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly mat
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
 Average execution time: 104.150000 ms
-BENCHID++DISTAL++spmm++kmer_V1r++1
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmm -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 75G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+BENCHID++DISTAL++spmm++kmer_V1r++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmm -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-[0 - 20141fe3f8b0]    6.900722 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 4 of task task_1 (UID 78) in memory 1e00000000000002 (SOCKET_MEM) for processor 1d00000000000003 (OMP_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
-[0 - 20141fe8f8b0]    6.900825 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 4 of task task_1 (UID 82) in memory 1e00000000000003 (SOCKET_MEM) for processor 1d00000000000004 (OMP_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
-spmm: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
-spmm: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
-*** Caught a fatal signal (proc 0): SIGABRT(6)
-NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
-NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
-*** Caught a fatal signal (proc 0): SIGABRT(6)
-ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+Average execution time: 1791.350000 ms
 BENCHID++DISTAL++spmm++kmer_V1r++2
 Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spmm -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 75G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
