@@ -1,0 +1,396 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++CTF++spmm++arabic-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 30734.7 ms.
+BENCHID++CTF++spmm++arabic-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 8911.25 ms.
+BENCHID++CTF++spmm++arabic-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 15713.1 ms.
+BENCHID++CTF++spmm++arabic-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 4546.7 ms.
+BENCHID++CTF++spmm++arabic-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench spmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 9390.9 ms.
+BENCHID++CTF++spmm++it-2004++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 56808.2 ms.
+BENCHID++CTF++spmm++it-2004++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 16552.5 ms.
+BENCHID++CTF++spmm++it-2004++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 28715.2 ms.
+BENCHID++CTF++spmm++it-2004++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 8341.3 ms.
+BENCHID++CTF++spmm++it-2004++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench spmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 17654 ms.
+BENCHID++CTF++spmm++kmer_A2a++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmm
+Read 360585172 non-zero entries from the file.
+Average execution time: 38333.8 ms.
+BENCHID++CTF++spmm++kmer_A2a++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 42) terminated with signal 9
+BENCHID++CTF++spmm++kmer_A2a++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmm
+Read 360585172 non-zero entries from the file.
+Average execution time: 20334.8 ms.
+BENCHID++CTF++spmm++kmer_A2a++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmm
+Read 360585172 non-zero entries from the file.
+Average execution time: 24926 ms.
+BENCHID++CTF++spmm++kmer_A2a++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench spmm
+Read 360585172 non-zero entries from the file.
+Average execution time: 17716.4 ms.
+BENCHID++CTF++spmm++kmer_V1r++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 36) terminated with signal 9
+BENCHID++CTF++spmm++kmer_V1r++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 43) terminated with signal 9
+BENCHID++CTF++spmm++kmer_V1r++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmm
+Read 465410904 non-zero entries from the file.
+Average execution time: 25541.7 ms.
+BENCHID++CTF++spmm++kmer_V1r++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 113) terminated with signal 9
+BENCHID++CTF++spmm++kmer_V1r++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench spmm
+Read 465410904 non-zero entries from the file.
+Average execution time: 21934 ms.
+BENCHID++CTF++spmm++mycielskian19++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 15811.9 ms.
+BENCHID++CTF++spmm++mycielskian19++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 9974.5 ms.
+BENCHID++CTF++spmm++mycielskian19++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 9075.85 ms.
+BENCHID++CTF++spmm++mycielskian19++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 10770 ms.
+BENCHID++CTF++spmm++mycielskian19++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench spmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 5716.45 ms.
+BENCHID++CTF++spmm++nlpkkt240++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 39083.4 ms.
+BENCHID++CTF++spmm++nlpkkt240++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 12573.8 ms.
+BENCHID++CTF++spmm++nlpkkt240++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 19068 ms.
+BENCHID++CTF++spmm++nlpkkt240++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 6015.8 ms.
+BENCHID++CTF++spmm++nlpkkt240++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench spmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 11374 ms.
+BENCHID++CTF++spmm++sk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmm
+Read 1949412601 non-zero entries from the file.
+[lassen130:79088] *** Process received signal ***
+[lassen130:79088] Signal: Segmentation fault (11)
+[lassen130:79088] Signal code: Address not mapped (1)
+[lassen130:79088] Failing at address: 0x20012df91930
+[lassen130:79087] *** Process received signal ***
+[lassen130:79087] Signal: Segmentation fault (11)
+[lassen130:79087] Signal code: Address not mapped (1)
+[lassen130:79087] Failing at address: 0x20012d1998a0
+[lassen130:79083] *** Process received signal ***
+[lassen130:79083] Signal: Segmentation fault (11)
+[lassen130:79083] Signal code: Address not mapped (1)
+[lassen130:79083] Failing at address: 0x200134951f50
+[lassen130:79084] *** Process received signal ***
+[lassen130:79084] Signal: Segmentation fault (11)
+[lassen130:79084] Signal code: Address not mapped (1)
+[lassen130:79084] Failing at address: 0x2001311a20d0
+[lassen130:79090] *** Process received signal ***
+[lassen130:79090] Signal: Segmentation fault (11)
+[lassen130:79090] Signal code: Address not mapped (1)
+[lassen130:79090] Failing at address: 0x20015a6eb340
+[lassen130:79092] *** Process received signal ***
+[lassen130:79092] Signal: Segmentation fault (11)
+[lassen130:79092] Signal code: Address not mapped (1)
+[lassen130:79092] Failing at address: 0x200158c9f7f0
+[lassen130:79085] *** Process received signal ***
+[lassen130:79085] Signal: Segmentation fault (11)
+[lassen130:79085] Signal code: Address not mapped (1)
+[lassen130:79085] Failing at address: 0x20012e7ecef0
+[lassen130:79091] *** Process received signal ***
+[lassen130:79091] Signal: Segmentation fault (11)
+[lassen130:79091] Signal code: Address not mapped (1)
+[lassen130:79091] Failing at address: 0x20015af452b0
+[lassen130:79089] *** Process received signal ***
+[lassen130:79089] Signal: Segmentation fault (11)
+[lassen130:79089] Signal code: Address not mapped (1)
+[lassen130:79089] Failing at address: 0x20015edf0ed0
+[lassen130:79086] *** Process received signal ***
+[lassen130:79086] Signal: Segmentation fault (11)
+[lassen130:79086] Signal code: Address not mapped (1)
+[lassen130:79086] Failing at address: 0x200130a14ef0
+<< Rank 6: Generating lwcore_cpu.3217658_31.6 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 3: Generating lwcore_cpu.3217658_31.3 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 1: Generating lwcore_cpu.3217658_31.1 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 0: Generating lwcore_cpu.3217658_31.0 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 4: Generating lwcore_cpu.3217658_31.4 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 5: Generating lwcore_cpu.3217658_31.5 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 9: Generating lwcore_cpu.3217658_31.9 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 7: Generating lwcore_cpu.3217658_31.7 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 8: Generating lwcore_cpu.3217658_31.8 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 2: Generating lwcore_cpu.3217658_31.2 on lassen130 Wed Feb  2 13:34:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 1:  Generated lwcore_cpu.3217658_31.1 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 7:  Generated lwcore_cpu.3217658_31.7 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 0:  Generated lwcore_cpu.3217658_31.0 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 6:  Generated lwcore_cpu.3217658_31.6 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 4:  Generated lwcore_cpu.3217658_31.4 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 5:  Generated lwcore_cpu.3217658_31.5 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 8:  Generated lwcore_cpu.3217658_31.8 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 2:  Generated lwcore_cpu.3217658_31.2 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 9:  Generated lwcore_cpu.3217658_31.9 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 3:  Generated lwcore_cpu.3217658_31.3 on lassen130 Wed Feb  2 13:34:04 PST 2022 in 1 secs >>
+<< Rank 0: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 1: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 6: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 2: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 5: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 7: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 9: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 3: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 8: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 4: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 13:34:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+ERROR:  One or more process (first noticed rank 6) terminated with signal 11
+BENCHID++CTF++spmm++sk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 24961.8 ms.
+BENCHID++CTF++spmm++sk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 48566.3 ms.
+BENCHID++CTF++spmm++sk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 11500.1 ms.
+BENCHID++CTF++spmm++sk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench spmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 27473.2 ms.
+BENCHID++CTF++spmm++twitter7++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmm
+Read 1468365182 non-zero entries from the file.
+[lassen130:109994] *** Process received signal ***
+[lassen130:109994] Signal: Segmentation fault (11)
+[lassen130:109994] Signal code: Address not mapped (1)
+[lassen130:109994] Failing at address: 0x200108a90010
+<< Rank 8: Generating lwcore_cpu.3217658_36.8 on lassen130 Wed Feb  2 14:33:27 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+[lassen130:109987] *** Process received signal ***
+[lassen130:109987] Signal: Segmentation fault (11)
+[lassen130:109987] Signal code: Address not mapped (1)
+[lassen130:109987] Failing at address: 0x2000ed250000
+[lassen130:109990] *** Process received signal ***
+[lassen130:109990] Signal: Segmentation fault (11)
+[lassen130:109990] Signal code: Address not mapped (1)
+[lassen130:109990] Failing at address: 0x2000edac0000
+[lassen130:109989] *** Process received signal ***
+[lassen130:109989] Signal: Segmentation fault (11)
+[lassen130:109989] Signal code: Address not mapped (1)
+[lassen130:109989] Failing at address: 0x2000ec070000
+[lassen130:109995] *** Process received signal ***
+[lassen130:109995] Signal: Segmentation fault (11)
+[lassen130:109995] Signal code: Address not mapped (1)
+[lassen130:109995] Failing at address: 0x2000ed0d0000
+[lassen130:109988] *** Process received signal ***
+[lassen130:109988] Signal: Segmentation fault (11)
+[lassen130:109988] Signal code: Address not mapped (1)
+[lassen130:109988] Failing at address: 0x2000eca30000
+[lassen130:109993] *** Process received signal ***
+[lassen130:109993] Signal: Segmentation fault (11)
+[lassen130:109993] Signal code: Address not mapped (1)
+[lassen130:109993] Failing at address: 0x2000ebe90000
+[lassen130:109991] *** Process received signal ***
+[lassen130:109991] Signal: Segmentation fault (11)
+[lassen130:109991] Signal code: Address not mapped (1)
+[lassen130:109991] Failing at address: 0x2000ed050000
+<< Rank 1: Generating lwcore_cpu.3217658_36.1 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 4: Generating lwcore_cpu.3217658_36.4 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 3: Generating lwcore_cpu.3217658_36.3 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 2: Generating lwcore_cpu.3217658_36.2 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 9: Generating lwcore_cpu.3217658_36.9 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 7: Generating lwcore_cpu.3217658_36.7 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 5: Generating lwcore_cpu.3217658_36.5 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+[lassen130:109992] *** Process received signal ***
+[lassen130:109992] Signal: Segmentation fault (11)
+[lassen130:109992] Signal code: Address not mapped (1)
+[lassen130:109992] Failing at address: 0x2000ec800000
+<< Rank 6: Generating lwcore_cpu.3217658_36.6 on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 8:  Generated lwcore_cpu.3217658_36.8 on lassen130 Wed Feb  2 14:33:28 PST 2022 in 1 secs >>
+<< Rank 8: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:28 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 1:  Generated lwcore_cpu.3217658_36.1 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 4:  Generated lwcore_cpu.3217658_36.4 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 1: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 4: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 9:  Generated lwcore_cpu.3217658_36.9 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 9: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 5:  Generated lwcore_cpu.3217658_36.5 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 3:  Generated lwcore_cpu.3217658_36.3 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 7:  Generated lwcore_cpu.3217658_36.7 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 5: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 3: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 2:  Generated lwcore_cpu.3217658_36.2 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 7: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 2: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 6:  Generated lwcore_cpu.3217658_36.6 on lassen130 Wed Feb  2 14:33:29 PST 2022 in 1 secs >>
+<< Rank 6: Waiting 60 secs before aborting task on lassen130 Wed Feb  2 14:33:29 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 8:  Waited 60 secs -> now aborting task on lassen130 Wed Feb  2 14:34:28 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen130:109994] -----------------------
+[lassen130:109994] -----------------------
+[lassen130:109994] *** End of error message ***
+ERROR:  One or more process (first noticed rank 8) terminated with signal 11
+BENCHID++CTF++spmm++twitter7++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 29546.7 ms.
+BENCHID++CTF++spmm++twitter7++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 48515.3 ms.
+BENCHID++CTF++spmm++twitter7++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 11330.4 ms.
+BENCHID++CTF++spmm++twitter7++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench spmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 24125.9 ms.
+BENCHID++CTF++spmm++uk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 46612.8 ms.
+BENCHID++CTF++spmm++uk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 14389 ms.
+BENCHID++CTF++spmm++uk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 23588.8 ms.
+BENCHID++CTF++spmm++uk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 7545.25 ms.
+BENCHID++CTF++spmm++uk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench spmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 13871.5 ms.
+BENCHID++CTF++spmm++webbase-2001++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmm
+Read 1019903190 non-zero entries from the file.
+Average execution time: 58199.6 ms.
+BENCHID++CTF++spmm++webbase-2001++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 54) terminated with signal 9
+BENCHID++CTF++spmm++webbase-2001++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmm
+Read 1019903190 non-zero entries from the file.
+Average execution time: 29963 ms.
+BENCHID++CTF++spmm++webbase-2001++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmm
+Read 1019903190 non-zero entries from the file.
+Average execution time: 18887.2 ms.
+BENCHID++CTF++spmm++webbase-2001++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench spmm
+Read 1019903190 non-zero entries from the file.
+Average execution time: 20119.8 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3217658: <../scripts/spbenchmark.py CTF spmm all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py CTF spmm all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen709> by user <yadav2> in cluster <lassen> at Wed Feb  2 09:17:45 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb  2 09:17:54 2022
+                            <40*lassen459>
+                            <40*lassen788>
+                            <40*lassen611>
+                            <40*lassen612>
+                            <40*lassen130>
+                            <40*lassen615>
+                            <40*lassen131>
+                            <40*lassen616>
+                            <40*lassen132>
+                            <40*lassen461>
+                            <40*lassen617>
+                            <40*lassen133>
+                            <40*lassen618>
+                            <40*lassen134>
+                            <40*lassen463>
+                            <40*lassen792>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb  2 09:17:54 2022
+Terminated at Wed Feb  2 17:34:31 2022
+Results reported at Wed Feb  2 17:34:31 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py CTF spmm all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   18.00 sec.
+    Max Memory :                                 131 MB
+    Average Memory :                             105.63 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              7
+    Max Threads :                                31
+    Run time :                                   29798 sec.
+    Turnaround time :                            29806 sec.
+
+The output (if any) is above this job summary.
+
