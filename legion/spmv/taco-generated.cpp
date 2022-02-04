@@ -692,7 +692,7 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     return ;
 
   int64_t pointID1 = jposo;
-  #pragma omp parallel for schedule(static)
+  #pragma omp parallel for schedule(dynamic, 128)
   for (int32_t jposi = 0; jposi < ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces); jposi++) {
     int32_t jposc = (jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi) + c1_pos_accessor[Point<1>(0)].lo;
     if (jposc >= (jposo + 1) * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo)
