@@ -2753,13 +2753,39 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     kind = LoopKind::Vectorized;
   } else if (forall.getParallelUnit() != ParallelUnit::NotParallel
             && forall.getOutputRaceStrategy() != OutputRaceStrategy::ParallelReduction && !ignoreVectorize) {
-    // Position space loops are statically partitioned, so they can be given a static
-    // thread assignment. Other loops are not statically load balanced so we should
-    // use a runtime scheduling system to parallelize them.
-    if (inPosIter) {
-      kind = LoopKind::Static_Chunked;
-    } else {
+    // We can only safely do a static assignment to threads if we are sure that each iteration
+    // of the current loop will perform the same amount of work. This means that either the body
+    // is a single statement, or body contains loops that all have statically known bounds.
+    struct VariableLengthLoopFinder : public IndexNotationVisitor {
+      VariableLengthLoopFinder(Iterators& iterators, ProvenanceGraph& pg, std::set<IndexVar>& definedIndexVars)
+        : iterators(iterators), pg(pg), definedIndexVars(definedIndexVars) {}
+
+      // To ensure that all the inner loops have statically known bounds, we
+      // make sure that each forall node in the body of the current statement
+      // is a dimension iterator. Iterators over the position space or merge
+      // lattices that have multiple lattice points will have variable amounts
+      // of work per loop iteration.
+      void visit(const ForallNode* node) {
+        auto lattice = MergeLattice::make(node, this->iterators, this->pg, this->definedIndexVars);
+        auto latticeIterators = lattice.iterators();
+        if (latticeIterators.size() == 1) {
+          containsVariableSizeLoop |= !(latticeIterators[0].isDimensionIterator());
+        } else {
+          containsVariableSizeLoop |= true;
+        }
+        node->stmt.accept(this);
+      }
+      bool containsVariableSizeLoop = false;
+      Iterators& iterators;
+      ProvenanceGraph& pg;
+      std::set<IndexVar>& definedIndexVars;
+    };
+    VariableLengthLoopFinder finder(this->iterators, this->provGraph, this->definedIndexVars);
+    forall.getStmt().accept(&finder);
+    if (finder.containsVariableSizeLoop) {
       kind = LoopKind::Dynamic;
+    } else {
+      kind = LoopKind::Static_Chunked;
     }
   }
 

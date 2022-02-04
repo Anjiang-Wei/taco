@@ -506,7 +506,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int32_t pB2_begin = B2PosDomain.bounds.lo;
   int32_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ffposo;
-  #pragma omp parallel for schedule(static)
+  #pragma omp parallel for schedule(dynamic, 128)
   for (int32_t ffposio = 0; ffposio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); ffposio++) {
     int64_t pointID2 = pointID1 * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + ffposio;
     int32_t ffposi = ffposio * 2048;
