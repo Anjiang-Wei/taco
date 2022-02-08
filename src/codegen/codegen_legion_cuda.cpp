@@ -807,6 +807,7 @@ void CodegenLegionCuda::emitHeaders(std::ostream &o) {
     //  interface down here about the name of the generated files right now.
     o << "#include \"taco-generated.cuh\"\n";
     o << "#include \"cublas_v2.h\"\n";
+    o << "#include \"cusparse.h\"\n";
     o << "#include \"cudalibs.h\"\n";
     o << "#include \"leaf_kernels.cuh\"\n";
   }

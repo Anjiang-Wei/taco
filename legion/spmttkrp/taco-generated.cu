@@ -6,6 +6,7 @@ using namespace Legion;
 
 #include "taco-generated.cuh"
 #include "cublas_v2.h"
+#include "cusparse.h"
 #include "cudalibs.h"
 #include "leaf_kernels.cuh"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;

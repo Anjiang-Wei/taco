@@ -110,5 +110,7 @@ size_t getNumPieces(Legion::Context ctx, Legion::Runtime* runtime) {
 #ifndef TACO_USE_CUDA
 // Dummy implementations of initCuBLAS and initCUDA if we aren't supposed to use CUDA.
 void initCuBLAS(Context ctx, Runtime* runtime) {}
+void initCuSparse(Context ctx, Runtime* runtime) {}
 void initCUDA() {}
+void initCuSparseAtStartup() {}
 #endif
