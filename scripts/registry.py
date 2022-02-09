@@ -27,6 +27,8 @@ class SparseTensorRegistry:
         registry.addAll([
             # 3-tensors.
             SparseTensor("amazon-reviews", [4821207, 1774269, 1805187], 1741809018),
+            SparseTensor("freebase_music", [23344784, 23344784, 166], 99546551),
+            SparseTensor("freebase_sampled", [38955429, 38955429, 532], 139920771),
             SparseTensor("nell-1", [2902330, 2143368, 25495389], 143599552),
             SparseTensor("nell-2", [12092, 9184, 28818], 76879419),
             # TODO (rohany): We'll want to load patents into a DDS format for some benchmarks.
