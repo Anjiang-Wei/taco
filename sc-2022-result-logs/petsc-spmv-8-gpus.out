@@ -1,0 +1,189 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++PETSc++spmv++arabic-2005++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 11.663927 ms.
+BENCHID++PETSc++spmv++arabic-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 6.376284 ms.
+BENCHID++PETSc++spmv++arabic-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 3.406664 ms.
+BENCHID++PETSc++spmv++arabic-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 1.822299 ms.
+BENCHID++PETSc++spmv++it-2004++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 21.259349 ms.
+BENCHID++PETSc++spmv++it-2004++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 12.113974 ms.
+BENCHID++PETSc++spmv++it-2004++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 6.995545 ms.
+BENCHID++PETSc++spmv++it-2004++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 3.762143 ms.
+BENCHID++PETSc++spmv++kmer_A2a++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 21.846103 ms.
+BENCHID++PETSc++spmv++kmer_A2a++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 18.157847 ms.
+BENCHID++PETSc++spmv++kmer_A2a++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 33.086270 ms.
+BENCHID++PETSc++spmv++kmer_A2a++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_A2a.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 39.637981 ms.
+BENCHID++PETSc++spmv++kmer_V1r++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 22.555227 ms.
+BENCHID++PETSc++spmv++kmer_V1r++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 21.818287 ms.
+BENCHID++PETSc++spmv++kmer_V1r++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 46.388515 ms.
+BENCHID++PETSc++spmv++kmer_V1r++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/kmer_V1r.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 60.043270 ms.
+BENCHID++PETSc++spmv++mycielskian19++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 16.237568 ms.
+BENCHID++PETSc++spmv++mycielskian19++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 11.240221 ms.
+BENCHID++PETSc++spmv++mycielskian19++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 8.295144 ms.
+BENCHID++PETSc++spmv++mycielskian19++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 6.220897 ms.
+BENCHID++PETSc++spmv++nlpkkt240++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 16.486440 ms.
+BENCHID++PETSc++spmv++nlpkkt240++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 10.321769 ms.
+BENCHID++PETSc++spmv++nlpkkt240++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 8.888348 ms.
+BENCHID++PETSc++spmv++nlpkkt240++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 9.756884 ms.
+BENCHID++PETSc++spmv++sk-2005++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen397:171907] *** Process received signal ***
+[lassen397:171907] Signal: Aborted (6)
+[lassen397:171907] Signal code:  (-6)
+<< Rank 0: Generating lwcore_cpu.3225003_25.0 on lassen397 Thu Feb  3 15:41:03 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 0:  Generated lwcore_cpu.3225003_25.0 on lassen397 Thu Feb  3 15:41:04 PST 2022 in 1 secs >>
+<< Rank 0: Waiting 60 secs before aborting task on lassen397 Thu Feb  3 15:41:04 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 0:  Waited 60 secs -> now aborting task on lassen397 Thu Feb  3 15:42:04 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen397:171907] -----------------------
+[lassen397:171907] -----------------------
+[lassen397:171907] *** End of error message ***
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++PETSc++spmv++sk-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 18.153017 ms.
+BENCHID++PETSc++spmv++sk-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 10.108945 ms.
+BENCHID++PETSc++spmv++sk-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 5.323571 ms.
+BENCHID++PETSc++spmv++twitter7++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen397:174015] *** Process received signal ***
+[lassen397:174015] Signal: Aborted (6)
+[lassen397:174015] Signal code:  (-6)
+<< Rank 0: Generating lwcore_cpu.3225003_29.0 on lassen397 Thu Feb  3 15:44:19 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 0:  Generated lwcore_cpu.3225003_29.0 on lassen397 Thu Feb  3 15:44:20 PST 2022 in 1 secs >>
+<< Rank 0: Waiting 60 secs before aborting task on lassen397 Thu Feb  3 15:44:20 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 0:  Waited 60 secs -> now aborting task on lassen397 Thu Feb  3 15:45:20 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen397:174015] -----------------------
+[lassen397:174015] -----------------------
+[lassen397:174015] *** End of error message ***
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++PETSc++spmv++twitter7++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 154.353862 ms.
+BENCHID++PETSc++spmv++twitter7++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 117.602421 ms.
+BENCHID++PETSc++spmv++twitter7++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 80.408402 ms.
+BENCHID++PETSc++spmv++uk-2005++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 17.259957 ms.
+BENCHID++PETSc++spmv++uk-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 10.306992 ms.
+BENCHID++PETSc++spmv++uk-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 6.210925 ms.
+BENCHID++PETSc++spmv++uk-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 3.279024 ms.
+BENCHID++PETSc++spmv++webbase-2001++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 30.194541 ms.
+BENCHID++PETSc++spmv++webbase-2001++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 16.447078 ms.
+BENCHID++PETSc++spmv++webbase-2001++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 8.692437 ms.
+BENCHID++PETSc++spmv++webbase-2001++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmv
+Average time: 27.967000 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3225003: <../scripts/spbenchmark.py PETSc spmv all-matrices --gpus 1 2 4 8> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py PETSc spmv all-matrices --gpus 1 2 4 8> was submitted from host <lassen708> by user <yadav2> in cluster <lassen> at Thu Feb  3 15:27:09 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Thu Feb  3 15:31:29 2022
+                            <40*lassen533>
+                            <40*lassen397>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Thu Feb  3 15:31:29 2022
+Terminated at Thu Feb  3 15:53:04 2022
+Results reported at Thu Feb  3 15:53:04 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py PETSc spmv all-matrices --gpus 1 2 4 8
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   0.58 sec.
+    Max Memory :                                 62 MB
+    Average Memory :                             61.18 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1425 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   1295 sec.
+    Turnaround time :                            1555 sec.
+
+The output (if any) is above this job summary.
+
