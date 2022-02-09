@@ -41,7 +41,7 @@ void copyRect1(const Task* task, const std::vector<PhysicalRegion>& regions, Con
   for (size_t i = dom.lo()[0]; i < size_t(dom.hi()[0]); i++) {
     xAcc[i] = yAcc[i].lo;
   }
-  xAcc[dom.hi()[0]] = yAcc[dom.hi()[0]].hi + 1;
+  xAcc[dom.hi()[0]] = yAcc[dom.hi()[0] - 1].hi + 1;
 }
 
 void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, LegionTensor& tensor, partitionPackForcomputeLegionRowSplit& pack, ExternalHDF5LegionTensor& attached) {
