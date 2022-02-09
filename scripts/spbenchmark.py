@@ -289,7 +289,7 @@ def main():
     parser.add_argument("system", type=str, choices=systems + ["all"])
     # TODO (rohany): Have option to run all benchmarks.
     parser.add_argument("bench", type=str, choices=BenchmarkKind.names())
-    parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors"])
+    parser.add_argument("tensor", type=str, choices=registry.getAllNames() + ["all", "all-matrices", "all-3-tensors", "all-ctf-3-tensors"])
     parser.add_argument("--nodes", type=int, nargs='+', help="Node counts to run on", default=[1])
     parser.add_argument("--gpus", type=int, nargs='+', help="Number of GPUs to run on", default=[])
     parser.add_argument("--n", type=int, default=20)
@@ -321,6 +321,14 @@ def main():
         tensors = [t for t in registry.getAll() if t.order == 2]
     elif args.tensor == "all-3-tensors":
         tensors = [t for t in registry.getAll() if t.order == 3]
+    elif args.tensor == "all-ctf-3-tensors":
+        maxint = 9223372036854775807
+        def zipProd(l):
+            tot = 1
+            for e in l:
+                tot *= e
+            return tot
+        tensors = [t for t in registry.getAll() if t.order == 3 and zipProd(t.dims) < maxint]
     else:
         tensors = [registry.getByName(args.tensor)]
 
