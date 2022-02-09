@@ -135,35 +135,32 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   cudaStream_t taskStream = cudaStream_t();
   cudaStreamCreate(&(taskStream));
   CHECK_CUSPARSE(cusparseSetStream(handle, taskStream));
-  cusparseDnVecDescr_t aVec = cusparseDnVecDescr_t();
-  cusparseDnVecDescr_t cVec = cusparseDnVecDescr_t();
-  CHECK_CUSPARSE(cusparseCreateDnVec(&(aVec), (posDomain.get_volume() - 1), a_vals_rw_accessor.ptr(aValsDomain.lo()), CUDA_R_64F));
-  CHECK_CUSPARSE(cusparseCreateDnVec(&(cVec), B2_dimension, const_cast<double*>(c_vals_ro_accessor.ptr(cValsDomain.lo())), CUDA_R_64F));
-  cusparseSpMatDescr_t BMat = cusparseSpMatDescr_t();
-  CHECK_CUSPARSE(cusparseCreateCsr(
-    &(BMat),
+  cusparseMatDescr_t mat = cusparseMatDescr_t();
+  CHECK_CUSPARSE(cusparseCreateMatDescr(&(mat)));
+  CHECK_CUSPARSE(cusparseSetMatIndexBase(mat, CUSPARSE_INDEX_BASE_ZERO));
+  CHECK_CUSPARSE(cusparseSetMatType(mat, CUSPARSE_MATRIX_TYPE_GENERAL));
+  uint64_t bufferSize = 0;
+  CHECK_CUSPARSE(cusparseCsrmvEx_bufferSize(
+    handle,
+    CUSPARSE_ALG_MERGE_PATH,
+    CUSPARSE_OPERATION_NON_TRANSPOSE,
     (posDomain.get_volume() - 1),
     B2_dimension,
     crdDomain.get_volume(),
-    const_cast<int32_t*>(B2_pos_accessor.ptr(posDomain.lo())),
-    const_cast<int32_t*>(B2_crd_accessor.ptr(crdDomain.lo())),
-    const_cast<double*>(B_vals_ro_accessor.ptr(BValsDomain.lo())),
-    CUSPARSE_INDEX_32I,
-    CUSPARSE_INDEX_32I,
-    CUSPARSE_INDEX_BASE_ZERO,
-    CUDA_R_64F
-  ));
-  uint64_t bufferSize = 0;
-  CHECK_CUSPARSE(cusparseSpMV_bufferSize(
-    handle,
-    CUSPARSE_OPERATION_NON_TRANSPOSE,
     &(alpha),
-    BMat,
-    cVec,
-    &(alpha),
-    aVec,
     CUDA_R_64F,
-    CUSPARSE_MV_ALG_DEFAULT,
+    mat,
+    B_vals_ro_accessor.ptr(BValsDomain.lo()),
+    CUDA_R_64F,
+    B2_pos_accessor.ptr(posDomain.lo()),
+    B2_crd_accessor.ptr(crdDomain.lo()),
+    c_vals_ro_accessor.ptr(cValsDomain.lo()),
+    CUDA_R_64F,
+    &(alpha),
+    CUDA_R_64F,
+    a_vals_rw_accessor.ptr(aValsDomain.lo()),
+    CUDA_R_64F,
+    CUDA_R_64F,
     &(bufferSize)
   ));
   void* workspacePtr = NULL;
@@ -171,16 +168,27 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     Legion::DeferredBuffer<char, 1> buf = Legion::DeferredBuffer<char, 1>(Rect<1>(0, (bufferSize - 1)), Memory::Kind::GPU_FB_MEM);
     workspacePtr = buf.ptr(0);
   }
-  CHECK_CUSPARSE(cusparseSpMV(
+  CHECK_CUSPARSE(cusparseCsrmvEx(
     handle,
+    CUSPARSE_ALG_MERGE_PATH,
     CUSPARSE_OPERATION_NON_TRANSPOSE,
+    (posDomain.get_volume() - 1),
+    B2_dimension,
+    crdDomain.get_volume(),
     &(alpha),
-    BMat,
-    cVec,
-    &(alpha),
-    aVec,
     CUDA_R_64F,
-    CUSPARSE_MV_ALG_DEFAULT,
+    mat,
+    B_vals_ro_accessor.ptr(BValsDomain.lo()),
+    CUDA_R_64F,
+    B2_pos_accessor.ptr(posDomain.lo()),
+    B2_crd_accessor.ptr(crdDomain.lo()),
+    c_vals_ro_accessor.ptr(cValsDomain.lo()),
+    CUDA_R_64F,
+    &(alpha),
+    CUDA_R_64F,
+    a_vals_rw_accessor.ptr(aValsDomain.lo()),
+    CUDA_R_64F,
+    CUDA_R_64F,
     workspacePtr
   ));
 }

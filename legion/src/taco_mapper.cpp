@@ -64,6 +64,7 @@ TACOMapper::TACOMapper(Legion::Mapping::MapperRuntime *rt, Legion::Machine &mach
       BOOL_ARG("-tm:enable_backpressure", this->enableBackpressure);
       INT_ARG("-tm:backpressure_max_in_flight", this->maxInFlightTasks);
       BOOL_ARG("-tm:multiple_shards_per_node", this->multipleShardsPerNode);
+      BOOL_ARG("-tm:align128", this->alignTo128Bytes);
 #undef BOOL_ARG
     }
   }
@@ -391,6 +392,12 @@ void TACOMapper::default_policy_select_constraints(Legion::Mapping::MapperContex
   }
   dimension_ordering[dim] = LEGION_DIM_F;
   constraints.add_constraint(Legion::OrderingConstraint(dimension_ordering, false/*contiguous*/));
+  // If we were requested to have an alignment, add the constraint.
+  if (this->alignTo128Bytes) {
+    for (auto it : req.privilege_fields) {
+      constraints.add_constraint(Legion::AlignmentConstraint(it, LEGION_EQ_EK, 128));
+    }
+  }
   DefaultMapper::default_policy_select_constraints(ctx, constraints, target_memory, req);
 }
 

@@ -54,8 +54,7 @@ class DISTALBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, procs):
         # TODO (rohany): Standardize the DISTAL binary arguments more...
         args = {
-            # TODO (rohany): Handle extra arguments...
-            BenchmarkKind.SpMV: ["-csr", self.getDISTALTensor(tensor, "csr")],
+            BenchmarkKind.SpMV: ["-csr", self.getDISTALTensor(tensor, "csr")] + ["-tm:align128"] if self.gpu else [],
             BenchmarkKind.SpMSpV: ["-csc", self.getDISTALTensor(tensor, "csc"), "-spx", self.getUniformVec(tensor)],
             # TODO (rohany): Thread through the jdim here.
             BenchmarkKind.SpMM: ["-tensor", self.getDISTALTensor(tensor, 'csr')],

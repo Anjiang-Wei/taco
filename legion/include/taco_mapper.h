@@ -188,6 +188,10 @@ private:
   // shardCPUGPUMapping maps the processors running each shard to a GPU to perform work on.
   std::map<Legion::Processor, Legion::Processor> shardCPUGPUMapping;
 
+  // Controls whether or not to align regions to 128 bytes. This is needed to use
+  // CuSparse SpMV.
+  bool alignTo128Bytes = false;
+
   // InFlightTask represents a task currently being executed.
   struct InFlightTask {
     // Unique identifier of the task instance.
