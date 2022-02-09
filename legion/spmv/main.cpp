@@ -51,7 +51,7 @@ void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, Le
     auto falloc = runtime->create_field_allocator(ctx, fspace);
     falloc.allocate_field(sizeof(int32_t), FID_RECT_1);
   }
-  auto ispace = runtime->create_index_space(ctx, Rect<1>(0, tensor.dims[0] + 1));
+  auto ispace = runtime->create_index_space(ctx, Rect<1>(0, tensor.dims[0]));
   auto posCopy = runtime->create_logical_region(ctx, ispace, fspace);
   {
     // TODO (rohany): Expand this to run on multiple node if needed.

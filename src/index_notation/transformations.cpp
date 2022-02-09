@@ -2195,9 +2195,9 @@ ir::Stmt CuSparseSpMV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std:
   auto ctx = ir::Symbol::make("ctx");
   auto nonTrans = ir::Symbol::make("CUSPARSE_OPERATION_NON_TRANSPOSE");
   auto cusparseReal = ir::Symbol::make("CUDA_R_64F");
-  auto defaultAlg = ir::Symbol::make("CUSPARSE_MV_ALG_DEFAULT");
-  auto index32 = ir::Symbol::make("CUSPARSE_INDEX_32I");
+  auto defaultAlg = ir::Symbol::make("CUSPARSE_ALG_MERGE_PATH");
   auto index0 = ir::Symbol::make("CUSPARSE_INDEX_BASE_ZERO");
+  auto generalMat = ir::Symbol::make("CUSPARSE_MATRIX_TYPE_GENERAL");
 
   auto B2Iter = iterators.getLevelIteratorByLevel(this->content->B, 1);
   auto pack = B2Iter.getMode().getModePack();
@@ -2253,120 +2253,100 @@ ir::Stmt CuSparseSpMV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std:
   auto numRows = ir::Sub::make(ir::MethodCall::make(posDomain, "get_volume", {}, false /* deref */, Int()), 1);
   auto B2Dim = ir::GetProperty::make(B, ir::TensorProperty::Dimension, 1);
 
-  // Start allocating our data structures.
-  auto cusparseVec = Datatype("cusparseDnVecDescr_t");
-  auto aVec = ir::Var::make("aVec", cusparseVec);
-  auto cVec = ir::Var::make("cVec", cusparseVec);
-  results.push_back(ir::VarDecl::make(aVec, ir::makeConstructor(cusparseVec, {})));
-  results.push_back(ir::VarDecl::make(cVec, ir::makeConstructor(cusparseVec, {})));
-  results.push_back(ir::SideEffect::make(check(ir::Call::make(
-    "cusparseCreateDnVec",
-    {
-      addr(aVec),
-      numRows,
-      ir::MethodCall::make(aValsAcc, "ptr", {getBounds(aValsDomain, "lo")}, false /* deref */, Auto),
-      cusparseReal,
-    },
-    Auto
-  ))));
-  results.push_back(ir::SideEffect::make(check(ir::Call::make(
-    "cusparseCreateDnVec",
-    {
-      addr(cVec),
-      B2Dim,
-      noConst(ir::MethodCall::make(cValsAcc, "ptr", {getBounds(cValsDomain, "lo")}, false /* deref */, Auto), Float64),
-      cusparseReal,
-    },
-    Auto
-  ))));
+  // Set up properties about our matrix.
+  auto matTy = Datatype("cusparseMatDescr_t");
+  auto BMat = ir::Var::make("mat", matTy);
+  results.push_back(ir::VarDecl::make(BMat, ir::makeConstructor(matTy, {})));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make("cusparseCreateMatDescr", {addr(BMat)}, Auto))));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make("cusparseSetMatIndexBase", {BMat, index0}, Auto))));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make("cusparseSetMatType", {BMat, generalMat}, Auto))));
 
   // A special pos pointer that is actually int32_t's instead of Rect<1>'s.
   auto B2Pos = ir::GetProperty::makeIndicesAccessor(
-    B,
-    B2Iter.getMode().getName() + "_pos",
-    1 /* mode */,
-    0 /* index */,
-    ir::GetProperty::AccessorArgs(
-      1 /* dim */,
-      Int32 /* elemType */,
-      ir::Symbol::make("FID_RECT_1") /* field */,
-      pos /* regionAccessing */,
-      pos /* regionParent */,
-      ir::RO /* priv */
-    )
+      B,
+      B2Iter.getMode().getName() + "_pos",
+      1 /* mode */,
+      0 /* index */,
+      ir::GetProperty::AccessorArgs(
+          1 /* dim */,
+          Int32 /* elemType */,
+          ir::Symbol::make("FID_RECT_1") /* field */,
+          pos /* regionAccessing */,
+          pos /* regionParent */,
+          ir::RO /* priv */
+      )
   );
-
-  auto cusparseMat = Datatype("cusparseSpMatDescr_t");
-  auto BMat = ir::Var::make("BMat", cusparseMat);
-  results.push_back(ir::VarDecl::make(BMat, ir::makeConstructor(cusparseMat, {})));
-  results.push_back(ir::SideEffect::make(check(ir::Call::make(
-    "cusparseCreateCsr",
-    {
-      addr(BMat),
-      numRows,
-      B2Dim,
-      ir::MethodCall::make(crdDomain, "get_volume", {}, false /* deref */, Auto),
-      noConst(ir::MethodCall::make(B2Pos, "ptr", {getBounds(posDomain, "lo")}, false /* deref */, Auto), Int32),
-      noConst(ir::MethodCall::make(B2->getAccessor(pack, RectCompressedModeFormat::CRD), "ptr", {getBounds(crdDomain, "lo")}, false /* deref */, Auto), Int32),
-      noConst(ir::MethodCall::make(BValsAcc, "ptr", {getBounds(BValsDomain, "lo")}, false /* deref */, Auto), Float64),
-      index32,
-      index32,
-      index0,
-      cusparseReal,
-    },
-    Auto
-  ))));
 
   auto sizet = UInt64;
   auto bufferSize = ir::Var::make("bufferSize", sizet);
   results.push_back(ir::VarDecl::make(bufferSize, 0));
   results.push_back(ir::SideEffect::make(check(ir::Call::make(
-    "cusparseSpMV_bufferSize",
+    "cusparseCsrmvEx_bufferSize",
     {
       handle,
-      nonTrans,
-      addr(alpha),
-      BMat,
-      cVec,
-      addr(alpha),
-      aVec,
-      cusparseReal,
       defaultAlg,
+      nonTrans,
+      numRows,
+      B2Dim,
+      ir::MethodCall::make(crdDomain, "get_volume", {}, false /* deref */, Auto),
+      addr(alpha),
+      cusparseReal,
+      BMat,
+      ir::MethodCall::make(BValsAcc, "ptr", {getBounds(BValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      ir::MethodCall::make(B2Pos, "ptr", {getBounds(posDomain, "lo")}, false /* deref */, Auto),
+      ir::MethodCall::make(B2->getAccessor(pack, RectCompressedModeFormat::CRD), "ptr", {getBounds(crdDomain, "lo")}, false /* deref */, Auto),
+      ir::MethodCall::make(cValsAcc, "ptr", {getBounds(cValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      addr(alpha),
+      cusparseReal,
+      ir::MethodCall::make(aValsAcc, "ptr", {getBounds(aValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      cusparseReal,
       addr(bufferSize)
     },
     Auto
   ))));
 
-  // TODO (rohany): Allocate the deferred buffer.
+  // Allocate the necessary space.
   auto workspacePtr = ir::Var::make("workspacePtr", Datatype("void*"));
   results.push_back(ir::VarDecl::make(workspacePtr, ir::Symbol::make("NULL")));
   auto defBufTy = DeferredBuffer(Datatype("char"), 1);
   auto defBuf = ir::Var::make("buf", defBufTy);
   results.push_back(ir::IfThenElse::make(
-    ir::Gt::make(bufferSize, 0),
-    ir::Block::make(
-      ir::VarDecl::make(defBuf, ir::makeConstructor(defBufTy, {ir::makeConstructor(Rect(1), {0, ir::Sub::make(bufferSize, 1)}), ir::Symbol::make("Memory::Kind::GPU_FB_MEM")})),
-      ir::Assign::make(workspacePtr, ir::MethodCall::make(defBuf, "ptr", {0}, false /* deref */, Auto))
-    )
+      ir::Gt::make(bufferSize, 0),
+      ir::Block::make(
+          ir::VarDecl::make(defBuf, ir::makeConstructor(defBufTy, {ir::makeConstructor(Rect(1), {0, ir::Sub::make(bufferSize, 1)}), ir::Symbol::make("Memory::Kind::GPU_FB_MEM")})),
+          ir::Assign::make(workspacePtr, ir::MethodCall::make(defBuf, "ptr", {0}, false /* deref */, Auto))
+      )
   ));
-
   results.push_back(ir::SideEffect::make(check(ir::Call::make(
-    "cusparseSpMV",
+    "cusparseCsrmvEx",
     {
       handle,
-      nonTrans,
-      addr(alpha),
-      BMat,
-      cVec,
-      addr(alpha),
-      aVec,
-      cusparseReal,
       defaultAlg,
+      nonTrans,
+      numRows,
+      B2Dim,
+      ir::MethodCall::make(crdDomain, "get_volume", {}, false /* deref */, Auto),
+      addr(alpha),
+      cusparseReal,
+      BMat,
+      ir::MethodCall::make(BValsAcc, "ptr", {getBounds(BValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      ir::MethodCall::make(B2Pos, "ptr", {getBounds(posDomain, "lo")}, false /* deref */, Auto),
+      ir::MethodCall::make(B2->getAccessor(pack, RectCompressedModeFormat::CRD), "ptr", {getBounds(crdDomain, "lo")}, false /* deref */, Auto),
+      ir::MethodCall::make(cValsAcc, "ptr", {getBounds(cValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      addr(alpha),
+      cusparseReal,
+      ir::MethodCall::make(aValsAcc, "ptr", {getBounds(aValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+      cusparseReal,
       workspacePtr,
     },
     Auto
   ))));
-
   return ir::Block::make(results);
 }
 
