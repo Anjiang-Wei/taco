@@ -1,0 +1,139 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++CTF++spttv++freebase_music++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_music.tns -dims 23344784,23344784,166 -n 20 -warmup 10 -bench spttv
+Read 99546551 non-zero entries from the file.
+Average execution time: 7706.9 ms.
+BENCHID++CTF++spttv++freebase_music++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_music.tns -dims 23344784,23344784,166 -n 20 -warmup 10 -bench spttv
+Read 99546551 non-zero entries from the file.
+Average execution time: 4018.3 ms.
+BENCHID++CTF++spttv++freebase_music++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_music.tns -dims 23344784,23344784,166 -n 20 -warmup 10 -bench spttv
+Read 99546551 non-zero entries from the file.
+Average execution time: 2109.35 ms.
+BENCHID++CTF++spttv++freebase_music++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_music.tns -dims 23344784,23344784,166 -n 20 -warmup 10 -bench spttv
+Read 99546551 non-zero entries from the file.
+Average execution time: 1281 ms.
+BENCHID++CTF++spttv++freebase_music++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_music.tns -dims 23344784,23344784,166 -n 20 -warmup 10 -bench spttv
+Read 99546551 non-zero entries from the file.
+Average execution time: 712.4 ms.
+BENCHID++CTF++spttv++freebase_sampled++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_sampled.tns -dims 38955429,38955429,532 -n 20 -warmup 10 -bench spttv
+Read 139920771 non-zero entries from the file.
+Average execution time: 12119.4 ms.
+BENCHID++CTF++spttv++freebase_sampled++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_sampled.tns -dims 38955429,38955429,532 -n 20 -warmup 10 -bench spttv
+Read 139920771 non-zero entries from the file.
+Average execution time: 6620.8 ms.
+BENCHID++CTF++spttv++freebase_sampled++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_sampled.tns -dims 38955429,38955429,532 -n 20 -warmup 10 -bench spttv
+Read 139920771 non-zero entries from the file.
+Average execution time: 3398.65 ms.
+BENCHID++CTF++spttv++freebase_sampled++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_sampled.tns -dims 38955429,38955429,532 -n 20 -warmup 10 -bench spttv
+Read 139920771 non-zero entries from the file.
+Average execution time: 2224.5 ms.
+BENCHID++CTF++spttv++freebase_sampled++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/freebase_sampled.tns -dims 38955429,38955429,532 -n 20 -warmup 10 -bench spttv
+Read 139920771 non-zero entries from the file.
+Average execution time: 1169.6 ms.
+BENCHID++CTF++spttv++nell-2++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nell-2.tns -dims 12092,9184,28818 -n 20 -warmup 10 -bench spttv
+Read 76879419 non-zero entries from the file.
+Average execution time: 2196 ms.
+BENCHID++CTF++spttv++nell-2++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nell-2.tns -dims 12092,9184,28818 -n 20 -warmup 10 -bench spttv
+Read 76879419 non-zero entries from the file.
+Average execution time: 888.95 ms.
+BENCHID++CTF++spttv++nell-2++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nell-2.tns -dims 12092,9184,28818 -n 20 -warmup 10 -bench spttv
+Read 76879419 non-zero entries from the file.
+Average execution time: 503 ms.
+BENCHID++CTF++spttv++nell-2++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nell-2.tns -dims 12092,9184,28818 -n 20 -warmup 10 -bench spttv
+Read 76879419 non-zero entries from the file.
+Average execution time: 372 ms.
+BENCHID++CTF++spttv++nell-2++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nell-2.tns -dims 12092,9184,28818 -n 20 -warmup 10 -bench spttv
+Read 76879419 non-zero entries from the file.
+Average execution time: 235.4 ms.
+BENCHID++CTF++spttv++patents++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/patents.tns -dims 46,239172,239172 -n 20 -warmup 10 -bench spttv
+Read 3596640708 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 11) terminated with signal 9
+BENCHID++CTF++spttv++patents++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/patents.tns -dims 46,239172,239172 -n 20 -warmup 10 -bench spttv
+Read 3596640708 non-zero entries from the file.
+Average execution time: 36729.3 ms.
+BENCHID++CTF++spttv++patents++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/patents.tns -dims 46,239172,239172 -n 20 -warmup 10 -bench spttv
+Read 3596640708 non-zero entries from the file.
+Average execution time: 19244.5 ms.
+BENCHID++CTF++spttv++patents++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/patents.tns -dims 46,239172,239172 -n 20 -warmup 10 -bench spttv
+Read 3596640708 non-zero entries from the file.
+Average execution time: 10587.5 ms.
+BENCHID++CTF++spttv++patents++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/patents.tns -dims 46,239172,239172 -n 20 -warmup 10 -bench spttv
+Read 3596640708 non-zero entries from the file.
+Average execution time: 6509.5 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3246604: <../scripts/spbenchmark.py CTF spttv all-ctf-3-tensors --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py CTF spttv all-ctf-3-tensors --nodes 1 2 4 8 16> was submitted from host <lassen725> by user <yadav2> in cluster <lassen> at Wed Feb  9 09:27:40 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb  9 09:39:28 2022
+                            <40*lassen754>
+                            <40*lassen426>
+                            <40*lassen270>
+                            <40*lassen755>
+                            <40*lassen602>
+                            <40*lassen603>
+                            <40*lassen604>
+                            <40*lassen120>
+                            <40*lassen605>
+                            <40*lassen121>
+                            <40*lassen450>
+                            <40*lassen606>
+                            <40*lassen123>
+                            <40*lassen452>
+                            <40*lassen608>
+                            <40*lassen781>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb  9 09:39:28 2022
+Terminated at Wed Feb  9 10:49:06 2022
+Results reported at Wed Feb  9 10:49:06 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py CTF spttv all-ctf-3-tensors --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4.00 sec.
+    Max Memory :                                 103 MB
+    Average Memory :                             86.37 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   4178 sec.
+    Turnaround time :                            4886 sec.
+
+The output (if any) is above this job summary.
+
