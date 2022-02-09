@@ -12,10 +12,16 @@ class SparseTensorRegistry:
         self.tensors.append(tensor)
     def addAll(self, tensors):
         self.tensors += tensors
-    def getAllNames(self):
-        return [t.name for t in self.tensors]
-    def getAll(self):
-        return self.tensors
+    def getAllNames(self, filterFunc=None):
+        if filterFunc is not None:
+            return [t.name for t in self.tensors if filterFunc(t)]
+        else:
+            return [t.name for t in self.tensors]
+    def getAll(self, filterFunc=None):
+        if filterFunc is not None:
+            return [t for t in self.tensors if filterFunc(t)]
+        else:
+            return self.tensors
     def getByName(self, name):
         filtered = list(filter(lambda tensor: tensor.name == name, self.tensors))
         assert(len(filtered) == 1)
@@ -25,7 +31,8 @@ class SparseTensorRegistry:
         registry = SparseTensorRegistry()
         # TODO (rohany): Register all of the sparse tensors that we are considering.
         registry.addAll([
-            # 3-tensors.
+            # 3-tensors. Only the nell-2 and patents tensor can be loaded in
+            # CTF. The other tensors are too large dimension-wise.
             SparseTensor("amazon-reviews", [4821207, 1774269, 1805187], 1741809018),
             SparseTensor("freebase_music", [23344784, 23344784, 166], 99546551),
             SparseTensor("freebase_sampled", [38955429, 38955429, 532], 139920771),
