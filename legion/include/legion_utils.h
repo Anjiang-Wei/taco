@@ -67,7 +67,9 @@ T average(std::vector<T> vals) {
 // We forward declare these functions. If we are building with CUDA, then
 // the CUDA files define them. Otherwise, the CPP files define them.
 void initCuBLAS(Legion::Context ctx, Legion::Runtime* runtime);
+void initCuSparse(Legion::Context ctx, Legion::Runtime* runtime);
 void initCUDA();
+void initCuSparseAtStartup();
 
 #define TACO_MAIN(FillType) \
   int main(int argc, char **argv) { \

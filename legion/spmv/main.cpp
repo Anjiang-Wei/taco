@@ -29,6 +29,65 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
   }
 }
 
+void copyRect1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  typedef FieldAccessor<WRITE_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorD;
+  typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorR;
+  auto x = regions[0];
+  auto dom = runtime->get_index_space_domain(x.get_logical_region().get_index_space());
+  AccessorD xAcc(x, FID_RECT_1);
+  AccessorR yAcc(regions[1], FID_RECT_1);
+  // Unpack each Rect<1> into an entry for the current row.
+  #pragma omp parallel for schedule(static)
+  for (size_t i = dom.lo()[0]; i < size_t(dom.hi()[0]); i++) {
+    xAcc[i] = yAcc[i].lo;
+  }
+  xAcc[dom.hi()[0]] = yAcc[dom.hi()[0]].hi + 1;
+}
+
+void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, LegionTensor& tensor, partitionPackForcomputeLegionRowSplit& pack, ExternalHDF5LegionTensor& attached) {
+  // Create a new region, and collect the old one
+  auto fspace = runtime->create_field_space(ctx);
+  {
+    auto falloc = runtime->create_field_allocator(ctx, fspace);
+    falloc.allocate_field(sizeof(int32_t), FID_RECT_1);
+  }
+  auto ispace = runtime->create_index_space(ctx, Rect<1>(0, tensor.dims[0] + 1));
+  auto posCopy = runtime->create_logical_region(ctx, ispace, fspace);
+  {
+    // TODO (rohany): Expand this to run on multiple node if needed.
+    TaskLauncher launcher(TID_COPY_RECT_TO_NORMAL_POS, TaskArgument());
+    launcher.add_region_requirement(RegionRequirement(posCopy, WRITE_ONLY, EXCLUSIVE, posCopy).add_field(FID_RECT_1));
+    launcher.add_region_requirement(RegionRequirement(tensor.indices[1][0], READ_ONLY, EXCLUSIVE, tensor.indicesParents[1][0]).add_field(FID_RECT_1));
+    runtime->execute_task(ctx, launcher).wait();
+  }
+  auto oldReg = tensor.indicesParents[1][0];
+  tensor.indices[1][0] = posCopy;
+  tensor.indicesParents[1][0] = posCopy;
+  // Create a corresponding partition for the new region.
+  DomainPointColoring coloring;
+  auto origPart = pack.BPartition.indicesPartitions[1][0];
+  for (int i = 0; i < pieces; i++) {
+    auto subreg = runtime->get_logical_subregion_by_color(ctx, origPart, i);
+    auto bounds = runtime->get_index_space_domain(ctx, subreg.get_index_space());
+    coloring[i] = Rect<1>(bounds.lo()[0], bounds.hi()[0] + 1);
+  }
+  auto ipart = runtime->create_partition_by_domain(ctx, posCopy.get_index_space(), coloring, runtime->get_index_partition_color_space_name(ctx, origPart.get_index_partition()));
+  pack.BPartition.indicesPartitions[1][0] = runtime->get_logical_partition(ctx, posCopy, ipart);
+
+  // Delete the old region, as this is important to not OOM on some benchmarks.
+  // Before we do so though, detach the region from the external allocation.
+  size_t toDelete = 0;
+  for (size_t i = 0; i < attached.attachedRegions.size(); i++) {
+    auto phys = attached.attachedRegions[i];
+    if (phys.get_logical_region() == oldReg) {
+      toDelete = i;
+      runtime->detach_external_resource(ctx, phys);
+    }
+  }
+  attached.attachedRegions.erase(attached.attachedRegions.begin() + toDelete);
+  runtime->destroy_logical_region(ctx, oldReg);
+}
+
 // Configuration represents the kind of SpMV benchmark we are running.
 enum Configuration {
   CSR_ROW_SPLIT,
@@ -85,6 +144,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, cscFileName, {Dense, Sparse});
   }
 
+  // Initialize CuSparse if we are running with GPUs.
+  initCuSparse(ctx, runtime);
+  
   auto eqPartIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
   auto eqPartDomain = runtime->get_index_space_domain(eqPartIspace);
   auto y = createDenseTensor<1, valType>(ctx, runtime, {A.dims[0]}, FID_VAL);
@@ -124,6 +186,15 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     case CSC_SPC:
       cscPack = partitionForcomputeLegionCSCMSpV(ctx, runtime, &y, &A, &x, pieces); break;
   }
+
+#ifdef TACO_USE_CUDA
+  // If we are using CUDA and using a row-split schedule, we're going to use CuSparse
+  // at the leaves. Therefore, we need to convert the DISTAL pos region into a standard
+  // CSR region to be compatible with CuSparse.
+  if (conf == CSR_ROW_SPLIT) {
+    convertDISTALCSRToStandardCSR(ctx, runtime, pieces, A, rowPack, Aex);
+  }
+#endif
 
   // Benchmark the computation.
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
@@ -177,10 +248,21 @@ int main(int argc, char** argv) {
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     Runtime::preregister_task_variant<initX>(registrar, "initX");
   }
+  {
+    TaskVariantRegistrar registrar(TID_COPY_RECT_TO_NORMAL_POS, "copyrect");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Runtime::preregister_task_variant<copyRect1>(registrar, "copyRect");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_COPY_RECT_TO_NORMAL_POS, "copyrect");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    Runtime::preregister_task_variant<copyRect1>(registrar, "copyRect");
+  }
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerDummyReadTasks();
   registerTacoRuntimeLibTasks();
+  initCuSparseAtStartup();
   Runtime::add_registration_callback(register_taco_mapper);
   Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);

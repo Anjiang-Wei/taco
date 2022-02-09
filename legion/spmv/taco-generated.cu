@@ -6,6 +6,7 @@ using namespace Legion;
 
 #include "taco-generated.cuh"
 #include "cublas_v2.h"
+#include "cusparse.h"
 #include "cudalibs.h"
 #include "leaf_kernels.cuh"
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
@@ -15,7 +16,7 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t B1_dimension;
+  int32_t B2_dimension;
   int32_t pieces;
 };
 
@@ -101,48 +102,6 @@ partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::
   return computePartitions;
 }
 
-__global__
-void task_1DeviceKernel0(AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorRWdouble1 a_vals_rw_accessor, int32_t B1_dimension, int32_t pieces, int32_t io) {
-
-  int32_t block = blockIdx.x;
-  int32_t thread = (threadIdx.x % (32));
-  int32_t warp = (threadIdx.x / 32);
-  if (threadIdx.x >= 256) {
-    return;
-  }
-
-  int64_t pointID2 = io * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
-  int64_t pointID3 = pointID2 * 8 + warp;
-  double* w_GPUThread = 0;
-  __shared__ double w_GPUThread_ALL[256];
-  w_GPUThread = w_GPUThread_ALL + warp * 32;
-
-  for (int32_t warp_row = 0; warp_row < 32; warp_row++) {
-    int32_t block_row = warp_row * 8 + warp;
-    int32_t ii = block * 256 + block_row;
-    int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    if (i >= B1_dimension)
-      break;
-
-    if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces))
-      break;
-
-    int64_t pointID4 = pointID3 * 32 + warp_row;
-    w_GPUThread[thread] = 0.0;
-    int64_t pointID5 = pointID4 * 32 + thread;
-    for (int32_t thread_nz = 0; thread_nz < ((((B2_pos_accessor[Point<1>(i)].hi + 1) - B2_pos_accessor[Point<1>(i)].lo) + 31) / 32); thread_nz++) {
-      int32_t jposB = (thread_nz * 32 + thread) + B2_pos_accessor[Point<1>(i)].lo;
-      if (jposB < B2_pos_accessor[Point<1>(i)].lo || jposB >= B2_pos_accessor[Point<1>(i)].hi + 1)
-        break;
-
-      int32_t j = B2_crd_accessor[jposB];
-      w_GPUThread[thread] = w_GPUThread[thread] + B_vals_ro_accessor[Point<1>(jposB)] * c_vals_ro_accessor[Point<1>(j)];
-    }
-    reduceWarp(a_vals_rw_accessor.ptr(Point<1>(i)), w_GPUThread[thread]);
-  }
-
-}
-
 void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
@@ -157,29 +116,78 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int32_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t B1_dimension = args->B1_dimension;
+  int32_t B2_dimension = args->B2_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
-  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
+  auto B2_pos_accessor = createAccessor<AccessorROint32_t1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
-    return ;
-
-  if (runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).empty())
-    return ;
-
-  if (((((B1_dimension + (pieces - 1)) / pieces + 255) / 256)) > 0) {
-    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), (32 * 8)>>>(B2_pos_accessor, B2_crd_accessor, B_vals_ro_accessor, c_vals_ro_accessor, a_vals_rw_accessor, B1_dimension, pieces, io);
+  auto posDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
+  auto crdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
+  auto aValsDomain = runtime->get_index_space_domain(ctx, get_index_space(a_vals));
+  auto BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
+  auto cValsDomain = runtime->get_index_space_domain(ctx, get_index_space(c_vals));
+  double alpha = 1.0000000000000000;
+  cusparseHandle_t handle = getCuSparse();
+  cudaStream_t taskStream = cudaStream_t();
+  cudaStreamCreate(&(taskStream));
+  CHECK_CUSPARSE(cusparseSetStream(handle, taskStream));
+  cusparseDnVecDescr_t aVec = cusparseDnVecDescr_t();
+  cusparseDnVecDescr_t cVec = cusparseDnVecDescr_t();
+  CHECK_CUSPARSE(cusparseCreateDnVec(&(aVec), (posDomain.get_volume() - 1), a_vals_rw_accessor.ptr(aValsDomain.lo()), CUDA_R_64F));
+  CHECK_CUSPARSE(cusparseCreateDnVec(&(cVec), B2_dimension, const_cast<double*>(c_vals_ro_accessor.ptr(cValsDomain.lo())), CUDA_R_64F));
+  cusparseSpMatDescr_t BMat = cusparseSpMatDescr_t();
+  CHECK_CUSPARSE(cusparseCreateCsr(
+    &(BMat),
+    (posDomain.get_volume() - 1),
+    B2_dimension,
+    crdDomain.get_volume(),
+    const_cast<int32_t*>(B2_pos_accessor.ptr(posDomain.lo())),
+    const_cast<int32_t*>(B2_crd_accessor.ptr(crdDomain.lo())),
+    const_cast<double*>(B_vals_ro_accessor.ptr(BValsDomain.lo())),
+    CUSPARSE_INDEX_32I,
+    CUSPARSE_INDEX_32I,
+    CUSPARSE_INDEX_BASE_ZERO,
+    CUDA_R_64F
+  ));
+  uint64_t bufferSize = 0;
+  CHECK_CUSPARSE(cusparseSpMV_bufferSize(
+    handle,
+    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    &(alpha),
+    BMat,
+    cVec,
+    &(alpha),
+    aVec,
+    CUDA_R_64F,
+    CUSPARSE_MV_ALG_DEFAULT,
+    &(bufferSize)
+  ));
+  void* workspacePtr = NULL;
+  if (bufferSize > 0) {
+    Legion::DeferredBuffer<char, 1> buf = Legion::DeferredBuffer<char, 1>(Rect<1>(0, (bufferSize - 1)), Memory::Kind::GPU_FB_MEM);
+    workspacePtr = buf.ptr(0);
   }
+  CHECK_CUSPARSE(cusparseSpMV(
+    handle,
+    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    &(alpha),
+    BMat,
+    cVec,
+    &(alpha),
+    aVec,
+    CUDA_R_64F,
+    CUSPARSE_MV_ALG_DEFAULT,
+    workspacePtr
+  ));
 }
 
 void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces) {
   auto a_vals_parent = a->valsParent;
-  int B1_dimension = B->dims[0];
+  int B2_dimension = B->dims[1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
@@ -192,7 +200,7 @@ void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   task_1Args taskArgsRaw1;
-  taskArgsRaw1.B1_dimension = B1_dimension;
+  taskArgsRaw1.B2_dimension = B2_dimension;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());

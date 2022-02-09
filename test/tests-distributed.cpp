@@ -1616,21 +1616,30 @@ TEST(distributed, legionSpMV) {
   const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
   const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
   IndexVar block("block"), warp("warp"), thread("thread"), thread_nz("thread_nz"), i1("i1"), block_row("block_row"), warp_row("warp_row");
+  // Due to mysterious and currently unresolved issues, the performance of this schedule
+  // is just not good enough for submission. We'll instead use CuSparse at the leaves.
+  // add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
+  //   return stmt
+  //          .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+  //          .split(ii, block, block_row, ROWS_PER_TB)
+  //          .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
+  //          .pos(j, jpos, B(i, j))
+  //          .split(jpos, thread_nz, thread, WARP_SIZE)
+  //          .reorder({block, warp, warp_row, thread, thread_nz})
+  //          .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+  //          .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+  //          .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Temporary)
+  //          .communicate(a(i), io)
+  //          .communicate(B(i, j), io)
+  //          .communicate(c(j), io)
+  //          ;
+  // }, Configuration::CSR, true /* cuda */);
   add("RowSplit", [&](IndexStmt stmt, Tensor<double> a, Tensor<double> B, Tensor<double> c, IndexExpr) {
-    return stmt
-           .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-           .split(ii, block, block_row, ROWS_PER_TB)
-           .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
-           .pos(j, jpos, B(i, j))
-           .split(jpos, thread_nz, thread, WARP_SIZE)
-           .reorder({block, warp, warp_row, thread, thread_nz})
-           .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
-           .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
-           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Temporary)
-           .communicate(a(i), io)
-           .communicate(B(i, j), io)
-           .communicate(c(j), io)
-           ;
+    auto call = std::make_shared<CuSparseSpMV>();
+    return stmt.distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+               .communicate({a(i), B(i, j), c(j)}, io)
+               .swapLeafKernel(ii, call)
+               ;
   }, Configuration::CSR, true /* cuda */);
   const int NNZ_PER_THREAD = 8;
   const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;

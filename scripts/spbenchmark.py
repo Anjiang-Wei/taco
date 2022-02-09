@@ -56,7 +56,7 @@ class DISTALBenchmark(Benchmark):
         args = {
             # TODO (rohany): Handle extra arguments...
             BenchmarkKind.SpMV: ["-csr", self.getDISTALTensor(tensor, "csr")],
-            BenchmarkKind.SpMSpV: ["-csc", "?", "-spx", "?"],
+            BenchmarkKind.SpMSpV: ["-csc", self.getDISTALTensor(tensor, "csc"), "-spx", self.getUniformVec(tensor)],
             # TODO (rohany): Thread through the jdim here.
             BenchmarkKind.SpMM: ["-tensor", self.getDISTALTensor(tensor, 'csr')],
             # TODO (rohany): Thread through the jdim here.
@@ -83,7 +83,7 @@ class DISTALBenchmark(Benchmark):
         legionArgs = ["-ll:ocpu", "2",
                       "-ll:othr", "18",
                       "-ll:onuma", "1",
-                      "-ll:nsize", "110G",
+                      "-ll:nsize", "100G",
                       "-ll:ncsize", "0",
                       "-ll:util", "2",
                       "-tm:numa_aware_alloc"]
@@ -92,10 +92,15 @@ class DISTALBenchmark(Benchmark):
                 gpus = procs
             else:
                 gpus = 4
+            # Allocate as much GPU memory as physically possible.
+            fbSize = "15.3G"
+            if benchKind == BenchmarkKind.SpMV:
+                # We'll allocate slightly less memory in this case for CuSparse, as the cusparseHandle_t
+                # takes up a non-trivial amount of memory.
+                fbSize = "15G"
             legionArgs += [
                 "-ll:gpu", str(gpus),
-                # Allocate as much GPU memory as physically possible.
-                "-ll:fsize", "15.3G",
+                "-ll:fsize", fbSize,
                 "-pieces", str(procs),
             ]
 
@@ -123,6 +128,11 @@ class DISTALBenchmark(Benchmark):
         name = f"{tensor.name}-rotated-{amount}.{formatStr}.hdf5"
         path = Path(getTensorDir(), "distal", name)
         return str(path)
+
+    def getUniformVec(self, tensor):
+      name = f"{tensor.name}-uniform-vec.vec.hdf5"
+      path = Path(getTensorDir(), "distal", name)
+      return str(path)
 
 class CTFBenchmark(Benchmark):
     def getCommand(self, tensor, benchKind, nodes):

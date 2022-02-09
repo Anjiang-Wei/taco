@@ -2709,10 +2709,10 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // Lower the appropriate kind of task call depending on whether the forall
     // is distributed.
     if (forall.isDistributed()) {
-      util::append(transfers, this->lowerIndexLaunch(forall, domain,tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
+      util::append(transfers, this->lowerIndexLaunch(forall, domain, tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
     } else {
       // Lower a serial loop of task launches.
-      util::append(transfers, this->lowerSerialTaskLoop(forall, domain, domainIter, pointT,tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
+      util::append(transfers, this->lowerSerialTaskLoop(forall, domain, domainIter, pointT, tensorLogicalPartitions, regionsAccessedByTask, taskID, unpackTensorData));
     }
 
     // Take the statements currently in the task header that were filled in by recursive calls.
@@ -5819,6 +5819,14 @@ bool LowererImpl::statementAccessesRegion(ir::Stmt stmt, ir::Expr target) {
       node->start.accept(this);
       node->end.accept(this);
       node->increment.accept(this);
+    }
+
+    void visit(const MethodCall* node) {
+      this->doesTargetMatch(node->var);
+      node->var.accept(this);
+      for (auto it : node->args) {
+        it.accept(this);
+      }
     }
 
     const GetProperty* targetGP;

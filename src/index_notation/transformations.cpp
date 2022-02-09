@@ -9,6 +9,7 @@
 #include "taco/lower/merge_lattice.h"
 #include "taco/lower/mode.h"
 #include "taco/lower/mode_format_impl.h"
+#include "taco/lower/mode_format_rect_compressed.h"
 
 #include <iostream>
 #include <algorithm>
@@ -2133,6 +2134,244 @@ ir::Stmt TTV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<Tens
       Auto
   )));
   return ir::Block::make(results);
+}
+
+struct CuSparseSpMV::Content {
+  IndexVar root;
+  TensorVar a;
+  TensorVar B;
+  TensorVar c;
+};
+
+CuSparseSpMV::CuSparseSpMV() : content(new Content) {}
+
+void CuSparseSpMV::canApply(IndexStmt stmt, ProvenanceGraph pg, IndexVar root, std::string *reason) const {
+  // TODO (rohany): Implement validation.
+
+  // TODO (rohany): Deduplicate this into a method on the LeafCallInterface.
+  struct Finder : IndexNotationVisitor {
+    void visit(const ForallNode* node) {
+      if (node->indexVar == this->target) {
+        this->root = node;
+      }
+      node->stmt.accept(this);
+    }
+
+    IndexStmt root;
+    IndexVar target;
+  };
+  Finder f; f.target = root;
+  stmt.accept(&f);
+
+  IndexStmt rootStmt = f.root;
+  auto iloop = to<Forall>(rootStmt);
+  auto jloop = to<Forall>(iloop.getStmt());
+  auto assign = to<Assignment>(jloop.getStmt());
+  auto a = to<Access>(assign.getLhs());
+  auto mul = to<Mul>(assign.getRhs());
+  auto B = to<Access>(mul.getA());
+  auto c = to<Access>(mul.getB());
+
+  this->content->root = root;
+  this->content->a = a.getTensorVar();
+  this->content->B = B.getTensorVar();
+  this->content->c = c.getTensorVar();
+}
+
+IndexVar CuSparseSpMV::getRootIvar() const {
+  return this->content->root;
+}
+
+ir::Stmt CuSparseSpMV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<TensorVar, ir::Expr> tensorVars,
+                                        bool inReduction, std::vector<IndexVar> definedVarOrder,
+                                        std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+                                        std::map<taco::IndexVar, taco::ir::Expr> variableNames,
+                                        Iterators iterators) const {
+  auto a = tensorVars[this->content->a];
+  auto B = tensorVars[this->content->B];
+  auto c = tensorVars[this->content->c];
+
+  std::vector<ir::Stmt> results;
+  auto ctx = ir::Symbol::make("ctx");
+  auto nonTrans = ir::Symbol::make("CUSPARSE_OPERATION_NON_TRANSPOSE");
+  auto cusparseReal = ir::Symbol::make("CUDA_R_64F");
+  auto defaultAlg = ir::Symbol::make("CUSPARSE_MV_ALG_DEFAULT");
+  auto index32 = ir::Symbol::make("CUSPARSE_INDEX_32I");
+  auto index0 = ir::Symbol::make("CUSPARSE_INDEX_BASE_ZERO");
+
+  auto B2Iter = iterators.getLevelIteratorByLevel(this->content->B, 1);
+  auto pack = B2Iter.getMode().getModePack();
+  auto B2 = B2Iter.getMode().getModeFormat().as<RectCompressedModeFormat>();
+
+  auto pos = B2->getRegion(pack, RectCompressedModeFormat::POS);
+  auto crd = B2->getRegion(pack, RectCompressedModeFormat::CRD);
+  auto aVals = ir::GetProperty::make(a, ir::TensorProperty::Values);
+  auto BVals = ir::GetProperty::make(B, ir::TensorProperty::Values);
+  auto cVals = ir::GetProperty::make(c, ir::TensorProperty::Values);
+  auto aValsAcc = ir::GetProperty::make(a, ir::TensorProperty::ValuesWriteAccessor, 1);
+  auto BValsAcc = ir::GetProperty::make(B, ir::TensorProperty::ValuesReadAccessor, 1);
+  auto cValsAcc = ir::GetProperty::make(c, ir::TensorProperty::ValuesReadAccessor, 1);
+
+  auto aValsDomain = ir::Var::make("aValsDomain", Auto);
+  auto cValsDomain = ir::Var::make("cValsDomain", Auto);
+  auto posDomain = ir::Var::make("posDomain", Auto);
+  auto crdDomain = ir::Var::make("crdDomain", Auto);
+  auto BValsDomain = ir::Var::make("BValsDomain", Auto);
+  results.push_back(ir::VarDecl::make(posDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(pos)}, Auto)));
+  results.push_back(ir::VarDecl::make(crdDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(crd)}, Auto)));
+  results.push_back(ir::VarDecl::make(aValsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(aVals)}, Auto)));
+  results.push_back(ir::VarDecl::make(BValsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(BVals)}, Auto)));
+  results.push_back(ir::VarDecl::make(cValsDomain, ir::Call::make("runtime->get_index_space_domain", {ctx, getIndexSpace(cVals)}, Auto)));
+
+  auto addr = [](ir::Expr e) {
+    return ir::Call::make("&", {e}, Auto);
+  };
+  auto check = [](ir::Expr e) {
+    return ir::Call::make("CHECK_CUSPARSE", {e}, Auto);
+  };
+  auto getBounds = [](ir::Expr e, std::string func) {
+    return ir::MethodCall::make(e, func, {}, false, Int64);
+  };
+  auto noConst = [](ir::Expr e, Datatype type) {
+    return ir::Call::make("const_cast<" + util::toString(type) + "*>", {e}, Auto);
+  };
+
+  auto alpha = ir::Var::make("alpha", Float64);
+  results.push_back(ir::VarDecl::make(alpha, ir::Literal::make((double)1, Float64)));
+  auto handleTy = Datatype("cusparseHandle_t");
+  auto streamTy = Datatype("cudaStream_t");
+  // Get the CuSparse handle.
+  auto handle = ir::Var::make("handle", handleTy);
+  results.push_back(ir::VarDecl::make(handle, ir::Call::make("getCuSparse", {}, handleTy)));
+  // Create a CUDA stream to launch the kernel on.
+  auto stream = ir::Var::make("taskStream", streamTy);
+  results.push_back(ir::VarDecl::make(stream, ir::makeConstructor(streamTy, {})));
+  results.push_back(ir::SideEffect::make(ir::Call::make("cudaStreamCreate", {addr(stream)}, Auto)));
+  // Attach the handle to the stream.
+  results.push_back(ir::SideEffect::make(check(ir::Call::make("cusparseSetStream", {handle, stream}, Auto))));
+
+  auto numRows = ir::Sub::make(ir::MethodCall::make(posDomain, "get_volume", {}, false /* deref */, Int()), 1);
+  auto B2Dim = ir::GetProperty::make(B, ir::TensorProperty::Dimension, 1);
+
+  // Start allocating our data structures.
+  auto cusparseVec = Datatype("cusparseDnVecDescr_t");
+  auto aVec = ir::Var::make("aVec", cusparseVec);
+  auto cVec = ir::Var::make("cVec", cusparseVec);
+  results.push_back(ir::VarDecl::make(aVec, ir::makeConstructor(cusparseVec, {})));
+  results.push_back(ir::VarDecl::make(cVec, ir::makeConstructor(cusparseVec, {})));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make(
+    "cusparseCreateDnVec",
+    {
+      addr(aVec),
+      numRows,
+      ir::MethodCall::make(aValsAcc, "ptr", {getBounds(aValsDomain, "lo")}, false /* deref */, Auto),
+      cusparseReal,
+    },
+    Auto
+  ))));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make(
+    "cusparseCreateDnVec",
+    {
+      addr(cVec),
+      B2Dim,
+      noConst(ir::MethodCall::make(cValsAcc, "ptr", {getBounds(cValsDomain, "lo")}, false /* deref */, Auto), Float64),
+      cusparseReal,
+    },
+    Auto
+  ))));
+
+  // A special pos pointer that is actually int32_t's instead of Rect<1>'s.
+  auto B2Pos = ir::GetProperty::makeIndicesAccessor(
+    B,
+    B2Iter.getMode().getName() + "_pos",
+    1 /* mode */,
+    0 /* index */,
+    ir::GetProperty::AccessorArgs(
+      1 /* dim */,
+      Int32 /* elemType */,
+      ir::Symbol::make("FID_RECT_1") /* field */,
+      pos /* regionAccessing */,
+      pos /* regionParent */,
+      ir::RO /* priv */
+    )
+  );
+
+  auto cusparseMat = Datatype("cusparseSpMatDescr_t");
+  auto BMat = ir::Var::make("BMat", cusparseMat);
+  results.push_back(ir::VarDecl::make(BMat, ir::makeConstructor(cusparseMat, {})));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make(
+    "cusparseCreateCsr",
+    {
+      addr(BMat),
+      numRows,
+      B2Dim,
+      ir::MethodCall::make(crdDomain, "get_volume", {}, false /* deref */, Auto),
+      noConst(ir::MethodCall::make(B2Pos, "ptr", {getBounds(posDomain, "lo")}, false /* deref */, Auto), Int32),
+      noConst(ir::MethodCall::make(B2->getAccessor(pack, RectCompressedModeFormat::CRD), "ptr", {getBounds(crdDomain, "lo")}, false /* deref */, Auto), Int32),
+      noConst(ir::MethodCall::make(BValsAcc, "ptr", {getBounds(BValsDomain, "lo")}, false /* deref */, Auto), Float64),
+      index32,
+      index32,
+      index0,
+      cusparseReal,
+    },
+    Auto
+  ))));
+
+  auto sizet = UInt64;
+  auto bufferSize = ir::Var::make("bufferSize", sizet);
+  results.push_back(ir::VarDecl::make(bufferSize, 0));
+  results.push_back(ir::SideEffect::make(check(ir::Call::make(
+    "cusparseSpMV_bufferSize",
+    {
+      handle,
+      nonTrans,
+      addr(alpha),
+      BMat,
+      cVec,
+      addr(alpha),
+      aVec,
+      cusparseReal,
+      defaultAlg,
+      addr(bufferSize)
+    },
+    Auto
+  ))));
+
+  // TODO (rohany): Allocate the deferred buffer.
+  auto workspacePtr = ir::Var::make("workspacePtr", Datatype("void*"));
+  results.push_back(ir::VarDecl::make(workspacePtr, ir::Symbol::make("NULL")));
+  auto defBufTy = DeferredBuffer(Datatype("char"), 1);
+  auto defBuf = ir::Var::make("buf", defBufTy);
+  results.push_back(ir::IfThenElse::make(
+    ir::Gt::make(bufferSize, 0),
+    ir::Block::make(
+      ir::VarDecl::make(defBuf, ir::makeConstructor(defBufTy, {ir::makeConstructor(Rect(1), {0, ir::Sub::make(bufferSize, 1)}), ir::Symbol::make("Memory::Kind::GPU_FB_MEM")})),
+      ir::Assign::make(workspacePtr, ir::MethodCall::make(defBuf, "ptr", {0}, false /* deref */, Auto))
+    )
+  ));
+
+  results.push_back(ir::SideEffect::make(check(ir::Call::make(
+    "cusparseSpMV",
+    {
+      handle,
+      nonTrans,
+      addr(alpha),
+      BMat,
+      cVec,
+      addr(alpha),
+      aVec,
+      cusparseReal,
+      defaultAlg,
+      workspacePtr,
+    },
+    Auto
+  ))));
+
+  return ir::Block::make(results);
+}
+
+void CuSparseSpMV::print(std::ostream &os) const {
+  os << "CuSparseSpMV";
 }
 
 // Autoscheduling functions
