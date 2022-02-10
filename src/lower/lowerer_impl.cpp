@@ -1929,8 +1929,8 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     Expr rhs;
     if (i == 0) {
       // In the first level of the iteration, the iteration space identifier is
-      // the variable itself.
-      rhs = this->indexVarToExprMap[this->definedIndexVarsExpanded[i]];
+      // the variable itself, offset by an initial value.
+      rhs = ir::Add::make(this->indexVarToExprMap[this->definedIndexVarsExpanded[i]], ir::Symbol::make("TACO_PARTITION_COLOR_OFFSET"));
     } else {
       // Otherwise, we construct the variable from the prior level iteration space point.
       auto var = this->indexVarToExprMap[this->definedIndexVarsExpanded[i]];
@@ -2183,6 +2183,53 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       coloringLoopBody.push_back(ir::VarDecl::make(this->indexVarToExprMap[forall.getIndexVar()],
                                                    ir::Load::make(ir::Deref::make(domainIter, pointT), 0)));
       coloringLoopBody.push_back(posIter.getCreatePosColoringEntry(ir::Deref::make(domainIter, Auto), lower, upper));
+
+
+      std::map<TensorVar, ir::Expr> extraColorings;
+      std::vector<Expr> colorings;
+      std::vector<Stmt> initColorings;
+      for (auto &t : forall.getTransfers()) {
+        auto c = ir::Var::make(t.getAccess().getTensorVar().getName() + "Coloring", DomainPointColoring);
+        initColorings.push_back(
+            ir::VarDecl::make(c, ir::Call::make(DomainPointColoring.getName(), {}, DomainPointColoring)));
+        colorings.push_back(c);
+      }
+      // TODO (rohany): Hacking...
+      for (auto& t : forall.getTransfers()) {
+        auto tv = t.getAccess().getTensorVar();
+        auto domain = ir::Var::make(tv.getName() + "Domain", Auto);
+        auto runs = DenseFormatRuns(t.getAccess(), this->iterators);
+        auto ispace = ir::GetProperty::makeDenseLevelRun(this->tensorVars[tv], 0);
+        partitioningStmts.push_back(ir::VarDecl::make(domain, ir::Call::make("runtime->get_index_space_domain", {ctx, ispace}, Auto)));
+        domains[t.getAccess().getTensorVar()] = domain;
+      }
+      for (size_t idx = 0; idx < forall.getTransfers().size(); idx++) {
+        auto& t = forall.getTransfers()[idx];
+        auto& tv = t.getAccess().getTensorVar();
+        auto n = tv.getName();
+        if (t.getAccess() == posAccess) {
+          continue;
+        }
+        auto affineProjection = this->constructAffineProjection(posAccess, t.getAccess());
+        bool isPartitionedByOuterVars = false;
+        // std::set<IndexVar> considering = this->varsInScope[this->curDistVar];
+        std::set<IndexVar> considering = this->definedIndexVars;
+        considering.erase(this->curDistVar);
+        for (auto ivar : t.getAccess().getIndexVars()) {
+          if (this->anyParentInSet(ivar, considering)) {
+            isPartitionedByOuterVars = true;
+          }
+        }
+        if (isPartitionedByOuterVars && !affineProjection.defined()) {
+          partitioningStmts.push_back(initColorings[idx]);
+          std::set<TensorVar> fullyRepl;
+          coloringLoopBody.push_back(ir::Block::make(this->createDomainPointColorings(forall, domainIter, domains, fullyRepl, colorings, tv)));
+          extraColorings[tv] = colorings[idx];
+        }
+        // TODO (rohany): As described below, we aren't going to be able to compute a tight bound
+        //  on the subspaces here.
+        // taco_iassert(!(isPartitionedByOuterVars && affineProjection.defined()));
+      }
       auto coloringLoop = ir::For::make(
           domainIter,
           ir::Call::make(pointInDimT.getName(), {domain}, pointInDimT),
@@ -2190,6 +2237,19 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
           1 /* increment -- hack to get ++ */,
          ir::Block::make(coloringLoopBody)
       );
+
+      // TODO (rohany): We need to add coloring and partition ops for tensors that are being partitioned
+      //  by variables that are in scope but not present in the projection from the pos tensor. I.e.
+      //  if we had A(i, j) = B(i, k) * C(k, j), ordering j -> i -> k and do a pos on B(i, k). In this
+      //  case, the C tensor is not partitioned by the projection from B, but needs to be partitioned
+      //  by the current value of j.
+      // TODO (rohany): It's unclear to me what we would do if we had a partition implied from a projection
+      //  and by in scope variables. For example, consider the contraction A(i, j) = B(i, k) * C(i, j, k),
+      //  with loop ordering j -> i -> k and a pos on B(i, k). In this case, the C tensor is partitioned by
+      //  both the partition of B implied by the position split and the current value of j. This seems like
+      //  a more general case of what we have now, where we'd want to form a coloring of the parent partitioned
+      //  dimensions of C, and take a product of some sort against dimensions implied by the projection from B.
+
       partitioningStmts.push_back(coloringLoop);
       partitioningStmts.push_back(posIter.getFinalizePosColoring());
 
@@ -2286,7 +2346,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       auto denseRunPartition = ir::Var::make(posTensor.getName() + "DenseRun0Partition", IndexPartition);
       DenseFormatRuns posTensorFormatRuns(posAccess, this->iterators);
       if (!posTensorFormatRuns.runs.empty() && util::contains(posTensorFormatRuns.runs[0].levels, 0)) {
-        partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", maybeAddPartColor({ctx, runtime, upwardsPart, denseRun}), IndexPartition)));
+        partitioningStmts.push_back(ir::VarDecl::make(denseRunPartition, ir::Call::make("copyPartition", {ctx, runtime, upwardsPart, denseRun}, IndexPartition)));
         tensorDenseRunPartitions[posTensor][0] = denseRunPartition;
       }
 
@@ -2368,27 +2428,31 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
         ir::Expr createDenseRunPart;
         auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
-        // Attempt to create different projections from the pos tensor
-        // into the target tensor.
-        auto affineProjection = this->constructAffineProjection(posAccess, tvAccess);
-        auto sparseGatherProjection = this->constructSparseGatherProjection(posAccess, tvAccess, posMode);
-        if (affineProjection.defined()) {
-          createDenseRunPart = ir::MethodCall::make(affineProjection, "apply", maybeAddPartColor({ctx, runtime, denseRunPartition, firstDenseRun}), false /* deref */, IndexPartition);
-        } else if (sparseGatherProjection.defined() && !isFusedPos) {
-          // We can't apply a SparseGatherProjection if the position space loop is fused.
-          // TODO (rohany): This is still hardcoded for the RectCompressedModeFormat.
-          auto rcmf = posIter.getMode().getModeFormat().as<RectCompressedModeFormat>();
-          auto pack = posIter.getMode().getModePack();
-          auto crdParent = rcmf->getRegion(pack, RectCompressedModeFormat::CRD_PARENT);
-          auto crdAcc = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO).as<ir::GetProperty>();
-          auto crdField = crdAcc->accessorArgs.field;
-          auto crdPart = tensorLogicalPartitions[posTensor][posLevel][1];
-          createDenseRunPart = ir::MethodCall::make(sparseGatherProjection, "apply", maybeAddPartColor(
-              {ctx, runtime, crdParent, crdPart, crdField, firstDenseRun}), false /* deref */,
-                                                    IndexPartition);
+        if (util::contains(extraColorings, tv)) {
+          createDenseRunPart = ir::Call::make("runtime->create_index_partition", {ctx, firstDenseRun, domain, extraColorings[tv], computePart}, Auto);
         } else {
-          // If we can't make any projections, then this tensor is fully replicated.
-          continue;
+          // Attempt to create different projections from the pos tensor
+          // into the target tensor.
+          auto affineProjection = this->constructAffineProjection(posAccess, tvAccess);
+          auto sparseGatherProjection = this->constructSparseGatherProjection(posAccess, tvAccess, posMode);
+          if (affineProjection.defined()) {
+            createDenseRunPart = ir::MethodCall::make(affineProjection, "apply", {ctx, runtime, denseRunPartition, firstDenseRun}, false /* deref */, IndexPartition);
+          } else if (sparseGatherProjection.defined() && !isFusedPos) {
+            // We can't apply a SparseGatherProjection if the position space loop is fused.
+            // TODO (rohany): This is still hardcoded for the RectCompressedModeFormat.
+            auto rcmf = posIter.getMode().getModeFormat().as<RectCompressedModeFormat>();
+            auto pack = posIter.getMode().getModePack();
+            auto crdParent = rcmf->getRegion(pack, RectCompressedModeFormat::CRD_PARENT);
+            auto crdAcc = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO).as<ir::GetProperty>();
+            auto crdField = crdAcc->accessorArgs.field;
+            auto crdPart = tensorLogicalPartitions[posTensor][posLevel][1];
+            createDenseRunPart = ir::MethodCall::make(sparseGatherProjection, "apply", maybeAddPartColor(
+                {ctx, runtime, crdParent, crdPart, crdField, firstDenseRun}), false /* deref */,
+                                                      IndexPartition);
+          } else {
+            // If we can't make any projections, then this tensor is fully replicated.
+            continue;
+          }
         }
 
         // TODO (rohany): Deduplicate this out into a helper function used by the standard
@@ -2636,7 +2700,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
       // First, instantiate an instance of the struct in a pointer.
       auto structPack = ir::Var::make("computePartitions", Auto);
-      returnPartitionStatements.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
+      this->header.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
 
       for (auto& t : this->tensorVarOrdering) {
         auto tensor = this->tensorVars[t];
@@ -5709,6 +5773,9 @@ Expr LowererImpl::projectCanonicalSpaceToWindowedPosition(Iterator iterator, ir:
 }
 
 bool LowererImpl::anyParentInSet(IndexVar var, std::set<IndexVar>& s) {
+  if (util::contains(s, var)) {
+    return true;
+  }
   auto children = this->provGraph.getChildren(var);
   for (auto c : children) {
     if (util::contains(s, c)) {
@@ -6308,6 +6375,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         ir::Expr tag;
         if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
           tag = virtualMap;
+        } else {
           taskReadsAnyVars |= true;
         }
         if (util::contains(tensorLogicalPartitions, tv)) {
@@ -6666,6 +6734,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
         ir::Expr tag;
         if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
           tag = virtualMap;
+        } else {
           taskReadsAnyVars |= true;
         }
 
@@ -6981,7 +7050,7 @@ std::vector<ir::Expr> LowererImpl::getAllNeededParentPositions(Iterator &iter) {
   return {rev.begin(), rev.end()};
 }
 
-ir::Expr LowererImpl::constructAffineProjection(Access &from, Access &to) {
+ir::Expr LowererImpl::constructAffineProjection(Access &from, const Access &to) {
   auto fromDenseRuns = DenseFormatRuns(from, this->iterators);
   auto toDenseRuns = DenseFormatRuns(to, this->iterators);
 

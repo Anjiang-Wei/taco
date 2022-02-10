@@ -829,7 +829,8 @@ ModeFunction RectCompressedModeFormat::partitionPosFromCrd(Mode mode, ir::Expr c
           this->getRegion(pack, POS),
           this->getRegion(pack, POS_PARENT),
           fidRect1,
-          ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdIndexPartition}, Auto)
+          ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdIndexPartition}, Auto),
+          ir::Symbol::make("LEGION_ALIASED_INCOMPLETE_KIND"),
       },
       Auto
   );

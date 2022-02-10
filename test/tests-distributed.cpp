@@ -1817,8 +1817,8 @@ TEST(distributed, legionSpMM) {
                   .communicate({A(i, j), B(i, k), C(k, j)}, io)
                   ;
   IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
-           warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
-           dense_ub("dense_ub"), dense_b("dense_b");
+           warp("warp"), thread("thread"), fposi1("fposi1"), fposi2("fposi2"), nnz("nnz"),
+           dense_ub("dense_ub"), dense_b("dense_b"), thread_nz("thread_nz");
   const int NNZ_PER_WARP = 64;
   const int BLOCK_SIZE = 256;
   const int WARP_SIZE = 32;
@@ -1845,8 +1845,38 @@ TEST(distributed, legionSpMM) {
                      ;
   auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
   auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", loweredCPU);
-  ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", loweredGPU);
+
+  const int BATCH_SIZE = 4;
+  // Schedule to conserve memory (i.e. not replicate C onto all nodes).
+  auto cpuCons = stmt.split(j, jo, ji, BATCH_SIZE)
+                     .reorder({jo, i, k, ji})
+                     .distribute({i}, {io}, {ii}, Grid(gx))
+                     .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+                     .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                     ;
+
+  const int BATCHED_NNZ_PER_THREAD = 8;
+  const int BATCHED_NNZ_PER_WARP = BATCHED_NNZ_PER_THREAD * WARP_SIZE;
+  const int BATCHED_NNZ_PER_TB = BATCHED_NNZ_PER_THREAD * BLOCK_SIZE;
+  auto cpuConsLowered = lowerLegionSeparatePartitionCompute(cpuCons, "computeLegionBatched", false /* waitOnFutureMap */);
+  auto gpuCons = stmt.split(j, jo, ji, BATCH_SIZE)
+                     .reorder({jo, i, k, ji})
+                     .fuse(i, k, f)
+                     .pos(f, fpos, B(i, k))
+                     .distribute({fpos}, {fposo}, {fposi}, Grid(gx), taco::ParallelUnit::DistributedGPU)
+                     // TODO (rohany): This can probably be optimized further.
+                     .split(fposi, block, fposi1, BATCHED_NNZ_PER_TB)
+                     .split(fposi1, warp, fposi2, BATCHED_NNZ_PER_WARP)
+                     .split(fposi2, thread, thread_nz, BATCHED_NNZ_PER_THREAD)
+                     .reorder({block, warp, thread, thread_nz})
+                     .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+                     .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+                     .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+                     .communicate({A(i, j), B(i, k), C(k, j)}, fposo)
+                     ;
+  auto gpuConsLowered = lowerLegionSeparatePartitionCompute(gpuCons, "computeLegionBatched", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", ir::Block::make(loweredCPU, cpuConsLowered));
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", ir::Block::make(loweredGPU, gpuConsLowered));
 }
 
 TEST(distributed, legionSpSDDMM) {

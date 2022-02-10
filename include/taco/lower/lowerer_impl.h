@@ -781,7 +781,7 @@ private:
   // construct an AffineProjection between the bottom-up partition of the top dense
   // level pack of `from` to the fully-dense level pack of `to`. It returns an empty
   // Expr (i.e. !ret.defined()) when `to` is not partitioned by `from`.
-  ir::Expr constructAffineProjection(Access& from, Access& to);
+  ir::Expr constructAffineProjection(Access& from, const Access& to);
 
   // construct a SparseGatherProjection between the partition of a
   // sparse level of `from` to the dense level pack of `to`. It returns

@@ -55,7 +55,9 @@ Datatype max_type(Datatype a, Datatype b) {
   if (a == b) {
     return a;
   }
-  else if (a.isComplex() || b.isComplex()) {
+  if (a.getKind() == Datatype::CppType || b.getKind() == Datatype::CppType) {
+    return Datatype::CppType;
+  } else if (a.isComplex() || b.isComplex()) {
     if (a == Complex128 || b == Complex128 || a == Float64 || b == Float64) {
       return Complex128;
     }

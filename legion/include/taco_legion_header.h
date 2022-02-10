@@ -16,6 +16,7 @@ enum TensorFields {
 };
 const int TACO_TASK_BASE_ID = 10000;
 const int TACO_SHARD_BASE_ID = 1000;
+const int TACO_PARTITION_COLOR_OFFSET = 10000;
 
 // A helper widget to treat LogicalRegions and PhysicalRegions the same.
 struct RegionWrapper {

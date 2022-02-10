@@ -13,7 +13,7 @@ typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
-  bool dump = false;
+  bool dump = false, batched = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
   int n = 10, pieces = 0, warmup = 5, jDim = 32;
@@ -24,6 +24,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   parser.add_option_int("-jdim", jDim);
+  parser.add_option_bool("-batched", batched);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
@@ -41,14 +42,28 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
 
-  auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+  auto piecesIspace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
+  auto piecesDom = runtime->get_index_space_domain(ctx, piecesIspace);
 
-  auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+  partitionPackForcomputeLegion pack;
+  partitionPackForcomputeLegionBatched packBatched;
+  IndexPartition commPart;
+  if (batched) {
+    packBatched = partitionForcomputeLegionBatched(ctx, runtime, &A, &B, &C, pieces);
+    commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), packBatched.APartition.valsPartition.get_index_partition());
+  } else {
+    pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+    commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+  }
   auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
-    computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
+    if (batched) {
+      computeLegionBatched(ctx, runtime, &A, &B, &C, &packBatched, pieces);
+    } else {
+      computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
+    }
 #ifdef TACO_USE_CUDA
     // Collapse our reduction buffers. We use sparse instances to force just the communication
     // that we want. We only do this for the GPU schedule, as the CPU schedule does not
