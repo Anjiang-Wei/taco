@@ -37,7 +37,7 @@ enum FieldIDs {
 
 static size_t numIntsToCompare = 0;
 static int lexComp(const void* a, const void* b) {
-  for (size_t i = 0; numIntsToCompare; i++) {
+  for (size_t i = 0; i < numIntsToCompare; i++) {
     int diff = ((int32_t*)a)[i] - ((int32_t*)b)[i];
     if (diff != 0) {
       return diff;
