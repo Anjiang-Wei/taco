@@ -41,11 +41,14 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
 
+
   auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
+    // Collapse our reduction buffers.
+    launchDummyReadOverPartition(ctx, runtime, A.vals, pack.APartition.valsPartition, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */);
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
