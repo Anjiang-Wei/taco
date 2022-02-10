@@ -1,0 +1,359 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++DISTAL++spadd3++arabic-2005++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 374.400000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 207.100000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 138.600000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 96.150000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 112.800000 ms
+BENCHID++DISTAL++spadd3++it-2004++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 717.900000 ms
+BENCHID++DISTAL++spadd3++it-2004++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 460.750000 ms
+BENCHID++DISTAL++spadd3++it-2004++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 287.200000 ms
+BENCHID++DISTAL++spadd3++it-2004++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 207.700000 ms
+BENCHID++DISTAL++spadd3++it-2004++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 186.650000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 962.350000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1027.500000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 644.050000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 388.050000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 264.400000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1101.750000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1266.850000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 799.050000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 494.400000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 314.000000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 717.150000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 486.000000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 333.200000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 248.350000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 227.300000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 445.900000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 235.300000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 148.850000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 111.850000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 103.300000 ms
+BENCHID++DISTAL++spadd3++sk-2005++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1117.900000 ms
+BENCHID++DISTAL++spadd3++sk-2005++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 753.200000 ms
+BENCHID++DISTAL++spadd3++sk-2005++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 380.250000 ms
+BENCHID++DISTAL++spadd3++sk-2005++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 235.400000 ms
+BENCHID++DISTAL++spadd3++sk-2005++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 201.800000 ms
+BENCHID++DISTAL++spadd3++twitter7++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1602.500000 ms
+BENCHID++DISTAL++spadd3++twitter7++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1232.400000 ms
+BENCHID++DISTAL++spadd3++twitter7++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 899.350000 ms
+BENCHID++DISTAL++spadd3++twitter7++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 592.400000 ms
+BENCHID++DISTAL++spadd3++twitter7++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 404.700000 ms
+BENCHID++DISTAL++spadd3++uk-2005++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 653.000000 ms
+BENCHID++DISTAL++spadd3++uk-2005++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 394.800000 ms
+BENCHID++DISTAL++spadd3++uk-2005++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 243.600000 ms
+BENCHID++DISTAL++spadd3++uk-2005++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 163.950000 ms
+BENCHID++DISTAL++spadd3++uk-2005++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 148.600000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 901.700000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 732.450000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 516.500000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 312.450000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spadd3 -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 222.050000 ms
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3247712: <../scripts/spbenchmark.py DISTAL spadd3 all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py DISTAL spadd3 all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen709> by user <yadav2> in cluster <lassen> at Wed Feb  9 16:14:26 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb  9 16:20:35 2022
+                            <40*lassen544>
+                            <40*lassen547>
+                            <40*lassen218>
+                            <40*lassen392>
+                            <40*lassen219>
+                            <40*lassen393>
+                            <40*lassen395>
+                            <40*lassen42>
+                            <40*lassen44>
+                            <40*lassen45>
+                            <40*lassen46>
+                            <40*lassen48>
+                            <40*lassen552>
+                            <40*lassen223>
+                            <40*lassen53>
+                            <40*lassen58>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb  9 16:20:35 2022
+Terminated at Wed Feb  9 17:04:06 2022
+Results reported at Wed Feb  9 17:04:06 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py DISTAL spadd3 all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   10.00 sec.
+    Max Memory :                                 62 MB
+    Average Memory :                             61.22 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1426 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   2610 sec.
+    Turnaround time :                            2980 sec.
+
+The output (if any) is above this job summary.
+

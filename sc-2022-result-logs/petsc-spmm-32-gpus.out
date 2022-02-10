@@ -1,0 +1,210 @@
+BENCHID++PETSc++spmm++arabic-2005++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen198:03038] *** Process received signal ***
+[lassen198:03038] Signal: Aborted (6)
+[lassen198:03038] Signal code:  (-6)
+<< Rank 0: Generating lwcore_cpu.3224967_1.0 on lassen198 Thu Feb  3 15:31:27 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 0:  Generated lwcore_cpu.3224967_1.0 on lassen198 Thu Feb  3 15:31:28 PST 2022 in 1 secs >>
+<< Rank 0: Waiting 60 secs before aborting task on lassen198 Thu Feb  3 15:31:28 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 0:  Waited 60 secs -> now aborting task on lassen198 Thu Feb  3 15:32:28 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen198:03038] -----------------------
+[lassen198:03038] -----------------------
+[lassen198:03038] *** End of error message ***
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++PETSc++spmm++arabic-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1379.461863 ms.
+BENCHID++PETSc++spmm++arabic-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 998.456211 ms.
+BENCHID++PETSc++spmm++arabic-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 712.957127 ms.
+BENCHID++PETSc++spmm++arabic-2005++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 432.766560 ms.
+BENCHID++PETSc++spmm++arabic-2005++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/arabic-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 286.907681 ms.
+BENCHID++PETSc++spmm++it-2004++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+[0]PETSC ERROR: --------------------- Error Message --------------------------------------------------------------
+[0]PETSC ERROR: GPU error
+[0]PETSC ERROR: cuda error 2 (cudaErrorMemoryAllocation) : out of memory
+[0]PETSC ERROR: See https://petsc.org/release/faq/ for trouble shooting.
+[0]PETSC ERROR: Petsc Release Version 3.16.3, unknown
+[0]PETSC ERROR: /g/g15/yadav2/taco/petsc/bin/benchmark on a  named lassen198 by yadav2 Thu Feb  3 15:37:52 2022
+[0]PETSC ERROR: Configure options --download-c2html=0 --download-hwloc=0 --download-sowing=0 --prefix=./petsc-install/ --with-64-bit-indices=0 --with-blaslapack-lib="/usr/tcetmp/packages/lapack/lapack-3.9.0-gcc-7.3.1/lib/liblapack.so /usr/tcetmp/packages/lapack/lapack-3.9.0-gcc-7.3.1/lib/libblas.so" --with-cc=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpigcc --with-clanguage=C --with-cxx-dialect=C++17 --with-cxx=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpig++ --with-cuda=1 --with-debugging=0 --with-fc=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpigfortran --with-fftw=0 --with-hdf5-dir=/usr/tcetmp/packages/petsc/build/3.13.0/spack/opt/spack/linux-rhel7-power9le/xl_r-16.1/hdf5-1.10.6-e7e7urb5k7va3ib7j4uro56grvzmcmd4 --with-hdf5=1 --with-mumps=0 --with-precision=double --with-scalapack=0 --with-scalar-type=real --with-shared-libraries=1 --with-ssl=0 --with-suitesparse=0 --with-trilinos=0 --with-valgrind=0 --with-x=0 --with-zlib-include=/usr/include --with-zlib-lib=/usr/lib64/libz.so --with-zlib=1 CFLAGS="-g -DNoChange" COPTFLAGS="-O3" CXXFLAGS="-O3" CXXOPTFLAGS="-O3" FFLAGS=-g CUDAFLAGS=-std=c++17 FOPTFLAGS= PETSC_ARCH=arch-linux-c-opt
+[0]PETSC ERROR: #1 MatSeqDenseCUDASetPreallocation() at /g/g15/yadav2/taco/petsc/petsc/src/mat/impls/dense/seq/cuda/densecuda.cu:114
+[0]PETSC ERROR: #2 MatCreateDenseCUDA() at /g/g15/yadav2/taco/petsc/petsc/src/mat/impls/dense/mpi/mpidense.c:2539
+[0]PETSC ERROR: ------------------------------------------------------------------------
+[0]PETSC ERROR: Caught signal number 11 SEGV: Segmentation Violation, probably memory access out of range
+[0]PETSC ERROR: Try option -start_in_debugger or -on_error_attach_debugger
+[0]PETSC ERROR: or see https://petsc.org/release/faq/#valgrind
+[0]PETSC ERROR: or try http://valgrind.org on GNU/linux and Apple Mac OS X to find memory corruption errors
+[0]PETSC ERROR: or try https://docs.nvidia.com/cuda/cuda-memcheck/index.html on NVIDIA CUDA systems  to find memory corruption errors
+[0]PETSC ERROR: configure using --with-debugging=yes, recompile, link, and run
+[0]PETSC ERROR: to get more information on the crash.
+[0]PETSC ERROR: #3 User provided function() at unknown file:0
+[0]PETSC ERROR: Run with -malloc_debug to check if memory corruption is causing the crash.
+--------------------------------------------------------------------------
+MPI_ABORT was invoked on rank 0 in communicator MPI_COMM_WORLD
+with errorcode 59.
+
+NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
+You may or may not see output from other processes, depending on
+exactly when Open MPI kills them.
+--------------------------------------------------------------------------
+BENCHID++PETSc++spmm++it-2004++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen198:08658] *** Process received signal ***
+[lassen198:08658] Signal: Aborted (6)
+[lassen198:08658] Signal code:  (-6)
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen198:08659] *** Process received signal ***
+[lassen198:08659] Signal: Aborted (6)
+[lassen198:08659] Signal code:  (-6)
+<< Rank 0: Generating lwcore_cpu.3224967_8.0 on lassen198 Thu Feb  3 15:40:12 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 1: Generating lwcore_cpu.3224967_8.1 on lassen198 Thu Feb  3 15:40:12 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 0:  Generated lwcore_cpu.3224967_8.0 on lassen198 Thu Feb  3 15:40:13 PST 2022 in 1 secs >>
+<< Rank 0: Waiting 60 secs before aborting task on lassen198 Thu Feb  3 15:40:13 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 1:  Generated lwcore_cpu.3224967_8.1 on lassen198 Thu Feb  3 15:40:13 PST 2022 in 1 secs >>
+<< Rank 1: Waiting 60 secs before aborting task on lassen198 Thu Feb  3 15:40:13 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 0:  Waited 60 secs -> now aborting task on lassen198 Thu Feb  3 15:41:13 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen198:08658] -----------------------
+[lassen198:08658] -----------------------
+[lassen198:08658] *** End of error message ***
+<< Rank 1:  Waited 60 secs -> now aborting task on lassen198 Thu Feb  3 15:41:13 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen198:08659] -----------------------
+[lassen198:08659] -----------------------
+[lassen198:08659] *** End of error message ***
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++PETSc++spmm++it-2004++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1959.154621 ms.
+BENCHID++PETSc++spmm++it-2004++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1398.580352 ms.
+BENCHID++PETSc++spmm++it-2004++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 911.470279 ms.
+BENCHID++PETSc++spmm++it-2004++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/it-2004.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 619.013081 ms.
+
+# kmer_A2a OOM 1-4 GPUs, Internal error 8-32.
+# kmer_V1r OOM 1-4 GPUs, Internal error 8-32.
+
+# Internal error on 4, 8 GPUs.
+BENCHID++PETSc++spmm++mycielskian19++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 501.565880 ms.
+BENCHID++PETSc++spmm++mycielskian19++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/mycielskian19.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 9559.705803 ms.
+
+
+BENCHID++PETSc++spmm++nlpkkt240++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 8697.731624 ms.
+BENCHID++PETSc++spmm++nlpkkt240++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 5131.279604 ms.
+BENCHID++PETSc++spmm++nlpkkt240++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 2521.407590 ms.
+BENCHID++PETSc++spmm++nlpkkt240++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1271.086859 ms.
+BENCHID++PETSc++spmm++nlpkkt240++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/nlpkkt240.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 644.937657 ms.
+
+BENCHID++PETSc++spmm++uk-2005++1++gpus
+Executing command: jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+[0]PETSC ERROR: --------------------- Error Message --------------------------------------------------------------
+[0]PETSC ERROR: GPU error
+[0]PETSC ERROR: cuda error 2 (cudaErrorMemoryAllocation) : out of memory
+[0]PETSC ERROR: See https://petsc.org/release/faq/ for trouble shooting.
+[0]PETSC ERROR: Petsc Release Version 3.16.3, unknown
+[0]PETSC ERROR: /g/g15/yadav2/taco/petsc/bin/benchmark on a  named lassen216 by yadav2 Wed Feb  9 17:41:51 2022
+[0]PETSC ERROR: Configure options --download-c2html=0 --download-hwloc=0 --download-sowing=0 --prefix=./petsc-install/ --with-64-bit-indices=0 --with-blaslapack-lib="/usr/tcetmp/packages/lapack/lapack-3.9.0-gcc-7.3.1/lib/liblapack.so /usr/tcetmp/packages/lapack/lapack-3.9.0-gcc-7.3.1/lib/libblas.so" --with-cc=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpigcc --with-clanguage=C --with-cxx-dialect=C++17 --with-cxx=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpig++ --with-cuda=1 --with-debugging=0 --with-fc=/usr/tce/packages/spectrum-mpi/spectrum-mpi-rolling-release-gcc-8.3.1/bin/mpigfortran --with-fftw=0 --with-hdf5-dir=/usr/tcetmp/packages/petsc/build/3.13.0/spack/opt/spack/linux-rhel7-power9le/xl_r-16.1/hdf5-1.10.6-e7e7urb5k7va3ib7j4uro56grvzmcmd4 --with-hdf5=1 --with-mumps=0 --with-precision=double --with-scalapack=0 --with-scalar-type=real --with-shared-libraries=1 --with-ssl=0 --with-suitesparse=0 --with-trilinos=0 --with-valgrind=0 --with-x=0 --with-zlib-include=/usr/include --with-zlib-lib=/usr/lib64/libz.so --with-zlib=1 CFLAGS="-g -DNoChange" COPTFLAGS="-O3" CXXFLAGS="-O3" CXXOPTFLAGS="-O3" FFLAGS=-g CUDAFLAGS=-std=c++17 FOPTFLAGS= PETSC_ARCH=arch-linux-c-opt
+[0]PETSC ERROR: #1 MatSeqDenseCUDASetPreallocation() at /g/g15/yadav2/taco/petsc/petsc/src/mat/impls/dense/seq/cuda/densecuda.cu:114
+[0]PETSC ERROR: #2 MatCreateDenseCUDA() at /g/g15/yadav2/taco/petsc/petsc/src/mat/impls/dense/mpi/mpidense.c:2539
+[0]PETSC ERROR: ------------------------------------------------------------------------
+[0]PETSC ERROR: Caught signal number 11 SEGV: Segmentation Violation, probably memory access out of range
+[0]PETSC ERROR: Try option -start_in_debugger or -on_error_attach_debugger
+[0]PETSC ERROR: or see https://petsc.org/release/faq/#valgrind
+[0]PETSC ERROR: or try http://valgrind.org on GNU/linux and Apple Mac OS X to find memory corruption errors
+[0]PETSC ERROR: or try https://docs.nvidia.com/cuda/cuda-memcheck/index.html on NVIDIA CUDA systems  to find memory corruption errors
+[0]PETSC ERROR: configure using --with-debugging=yes, recompile, link, and run
+[0]PETSC ERROR: to get more information on the crash.
+[0]PETSC ERROR: #3 User provided function() at unknown file:0
+[0]PETSC ERROR: Run with -malloc_debug to check if memory corruption is causing the crash.
+--------------------------------------------------------------------------
+MPI_ABORT was invoked on rank 0 in communicator MPI_COMM_WORLD
+with errorcode 59.
+
+NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
+You may or may not see output from other processes, depending on
+exactly when Open MPI kills them.
+--------------------------------------------------------------------------
+BENCHID++PETSc++spmm++uk-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+terminate called after throwing an instance of 'thrust::system::detail::bad_alloc'
+  what():  std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+[lassen216:171431] *** Process received signal ***
+[lassen216:171431] Signal: Aborted (6)
+[lassen216:171431] Signal code:  (-6)
+<< Rank 1: Generating lwcore_cpu.3248337_2.1 on lassen216 Wed Feb  9 17:44:09 PST 2022 (LLNL_COREDUMP_FORMAT_CPU=lwcore) >>
+<< Rank 1:  Generated lwcore_cpu.3248337_2.1 on lassen216 Wed Feb  9 17:44:11 PST 2022 in 2 secs >>
+<< Rank 1: Waiting 60 secs before aborting task on lassen216 Wed Feb  9 17:44:11 PST 2022 (LLNL_COREDUMP_WAIT_FOR_OTHERS=60) >>
+<< Rank 1:  Waited 60 secs -> now aborting task on lassen216 Wed Feb  9 17:45:11 PST 2022 (LLNL_COREDUMP_KILL=task) >>
+[lassen216:171431] -----------------------
+[lassen216:171431] -----------------------
+[lassen216:171431] *** End of error message ***
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++PETSc++spmm++uk-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 2003.966514 ms.
+BENCHID++PETSc++spmm++uk-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1335.847268 ms.
+BENCHID++PETSc++spmm++uk-2005++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 848.955873 ms.
+BENCHID++PETSc++spmm++uk-2005++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 874.045047 ms.
+
+# sk-2005 OOM on 1,2 GPUs, internal error on 32 GPUs.
+BENCHID++PETSc++spmm++sk-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 2211.498277 ms.
+BENCHID++PETSc++spmm++sk-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 1362.301753 ms.
+BENCHID++PETSc++spmm++sk-2005++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/sk-2005.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 939.176003 ms.
+
+# webbase-2001 OOM on 1-4 GPUs, internal error on 32 GPUs.
+BENCHID++PETSc++spmm++webbase-2001++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 4234.288679 ms.
+BENCHID++PETSc++spmm++webbase-2001++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 2888.564490 ms.
+
+# twitter7 OOM on 1-2 GPUs. Error on 16,32 GPUs.
+BENCHID++PETSc++spmm++twitter7++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 147452.654609 ms.
+BENCHID++PETSc++spmm++twitter7++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -enable_gpu -vec_type cuda -mat_type aijcusparse -bench spmm
+Average time: 128317.805903 ms.
