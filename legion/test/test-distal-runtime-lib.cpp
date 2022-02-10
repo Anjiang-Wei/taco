@@ -187,7 +187,7 @@ int32_t scanExpectedResult(Context ctx, Runtime* runtime, LogicalRegion posL, Lo
   auto posP = legionMalloc(ctx, runtime, posL, posL, FID_RECT_1, WRITE_ONLY);
   auto nnzP = legionMalloc(ctx, runtime, nnzL, nnzL, FID_VAL, READ_ONLY);
   Accessor<Rect<1>, DIM, WRITE_ONLY> posAcc(posP, FID_RECT_1);
-  Accessor<int32_t, DIM, READ_ONLY> nnzAcc(nnzP, FID_VAL);
+  Accessor<int64_t, DIM, READ_ONLY> nnzAcc(nnzP, FID_VAL);
   for (PointInRectIterator<DIM> itr(bounds, false /* column_major_order */); itr(); itr++) {
     auto accPoint = *itr;
     if (accPoint == accPoint.ZEROES()) {
@@ -213,15 +213,15 @@ void testRectCompressedSeqInsertEdges(
     Rect<DIM> regionBounds,
     IndexSpace colorSpace,
     FieldSpace rectfspace,
-    FieldSpace i32fspace
+    FieldSpace i64fspace
 ) {
   auto ispace = runtime->create_index_space(ctx, regionBounds);
   auto pos = runtime->create_logical_region(ctx, ispace, rectfspace);
   auto posExpected = runtime->create_logical_region(ctx, ispace, rectfspace);
-  auto nnz = runtime->create_logical_region(ctx, ispace, i32fspace);
+  auto nnz = runtime->create_logical_region(ctx, ispace, i64fspace);
   {
     auto preg = legionMalloc(ctx, runtime, nnz, nnz, FID_VAL, WRITE_ONLY);
-    Accessor<int32_t, DIM, WRITE_ONLY> acc(preg, FID_VAL);
+    Accessor<int64_t, DIM, WRITE_ONLY> acc(preg, FID_VAL);
     for (PointInRectIterator<DIM> itr(regionBounds); itr(); itr++) {
       auto isZero = dist(mt) < 4;
       if (isZero) {
@@ -247,7 +247,7 @@ TEST_F(DISTALRuntime, RectCompressedGetSeqInsertEdges) {
   auto pieces = 5;
   auto colorSpace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
   auto rectfspace = createFieldSpaceWithSize(ctx, runtime, FID_RECT_1, sizeof(Rect<1>));
-  auto i32fspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int32_t));
+  auto i64fspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
 
   // We'll initialize the nnz regions with random data.
   auto seed = initRandomDevice();
@@ -256,13 +256,13 @@ TEST_F(DISTALRuntime, RectCompressedGetSeqInsertEdges) {
 
   // Test each of 1-D, 2-D and 3-D.
   int n = 100;
-  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<1>(0, n - 1), colorSpace, rectfspace, i32fspace);
-  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<2>({0, 0}, {n - 1, n - 1}), colorSpace, rectfspace, i32fspace);
-  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<3>({0, 0, 0}, {n - 1, n - 1, n - 1}), colorSpace, rectfspace, i32fspace);
+  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<1>(0, n - 1), colorSpace, rectfspace, i64fspace);
+  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<2>({0, 0}, {n - 1, n - 1}), colorSpace, rectfspace, i64fspace);
+  testRectCompressedSeqInsertEdges(ctx, runtime, mt, dist, Rect<3>({0, 0, 0}, {n - 1, n - 1, n - 1}), colorSpace, rectfspace, i64fspace);
 
   runtime->destroy_index_space(ctx, colorSpace);
   runtime->destroy_field_space(ctx, rectfspace);
-  runtime->destroy_field_space(ctx, i32fspace);
+  runtime->destroy_field_space(ctx, i64fspace);
 }
 
 TEST_F(DISTALRuntime, RectCompressedCoordinatePartition) {

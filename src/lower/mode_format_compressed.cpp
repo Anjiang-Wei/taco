@@ -162,7 +162,7 @@ Stmt CompressedModeFormat::getAppendInitLevel(Expr szPrev, Expr sz,
   const bool szPrevIsZero = isa<ir::Literal>(szPrev) && 
                             to<ir::Literal>(szPrev)->equalsScalar(0);
 
-  Expr defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32); 
+  Expr defaultCapacity = ir::Literal::make(allocSize, Int());
   Expr posArray = getPosArray(mode.getModePack());
   Expr initCapacity = szPrevIsZero ? defaultCapacity : ir::Add::make(szPrev, 1);
   Expr posCapacity = initCapacity;

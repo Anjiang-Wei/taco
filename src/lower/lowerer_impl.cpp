@@ -2093,8 +2093,8 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
       declareBlock.push_back(ir::VarDecl::make(boundsVar, bounds));
       for (auto tvItr : this->provGraph.getPartitionBounds()) {
         for (auto idxItr : tvItr.second) {
-          auto lo = ir::Load::make(ir::MethodCall::make(boundsVar, "lo", {}, false, Int64), idxItr.first);
-          auto hi = ir::Load::make(ir::MethodCall::make(boundsVar, "hi", {}, false, Int64), idxItr.first);
+          auto lo = ir::Load::make(ir::MethodCall::make(boundsVar, "lo", {}, false, Int()), idxItr.first);
+          auto hi = ir::Load::make(ir::MethodCall::make(boundsVar, "hi", {}, false, Int()), idxItr.first);
           declareBlock.push_back(ir::VarDecl::make(idxItr.second.first, lo));
           declareBlock.push_back(ir::VarDecl::make(idxItr.second.second, hi));
         }
@@ -2857,7 +2857,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     Expr indexList = tempToIndexList.at(var);
     Expr indexListSize = tempToIndexListSize.at(var);
     Expr bitGuard = tempToBitGuard.at(var);
-    Expr loopVar = ir::Var::make(var.getName() + "_index_locator", taco::Int32, false, false);
+    Expr loopVar = ir::Var::make(var.getName() + "_index_locator", Int(), false, false);
     Expr coordinate = getCoordinateVar(forall.getIndexVar());
 
     if (forall.getParallelUnit() != ParallelUnit::NotParallel && forall.getOutputRaceStrategy() == OutputRaceStrategy::Atomics) {
@@ -3603,7 +3603,7 @@ vector<Stmt> LowererImpl::codeToInitializeDenseAcceleratorArrays(Where where) {
   // no decl for shared memory
   Stmt alreadySetDecl = Stmt();
   Stmt indexListDecl = Stmt();
-  const Expr indexListSizeExpr = ir::Var::make(indexListName + "_size", taco::Int32, false, false);
+  const Expr indexListSizeExpr = ir::Var::make(indexListName + "_size", Int(), false, false);
   Stmt freeTemps = Block::make(Free::make(indexListArr), Free::make(alreadySetArr));
   if ((isa<Forall>(where.getProducer()) && inParallelLoopDepth == 0) || !this->loweringToGPU()) {
     alreadySetDecl = VarDecl::make(alreadySetArr, ir::Literal::make(0));
@@ -5097,7 +5097,7 @@ Stmt LowererImpl::codeToInitializeIteratorVar(Iterator iterator, vector<Iterator
             // coordinate domain is empty.
             result.push_back(VarDecl::make(iterVar, 0));
             auto domain = this->rcmfCrdDomains[this->exprToTensorVar[iterator.getTensor()]][iterator.getMode().getLevel()];
-            auto upper = ir::Add::make(1, ir::FieldAccess::make(domain, "bounds.hi", false /* deref */, Int64));
+            auto upper = ir::Add::make(1, ir::FieldAccess::make(domain, "bounds.hi", false /* deref */, Int()));
             result.push_back(ir::IfThenElse::make(
               ir::MethodCall::make(domain, "empty", {}, false /* deref */, Bool),
               ir::Block::make(ir::Assign::make(iterVar, upper)),
@@ -6463,8 +6463,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         // to the argument pack. Next, we need to register the sharding functor
         // to the runtime system, rather than letting the mapper handle it.
         int sfID = shardingFunctorID++;
-        prefixVars.push_back(ir::Var::make("sfID", Int32));
-        prefixExprs.push_back(ir::Call::make("shardingID", {sfID}, Int32));
+        prefixVars.push_back(ir::Var::make("sfID", Int()));
+        prefixExprs.push_back(ir::Call::make("shardingID", {sfID}, Int()));
 
         // Create the vector of dimensions.
         auto vecty = Datatype("std::vector<int>");

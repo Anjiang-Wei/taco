@@ -14,7 +14,7 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t B1_dimension;
+  int64_t B1_dimension;
   double a_val;
   int32_t pieces;
 };
@@ -50,7 +50,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainPointColoring BColoring = DomainPointColoring();
   DomainPointColoring CColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t io = (*itr)[0];
+    int64_t io = (*itr)[0];
     Point<1> BStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> BEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)),BDomain.hi()[0]));
     Rect<1> BRect = Rect<1>(BStart, BEnd);
@@ -128,52 +128,52 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 }
 
 __global__
-void task_1DeviceKernel0(double* bufPtr, AccessorRORect_1_1 B2_pos_accessor, AccessorRORect_1_1 C2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 C2_crd_accessor, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 C3_pos_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorROint32_t1 C3_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 C_vals_ro_accessor, int32_t B1_dimension, double a_val, int32_t pieces, int32_t io) {
+void task_1DeviceKernel0(double* bufPtr, AccessorRORect_1_1 B2_pos_accessor, AccessorRORect_1_1 C2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 C2_crd_accessor, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 C3_pos_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorROint32_t1 C3_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 C_vals_ro_accessor, int64_t B1_dimension, double a_val, int32_t pieces, int64_t io) {
 
-  int32_t block = blockIdx.x;
-  int32_t thread = (threadIdx.x % (256));
+  int64_t block = blockIdx.x;
+  int64_t thread = (threadIdx.x % (256));
   if (threadIdx.x >= 256) {
     return;
   }
 
   int64_t pointID2 = io * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
   double tthreada_val = 0.0;
-  int32_t ii = block * 256 + thread;
-  int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
+  int64_t ii = block * 256 + thread;
+  int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
   if (i >= B1_dimension)
     return;
 
   if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces))
     return;
 
-  int32_t jB = B2_pos_accessor[Point<1>(i)].lo;
-  int32_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
-  int32_t jC = C2_pos_accessor[Point<1>(i)].lo;
-  int32_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
+  int64_t jB = B2_pos_accessor[Point<1>(i)].lo;
+  int64_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
+  int64_t jC = C2_pos_accessor[Point<1>(i)].lo;
+  int64_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
 
   while (jB < pB2_end && jC < pC2_end) {
-    int32_t jB0 = B2_crd_accessor[jB];
-    int32_t jC0 = C2_crd_accessor[jC];
-    int32_t j = TACO_MIN(jB0,jC0);
+    int64_t jB0 = B2_crd_accessor[jB];
+    int64_t jC0 = C2_crd_accessor[jC];
+    int64_t j = TACO_MIN(jB0,jC0);
     if (jB0 == j && jC0 == j) {
-      int32_t kB = B3_pos_accessor[Point<1>(jB)].lo;
-      int32_t pB3_end = B3_pos_accessor[Point<1>(jB)].hi + 1;
-      int32_t kC = C3_pos_accessor[Point<1>(jC)].lo;
-      int32_t pC3_end = C3_pos_accessor[Point<1>(jC)].hi + 1;
+      int64_t kB = B3_pos_accessor[Point<1>(jB)].lo;
+      int64_t pB3_end = B3_pos_accessor[Point<1>(jB)].hi + 1;
+      int64_t kC = C3_pos_accessor[Point<1>(jC)].lo;
+      int64_t pC3_end = C3_pos_accessor[Point<1>(jC)].hi + 1;
 
       while (kB < pB3_end && kC < pC3_end) {
-        int32_t kB0 = B3_crd_accessor[kB];
-        int32_t kC0 = C3_crd_accessor[kC];
-        int32_t k = TACO_MIN(kB0,kC0);
+        int64_t kB0 = B3_crd_accessor[kB];
+        int64_t kC0 = C3_crd_accessor[kC];
+        int64_t k = TACO_MIN(kB0,kC0);
         if (kB0 == k && kC0 == k) {
           tthreada_val = tthreada_val + B_vals_ro_accessor[Point<1>(kB)] * C_vals_ro_accessor[Point<1>(kC)];
         }
-        kB = kB + (int32_t)(kB0 == k);
-        kC = kC + (int32_t)(kC0 == k);
+        kB = kB + (int64_t)(kB0 == k);
+        kC = kC + (int64_t)(kC0 == k);
       }
     }
-    jB = jB + (int32_t)(jB0 == j);
-    jC = jC + (int32_t)(jC0 == j);
+    jB = jB + (int64_t)(jB0 == j);
+    jC = jC + (int64_t)(jC0 == j);
   }
   atomicAddWarp(&bufPtr[0], 0, tthreada_val);
 }
@@ -200,9 +200,9 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   PhysicalRegion C_vals = regions[9];
   LogicalRegion C_vals_parent = regions[9].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t B1_dimension = args->B1_dimension;
+  int64_t B1_dimension = args->B1_dimension;
   double a_val = args->a_val;
   int32_t pieces = args->pieces;
 

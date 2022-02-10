@@ -16,7 +16,7 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t B2_dimension;
+  int64_t B2_dimension;
   int32_t pieces;
 };
 
@@ -58,7 +58,7 @@ partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::
   DomainPointColoring BColoring = DomainPointColoring();
   DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t io = (*itr)[0];
+    int64_t io = (*itr)[0];
     Point<1> aStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> aEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)),aDomain.hi()[0]));
     Rect<1> aRect = Rect<1>(aStart, aEnd);
@@ -114,9 +114,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[4];
   LogicalRegion c_vals_parent = regions[4].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t B2_dimension = args->B2_dimension;
+  int64_t B2_dimension = args->B2_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -239,7 +239,7 @@ partitionPackForcomputeLegionPosSplit partitionForcomputeLegionPosSplit(Legion::
   DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
   DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t fposo = (*itr)[0];
+    int64_t fposo = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((fposo * ((B2Size + (pieces - 1)) / pieces)));
     Point<1> B2CrdEnd = Point<1>(TACO_MIN((fposo * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)),B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
@@ -280,11 +280,11 @@ partitionPackForcomputeLegionPosSplit partitionForcomputeLegionPosSplit(Legion::
 }
 
 __global__
-void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int32_t fposo) {
+void task_2DeviceKernel0(int64_t B2Size, int64_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int64_t fposo) {
 
-  int32_t block = blockIdx.x;
-  int32_t thread = (threadIdx.x % (32));
-  int32_t warp = (threadIdx.x / 32);
+  int64_t block = blockIdx.x;
+  int64_t thread = (threadIdx.x % (32));
+  int64_t warp = (threadIdx.x / 32);
   if (threadIdx.x >= 256) {
     return;
   }
@@ -295,45 +295,45 @@ void task_2DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   double* precomputed = 0;
   double precomputed__codegen_cuda_tmp[8];
   precomputed = precomputed__codegen_cuda_tmp;
-  for (int32_t pprecomputed = 0; pprecomputed < 8; pprecomputed++) {
+  for (int64_t pprecomputed = 0; pprecomputed < 8; pprecomputed++) {
     precomputed[pprecomputed] = 0.0;
   }
-  for (int32_t thread_nz_pre = 0; thread_nz_pre < 8; thread_nz_pre++) {
-    int32_t thread_nz = thread_nz_pre;
-    int32_t fpos2 = thread * 8 + thread_nz;
-    int32_t fpos1 = warp * 256 + fpos2;
-    int32_t fposi = block * 2048 + fpos1;
-    int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  for (int64_t thread_nz_pre = 0; thread_nz_pre < 8; thread_nz_pre++) {
+    int64_t thread_nz = thread_nz_pre;
+    int64_t fpos2 = thread * 8 + thread_nz;
+    int64_t fpos1 = warp * 256 + fpos2;
+    int64_t fposi = block * 2048 + fpos1;
+    int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
     if (fposB >= (fposo + 1) * ((B2Size + (pieces - 1)) / pieces))
       break;
 
     if (fposB >= B2Size)
       break;
 
-    int32_t f = B2_crd_accessor[fposB];
+    int64_t f = B2_crd_accessor[fposB];
     precomputed[thread_nz_pre] = B_vals_ro_accessor[Point<1>(fposB)] * c_vals_ro_accessor[Point<1>(f)];
   }
-  int32_t pB2_begin = i_blockStarts[block];
-  int32_t pB2_end = i_blockStarts[(block + 1)];
-  int32_t thread_nz = 0;
-  int32_t fpos2 = thread * 8 + thread_nz;
-  int32_t fpos1 = warp * 256 + fpos2;
-  int32_t fposi = block * 2048 + fpos1;
-  int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
-  int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, fposB);
-  int32_t i = i_pos;
-  for (int32_t thread_nz = 0; thread_nz < 8; thread_nz++) {
-    int32_t fpos2 = thread * 8 + thread_nz;
-    int32_t fpos1 = warp * 256 + fpos2;
-    int32_t fposi = block * 2048 + fpos1;
-    int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  int64_t pB2_begin = i_blockStarts[block];
+  int64_t pB2_end = i_blockStarts[(block + 1)];
+  int64_t thread_nz = 0;
+  int64_t fpos2 = thread * 8 + thread_nz;
+  int64_t fpos1 = warp * 256 + fpos2;
+  int64_t fposi = block * 2048 + fpos1;
+  int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, fposB);
+  int64_t i = i_pos;
+  for (int64_t thread_nz = 0; thread_nz < 8; thread_nz++) {
+    int64_t fpos2 = thread * 8 + thread_nz;
+    int64_t fpos1 = warp * 256 + fpos2;
+    int64_t fposi = block * 2048 + fpos1;
+    int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
     if (fposB >= (fposo + 1) * ((B2Size + (pieces - 1)) / pieces))
       break;
 
     if (fposB >= B2Size)
       break;
 
-    int32_t f = B2_crd_accessor[fposB];
+    int64_t f = B2_crd_accessor[fposB];
     while (!(B2_pos_accessor[i_pos].contains(fposB))) {
       i_pos = i_pos + 1;
       i = i_pos;
@@ -354,7 +354,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[4];
   LogicalRegion c_vals_parent = regions[4].get_logical_region();
 
-  int32_t fposo = task->index_point[0];
+  int64_t fposo = task->index_point[0];
   task_2Args* args = (task_2Args*)(task->args);
   int64_t B2Size = args->B2Size;
   int32_t pieces = args->pieces;
@@ -370,8 +370,8 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B2Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
-  int32_t* i_blockStarts = buf.ptr(0);
+  Legion::DeferredBuffer<int64_t, 1> buf = Legion::DeferredBuffer<int64_t, 1>(Rect<1>(0, (((B2Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
+  int64_t* i_blockStarts = buf.ptr(0);
   taco_binarySearchBeforeBlockLaunch(
     B2_pos_accessor,
     i_blockStarts,
@@ -434,7 +434,7 @@ partitionPackForcomputeLegionPosSplitDCSR partitionForcomputeLegionPosSplitDCSR(
   DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
   DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t fposo = (*itr)[0];
+    int64_t fposo = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((fposo * ((B2Size + (pieces - 1)) / pieces)));
     Point<1> B2CrdEnd = Point<1>(TACO_MIN((fposo * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)),B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
@@ -480,11 +480,11 @@ partitionPackForcomputeLegionPosSplitDCSR partitionForcomputeLegionPosSplitDCSR(
 }
 
 __global__
-void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorROint32_t1 B1_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int32_t fposo) {
+void task_3DeviceKernel0(int64_t B2Size, int64_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, AccessorROint32_t1 B1_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, int64_t fposo) {
 
-  int32_t block = blockIdx.x;
-  int32_t thread = (threadIdx.x % (32));
-  int32_t warp = (threadIdx.x / 32);
+  int64_t block = blockIdx.x;
+  int64_t thread = (threadIdx.x % (32));
+  int64_t warp = (threadIdx.x / 32);
   if (threadIdx.x >= 256) {
     return;
   }
@@ -495,45 +495,45 @@ void task_3DeviceKernel0(int64_t B2Size, int32_t* i_blockStarts, int32_t pieces,
   double* precomputed = 0;
   double precomputed__codegen_cuda_tmp[8];
   precomputed = precomputed__codegen_cuda_tmp;
-  for (int32_t pprecomputed = 0; pprecomputed < 8; pprecomputed++) {
+  for (int64_t pprecomputed = 0; pprecomputed < 8; pprecomputed++) {
     precomputed[pprecomputed] = 0.0;
   }
-  for (int32_t thread_nz_pre = 0; thread_nz_pre < 8; thread_nz_pre++) {
-    int32_t thread_nz = thread_nz_pre;
-    int32_t fpos2 = thread * 8 + thread_nz;
-    int32_t fpos1 = warp * 256 + fpos2;
-    int32_t fposi = block * 2048 + fpos1;
-    int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  for (int64_t thread_nz_pre = 0; thread_nz_pre < 8; thread_nz_pre++) {
+    int64_t thread_nz = thread_nz_pre;
+    int64_t fpos2 = thread * 8 + thread_nz;
+    int64_t fpos1 = warp * 256 + fpos2;
+    int64_t fposi = block * 2048 + fpos1;
+    int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
     if (fposB >= (fposo + 1) * ((B2Size + (pieces - 1)) / pieces))
       break;
 
     if (fposB >= B2Size)
       break;
 
-    int32_t f = B2_crd_accessor[fposB];
+    int64_t f = B2_crd_accessor[fposB];
     precomputed[thread_nz_pre] = B_vals_ro_accessor[Point<1>(fposB)] * c_vals_ro_accessor[Point<1>(f)];
   }
-  int32_t pB2_begin = i_blockStarts[block];
-  int32_t pB2_end = i_blockStarts[(block + 1)];
-  int32_t thread_nz = 0;
-  int32_t fpos2 = thread * 8 + thread_nz;
-  int32_t fpos1 = warp * 256 + fpos2;
-  int32_t fposi = block * 2048 + fpos1;
-  int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
-  int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, fposB);
-  int32_t i = B1_crd_accessor[i_pos];
-  for (int32_t thread_nz = 0; thread_nz < 8; thread_nz++) {
-    int32_t fpos2 = thread * 8 + thread_nz;
-    int32_t fpos1 = warp * 256 + fpos2;
-    int32_t fposi = block * 2048 + fpos1;
-    int32_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  int64_t pB2_begin = i_blockStarts[block];
+  int64_t pB2_end = i_blockStarts[(block + 1)];
+  int64_t thread_nz = 0;
+  int64_t fpos2 = thread * 8 + thread_nz;
+  int64_t fpos1 = warp * 256 + fpos2;
+  int64_t fposi = block * 2048 + fpos1;
+  int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
+  int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, fposB);
+  int64_t i = B1_crd_accessor[i_pos];
+  for (int64_t thread_nz = 0; thread_nz < 8; thread_nz++) {
+    int64_t fpos2 = thread * 8 + thread_nz;
+    int64_t fpos1 = warp * 256 + fpos2;
+    int64_t fposi = block * 2048 + fpos1;
+    int64_t fposB = fposo * ((B2Size + (pieces - 1)) / pieces) + fposi;
     if (fposB >= (fposo + 1) * ((B2Size + (pieces - 1)) / pieces))
       break;
 
     if (fposB >= B2Size)
       break;
 
-    int32_t f = B2_crd_accessor[fposB];
+    int64_t f = B2_crd_accessor[fposB];
     if (!(B2_pos_accessor[i_pos].contains(fposB))) {
       i_pos = i_pos + 1;
       i = B1_crd_accessor[i_pos];
@@ -558,7 +558,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[6];
   LogicalRegion c_vals_parent = regions[6].get_logical_region();
 
-  int32_t fposo = task->index_point[0];
+  int64_t fposo = task->index_point[0];
   task_3Args* args = (task_3Args*)(task->args);
   int64_t B2Size = args->B2Size;
   int32_t pieces = args->pieces;
@@ -575,8 +575,8 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  Legion::DeferredBuffer<int32_t, 1> buf = Legion::DeferredBuffer<int32_t, 1>(Rect<1>(0, (((B2Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
-  int32_t* i_blockStarts = buf.ptr(0);
+  Legion::DeferredBuffer<int64_t, 1> buf = Legion::DeferredBuffer<int64_t, 1>(Rect<1>(0, (((B2Size + (pieces - 1)) / pieces + 2047) / 2048)), Legion::Memory::Kind::GPU_FB_MEM);
+  int64_t* i_blockStarts = buf.ptr(0);
   taco_binarySearchBeforeBlockLaunch(
     B2_pos_accessor,
     i_blockStarts,
@@ -665,7 +665,7 @@ partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Co
   DomainT<1> c1_crd_domain = runtime->get_index_space_domain(ctx, c1_crd.get_index_space());
   DomainPointColoring c1_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t jposo = (*itr)[0];
+    int64_t jposo = (*itr)[0];
     Point<1> c1CrdStart = Point<1>((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo));
     Point<1> c1CrdEnd = Point<1>(TACO_MIN(((jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces - 1)) + c1_pos_accessor[Point<1>(0)].lo),c1_crd_domain.bounds.hi[0]));
     Rect<1> c1CrdRect = Rect<1>(c1CrdStart, c1CrdEnd);
@@ -717,26 +717,26 @@ partitionPackForcomputeLegionCSCMSpV partitionForcomputeLegionCSCMSpV(Legion::Co
 }
 
 __global__
-void task_4DeviceKernel0(AccessorRORect_1_1 c1_pos_accessor, AccessorROint32_t1 c1_crd_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t pieces, int32_t jposo) {
+void task_4DeviceKernel0(AccessorRORect_1_1 c1_pos_accessor, AccessorROint32_t1 c1_crd_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble1 a_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 c_vals_ro_accessor, int32_t pieces, int64_t jposo) {
 
-  int32_t block = blockIdx.x;
-  int32_t thread = (threadIdx.x % (512));
+  int64_t block = blockIdx.x;
+  int64_t thread = (threadIdx.x % (512));
   if (threadIdx.x >= 512) {
     return;
   }
 
   int64_t pointID2 = jposo * (((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces + 511) / 512) + block;
-  int32_t jposi = block * 512 + thread;
-  int32_t jposc = (jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi) + c1_pos_accessor[Point<1>(0)].lo;
+  int64_t jposi = block * 512 + thread;
+  int64_t jposc = (jposo * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + jposi) + c1_pos_accessor[Point<1>(0)].lo;
   if (jposc >= (jposo + 1) * ((((c1_pos_accessor[Point<1>(0)].hi + 1) - c1_pos_accessor[Point<1>(0)].lo) + (pieces - 1)) / pieces) + c1_pos_accessor[Point<1>(0)].lo)
     return;
 
   if (jposc < c1_pos_accessor[Point<1>(0)].lo || jposc >= c1_pos_accessor[Point<1>(0)].hi + 1)
     return;
 
-  int32_t j = c1_crd_accessor[jposc];
-  for (int32_t iB = B2_pos_accessor[Point<1>(j)].lo; iB < (B2_pos_accessor[Point<1>(j)].hi + 1); iB++) {
-    int32_t i = B2_crd_accessor[iB];
+  int64_t j = c1_crd_accessor[jposc];
+  for (int64_t iB = B2_pos_accessor[Point<1>(j)].lo; iB < (B2_pos_accessor[Point<1>(j)].hi + 1); iB++) {
+    int64_t i = B2_crd_accessor[iB];
     atomicAddWarp(a_vals_red_accessor_non_excl.ptr(Point<1>(i)), flattenPoint(a_vals_red_accessor_non_excl, Point<1>(i)), (B_vals_ro_accessor[Point<1>(iB)] * c_vals_ro_accessor[Point<1>(jposc)]));
   }
 }
@@ -757,7 +757,7 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[6];
   LogicalRegion c_vals_parent = regions[6].get_logical_region();
 
-  int32_t jposo = task->index_point[0];
+  int64_t jposo = task->index_point[0];
   task_4Args* args = (task_4Args*)(task->args);
   int32_t pieces = args->pieces;
 

@@ -10,7 +10,7 @@ typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 
 struct task_1Args {
-  int32_t b1_dimension;
+  int64_t b1_dimension;
   int32_t pieces;
 };
 
@@ -45,7 +45,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainPointColoring bColoring = DomainPointColoring();
   DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t io = (*itr)[0];
+    int64_t io = (*itr)[0];
     Point<1> aStart = Point<1>((io * ((b1_dimension + (pieces - 1)) / pieces)));
     Point<1> aEnd = Point<1>(TACO_MIN((io * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), aDomain.hi()[0]));
     Rect<1> aRect = Rect<1>(aStart, aEnd);
@@ -131,9 +131,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[6];
   LogicalRegion c_vals_parent = regions[6].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t b1_dimension = args->b1_dimension;
+  int64_t b1_dimension = args->b1_dimension;
   int32_t pieces = args->pieces;
 
   auto b_vals_ro_accessor = createAccessor<AccessorROdouble1>(b_vals, FID_VAL);
@@ -145,60 +145,60 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   DomainT<1> b1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(b1_crd));
   DomainT<1> c1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(c1_crd));
   int64_t pointID1 = io;
-  int32_t pb1_begin = io * ((b1_dimension + (pieces - 1)) / pieces);
-  int32_t ib = 0;
+  int64_t pb1_begin = io * ((b1_dimension + (pieces - 1)) / pieces);
+  int64_t ib = 0;
   if (b1_crd_domain.empty()) {
     ib = 1 + b1_crd_domain.bounds.hi;
   }
   else {
     ib = taco_binarySearchAfter(b1_crd_accessor, b1_crd_domain.bounds.lo, (1 + b1_crd_domain.bounds.hi), pb1_begin);
   }
-  int32_t pb1_end = 1 + b1_crd_domain.bounds.hi;
-  int32_t pc1_begin = io * ((b1_dimension + (pieces - 1)) / pieces);
-  int32_t ic = 0;
+  int64_t pb1_end = 1 + b1_crd_domain.bounds.hi;
+  int64_t pc1_begin = io * ((b1_dimension + (pieces - 1)) / pieces);
+  int64_t ic = 0;
   if (c1_crd_domain.empty()) {
     ic = 1 + c1_crd_domain.bounds.hi;
   }
   else {
     ic = taco_binarySearchAfter(c1_crd_accessor, c1_crd_domain.bounds.lo, (1 + c1_crd_domain.bounds.hi), pc1_begin);
   }
-  int32_t pc1_end = 1 + c1_crd_domain.bounds.hi;
-  int32_t ib0 = 0;
+  int64_t pc1_end = 1 + c1_crd_domain.bounds.hi;
+  int64_t ib0 = 0;
   if (b1_crd_domain.contains(ib)) {
     ib0 = b1_crd_accessor[(ib * 1)];
   }
   else {
     ib0 = b1_dimension;
   }
-  int32_t ic0 = 0;
+  int64_t ic0 = 0;
   if (c1_crd_domain.contains(ic)) {
     ic0 = c1_crd_accessor[(ic * 1)];
   }
   else {
     ic0 = b1_dimension;
   }
-  int32_t i = TACO_MIN(ib0, ic0);
-  int32_t ii = i - ((b1_dimension + (pieces - 1)) / pieces) * io;
-  int32_t ii_end = (b1_dimension + (pieces - 1)) / pieces;
+  int64_t i = TACO_MIN(ib0, ic0);
+  int64_t ii = i - ((b1_dimension + (pieces - 1)) / pieces) * io;
+  int64_t ii_end = (b1_dimension + (pieces - 1)) / pieces;
 
   while ((ib < pb1_end && ii < ii_end) && ic < pc1_end) {
     ib0 = b1_crd_accessor[(ib * 1)];
     ic0 = c1_crd_accessor[(ic * 1)];
     i = TACO_MIN(ib0, ic0);
     if (ib0 == i && ic0 == i) {
-      int32_t ia = i;
+      int64_t ia = i;
       a_vals_rw_accessor[Point<1>(i)] = b_vals_ro_accessor[Point<1>(ib)] + c_vals_ro_accessor[Point<1>(ic)];
     }
     else if (ib0 == i) {
-      int32_t ia = i;
+      int64_t ia = i;
       a_vals_rw_accessor[Point<1>(i)] = b_vals_ro_accessor[Point<1>(ib)];
     }
     else if (ic0 == i) {
-      int32_t ia = i;
+      int64_t ia = i;
       a_vals_rw_accessor[Point<1>(i)] = c_vals_ro_accessor[Point<1>(ic)];
     }
-    ib = ib + (int32_t)(ib0 == i);
-    ic = ic + (int32_t)(ic0 == i);
+    ib = ib + (int64_t)(ib0 == i);
+    ic = ic + (int64_t)(ic0 == i);
     if (b1_crd_domain.contains(ib)) {
       ib0 = b1_crd_accessor[(ib * 1)];
     }
@@ -218,10 +218,10 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     ib0 = b1_crd_accessor[(ib * 1)];
     i = b1_crd_accessor[(ib * 1)];
     if (ib0 == i) {
-      int32_t ia = i;
+      int64_t ia = i;
       a_vals_rw_accessor[Point<1>(i)] = b_vals_ro_accessor[Point<1>(ib)];
     }
-    ib = ib + (int32_t)(ib0 == i);
+    ib = ib + (int64_t)(ib0 == i);
     if (b1_crd_domain.contains(ib)) {
       ib0 = b1_crd_accessor[(ib * 1)];
     }
@@ -235,10 +235,10 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     ic0 = c1_crd_accessor[(ic * 1)];
     i = c1_crd_accessor[(ic * 1)];
     if (ic0 == i) {
-      int32_t ia = i;
+      int64_t ia = i;
       a_vals_rw_accessor[Point<1>(i)] = c_vals_ro_accessor[Point<1>(ic)];
     }
-    ic = ic + (int32_t)(ic0 == i);
+    ic = ic + (int64_t)(ic0 == i);
     if (c1_crd_domain.contains(ic)) {
       ic0 = c1_crd_accessor[(ic * 1)];
     }

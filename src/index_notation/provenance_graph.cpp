@@ -543,9 +543,9 @@ std::vector<ir::Expr> DivideOntoPartition::deriveIterBounds(IndexVar indexVar,
   std::vector<ir::Expr> parentBound = parentIterBounds.at(this->content->parentVar);
   if (indexVar == this->content->outerVar) {
     auto colorSpace = provGraph.getPartitionColorSpaceVar();
-    auto lo = ir::Load::make(ir::MethodCall::make(colorSpace, "lo", {}, false, Int32), this->content->accessIdx);
+    auto lo = ir::Load::make(ir::MethodCall::make(colorSpace, "lo", {}, false, Int()), this->content->accessIdx);
     // hi is inclusive, so we need to add 1 to it.
-    auto hi = ir::Load::make(ir::MethodCall::make(colorSpace, "hi", {}, false, Int32), this->content->accessIdx);
+    auto hi = ir::Load::make(ir::MethodCall::make(colorSpace, "hi", {}, false, Int()), this->content->accessIdx);
     return {lo, ir::Add::make(hi, 1)};
   } else if (indexVar == this->content->innerVar) {
     // Use the appropriate bounds available on the partition to get the bounds.
@@ -973,7 +973,7 @@ ir::Expr MultiFuseRelNode::recoverVariable(IndexVar indexVar, std::map<IndexVar,
   }
   taco_iassert(idx != -1);
   auto task = ir::Symbol::make("task");
-  return ir::Call::make("getIndexPoint", {task, idx}, Datatype::Int32);
+  return ir::Call::make("getIndexPoint", {task, idx}, Int());
 }
 
 ir::Stmt MultiFuseRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,
@@ -1296,7 +1296,7 @@ ProvenanceGraph::ProvenanceGraph(IndexStmt concreteStmt) {
         return ss.str();
       };
       if (this->partitionBounds[tv].count(accessIdx) == 0) {
-        this->partitionBounds[tv][accessIdx] = std::make_pair(ir::Var::make(getName("lo"), Int64), ir::Var::make(getName("hi"), Int64));
+        this->partitionBounds[tv][accessIdx] = std::make_pair(ir::Var::make(getName("lo"), Int()), ir::Var::make(getName("hi"), Int()));
       }
     }
   }

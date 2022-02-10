@@ -103,7 +103,7 @@ Stmt LgSingletonModeFormat::getAppendInitLevel(ir::Expr parentSize, ir::Expr siz
     return Stmt();
   }
 
-  auto defaultCapacity = ir::Literal::make(allocSize, Datatype::Int32);
+  auto defaultCapacity = ir::Literal::make(allocSize, Int());
   auto crdCapacity = getCoordCapacity(mode);
   auto crdArray = this->getRegion(pack, CRD);
   auto crdParent = this->getRegion(pack, CRD_PARENT);

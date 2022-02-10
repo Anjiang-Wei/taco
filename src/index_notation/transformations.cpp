@@ -1090,7 +1090,7 @@ IndexStmt SetAssembleStrategy::apply(IndexStmt stmt, string* reason) const {
                 insertedResults.insert(dedupTmp);
 
                 const auto resultName = modeName + "_" + attr.label;
-                TensorVar queryResult(resultName, Type(Int32, queryDims));
+                TensorVar queryResult(resultName, Type(Int(), queryDims));
                 epilog = Assignment(queryResult(groupBy), 
                                     Cast(dedupTmp(dedupCoords), Int()), Add());
                 for (const auto& coord : util::reverse(dedupCoords)) {
@@ -1443,20 +1443,20 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
   auto cAccess = ir::GetProperty::make(tvars[2], ir::TensorProperty::ValuesReadAccessor, this->content->tensorVars[2].getOrder());
 
   auto getBounds = [] (ir::Expr e, std::string func) {
-    return ir::MethodCall::make(e, func, {}, false, Int64);
+    return ir::MethodCall::make(e, func, {}, false, Int());
   };
 
   auto type = Type(this->content->tensorVars[0].getType().getDataType());
   auto ldA = ir::Div::make(
-    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(aAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(aAccess, "accessor", false, Auto), "strides", false, Int()), 0),
     ir::Sizeof::make(type)
   );
   auto ldB = ir::Div::make(
-    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(bAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(bAccess, "accessor", false, Auto), "strides", false, Int()), 0),
     ir::Sizeof::make(type)
   );
   auto ldC = ir::Div::make(
-    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(cAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+    ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(cAccess, "accessor", false, Auto), "strides", false, Int()), 0),
     ir::Sizeof::make(type)
   );
 
@@ -1529,20 +1529,20 @@ ir::Stmt CuGEMM::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<T
   auto cAccess = ir::GetProperty::make(tvars[2], ir::TensorProperty::ValuesReadAccessor, this->content->tensorVars[2].getOrder());
 
   auto getBounds = [] (ir::Expr e, std::string func) {
-    return ir::MethodCall::make(e, func, {}, false, Int64);
+    return ir::MethodCall::make(e, func, {}, false, Int());
   };
 
   auto type = Type(this->content->tensorVars[0].getType().getDataType());
   auto ldA = ir::Div::make(
-      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(aAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(aAccess, "accessor", false, Auto), "strides", false, Int()), 0),
       ir::Sizeof::make(type)
   );
   auto ldB = ir::Div::make(
-      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(bAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(bAccess, "accessor", false, Auto), "strides", false, Int()), 0),
       ir::Sizeof::make(type)
   );
   auto ldC = ir::Div::make(
-      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(cAccess, "accessor", false, Auto), "strides", false, Int64), 0),
+      ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(cAccess, "accessor", false, Auto), "strides", false, Int()), 0),
       ir::Sizeof::make(type)
   );
 
@@ -1688,7 +1688,7 @@ ir::Stmt MTTKRP::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<T
   results.push_back(ir::VarDecl::make(pack, ir::makeConstructor(packTy, {})));
 
   auto getBounds = [] (ir::Expr e, std::string func) {
-    return ir::MethodCall::make(e, func, {}, false, Int64);
+    return ir::MethodCall::make(e, func, {}, false, Int());
   };
   auto ld = [] (ir::Expr e, int idx) {
     return ir::Load::make(e, idx);
@@ -1702,7 +1702,7 @@ ir::Stmt MTTKRP::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<T
   auto type = Type(this->content->A.getType().getDataType());
   auto getLD = [&] (ir::Expr e, int idx) {
     return ir::Div::make(
-        ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(e, "accessor", false, Auto), "strides", false, Int64), idx),
+        ir::Load::make(ir::FieldAccess::make(ir::FieldAccess::make(e, "accessor", false, Auto), "strides", false, Int()), idx),
         ir::Sizeof::make(type)
     );
   };
@@ -1834,7 +1834,7 @@ ir::Stmt TTMC::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<Ten
 
   // We'll call BLAS DGEMM in a loop.
   std::vector<ir::Stmt> loopStmts;
-  auto loopVar = ir::Var::make("loopIdx", Int32);
+  auto loopVar = ir::Var::make("loopIdx", Int());
 
   auto getBounds = [] (ir::Expr e, std::string func) {
     return ir::MethodCall::make(e, func, {}, false, Int64);
@@ -1949,7 +1949,7 @@ ir::Stmt CuTTMC::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<T
 
   // We'll call BLAS DGEMM in a loop.
   std::vector<ir::Stmt> loopStmts;
-  auto loopVar = ir::Var::make("loopIdx", Int32);
+  auto loopVar = ir::Var::make("loopIdx", Int());
 
   auto getBounds = [] (ir::Expr e, std::string func) {
     return ir::MethodCall::make(e, func, {}, false, Int64);

@@ -12,7 +12,7 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t B1_dimension;
+  int64_t B1_dimension;
   int32_t pieces;
 };
 
@@ -59,7 +59,7 @@ partitionPackForcomputeLegionDSS partitionForcomputeLegionDSS(Legion::Context ct
   DomainPointColoring AColoring = DomainPointColoring();
   DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t io = (*itr)[0];
+    int64_t io = (*itr)[0];
     Point<1> BStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> BEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), BDomain.hi()[0]));
     Rect<1> BRect = Rect<1>(BStart, BEnd);
@@ -124,9 +124,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[8];
   LogicalRegion c_vals_parent = regions[8].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t B1_dimension = args->B1_dimension;
+  int64_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
 
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
@@ -139,8 +139,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t pointID1 = io;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int32_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
-    int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
+  for (int64_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
+    int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
     if (i >= B1_dimension)
       continue;
 
@@ -148,14 +148,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       continue;
 
     int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int32_t iA = i;
-    int32_t iB = i;
-    for (int32_t jB = B2_pos_accessor[Point<1>(i)].lo; jB < (B2_pos_accessor[Point<1>(i)].hi + 1); jB++) {
-      int32_t j = B2_crd_accessor[(jB * 1)];
-      int32_t jA = jB;
-      for (int32_t kB = B3_pos_accessor[Point<1>(jB)].lo; kB < (B3_pos_accessor[Point<1>(jB)].hi + 1); kB++) {
-        int32_t k = B3_crd_accessor[(kB * 1)];
-        int32_t kc = k;
+    int64_t iA = i;
+    int64_t iB = i;
+    for (int64_t jB = B2_pos_accessor[Point<1>(i)].lo; jB < (B2_pos_accessor[Point<1>(i)].hi + 1); jB++) {
+      int64_t j = B2_crd_accessor[(jB * 1)];
+      int64_t jA = jB;
+      for (int64_t kB = B3_pos_accessor[Point<1>(jB)].lo; kB < (B3_pos_accessor[Point<1>(jB)].hi + 1); kB++) {
+        int64_t k = B3_crd_accessor[(kB * 1)];
+        int64_t kc = k;
         A_vals_rw_accessor[Point<1>(jA)] = A_vals_rw_accessor[Point<1>(jA)] + B_vals_ro_accessor[Point<1>(kB)] * c_vals_ro_accessor[Point<1>(k)];
       }
     }
@@ -231,7 +231,7 @@ partitionPackForcomputeLegionDSSPosSplit partitionForcomputeLegionDSSPosSplit(Le
   DomainT<1> B3_crd_domain = runtime->get_index_space_domain(ctx, B3_crd.get_index_space());
   DomainPointColoring B3_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t ffposo = (*itr)[0];
+    int64_t ffposo = (*itr)[0];
     Point<1> B3CrdStart = Point<1>((ffposo * ((B3Size + (pieces - 1)) / pieces)));
     Point<1> B3CrdEnd = Point<1>(TACO_MIN((ffposo * ((B3Size + (pieces - 1)) / pieces) + ((B3Size + (pieces - 1)) / pieces - 1)), B3_crd_domain.bounds.hi[0]));
     Rect<1> B3CrdRect = Rect<1>(B3CrdStart, B3CrdEnd);
@@ -294,7 +294,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[8];
   LogicalRegion c_vals_parent = regions[8].get_logical_region();
 
-  int32_t ffposo = task->index_point[0];
+  int64_t ffposo = task->index_point[0];
   task_2Args* args = (task_2Args*)(task->args);
   int64_t B3Size = args->B3Size;
   int32_t pieces = args->pieces;
@@ -312,33 +312,33 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B3PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_pos));
   DomainT<1> B3CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B3_crd));
-  int32_t pB3_begin = B3PosDomain.bounds.lo;
-  int32_t pB3_end = B3PosDomain.bounds.hi;
+  int64_t pB3_begin = B3PosDomain.bounds.lo;
+  int64_t pB3_end = B3PosDomain.bounds.hi;
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  int32_t pB2_begin = B2PosDomain.bounds.lo;
-  int32_t pB2_end = B2PosDomain.bounds.hi;
+  int64_t pB2_begin = B2PosDomain.bounds.lo;
+  int64_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ffposo;
   #pragma omp parallel for schedule(static)
-  for (int32_t ffposio = 0; ffposio < (((B3Size + (pieces - 1)) / pieces + 2047) / 2048); ffposio++) {
+  for (int64_t ffposio = 0; ffposio < (((B3Size + (pieces - 1)) / pieces + 2047) / 2048); ffposio++) {
     int64_t pointID2 = pointID1 * (((B3Size + (pieces - 1)) / pieces + 2047) / 2048) + ffposio;
-    int32_t ffposi = ffposio * 2048;
-    int32_t ffposB = ffposo * ((B3Size + (pieces - 1)) / pieces) + ffposi;
-    int32_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, ffposB);
-    int32_t j = B2_crd_accessor[j_pos];
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
-    int32_t i = i_pos;
-    for (int32_t ffposii = 0; ffposii < 2048; ffposii++) {
-      int32_t ffposi = ffposio * 2048 + ffposii;
-      int32_t ffposB = ffposo * ((B3Size + (pieces - 1)) / pieces) + ffposi;
+    int64_t ffposi = ffposio * 2048;
+    int64_t ffposB = ffposo * ((B3Size + (pieces - 1)) / pieces) + ffposi;
+    int64_t j_pos = taco_binarySearchBefore(B3_pos_accessor, pB3_begin, pB3_end, ffposB);
+    int64_t j = B2_crd_accessor[j_pos];
+    int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, j_pos);
+    int64_t i = i_pos;
+    for (int64_t ffposii = 0; ffposii < 2048; ffposii++) {
+      int64_t ffposi = ffposio * 2048 + ffposii;
+      int64_t ffposB = ffposo * ((B3Size + (pieces - 1)) / pieces) + ffposi;
       if (ffposB >= (ffposo + 1) * ((B3Size + (pieces - 1)) / pieces))
         continue;
 
       if (ffposB >= B3Size)
         continue;
 
-      int32_t ff = B3_crd_accessor[ffposB];
-      int32_t k = ff;
+      int64_t ff = B3_crd_accessor[ffposB];
+      int64_t k = ff;
       if (!(B3_pos_accessor[j_pos].contains(ffposB))) {
         j_pos = j_pos + 1;
         j = B2_crd_accessor[j_pos];
@@ -347,10 +347,10 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
           i = i_pos;
         }
       }
-      int32_t jB = j_pos;
-      int32_t iA = i;
-      int32_t kc = k;
-      int32_t jA = jB;
+      int64_t jB = j_pos;
+      int64_t iA = i;
+      int64_t kc = k;
+      int64_t jA = jB;
       A_vals_red_accessor_non_excl[Point<1>(jA)] <<= B_vals_ro_accessor[Point<1>(ffposB)] * c_vals_ro_accessor[Point<1>(k)];
     }
   }
@@ -424,7 +424,7 @@ partitionPackForcomputeLegionDSSPartialPosSplit partitionForcomputeLegionDSSPart
   DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, B2_crd.get_index_space());
   DomainPointColoring B2_crd_coloring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t ffposo = (*itr)[0];
+    int64_t ffposo = (*itr)[0];
     Point<1> B2CrdStart = Point<1>((ffposo * ((B2Size + (pieces - 1)) / pieces)));
     Point<1> B2CrdEnd = Point<1>(TACO_MIN((ffposo * ((B2Size + (pieces - 1)) / pieces) + ((B2Size + (pieces - 1)) / pieces - 1)), B2_crd_domain.bounds.hi[0]));
     Rect<1> B2CrdRect = Rect<1>(B2CrdStart, B2CrdEnd);
@@ -485,7 +485,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   PhysicalRegion c_vals = regions[8];
   LogicalRegion c_vals_parent = regions[8].get_logical_region();
 
-  int32_t ffposo = task->index_point[0];
+  int64_t ffposo = task->index_point[0];
   task_3Args* args = (task_3Args*)(task->args);
   int64_t B2Size = args->B2Size;
   int32_t pieces = args->pieces;
@@ -503,36 +503,36 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   DomainT<1> B2PosDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
   DomainT<1> B2CrdDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  int32_t pB2_begin = B2PosDomain.bounds.lo;
-  int32_t pB2_end = B2PosDomain.bounds.hi;
+  int64_t pB2_begin = B2PosDomain.bounds.lo;
+  int64_t pB2_end = B2PosDomain.bounds.hi;
   int64_t pointID1 = ffposo;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int32_t ffposio = 0; ffposio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); ffposio++) {
+  for (int64_t ffposio = 0; ffposio < (((B2Size + (pieces - 1)) / pieces + 2047) / 2048); ffposio++) {
     int64_t pointID2 = pointID1 * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + ffposio;
-    int32_t ffposi = ffposio * 2048;
-    int32_t ffposB = ffposo * ((B2Size + (pieces - 1)) / pieces) + ffposi;
-    int32_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, ffposB);
-    int32_t i = i_pos;
-    for (int32_t ffposii = 0; ffposii < 2048; ffposii++) {
-      int32_t ffposi = ffposio * 2048 + ffposii;
-      int32_t ffposB = ffposo * ((B2Size + (pieces - 1)) / pieces) + ffposi;
+    int64_t ffposi = ffposio * 2048;
+    int64_t ffposB = ffposo * ((B2Size + (pieces - 1)) / pieces) + ffposi;
+    int64_t i_pos = taco_binarySearchBefore(B2_pos_accessor, pB2_begin, pB2_end, ffposB);
+    int64_t i = i_pos;
+    for (int64_t ffposii = 0; ffposii < 2048; ffposii++) {
+      int64_t ffposi = ffposio * 2048 + ffposii;
+      int64_t ffposB = ffposo * ((B2Size + (pieces - 1)) / pieces) + ffposi;
       if (ffposB >= (ffposo + 1) * ((B2Size + (pieces - 1)) / pieces))
         continue;
 
       if (ffposB >= B2Size)
         continue;
 
-      int32_t f = B2_crd_accessor[ffposB];
-      int32_t j = f;
+      int64_t f = B2_crd_accessor[ffposB];
+      int64_t j = f;
       while (!(B2_pos_accessor[i_pos].contains(ffposB))) {
         i_pos = i_pos + 1;
         i = i_pos;
       }
-      int32_t iA = i;
-      int32_t jA = ffposB;
-      for (int32_t kB = B3_pos_accessor[Point<1>(ffposB)].lo; kB < (B3_pos_accessor[Point<1>(ffposB)].hi + 1); kB++) {
-        int32_t k = B3_crd_accessor[(kB * 1)];
-        int32_t kc = k;
+      int64_t iA = i;
+      int64_t jA = ffposB;
+      for (int64_t kB = B3_pos_accessor[Point<1>(ffposB)].lo; kB < (B3_pos_accessor[Point<1>(ffposB)].hi + 1); kB++) {
+        int64_t k = B3_crd_accessor[(kB * 1)];
+        int64_t kc = k;
         A_vals_rw_accessor[Point<1>(jA)] = A_vals_rw_accessor[Point<1>(jA)] + B_vals_ro_accessor[Point<1>(kB)] * c_vals_ro_accessor[Point<1>(k)];
       }
     }

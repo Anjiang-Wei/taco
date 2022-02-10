@@ -10,7 +10,7 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int32_t B1_dimension;
+  int64_t B1_dimension;
   double a_val;
   int32_t pieces;
 };
@@ -51,7 +51,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainPointColoring BColoring = DomainPointColoring();
   DomainPointColoring CColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t io = (*itr)[0];
+    int64_t io = (*itr)[0];
     Point<1> BStart = Point<1>((io * ((B1_dimension + (pieces - 1)) / pieces)));
     Point<1> BEnd = Point<1>(TACO_MIN((io * ((B1_dimension + (pieces - 1)) / pieces) + ((B1_dimension + (pieces - 1)) / pieces - 1)), BDomain.hi()[0]));
     Rect<1> BRect = Rect<1>(BStart, BEnd);
@@ -122,9 +122,9 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   PhysicalRegion C_vals = regions[9];
   LogicalRegion C_vals_parent = regions[9].get_logical_region();
 
-  int32_t io = task->index_point[0];
+  int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int32_t B1_dimension = args->B1_dimension;
+  int64_t B1_dimension = args->B1_dimension;
   double a_val = args->a_val;
   int32_t pieces = args->pieces;
 
@@ -145,13 +145,13 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   DomainT<1> C3_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C3_crd));
   int64_t pointID1 = io;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int32_t iio = 0; iio < (((B1_dimension + (pieces - 1)) / pieces + 1023) / 1024); iio++) {
+  for (int64_t iio = 0; iio < (((B1_dimension + (pieces - 1)) / pieces + 1023) / 1024); iio++) {
     int64_t pointID2 = pointID1 * (((B1_dimension + (pieces - 1)) / pieces + 1023) / 1024) + iio;
     double tiiia_val = 0.0;
     bool tiiia_set = 0;
-    for (int32_t iii = 0; iii < 1024; iii++) {
-      int32_t ii = iio * 1024 + iii;
-      int32_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
+    for (int64_t iii = 0; iii < 1024; iii++) {
+      int64_t ii = iio * 1024 + iii;
+      int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
       if (i >= B1_dimension)
         continue;
 
@@ -159,36 +159,36 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
         continue;
 
       int64_t pointID3 = pointID2 * 1024 + iii;
-      int32_t iB = i;
-      int32_t iC = i;
-      int32_t jB = B2_pos_accessor[Point<1>(i)].lo;
-      int32_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
-      int32_t jC = C2_pos_accessor[Point<1>(i)].lo;
-      int32_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
+      int64_t iB = i;
+      int64_t iC = i;
+      int64_t jB = B2_pos_accessor[Point<1>(i)].lo;
+      int64_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
+      int64_t jC = C2_pos_accessor[Point<1>(i)].lo;
+      int64_t pC2_end = C2_pos_accessor[Point<1>(i)].hi + 1;
 
       while (jB < pB2_end && jC < pC2_end) {
-        int32_t jB0 = B2_crd_accessor[(jB * 1)];
-        int32_t jC0 = C2_crd_accessor[(jC * 1)];
-        int32_t j = TACO_MIN(jB0, jC0);
+        int64_t jB0 = B2_crd_accessor[(jB * 1)];
+        int64_t jC0 = C2_crd_accessor[(jC * 1)];
+        int64_t j = TACO_MIN(jB0, jC0);
         if (jB0 == j && jC0 == j) {
-          int32_t kB = B3_pos_accessor[Point<1>(jB)].lo;
-          int32_t pB3_end = B3_pos_accessor[Point<1>(jB)].hi + 1;
-          int32_t kC = C3_pos_accessor[Point<1>(jC)].lo;
-          int32_t pC3_end = C3_pos_accessor[Point<1>(jC)].hi + 1;
+          int64_t kB = B3_pos_accessor[Point<1>(jB)].lo;
+          int64_t pB3_end = B3_pos_accessor[Point<1>(jB)].hi + 1;
+          int64_t kC = C3_pos_accessor[Point<1>(jC)].lo;
+          int64_t pC3_end = C3_pos_accessor[Point<1>(jC)].hi + 1;
 
           while (kB < pB3_end && kC < pC3_end) {
-            int32_t kB0 = B3_crd_accessor[(kB * 1)];
-            int32_t kC0 = C3_crd_accessor[(kC * 1)];
-            int32_t k = TACO_MIN(kB0, kC0);
+            int64_t kB0 = B3_crd_accessor[(kB * 1)];
+            int64_t kC0 = C3_crd_accessor[(kC * 1)];
+            int64_t k = TACO_MIN(kB0, kC0);
             if (kB0 == k && kC0 == k) {
               tiiia_val = tiiia_val + B_vals_ro_accessor[Point<1>(kB)] * C_vals_ro_accessor[Point<1>(kC)];
             }
-            kB = kB + (int32_t)(kB0 == k);
-            kC = kC + (int32_t)(kC0 == k);
+            kB = kB + (int64_t)(kB0 == k);
+            kC = kC + (int64_t)(kC0 == k);
           }
         }
-        jB = jB + (int32_t)(jB0 == j);
-        jC = jC + (int32_t)(jC0 == j);
+        jB = jB + (int64_t)(jB0 == j);
+        jC = jC + (int64_t)(jC0 == j);
       }
     }
     #pragma omp atomic

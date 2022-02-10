@@ -664,7 +664,7 @@ void RectCompressedFinalizeYieldPositions::body<1>(Context ctx, Runtime* runtime
                                                    Rect<1> fullBounds, Rect<1> iterBounds,
                                                    Accessor<1, READ_WRITE> output, Accessor<1, READ_ONLY> ghost) {
   #pragma omp parallel for schedule(static)
-  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
     if (i == 0) {
       output[0].lo = 0;
     } else {
@@ -678,8 +678,8 @@ void RectCompressedFinalizeYieldPositions::body<2>(Context ctx, Runtime* runtime
                                                    Rect<2> fullBounds, Rect<2> iterBounds,
                                                    Accessor<2, READ_WRITE> output, Accessor<2, READ_ONLY> ghost) {
   #pragma omp parallel for schedule(static) collapse(2)
-  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
-    for (int j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
+  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+    for (coord_t j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
       Point<2> point(i, j);
       if (point == Point<2>::ZEROES()) {
         output[point].lo = 0;
@@ -695,9 +695,9 @@ void RectCompressedFinalizeYieldPositions::body<3>(Context ctx, Runtime* runtime
                                                    Rect<3> fullBounds, Rect<3> iterBounds,
                                                    Accessor<3, READ_WRITE> output, Accessor<3, READ_ONLY> ghost) {
   #pragma omp parallel for schedule(static) collapse(3)
-  for (int i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
-    for (int j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
-      for (int k = iterBounds.lo.z; k <= iterBounds.hi.z; k++) {
+  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
+    for (coord_t j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
+      for (coord_t k = iterBounds.lo.z; k <= iterBounds.hi.z; k++) {
         Point<3> point(i, j, k);
         if (point == Point<3>::ZEROES()) {
           output[point].lo = 0;
@@ -815,13 +815,13 @@ RectCompressedGetSeqInsertEdges::compute(Legion::Context ctx, Legion::Runtime *r
 
   // Perform a local exclusive scan on the per-processor results to construct
   // an ArgumentMap for the finalization launch.
-  int32_t scanVal = 0;
+  int64_t scanVal = 0;
   ArgumentMap scanMap;
-  std::vector<int> scanData(colorSpaceDomain.get_volume());
+  std::vector<int64_t> scanData(colorSpaceDomain.get_volume());
   for (PointInDomainIterator<1> itr(colorSpaceDomain); itr(); itr++) {
     scanData[int(*itr)] = scanVal;
-    scanMap.set_point(*itr, UntypedBuffer(&scanData[int(*itr)], sizeof(int32_t)));
-    scanVal += localScanResults.get_result<int32_t>(*itr);
+    scanMap.set_point(*itr, UntypedBuffer(&scanData[int(*itr)], sizeof(int64_t)));
+    scanVal += localScanResults.get_result<int64_t>(*itr);
   }
 
   // Now, we just need to apply the partial results to each subregion of pos.
@@ -898,18 +898,18 @@ T inclusiveScanPlus(
 }
 
 template<int DIM>
-int32_t RectCompressedGetSeqInsertEdges::scanBody(Context ctx, Runtime *runtime, Rect<DIM> iterBounds,
+int64_t RectCompressedGetSeqInsertEdges::scanBody(Context ctx, Runtime *runtime, Rect<DIM> iterBounds,
                                                   Accessor<Rect<1>, DIM, WRITE_ONLY> output,
-                                                  Accessor<int32_t, DIM, READ_ONLY> input,
+                                                  Accessor<int64_t, DIM, READ_ONLY> input,
                                                   Memory::Kind tmpMemKind) {
-  int32_t initVal = 0;
-  DeferredBuffer<int32_t, DIM> scanBuf(iterBounds, tmpMemKind, &initVal);
+  int64_t initVal = 0;
+  DeferredBuffer<int64_t, DIM> scanBuf(iterBounds, tmpMemKind, &initVal);
 
   Pitches<DIM - 1> pitches;
   auto volume = pitches.flatten(iterBounds);
 
   // First, compute the scan over input into a temporary buffer.
-  auto scanVal = inclusiveScanPlus(scanBuf, input, iterBounds, pitches, volume);
+  int64_t scanVal = inclusiveScanPlus<int64_t>(scanBuf, input, iterBounds, pitches, volume);
 
   // Next, use the result of the scan to compute the rectangle
   // bounds for the output pos array.
@@ -924,7 +924,7 @@ int32_t RectCompressedGetSeqInsertEdges::scanBody(Context ctx, Runtime *runtime,
   return scanVal;
 }
 
-int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
+int64_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
                                                   const std::vector<Legion::PhysicalRegion> &regions,
                                                   Legion::Context ctx,
                                                   Legion::Runtime *runtime) {
@@ -954,7 +954,7 @@ int32_t RectCompressedGetSeqInsertEdges::scanTask(const Legion::Task *task,
     case DIM: {    \
       Rect<DIM> iterBounds = runtime->get_index_space_domain(ctx, outputlr.get_index_space()).bounds<DIM, coord_t>();     \
       Accessor<Rect<1>, DIM, WRITE_ONLY> outAcc(output, outputField); \
-      Accessor<int32_t, DIM, READ_ONLY> inAcc(input, inputField); \
+      Accessor<int64_t, DIM, READ_ONLY> inAcc(input, inputField); \
       return RectCompressedGetSeqInsertEdges::scanBody<DIM>(ctx, runtime, iterBounds, outAcc, inAcc, tmpMemKind); \
     }
     LEGION_FOREACH_N(BLOCK)
@@ -978,7 +978,7 @@ template<int DIM>
 void RectCompressedGetSeqInsertEdges::applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime,
                                                               Legion::Rect<DIM> iterBounds,
                                                               Accessor<Legion::Rect<1>, DIM, READ_WRITE> output,
-                                                              int32_t value) {
+                                                              int64_t value) {
   Pitches<DIM - 1> pitches;
   auto volume = pitches.flatten(iterBounds);
   #pragma omp parallel for schedule(static)
@@ -991,7 +991,7 @@ void RectCompressedGetSeqInsertEdges::applyPartialResultsTask(const Legion::Task
                                                               const std::vector<Legion::PhysicalRegion> &regions,
                                                               Legion::Context ctx, Legion::Runtime *runtime) {
   FieldID outputField;
-  int32_t value;
+  int64_t value;
   std::tie(outputField, value) = RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(task);
 
   auto output = regions[0];
@@ -1011,14 +1011,14 @@ void RectCompressedGetSeqInsertEdges::applyPartialResultsTask(const Legion::Task
   }
 }
 
-std::pair<Legion::FieldID, int32_t> RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(
+std::pair<Legion::FieldID, int64_t> RectCompressedGetSeqInsertEdges::unpackApplyPartialResultsTaskArgs(
     const Legion::Task *task) {
   FieldID outputField;
   {
     Deserializer derez(task->args, task->arglen);
     derez.deserialize(outputField);
   }
-  int32_t value;
+  int64_t value;
   {
     Deserializer derez(task->local_args, task->local_arglen);
     derez.deserialize(value);
@@ -1033,20 +1033,20 @@ void RectCompressedGetSeqInsertEdges::registerTasks() {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
-    Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
+    Runtime::preregister_task_variant<int64_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
   }
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
     registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
-    Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
+    Runtime::preregister_task_variant<int64_t, RectCompressedGetSeqInsertEdges::scanTask>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
   }
 #ifdef TACO_USE_CUDA
   {
     TaskVariantRegistrar registrar(RectCompressedGetSeqInsertEdges::scanTaskID, "rectCompressedGetSeqInsertEdgesLocalScan");
     registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
     registrar.set_leaf();
-    Runtime::preregister_task_variant<int32_t, RectCompressedGetSeqInsertEdges::scanTaskGPU>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
+    Runtime::preregister_task_variant<int64_t, RectCompressedGetSeqInsertEdges::scanTaskGPU>(registrar, "rectCompressedGetSeqInsertEdgesLocalScan");
   }
 #endif
   {
