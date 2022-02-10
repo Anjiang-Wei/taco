@@ -82,7 +82,7 @@ void rectCompressedGetSeqInsertEdgesConstructFinalKernel(const Rect<DIM> iterBou
                                                          const Pitches<DIM - 1> pitches,
                                                          const size_t volume,
                                                          RCGSEIAccessor<Rect<1>, DIM, WRITE_ONLY> output,
-                                                         DeferredBuffer<int32_t, DIM> scanBuf) {
+                                                         DeferredBuffer<int64_t, DIM> scanBuf) {
   const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= volume) return;
   auto point = pitches.unflatten(idx, iterBounds.lo);
@@ -92,9 +92,9 @@ void rectCompressedGetSeqInsertEdgesConstructFinalKernel(const Rect<DIM> iterBou
 }
 
 template<int DIM>
-int32_t RectCompressedGetSeqInsertEdges::scanBodyGPU(Context ctx, Runtime *runtime, Rect<DIM> iterBounds,
+int64_t RectCompressedGetSeqInsertEdges::scanBodyGPU(Context ctx, Runtime *runtime, Rect<DIM> iterBounds,
                                                      Accessor<Rect<1>, DIM, WRITE_ONLY> output,
-                                                     Accessor<int32_t, DIM, READ_ONLY> input,
+                                                     Accessor<int64_t, DIM, READ_ONLY> input,
                                                      Memory::Kind tmpMemKind) {
   Pitches<DIM - 1> pitches;
   auto volume = pitches.flatten(iterBounds);
@@ -127,7 +127,7 @@ int32_t RectCompressedGetSeqInsertEdges::scanBodyGPU(Context ctx, Runtime *runti
   return scanVal;
 }
 
-int32_t RectCompressedGetSeqInsertEdges::scanTaskGPU(const Legion::Task *task,
+int64_t RectCompressedGetSeqInsertEdges::scanTaskGPU(const Legion::Task *task,
                                                      const std::vector<Legion::PhysicalRegion> &regions,
                                                      Legion::Context ctx,
                                                      Legion::Runtime *runtime) {
@@ -164,7 +164,7 @@ void rectCompressedGetSeqInsertEdgesApplyPartialResultsKernel(
     const Pitches<DIM - 1> pitches,
     const size_t volume,
     RCGSEIAccessor<Rect<1>, DIM, READ_WRITE> output,
-    int32_t value
+    int64_t value
 ) {
   const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= volume) return;

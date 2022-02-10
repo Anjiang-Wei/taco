@@ -390,7 +390,7 @@ private:
   static std::pair<Legion::FieldID, Legion::FieldID> unpackScanTaskArgs(const Legion::Task* task);
 #ifdef TACO_USE_CUDA
   template<int DIM>
-  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int32_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
   static int64_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #endif
   static const int scanTaskID;
