@@ -116,8 +116,12 @@ ERROR:  One or more process (first noticed rank 0) terminated with signal 9
 BENCHID++PETSc++spmm++twitter7++4
 Executing command: jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
 Average time: 45727.797603 ms.
-BENCHID++PETSc++spmm++twitter7++8
+BENCHID++PETSc++spmm++twitter7++8++nodes
 Executing command: jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+Average time: 25344.523495 ms.
+BENCHID++PETSc++spmm++twitter7++16++nodes
+Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/twitter7.petsc -n 20 -warmup 10 -bench spmm
+Average time: 17576.969230 ms.
 BENCHID++PETSc++spmm++uk-2005++1
 Executing command: jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/uk-2005.petsc -n 20 -warmup 10 -bench spmm
 Average time: 1777.877628 ms.
