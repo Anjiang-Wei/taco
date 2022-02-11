@@ -44,16 +44,19 @@ void registerDummyReadTasks() {
     {
       TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
       registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+      registrar.set_leaf();
       Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
     }
     {
       TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
       registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+      registrar.set_leaf();
       Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
     }
     {
       TaskVariantRegistrar registrar(TID_DUMMY_READ_REGION, "dummyReadTask");
       registrar.add_constraint(ProcessorConstraint(Processor::TOC_PROC));
+      registrar.set_leaf();
       Runtime::preregister_task_variant<dummyReadTask>(registrar, "dummyReadTask");
     }
     registeredDummyTasks = true;
