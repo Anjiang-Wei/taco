@@ -235,6 +235,19 @@ Legion::IndexPartition createSparseAliasingPartitions(Legion::Context ctx, Legio
   auto colorSpaceDom = runtime->get_index_space_domain(ctx, colorSpace);
   taco_iassert(colorSpaceDom.dim == 1);
   auto pieces = colorSpaceDom.get_volume();
+  // Return an empty index partition if we only have a single piece.
+  if (pieces == 1) {
+    DomainPoint lo, hi;
+    lo.dim = ispace.get_dim();
+    hi.dim = ispace.get_dim();
+    for (int i = 0; i < ispace.get_dim(); i++) {
+      lo[i] = 1;
+      hi[i] = 0;
+    }
+    coloring[0] = Domain(lo, hi);
+    return runtime->create_index_partition(ctx, ispace, colorSpaceDom, coloring);
+  }
+  // Otherwise, compute the actual aliasing that we want.
   for (PointInDomainIterator<1> itr(colorSpaceDom); itr(); itr++) {
     size_t i = *itr;
     auto subreg = runtime->get_index_subspace(ctx, part, i);
