@@ -61,6 +61,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (batched) {
       computeLegionBatched(ctx, runtime, &A, &B, &C, &packBatched, pieces);
+      launchDummyReadOverPartition(ctx, runtime, A.vals, commLPart, FID_VAL, Rect<1>(0, pieces - 1), false/* wait */, true /* untrack */, false /* cpuOnly */, true /* sparse */);
     } else {
       computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
     }

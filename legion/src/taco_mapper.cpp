@@ -15,16 +15,19 @@ Realm::Logger logTacoMapper("tacoMapper");
 void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs) {
   // If we're supposed to backpressure task executions, then we need to only
   // have a single mapper per node. Otherwise, we can use a mapper per processor.
-  bool backpressure = false;
+  bool backpressure = false, oneMapperPerNode = false;
   auto args = Legion::Runtime::get_input_args();
   for (int i = 1; i < args.argc; i++) {
     if (strcmp(args.argv[i], "-tm:enable_backpressure") == 0) {
       backpressure = true;
       break;
     }
+    if (strcmp(args.argv[i], "-tm:one_mapper_per_node") == 0) {
+      oneMapperPerNode = true;
+    }
   }
 
-  if (backpressure) {
+  if (backpressure || oneMapperPerNode) {
     auto proc = *local_procs.begin();
 #ifdef TACO_USE_LOGGING_MAPPER
     runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName)), Processor::NO_PROC);
@@ -141,11 +144,268 @@ void TACOMapper::select_task_options(const Legion::Mapping::MapperContext ctx,
   }
 }
 
+void TACOMapper::map_task_impl(const Legion::Mapping::MapperContext ctx, const Legion::Task &task,
+                               const MapTaskInput &input, MapTaskOutput &output) {
+  Processor::Kind target_kind = task.target_proc.kind();
+  // Get the variant that we are going to use to map this task
+  VariantInfo chosen = default_find_preferred_variant(task, ctx,
+                                                      true/*needs tight bound*/, true/*cache*/, target_kind);
+  output.chosen_variant = chosen.variant;
+  output.task_priority = default_policy_select_task_priority(ctx, task);
+  output.postmap_task = false;
+  // Figure out our target processors
+  default_policy_select_target_processors(ctx, task, output.target_procs);
+  Processor target_proc = output.target_procs[0];
+  // See if we have an inner variant, if we do virtually map all the regions
+  // We don't even both caching these since they are so simple
+  if (chosen.is_inner) {
+    // Check to see if we have any relaxed coherence modes in which
+    // case we can no longer do virtual mappings so we'll fall through
+    bool has_relaxed_coherence = false;
+    for (unsigned idx = 0; idx < task.regions.size(); idx++) {
+      if (task.regions[idx].prop != LEGION_EXCLUSIVE) {
+        has_relaxed_coherence = true;
+        break;
+      }
+    }
+    if (!has_relaxed_coherence) {
+      std::vector<unsigned> reduction_indexes;
+      for (unsigned idx = 0; idx < task.regions.size(); idx++) {
+        // As long as this isn't a reduction-only region requirement
+        // we will do a virtual mapping, for reduction-only instances
+        // we will actually make a physical instance because the runtime
+        // doesn't allow virtual mappings for reduction-only privileges
+        if (task.regions[idx].privilege == LEGION_REDUCE)
+          reduction_indexes.push_back(idx);
+        else
+          output.chosen_instances[idx].push_back(
+              PhysicalInstance::get_virtual_instance());
+      }
+      if (!reduction_indexes.empty()) {
+        const TaskLayoutConstraintSet &layout_constraints =
+            runtime->find_task_layout_constraints(ctx,
+                                                  task.task_id, output.chosen_variant);
+        for (std::vector<unsigned>::const_iterator it =
+            reduction_indexes.begin(); it !=
+                                       reduction_indexes.end(); it++) {
+          MemoryConstraint mem_constraint =
+              find_memory_constraint(ctx, task, output.chosen_variant, *it);
+          Memory target_memory = default_policy_select_target_memory(ctx,
+                                                                     target_proc,
+                                                                     task.regions[*it],
+                                                                     mem_constraint);
+          std::set<FieldID> copy = task.regions[*it].privilege_fields;
+          size_t footprint;
+          if (!default_create_custom_instances(ctx, target_proc,
+                                               target_memory, task.regions[*it], *it, copy,
+                                               layout_constraints, false/*needs constraint check*/,
+                                               output.chosen_instances[*it], &footprint)) {
+            default_report_failed_instance_creation(task, *it,
+                                                    target_proc, target_memory, footprint);
+          }
+        }
+      }
+      return;
+    }
+  }
+  // Should we cache this task?
+  CachedMappingPolicy cache_policy =
+      default_policy_select_task_cache_policy(ctx, task);
+
+  // First, let's see if we've cached a result of this task mapping
+  const unsigned long long task_hash = compute_task_hash(task);
+  std::pair<TaskID, Processor> cache_key(task.task_id, target_proc);
+  std::map<std::pair<TaskID, Processor>,
+      std::list<CachedTaskMapping> >::const_iterator
+      finder = cached_task_mappings.find(cache_key);
+  // This flag says whether we need to recheck the field constraints,
+  // possibly because a new field was allocated in a region, so our old
+  // cached physical instance(s) is(are) no longer valid
+  bool needs_field_constraint_check = false;
+  if (cache_policy == DEFAULT_CACHE_POLICY_ENABLE && finder != cached_task_mappings.end()) {
+    bool found = false;
+    // Iterate through and see if we can find one with our variant and hash
+    for (std::list<CachedTaskMapping>::const_iterator it =
+        finder->second.begin(); it != finder->second.end(); it++) {
+      if ((it->variant == output.chosen_variant) &&
+          (it->task_hash == task_hash)) {
+        // Have to copy it before we do the external call which
+        // might invalidate our iterator
+        output.chosen_instances = it->mapping;
+        output.output_targets = it->output_targets;
+        output.output_constraints = it->output_constraints;
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      // See if we can acquire these instances still
+      if (runtime->acquire_and_filter_instances(ctx,
+                                                output.chosen_instances))
+        return;
+      // We need to check the constraints here because we had a
+      // prior mapping and it failed, which may be the result
+      // of a change in the allocated fields of a field space
+      needs_field_constraint_check = true;
+      // If some of them were deleted, go back and remove this entry
+      // Have to renew our iterators since they might have been
+      // invalidated during the 'acquire_and_filter_instances' call
+      default_remove_cached_task(ctx, output.chosen_variant,
+                                 task_hash, cache_key, output.chosen_instances);
+    }
+  }
+  // We didn't find a cached version of the mapping so we need to
+  // do a full mapping, we already know what variant we want to use
+  // so let's use one of the acceleration functions to figure out
+  // which instances still need to be mapped.
+  std::vector<std::set<FieldID> > missing_fields(task.regions.size());
+  runtime->filter_instances(ctx, task, output.chosen_variant,
+                            output.chosen_instances, missing_fields);
+  // Track which regions have already been mapped
+  std::vector<bool> done_regions(task.regions.size(), false);
+  if (!input.premapped_regions.empty())
+    for (std::vector<unsigned>::const_iterator it =
+        input.premapped_regions.begin(); it !=
+                                         input.premapped_regions.end(); it++)
+      done_regions[*it] = true;
+  const TaskLayoutConstraintSet &layout_constraints =
+      runtime->find_task_layout_constraints(ctx,
+                                            task.task_id, output.chosen_variant);
+  // Now we need to go through and make instances for any of our
+  // regions which do not have space for certain fields
+  for (unsigned idx = 0; idx < task.regions.size(); idx++) {
+    if (done_regions[idx])
+      continue;
+    // Skip any empty regions
+    if ((task.regions[idx].privilege == LEGION_NO_ACCESS) ||
+        (task.regions[idx].privilege_fields.empty()) ||
+        missing_fields[idx].empty())
+      continue;
+    // See if this is a reduction
+    MemoryConstraint mem_constraint =
+        find_memory_constraint(ctx, task, output.chosen_variant, idx);
+    Memory target_memory = default_policy_select_target_memory(ctx,
+                                                               target_proc,
+                                                               task.regions[idx],
+                                                               mem_constraint);
+    if (task.regions[idx].privilege == LEGION_REDUCE) {
+      // std::cout << "Considering region requirement: " << Utilities::to_string(runtime, ctx, task.regions[idx], idx) << std::endl;
+      // auto key = std::make_tuple(task.regions[idx].region, size_t(idx), target_memory);
+      // auto key = std::make_tuple(task.index_point[0], size_t(idx), target_memory);
+      auto key = std::make_tuple(task_hash, size_t(idx), target_memory);
+      // std::cout << "KEY: " << std::get<0>(key) << " " << std::get<1>(key) << " " << std::get<2>(key) << std::endl;
+      auto it = this->reductionInstanceCache.find(key);
+      if (it != this->reductionInstanceCache.end()) {
+        std::vector<PhysicalInstance> instances = it->second;
+        // std::cout << "Potential reduction instances: ";
+        // for (auto inst : instances) {
+        //   std::cout << Utilities::to_string(runtime, ctx, inst) << " ";
+        // }
+        // std::cout << std::endl;
+        if (instances.size() > 0 && this->runtime->acquire_and_filter_instances(ctx, instances)) {
+          output.chosen_instances[idx] = instances;
+          this->reductionInstanceCache[key] = instances;
+          // std::cout << "Reusing instance for regionReq: ";
+          // for (auto inst : instances) {
+          //   std::cout << Utilities::to_string(runtime, ctx, inst) << " ";
+          // }
+          // std::cout << std::endl;
+          continue;
+        } else {
+          // std::cout << "Clearing reduction instance cache?" << std::endl;
+          this->reductionInstanceCache[key].clear();
+        }
+      }
+    }
+    // if (task.regions[idx].privilege == LEGION_REDUCE) {
+    //   size_t footprint;
+    //   if (!default_create_custom_instances(ctx, target_proc,
+    //                                        target_memory, task.regions[idx], idx, missing_fields[idx],
+    //                                        layout_constraints, needs_field_constraint_check,
+    //                                        output.chosen_instances[idx], &footprint)) {
+    //     default_report_failed_instance_creation(task, idx,
+    //                                             target_proc, target_memory, footprint);
+    //   }
+    //   continue;
+    // }
+    // Did the application request a virtual mapping for this requirement?
+    if ((task.regions[idx].tag & DefaultMapper::VIRTUAL_MAP) != 0 && !(task.regions[idx].privilege == LEGION_REDUCE)) {
+      PhysicalInstance virt_inst = PhysicalInstance::get_virtual_instance();
+      output.chosen_instances[idx].push_back(virt_inst);
+      continue;
+    }
+    // Check to see if any of the valid instances satisfy this requirement
+    {
+      std::vector<PhysicalInstance> valid_instances;
+
+      for (std::vector<PhysicalInstance>::const_iterator
+               it = input.valid_instances[idx].begin(),
+               ie = input.valid_instances[idx].end(); it != ie; ++it) {
+        if (it->get_location() == target_memory)
+          valid_instances.push_back(*it);
+      }
+      std::set<FieldID> valid_missing_fields;
+      runtime->filter_instances(ctx, task, idx, output.chosen_variant,
+                                valid_instances, valid_missing_fields);
+
+#ifndef NDEBUG
+      bool check =
+#endif
+          runtime->acquire_and_filter_instances(ctx, valid_instances);
+      assert(check);
+
+      output.chosen_instances[idx] = valid_instances;
+      missing_fields[idx] = valid_missing_fields;
+
+      if (missing_fields[idx].empty()) {
+        continue;
+      }
+    }
+    // Otherwise make normal instances for the given region
+    size_t footprint;
+    if (!default_create_custom_instances(ctx, target_proc,
+                                         target_memory, task.regions[idx], idx, missing_fields[idx],
+                                         layout_constraints, needs_field_constraint_check,
+                                         output.chosen_instances[idx], &footprint)) {
+      default_report_failed_instance_creation(task, idx,
+                                              target_proc, target_memory, footprint);
+    }
+    if (task.regions[idx].privilege == LEGION_REDUCE) {
+      // auto key = std::make_tuple(task.regions[idx].region, size_t(idx), target_memory);
+      // auto key = std::make_tuple(task.index_point[0], size_t(idx), target_memory);
+      auto key = std::make_tuple(task_hash, size_t(idx), target_memory);
+      // auto key = std::make_tuple(task_hash, size_t(idx), target_memory);
+      this->reductionInstanceCache[key] = output.chosen_instances[idx];
+    }
+  }
+
+  // Finally we set a target memory for output instances
+  Memory target_memory =
+      default_policy_select_output_target(ctx, task.target_proc);
+  for (unsigned i = 0; i < task.output_regions.size(); ++i) {
+    output.output_targets[i] = target_memory;
+    default_policy_select_output_constraints(
+        task, output.output_constraints[i], task.output_regions[i]);
+  }
+
+  if (cache_policy == DEFAULT_CACHE_POLICY_ENABLE && false) {
+    // Now that we are done, let's cache the result so we can use it later
+    std::list<CachedTaskMapping> &map_list = cached_task_mappings[cache_key];
+    map_list.push_back(CachedTaskMapping());
+    CachedTaskMapping &cached_result = map_list.back();
+    cached_result.task_hash = task_hash;
+    cached_result.variant = output.chosen_variant;
+    cached_result.mapping = output.chosen_instances;
+    cached_result.output_targets = output.output_targets;
+    cached_result.output_constraints = output.output_constraints;
+  }
+}
+
 void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
                           const Legion::Task &task,
                           const MapTaskInput &input,
                           MapTaskOutput &output) {
-  DefaultMapper::map_task(ctx, task, input, output);
+  this->map_task_impl(ctx, task, input, output);
   // If the tag is marked for untracked valid regions, then mark all of its
   // read only regions as up for collection.
   if ((task.tag & UNTRACK_VALID_REGIONS) != 0 && this->untrackValidRegions) {

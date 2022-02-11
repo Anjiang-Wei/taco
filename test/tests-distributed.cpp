@@ -1849,10 +1849,15 @@ TEST(distributed, legionSpMM) {
   const int BATCH_SIZE = 4;
   // Schedule to conserve memory (i.e. not replicate C onto all nodes).
   auto cpuCons = stmt.split(j, jo, ji, BATCH_SIZE)
+                      // TODO (rohany): Let's switch this back to a pos split to check the reduction instance stuff.
                      .reorder({jo, i, k, ji})
-                     .distribute({i}, {io}, {ii}, Grid(gx))
-                     .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
-                     .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                     .fuse(i, k, f)
+                     .pos(f, fpos, B(i, k))
+                     .distribute({fpos}, {fposo}, {fposi}, Grid(gx))
+                     .communicate({A(i, j), B(i, k), C(k, j)}, fposi)
+                     // .distribute({i}, {io}, {ii}, Grid(gx))
+                     // .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+                     // .communicate({A(i, j), B(i, k), C(k, j)}, io)
                      ;
 
   const int BATCHED_NNZ_PER_THREAD = 8;

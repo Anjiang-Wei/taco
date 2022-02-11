@@ -293,7 +293,7 @@ int AffineProjection::operator[] (size_t i) const {
 }
 
 Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *runtime, Legion::IndexPartition part,
-                                               Legion::IndexSpace ispace, Color color) {
+                                               Legion::IndexSpace ispace, DomainPointColoring coloringOverride, Color color) {
   DomainPointColoring col;
   auto colorSpace = runtime->get_index_partition_color_space(ctx, part);
   auto colorSpaceName = runtime->get_index_partition_color_space_name(ctx, part);
@@ -303,7 +303,19 @@ Legion::IndexPartition AffineProjection::apply(Legion::Context ctx, Runtime *run
     auto subspace = runtime->get_index_subspace(ctx, part, Color(*itr));
     auto subspaceDom = runtime->get_index_space_domain(ctx, subspace);
     taco_iassert(subspaceDom.dense());
-    auto projected = Domain(this->apply(subspaceDom.lo(), outputDomain.lo()), this->apply(subspaceDom.hi(), outputDomain.hi()));
+    auto lo = this->apply(subspaceDom.lo(), outputDomain.lo());
+    auto hi = this->apply(subspaceDom.hi(), outputDomain.hi());
+
+    // TODO (rohany): Comment this overriding business.
+    auto it = coloringOverride.find(*itr);
+    if (it != coloringOverride.end()) {
+      for (auto idx : this->overrides) {
+        lo[idx] = it->second.lo()[idx];
+        hi[idx] = it->second.hi()[idx];
+      }
+    }
+
+    auto projected = Domain(lo, hi);
     col[*itr] = projected;
   }
   return runtime->create_partition_by_domain(ctx, ispace, col, colorSpaceName, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);

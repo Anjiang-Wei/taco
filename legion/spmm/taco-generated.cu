@@ -247,6 +247,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
     auto ADomain = runtime->get_index_space_domain(ctx, A_dense_run_0);
     auto BDomain = runtime->get_index_space_domain(ctx, B_dense_run_0);
     auto CDomain = runtime->get_index_space_domain(ctx, C_dense_run_0);
+    DomainPointColoring AColoring = DomainPointColoring();
     DomainPointColoring CColoring = DomainPointColoring();
     for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
       int64_t fposo = (*itr)[0];
@@ -257,6 +258,13 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
         B2CrdRect = B2CrdRect.make_empty();
       }
       B2_crd_coloring[(*itr)] = B2CrdRect;
+      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 4));
+      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension),ADomain.hi()[0]), TACO_MIN((jo * 4 + 3),ADomain.hi()[1]));
+      Rect<2> ARect = Rect<2>(AStart, AEnd);
+      if (!ADomain.contains(ARect.lo) || !ADomain.contains(ARect.hi)) {
+        ARect = ARect.make_empty();
+      }
+      AColoring[(*itr)] = ARect;
       Point<2> CStart = Point<2>(0, (jo * 4));
       Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1),CDomain.hi()[0]), TACO_MIN((jo * 4 + 3),CDomain.hi()[1]));
       Rect<2> CRect = Rect<2>(CStart, CEnd);
@@ -287,7 +295,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
     LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
     LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B2_crd_part, B_vals, pointID1);
     IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
-    IndexPartition ADenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, A_dense_run_0);
+    IndexPartition ADenseRun0Partition = AffineProjection(0).addOverrides(1).apply(ctx, runtime, BDenseRun0Partition, A_dense_run_0, AColoring);
     auto A_vals_partition = copyPartition(ctx, runtime, ADenseRun0Partition, get_logical_region(A_vals), pointID1);
     IndexPartition CDenseRun0Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_COMPUTE_KIND);
     auto C_vals_partition = copyPartition(ctx, runtime, CDenseRun0Partition, get_logical_region(C_vals), pointID1);

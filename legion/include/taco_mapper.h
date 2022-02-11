@@ -44,6 +44,11 @@ public:
                            const Legion::Task& task,
                                  TaskOptions& output) override;
 
+  void map_task_impl(const Legion::Mapping::MapperContext ctx,
+                     const Legion::Task &task,
+                     const MapTaskInput &input,
+                     MapTaskOutput &output);
+
   void map_task(const Legion::Mapping::MapperContext ctx,
                 const Legion::Task &task,
                 const MapTaskInput &input,
@@ -220,6 +225,8 @@ private:
   std::map<std::tuple<Legion::Memory::Kind, Legion::IndexSpace, Legion::FieldSpace>, Legion::LayoutConstraintID> distalLayoutConstraintCache;
   // distalReductionConstraintCache is similar to distalLayoutConstraintCache for reduction constraints.
   std::map<std::tuple<Legion::Memory::Kind, Legion::IndexSpace, Legion::FieldSpace, Legion::ReductionOpID>, Legion::LayoutConstraintID> distalReductionConstraintCache;
+
+  std::map<std::tuple<unsigned long long, size_t, Legion::Memory>, std::vector<Legion::Mapping::PhysicalInstance>> reductionInstanceCache;
 
   // TODO (rohany): It may end up being necessary that we need to explicitly map
   //  regions for placement tasks. If so, Manolis says the following approach

@@ -202,7 +202,7 @@ public:
   // Access the mapped index of this projection.
   int operator[](size_t i) const;
   // Apply the projection to an index partition.
-  Legion::IndexPartition apply(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition part, Legion::IndexSpace ispace, Legion::Color color = LEGION_AUTO_GENERATE_ID);
+  Legion::IndexPartition apply(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexPartition part, Legion::IndexSpace ispace, Legion::DomainPointColoring coloring = Legion::DomainPointColoring(), Legion::Color color = LEGION_AUTO_GENERATE_ID);
   // Apply the projection to a domain point. outputBounds contains the corresponding
   // bounds for the output point (i.e. zero, n). It is used when positions in the
   // output are not specified by the AffineProjection, as in situations where a lower
@@ -210,11 +210,21 @@ public:
   // are not specified by the projection, they take the value given by outputBounds at
   // that dimension.
   Legion::DomainPoint apply(Legion::DomainPoint point, Legion::DomainPoint outputBounds);
+
+  AffineProjection addOverrides(std::vector<int> overs) {
+    for (auto it : overs) {
+      this->overrides.push_back(it);
+    }
+    return *this;
+  }
+  template <typename ... Overs>
+  AffineProjection addOverrides(const Overs&... overs) { return addOverrides(std::vector<int>{overs...}); }
   // Value to represent the \bot value of projection, i.e. an index
   // that does not map to other indices.
   const static int BOT;
 private:
   std::vector<int> projs;
+  std::vector<int> overrides;
 };
 
 // Helper class to perform partitions for the downwards partition path for

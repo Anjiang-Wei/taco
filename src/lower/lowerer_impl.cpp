@@ -2186,6 +2186,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
 
       std::map<TensorVar, ir::Expr> extraColorings;
+      std::map<TensorVar, std::vector<int>> partitionedByOuter;
       std::vector<Expr> colorings;
       std::vector<Stmt> initColorings;
       for (auto &t : forall.getTransfers()) {
@@ -2215,19 +2216,21 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         // std::set<IndexVar> considering = this->varsInScope[this->curDistVar];
         std::set<IndexVar> considering = this->definedIndexVars;
         considering.erase(this->curDistVar);
-        for (auto ivar : t.getAccess().getIndexVars()) {
+        for (size_t i = 0; i < t.getAccess().getIndexVars().size(); i++) {
+          auto ivar = t.getAccess().getIndexVars()[i];
           if (this->anyParentInSet(ivar, considering)) {
             isPartitionedByOuterVars = true;
+            partitionedByOuter[tv].push_back(i);
           }
         }
-        if (isPartitionedByOuterVars && !affineProjection.defined()) {
+        if (isPartitionedByOuterVars) {
           partitioningStmts.push_back(initColorings[idx]);
           std::set<TensorVar> fullyRepl;
           coloringLoopBody.push_back(ir::Block::make(this->createDomainPointColorings(forall, domainIter, domains, fullyRepl, colorings, tv)));
           extraColorings[tv] = colorings[idx];
         }
         // TODO (rohany): As described below, we aren't going to be able to compute a tight bound
-        //  on the subspaces here.
+        //  on the subspaces here. I think I know what to do here now?
         // taco_iassert(!(isPartitionedByOuterVars && affineProjection.defined()));
       }
       auto coloringLoop = ir::For::make(
@@ -2426,17 +2429,28 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
         auto tvExpr = this->tensorVars[tv];
         auto tvAccess = this->tensorVarToAccess.at(tv);
 
+        auto affineProjection = this->constructAffineProjection(posAccess, tvAccess);
+
         ir::Expr createDenseRunPart;
         auto firstDenseRun = ir::GetProperty::makeDenseLevelRun(tvExpr, 0);
-        if (util::contains(extraColorings, tv)) {
+        if (util::contains(extraColorings, tv) && !affineProjection.defined()) {
           createDenseRunPart = ir::Call::make("runtime->create_index_partition", {ctx, firstDenseRun, domain, extraColorings[tv], computePart}, Auto);
         } else {
           // Attempt to create different projections from the pos tensor
           // into the target tensor.
-          auto affineProjection = this->constructAffineProjection(posAccess, tvAccess);
           auto sparseGatherProjection = this->constructSparseGatherProjection(posAccess, tvAccess, posMode);
           if (affineProjection.defined()) {
-            createDenseRunPart = ir::MethodCall::make(affineProjection, "apply", {ctx, runtime, denseRunPartition, firstDenseRun}, false /* deref */, IndexPartition);
+            std::vector<ir::Expr> projectionArgs = {ctx, runtime, denseRunPartition, firstDenseRun};
+            if (util::contains(partitionedByOuter, tv)) {
+              auto overrides = partitionedByOuter[tv];
+              std::vector<ir::Expr> overrideExprs;
+              for (auto it : overrides) {
+                overrideExprs.push_back(Expr(it));
+              }
+              affineProjection = ir::MethodCall::make(affineProjection, "addOverrides", overrideExprs, false /* deref */, Auto);
+              projectionArgs.push_back(extraColorings[tv]);
+            }
+            createDenseRunPart = ir::MethodCall::make(affineProjection, "apply", projectionArgs, false /* deref */, IndexPartition);
           } else if (sparseGatherProjection.defined() && !isFusedPos) {
             // We can't apply a SparseGatherProjection if the position space loop is fused.
             // TODO (rohany): This is still hardcoded for the RectCompressedModeFormat.
@@ -6084,7 +6098,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     auto part = ir::Var::make(tv.getName() + "_dense_run_0_Partition", Auto);
     // TODO (rohany): Make this LEGION_COMPUTE_KIND since it is happening
     //  off of the critical path.
-    auto partKind = disjointPart;
+    auto partKind = computePart;
     // Figure out how many axes of the tensor are not being partitioned in order
     // to figure out how many axes of the tensor are being partitioned. If
     // the tensor is being partitioned in as many ways as the target loop is
