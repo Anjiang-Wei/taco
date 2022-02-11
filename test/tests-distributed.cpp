@@ -1910,16 +1910,9 @@ TEST(distributed, legionSpMTTKRP) {
   const int CHUNK_SIZE=2048;
   auto stmt = A.getAssignment().concretize();
   auto cpuStmt = stmt.reorder({i, j, k, l})
-                     .fuse(j, k, f1)
-                     .fuse(i, f1, f2)
-                     .pos(f2, fpos, B(i, j, k))
-                     .distribute({fpos}, {fposo}, {fposi}, Grid(pieces))
-                     .split(fposi, fposio, fposii, CHUNK_SIZE)
-                     .parallelize(fposio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-                     .communicate(A(i, l), fposo)
-                     .communicate(B(i, j, k), fposo)
-                     .communicate(C(j, l), fposo)
-                     .communicate(D(k, l), fposo)
+                     .distribute({i}, {io}, {ii}, Grid(pieces))
+                     .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+                     .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, io)
                      ;
 
   // Note: we use a different schedule than the one in tests-scheduling-eval.cpp that fully
