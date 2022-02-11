@@ -1811,15 +1811,10 @@ TEST(distributed, legionSpMM) {
   A(i, j) = B(i, k) * C(k, j);
   auto stmt = A.getAssignment().concretize();
   auto cpuStmt = stmt.reorder({i, k, j})
-                     .fuse(i, k, f)
-                     .pos(f, kpos, B(i, k))
-                     .distribute({kpos}, {ko}, {ki}, Grid(gx))
-                     .split(ki, iio, iii, CHUNKSIZE)
-                     .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-                     .communicate(A(i, j), ko)
-                     .communicate(B(i, k), ko)
-                     .communicate(C(k, j), ko)
-                     ;
+                  .distribute({i}, {io}, {ii}, Grid(gx))
+                  .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+                  .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                  ;
   IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
            warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
            dense_ub("dense_ub"), dense_b("dense_b");
