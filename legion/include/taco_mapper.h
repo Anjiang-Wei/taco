@@ -24,6 +24,8 @@ public:
     BACKPRESSURE_TASK = (1 << 8),
     // Force a task to be mapped to LOC or OMP procs.
     MAP_TO_OMP_OR_LOC = (1 << 9),
+    // Mark that an instance should be allocated in a compact, sparse manner.
+    SPARSE_INSTANCE = (1 << 10),
   };
 
   // Tunable values handled by the TACO mapper.

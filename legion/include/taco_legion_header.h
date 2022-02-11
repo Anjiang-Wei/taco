@@ -131,6 +131,9 @@ Legion::IndexPartition copyPartition(Legion::Context ctx, Legion::Runtime* runti
 // 1-dimensional color spaces.
 Legion::IndexPartition densifyPartition(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexSpace ispace, Legion::IndexPartition part, Legion::Color color = LEGION_AUTO_GENERATE_ID);
 
+// Create an IndexPartition where each color maps to the boundary overlap between adjacent colors.
+Legion::IndexPartition createSparseAliasingPartitions(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexSpace ispace, Legion::IndexPartition part);
+
 // Templated helper functions to potentially create accessors. These allow us to generate
 // accessors when we don't have valid PhysicalRegions without running into problems.
 template<typename T>
