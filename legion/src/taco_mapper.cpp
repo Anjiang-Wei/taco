@@ -3,6 +3,7 @@
 #include "error.h"
 #include "realm/logging.h"
 #include "legion_tensor.h"
+#include "mapping_utilities.h"
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -399,10 +400,31 @@ void TACOMapper::default_policy_select_constraints(Legion::Mapping::MapperContex
     }
   }
   // If the instance is supposed to be sparse, tell Legion we want it that way.
+  // Unfortunately because we are adjusting the SpecializedConstraint, we have to
+  // fully override the default mapper because there appears to be some undefined
+  // behavior when two specialized constraints are added.
   if ((req.tag & SPARSE_INSTANCE) != 0) {
+    taco_iassert(req.privilege != LEGION_REDUCE);
     constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
+  } else if (req.privilege == LEGION_REDUCE) {
+    // Make reduction fold instances.
+    constraints.add_constraint(SpecializedConstraint(
+                        LEGION_AFFINE_REDUCTION_SPECIALIZE, req.redop))
+      .add_constraint(MemoryConstraint(target_memory.kind()));
+  } else {
+    // Our base default mapper will try to make instances of containing
+    // all fields (in any order) laid out in SOA format to encourage
+    // maximum re-use by any tasks which use subsets of the fields
+    constraints.add_constraint(SpecializedConstraint())
+               .add_constraint(MemoryConstraint(target_memory.kind()));
+    if (constraints.field_constraint.field_set.size() == 0)
+    {
+      // Normal instance creation
+      std::vector<FieldID> fields;
+      default_policy_select_constraint_fields(ctx, req, fields);
+      constraints.add_constraint(FieldConstraint(fields,false/*contiguous*/,false/*inorder*/));
+    }
   }
-  DefaultMapper::default_policy_select_constraints(ctx, constraints, target_memory, req);
 }
 
 void TACOMapper::default_policy_select_target_processors(
