@@ -41,15 +41,19 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
 
-
   auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+
+  auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+  auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
+
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
 #ifdef TACO_USE_CUDA
-    // Collapse our reduction buffers. We only need to do this for GPUs, as the CPU schedule
-    // does not use reductions.
-    launchDummyReadOverPartition(ctx, runtime, A.vals, pack.APartition.valsPartition, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */);
+    // Collapse our reduction buffers. We use sparse instances to force just the communication
+    // that we want. We only do this for the GPU schedule, as the CPU schedule does not
+    // use Legion reductions.
+    launchDummyReadOverPartition(ctx, runtime, A.vals, commLPart, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */, false /* cpuOnly */, true /* sparse */);
 #endif
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);

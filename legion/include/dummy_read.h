@@ -15,7 +15,7 @@ launchDummyRead(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRe
 
 void launchDummyReadOverPartition(Legion::Context ctx, Legion::Runtime *runtime, Legion::LogicalRegion reg,
                                   Legion::LogicalPartition part, Legion::FieldID fid, Legion::Domain launchDim,
-                                  bool wait = false, bool untrack = false, bool cpuOnly = false);
+                                  bool wait = false, bool untrack = false, bool cpuOnly = false, bool sparse = false);
 
 void registerDummyReadTasks();
 

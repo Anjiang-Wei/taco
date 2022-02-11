@@ -398,6 +398,10 @@ void TACOMapper::default_policy_select_constraints(Legion::Mapping::MapperContex
       constraints.add_constraint(Legion::AlignmentConstraint(it, LEGION_EQ_EK, 128));
     }
   }
+  // If the instance is supposed to be sparse, tell Legion we want it that way.
+  if ((req.tag & SPARSE_INSTANCE) != 0) {
+    constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
+  }
   DefaultMapper::default_policy_select_constraints(ctx, constraints, target_memory, req);
 }
 

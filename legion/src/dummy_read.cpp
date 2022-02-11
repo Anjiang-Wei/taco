@@ -17,7 +17,7 @@ LogicalPartition launchDummyRead(Legion::Context ctx, Legion::Runtime* runtime, 
   return lpart;
 }
 
-void launchDummyReadOverPartition(Context ctx, Runtime* runtime, LogicalRegion reg, LogicalPartition part, FieldID fid, Domain launchDim, bool wait, bool untrack, bool cpuOnly) {
+void launchDummyReadOverPartition(Context ctx, Runtime* runtime, LogicalRegion reg, LogicalPartition part, FieldID fid, Domain launchDim, bool wait, bool untrack, bool cpuOnly, bool sparse) {
   IndexTaskLauncher launcher(TID_DUMMY_READ_REGION, launchDim, TaskArgument(), ArgumentMap());
   launcher.add_region_requirement(RegionRequirement(part, 0, READ_ONLY, EXCLUSIVE, reg).add_field(fid));
   if (untrack) {
@@ -25,6 +25,9 @@ void launchDummyReadOverPartition(Context ctx, Runtime* runtime, LogicalRegion r
   }
   if (cpuOnly) {
     launcher.tag |= TACOMapper::MAP_TO_OMP_OR_LOC;
+  }
+  if (sparse) {
+    launcher.region_requirements[0].tag |= TACOMapper::SPARSE_INSTANCE;
   }
   auto fut = runtime->execute_index_space(ctx, launcher);
   if (wait) {

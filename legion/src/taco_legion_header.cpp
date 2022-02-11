@@ -229,6 +229,41 @@ IndexPartition densifyPartition(Context ctx, Runtime* runtime, IndexSpace ispace
   return runtime->create_partition_by_domain(ctx, ispace, coloring, colorSpace, true /* perform_intersections */, LEGION_COMPUTE_KIND, color);
 }
 
+Legion::IndexPartition createSparseAliasingPartitions(Legion::Context ctx, Legion::Runtime* runtime, Legion::IndexSpace ispace, Legion::IndexPartition part) {
+  DomainPointColoring coloring;
+  auto colorSpace = runtime->get_index_partition_color_space_name(ctx, part);
+  auto colorSpaceDom = runtime->get_index_space_domain(ctx, colorSpace);
+  taco_iassert(colorSpaceDom.dim == 1);
+  auto pieces = colorSpaceDom.get_volume();
+  for (PointInDomainIterator<1> itr(colorSpaceDom); itr(); itr++) {
+    size_t i = *itr;
+    auto subreg = runtime->get_index_subspace(ctx, part, i);
+    auto subregDomain = runtime->get_index_space_domain(ctx, subreg);
+    Domain prevDomain, nextDomain;
+    if (i > 0) {
+      auto prev = runtime->get_index_subspace(ctx, part, i - 1);
+      auto dom = runtime->get_index_space_domain(ctx, prev);
+      prevDomain = dom.intersection(subregDomain);
+    }
+    if (i < pieces - 1) {
+      auto next = runtime->get_index_subspace(ctx, part, i + 1);
+      auto dom = runtime->get_index_space_domain(ctx, next);
+      nextDomain = dom.intersection(subregDomain);
+    }
+    std::vector<IndexSpace> toUnion;
+    if (prevDomain.exists()) {
+      toUnion.push_back(runtime->create_index_space(ctx, prevDomain));
+    }
+    if (nextDomain.exists()) {
+      toUnion.push_back(runtime->create_index_space(ctx, nextDomain));
+    }
+    auto result = runtime->union_index_spaces(ctx, toUnion);
+    auto resultDomain = runtime->get_index_space_domain(ctx, result);
+    coloring[i] = resultDomain;
+  }
+  return runtime->create_index_partition(ctx, ispace, colorSpaceDom, coloring);
+}
+
 // We have to include this separate definition out here to make the linker happy, as per
 // https://stackoverflow.com/questions/4891067/weird-undefined-symbols-of-static-constants-inside-a-struct-class.
 const int AffineProjection::BOT = -1;
