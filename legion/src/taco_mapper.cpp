@@ -411,6 +411,11 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
   if ((task.tag & UNTRACK_VALID_REGIONS) != 0 && this->untrackValidRegions) {
     for (size_t i = 0; i < task.regions.size(); i++) {
       auto &rg = task.regions[i];
+      // TODO (rohany): I only set i == 4 here so that the C region in the SpMM computation
+      //  gets collected instead of any of the other regions, which forces the regions to get
+      //  loaded from disks intead of remaining in FB memory. I need to investigate what
+      //  happens if I create long lasting instances with an explicit dummy read and then 
+      //  run with untraked all. I don't think that helps here too...
       if (rg.privilege == READ_ONLY && i == 4) {
         output.untracked_valid_regions.insert(i);
       }
