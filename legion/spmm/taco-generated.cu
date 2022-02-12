@@ -192,7 +192,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
@@ -221,14 +221,14 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
 partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
 
@@ -236,7 +236,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 3) / 4); jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -258,15 +258,15 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
         B2CrdRect = B2CrdRect.make_empty();
       }
       B2_crd_coloring[(*itr)] = B2CrdRect;
-      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 4));
-      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension),ADomain.hi()[0]), TACO_MIN((jo * 4 + 3),ADomain.hi()[1]));
+      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 8));
+      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension),ADomain.hi()[0]), TACO_MIN((jo * 8 + 7),ADomain.hi()[1]));
       Rect<2> ARect = Rect<2>(AStart, AEnd);
       if (!ADomain.contains(ARect.lo) || !ADomain.contains(ARect.hi)) {
         ARect = ARect.make_empty();
       }
       AColoring[(*itr)] = ARect;
-      Point<2> CStart = Point<2>(0, (jo * 4));
-      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1),CDomain.hi()[0]), TACO_MIN((jo * 4 + 3),CDomain.hi()[1]));
+      Point<2> CStart = Point<2>(0, (jo * 8));
+      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1),CDomain.hi()[0]), TACO_MIN((jo * 8 + 7),CDomain.hi()[1]));
       Rect<2> CRect = Rect<2>(CStart, CEnd);
       if (!CDomain.contains(CRect.lo) || !CDomain.contains(CRect.hi)) {
         CRect = CRect.make_empty();
@@ -355,8 +355,8 @@ void task_2DeviceKernel0(int64_t B2Size, int64_t fposo, int32_t gx, int64_t* i_b
       i_pos = i_pos + 1;
       i = i_pos;
     }
-    for (int64_t ji = 0; ji < 4; ji++) {
-      int64_t j = jo * 4 + ji;
+    for (int64_t ji = 0; ji < 8; ji++) {
+      int64_t j = jo * 8 + ji;
       if (j >= C2_dimension)
         break;
 
@@ -423,13 +423,13 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   auto B2_crd_parent = B->indicesParents[1][1];
   RegionWrapper B_vals = B->vals;
   auto B_vals_parent = B->valsParent;
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 3) / 4); jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));

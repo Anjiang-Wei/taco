@@ -1846,7 +1846,7 @@ TEST(distributed, legionSpMM) {
   auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
   auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
 
-  const int BATCH_SIZE = 4;
+  const int BATCH_SIZE = 8;
   // Schedule to conserve memory (i.e. not replicate C onto all nodes).
   auto cpuCons = stmt.split(j, jo, ji, BATCH_SIZE)
                       // TODO (rohany): Let's switch this back to a pos split to check the reduction instance stuff.

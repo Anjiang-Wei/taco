@@ -411,7 +411,7 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
   if ((task.tag & UNTRACK_VALID_REGIONS) != 0 && this->untrackValidRegions) {
     for (size_t i = 0; i < task.regions.size(); i++) {
       auto &rg = task.regions[i];
-      if (rg.privilege == READ_ONLY) {
+      if (rg.privilege == READ_ONLY && i == 4) {
         output.untracked_valid_regions.insert(i);
       }
     }
