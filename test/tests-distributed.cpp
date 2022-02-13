@@ -1613,8 +1613,8 @@ TEST(distributed, legionSpMV) {
   }, Configuration::CSC_SP_C);
 
   // CUDA schedules. These are set up so that we can use the same main.cpp file.
-  const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
-  const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
+  // const int ROWS_PER_WARP = 1, BLOCK_SIZE = 256, WARP_SIZE = 32;
+  // const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
   IndexVar block("block"), warp("warp"), thread("thread"), thread_nz("thread_nz"), i1("i1"), block_row("block_row"), warp_row("warp_row");
   // Due to mysterious and currently unresolved issues, the performance of this schedule
   // is just not good enough for submission. We'll instead use CuSparse at the leaves.
@@ -1641,7 +1641,7 @@ TEST(distributed, legionSpMV) {
                .swapLeafKernel(ii, call)
                ;
   }, Configuration::CSR, true /* cuda */);
-  const int NNZ_PER_THREAD = 8;
+  const int NNZ_PER_THREAD = 8, BLOCK_SIZE = 256, WARP_SIZE = 32;
   const int NNZ_PER_WARP = NNZ_PER_THREAD * WARP_SIZE;
   const int NNZ_PER_TB = NNZ_PER_THREAD * BLOCK_SIZE;
   IndexVar fpos1("fpos1"), fpos2("fpos2"), thread_nz_pre("thread_nz_pre");
@@ -1806,7 +1806,6 @@ TEST(distributed, legionSpMM) {
   Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
   Tensor<double> C("C", {dim, dim}, Format{Dense, Dense});
 
-  const int CHUNKSIZE = 2048;
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"), iii("iii");
   A(i, j) = B(i, k) * C(k, j);
   auto stmt = A.getAssignment().concretize();
@@ -1897,23 +1896,49 @@ TEST(distributed, legionSpSDDMM) {
 
 TEST(distributed, legionSpMTTKRP) {
   int dim = 1000;
-  Tensor<double> A("A", {dim, dim}, Dense);
-  Tensor<double> B("B", {dim, dim, dim}, LgFormat({Dense, LgSparse, LgSparse}));
-  Tensor<double> C("C", {dim, dim}, Dense);
-  Tensor<double> D("D", {dim, dim}, Dense);
 
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), k("k"), l("l");
   IndexVar io("io"), ii("ii");
   IndexVar f1("f1"), f2("f2"), fpos("fpos"), fposo("fposo"), fposi("fposi"), fposio("fposio"), fposii("fposii");
-  A(i, l) = B(i, j, k) * C(j, l) * D(k, l);
-  const int CHUNK_SIZE=2048;
-  auto stmt = A.getAssignment().concretize();
-  auto cpuStmt = stmt.reorder({i, j, k, l})
-                     .distribute({i}, {io}, {ii}, Grid(pieces))
-                     .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-                     .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, io)
-                     ;
+
+  std::vector<ir::Stmt> stmts;
+  std::vector<ir::Stmt> gpuStmts;
+  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D)> sched, bool DDS = false, bool cuda = false) {
+    Tensor<double> A("A", {dim, dim}, Dense);
+    auto format = LgFormat({Dense, LgSparse, LgSparse});
+    if (DDS) {
+      format = LgFormat({Dense, Dense, LgSparse});
+    }
+    Tensor<double> B("B", {dim, dim, dim}, format);
+    Tensor<double> C("C", {dim, dim}, Dense);
+    Tensor<double> D("D", {dim, dim}, Dense);
+    A(i, l) = B(i, j, k) * C(j, l) * D(k, l);
+    auto stmt = sched(A.getAssignment().concretize(), A, B, C, D);
+    if (cuda) {
+      gpuStmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+    } else {
+      stmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
+    }
+  };
+
+
+  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
+    return stmt.reorder({i, j, k, l})
+               .distribute({i}, {io}, {ii}, Grid(pieces))
+               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+               .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, io)
+               ;
+  });
+  IndexVar jo("jo"), ji("ji");
+  auto pieces2 = ir::Var::make("pieces2", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  add("DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
+    return stmt.reorder({i, j, k, l})
+               .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))
+               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
+               .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, jo)
+               ;
+  }, true /* DDS */);
 
   // Note: we use a different schedule than the one in tests-scheduling-eval.cpp that fully
   // parallelizes the loop over the non-zeros instead of parallelizing the inner l loop over
@@ -1927,26 +1952,26 @@ TEST(distributed, legionSpMTTKRP) {
   const int NNZ_PER_BLOCK = NNZ_PER_THREAD * BLOCK_SIZE;
   IndexVar block("block"), fposi1("fposi1"), fposi2("fposi2"), thread("thread"), warp("warp"),
            dense_b("dense_b"), nnz("nnz"), thread_nz("thread_nz");
-  auto gpuStmt = stmt.reorder({i, j, k, l})
-                     .fuse(j, k, f1)
-                     .fuse(i, f1, f2)
-                     .pos(f2, fpos, B(i, j, k))
-                     .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-                     .split(fposi, block, fposi1, NNZ_PER_BLOCK)
-                     .split(fposi1, warp, fposi2, NNZ_PER_WARP)
-                     .split(fposi2, thread, thread_nz, NNZ_PER_THREAD)
-                     .reorder({block, warp, thread, thread_nz})
-                     // TODO (rohany): A small benefit can be gained by precomputing the result
-                     //  over the l loop into a temporary, but breaks some pieces of TACO.
-                     .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
-                     .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
-                     .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
-                     .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, fposo)
-                     ;
-  auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spmttkrp/", loweredCPU);
-  ir::CodegenLegionCuda::compileToDirectory("../legion/spmttkrp/", loweredGPU);
+  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
+    return stmt.reorder({i, j, k, l})
+               .fuse(j, k, f1)
+               .fuse(i, f1, f2)
+               .pos(f2, fpos, B(i, j, k))
+               .distribute({fpos}, {fposo}, {fposi}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+               .split(fposi, block, fposi1, NNZ_PER_BLOCK)
+               .split(fposi1, warp, fposi2, NNZ_PER_WARP)
+               .split(fposi2, thread, thread_nz, NNZ_PER_THREAD)
+               .reorder({block, warp, thread, thread_nz})
+               // TODO (rohany): A small benefit can be gained by precomputing the result
+               //  over the l loop into a temporary, but breaks some pieces of TACO.
+               .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+               .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+               .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, fposo)
+               ;
+  }, false /* DDS */, true /* cuda */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spmttkrp/", ir::Block::make(stmts));
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spmttkrp/", ir::Block::make(gpuStmts));
 }
 
 TEST(distributed, legionSpFormatConverterLib) {

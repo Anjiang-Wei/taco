@@ -13,7 +13,7 @@ typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string fileName;
-  bool dump = false;
+  bool dump = false, dds = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
   int n = 10, pieces = 0, warmup = 5, lDim = 32;
@@ -24,6 +24,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   parser.add_option_int("-ldim", lDim);
+  parser.add_option_int("-dds", dds);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!fileName.empty()) << "Provide a tensor with -tensor";
@@ -35,7 +36,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
 
   LegionTensor B; ExternalHDF5LegionTensor Bex;
-  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileName, {Dense, Sparse, Sparse});
+  LegionTensorFormat format = {Dense, Sparse, Sparse};
+  if (dds) {
+    format = {Dense, Dense, Sparse};
+  }
+  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileName, format);
   auto A = createDenseTensor<2, valType>(ctx, runtime, {B.dims[0], lDim}, FID_VAL);
   auto C = createDenseTensor<2, valType>(ctx, runtime, {B.dims[1], lDim}, FID_VAL);
   auto D = createDenseTensor<2, valType>(ctx, runtime, {B.dims[2], lDim}, FID_VAL);
@@ -43,13 +48,24 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
   runtime->fill_field(ctx, D.vals, D.valsParent, FID_VAL, valType(1));
 
-  auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
+  partitionPackForcomputeLegion pack;
+  partitionPackForcomputeLegionDDS packDDS;
+  if (dds) {
+    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces);
+  } else {
+    pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
+  }
+
   auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
   auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
-    computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
+    if (dds) {
+      computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces);
+    } else {
+      computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
+    }
 #ifdef TACO_USE_CUDA
     // Collapse our reduction buffers.
     launchDummyReadOverPartition(ctx, runtime, A.vals, commLPart, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */, false /* cpuOnly */, true /* sparse */);
