@@ -51,7 +51,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   partitionPackForcomputeLegion pack;
   partitionPackForcomputeLegionDDS packDDS;
   if (dds) {
-    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces);
+    // TODO (rohany): Experiment with the right grid size here.
+    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces, 1);
   } else {
     pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
   }
@@ -62,7 +63,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (dds) {
-      computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces);
+      // TODO (rohany): Experiment with the right grid size here.
+      computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces, 1);
     } else {
       computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
     }

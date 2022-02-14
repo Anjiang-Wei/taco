@@ -2,6 +2,7 @@
 #include "taco/format.h"
 #include "taco/tensor.h"
 #include "taco/index_notation/index_notation.h"
+#include "taco/index_notation/index_notation_nodes.h"
 #include "taco/index_notation/distribution.h"
 #include "taco/lower/lower.h"
 #include "codegen/codegen.h"
@@ -11,6 +12,7 @@
 
 #include "taco/index_notation/transformations.h"
 #include "taco/index_notation/provenance_graph.h"
+#include "taco/index_notation/index_notation_rewriter.h"
 
 #include "taco/ir/simplify.h"
 
@@ -1896,6 +1898,7 @@ TEST(distributed, legionSpSDDMM) {
 
 TEST(distributed, legionSpMTTKRP) {
   int dim = 1000;
+  int ldim = 32;
 
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   IndexVar i("i"), j("j"), k("k"), l("l");
@@ -1904,17 +1907,20 @@ TEST(distributed, legionSpMTTKRP) {
 
   std::vector<ir::Stmt> stmts;
   std::vector<ir::Stmt> gpuStmts;
-  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D)> sched, bool DDS = false, bool cuda = false) {
-    Tensor<double> A("A", {dim, dim}, Dense);
+  auto add = [&](std::string funcName, std::function<IndexStmt(IndexStmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D, IndexExpr precomputed, IndexExpr acc)> sched, bool DDS = false, bool cuda = false) {
+    Tensor<double> A("A", {dim, ldim}, Dense);
     auto format = LgFormat({Dense, LgSparse, LgSparse});
     if (DDS) {
       format = LgFormat({Dense, Dense, LgSparse});
     }
     Tensor<double> B("B", {dim, dim, dim}, format);
-    Tensor<double> C("C", {dim, dim}, Dense);
-    Tensor<double> D("D", {dim, dim}, Dense);
-    A(i, l) = B(i, j, k) * C(j, l) * D(k, l);
-    auto stmt = sched(A.getAssignment().concretize(), A, B, C, D);
+    Tensor<double> C("C", {dim, ldim}, Dense);
+    Tensor<double> D("D", {dim, ldim}, Dense);
+    auto precomputed = B(i, j, k) * C(j, l) * D(k, l);
+    auto acc = A(i, l);
+    acc = precomputed;
+    auto stmt = sched(A.getAssignment().concretize(), A, B, C, D, precomputed, acc);
+    std::cout << stmt << std::endl;
     if (cuda) {
       gpuStmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
     } else {
@@ -1923,21 +1929,57 @@ TEST(distributed, legionSpMTTKRP) {
   };
 
 
-  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
+  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D, IndexExpr, IndexExpr) {
     return stmt.reorder({i, j, k, l})
                .distribute({i}, {io}, {ii}, Grid(pieces))
                .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
                .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, io)
                ;
   });
-  IndexVar jo("jo"), ji("ji");
+  IndexVar jo("jo"), ji("ji"), jio("jio"), jii("jii"), lw("lw");
   auto pieces2 = ir::Var::make("pieces2", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  add("DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
-    return stmt.reorder({i, j, k, l})
-               .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))
-               .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
-               .communicate({A(i, l), B(i, j, k), C(j, l), D(k, l)}, jo)
-               ;
+  add("DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D, IndexExpr precomputedExpr, IndexExpr acc) {
+    const int CHUNK_SIZE=1024;
+    TensorVar precomputed("precomputed", Type(Float64, {ldim}), taco::dense);
+    auto postSplit = stmt.reorder({i, j, k, l})
+                         .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))
+                         .split(ji, jio, jii, CHUNK_SIZE)
+                         // This is pretty gross, but we have to use lw instaed of l here.
+                         .communicate({A(i, l), B(i, j, k), C(j, lw), D(k, lw)}, jo)
+                         ;
+    // Manually schedule our precompute. We have to do this because the precompute command is not
+    // smart enough right now to understand how to do the precompute that we want.
+    auto st = to<SuchThat>(postSplit);
+    auto fdistFused = to<Forall>(st.getStmt());
+    auto fii = to<Forall>(fdistFused.getStmt());
+    auto fjio = to<Forall>(fii.getStmt());
+    // We annoyingly cannot use the standard `replace` function as that does not traverse
+    // into the LHS sides of assignments.
+    struct Replacer : public IndexNotationRewriter {
+      Replacer(Access* access, Access* repl) : targetAccess(access), replaceWith(repl) {}
+      void visit(const AssignmentNode* node) {
+        if (node->lhs == (*this->targetAccess)) {
+          stmt = new AssignmentNode(*this->replaceWith, node->rhs, node->op);
+        } else {
+          stmt = node;
+        }
+      }
+      Access* targetAccess;
+      Access* replaceWith;
+    };
+    Access target = A(i, l);
+    Access precomp = precomputed(l);
+    Replacer r(&target, &precomp);
+    auto replA = r.rewrite(fjio.getStmt());
+    auto repll = replace(replA, {{l, lw}});
+    auto producer = to<Forall>(repll);
+    auto consumer = Forall(l, Assignment(A(i, l), precomputed(l), Add()));
+    auto where = Where(consumer, producer);
+    auto newfjio = Forall(fjio.getIndexVar(), where, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces, {}, {}, 0);
+    auto newfii = Forall(fii.getIndexVar(), newfjio);
+    auto newfdistFused = Forall(fdistFused.getIndexVar(), newfii, fdistFused.getParallelUnit(), fdistFused.getOutputRaceStrategy(), fdistFused.getTransfers(), fdistFused.getComputingOn(), fdistFused.getUnrollFactor());
+    auto newst = SuchThat(newfdistFused, st.getPredicate(), st.getCalls());
+    return newst;
   }, true /* DDS */);
 
   // Note: we use a different schedule than the one in tests-scheduling-eval.cpp that fully
@@ -1952,7 +1994,7 @@ TEST(distributed, legionSpMTTKRP) {
   const int NNZ_PER_BLOCK = NNZ_PER_THREAD * BLOCK_SIZE;
   IndexVar block("block"), fposi1("fposi1"), fposi2("fposi2"), thread("thread"), warp("warp"),
            dense_b("dense_b"), nnz("nnz"), thread_nz("thread_nz");
-  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D) {
+  add("", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D, IndexExpr, IndexExpr) {
     return stmt.reorder({i, j, k, l})
                .fuse(j, k, f1)
                .fuse(i, f1, f2)

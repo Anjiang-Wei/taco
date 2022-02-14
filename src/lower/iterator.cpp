@@ -758,7 +758,7 @@ Iterator Iterators::getLevelIteratorByModeAccess(ModeAccess modeAccess) const
 {
   taco_iassert(content != nullptr);
   taco_iassert(util::contains(content->levelIterators, modeAccess))
-      << "Cannot find " << modeAccess << " in "
+      << "Cannot find " << modeAccess.getAccess() << "," << modeAccess.getModePos() << " in "
       << util::join(content->levelIterators);
   return content->levelIterators.at(modeAccess);
 }
