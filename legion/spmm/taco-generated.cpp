@@ -38,13 +38,13 @@ struct task_3Args {
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
 
   auto computePartitions = partitionPackForcomputeLegion();
@@ -150,14 +150,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 }
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegion* partitionPack, int32_t gx) {
-  int A2_dimension = A->dims[1];
+  size_t A2_dimension = A->dims[1];
   auto A_vals_parent = A->valsParent;
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
@@ -239,8 +239,8 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
   RegionWrapper A_vals = A->vals;
   auto A_vals_parent = A->valsParent;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
@@ -248,7 +248,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
   RegionWrapper B_vals = B->vals;
   auto B_vals_parent = B->valsParent;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
@@ -257,7 +257,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 3) / 4); jo++) {
+  for (int64_t jo = 0; jo < C2_dimension; jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -279,15 +279,15 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
         B2CrdRect = B2CrdRect.make_empty();
       }
       B2_crd_coloring[(*itr)] = B2CrdRect;
-      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 4));
-      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension), ADomain.hi()[0]), TACO_MIN((jo * 4 + 3), ADomain.hi()[1]));
+      Point<2> AStart = Point<2>((0 / B2_dimension), jo);
+      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension), ADomain.hi()[0]), TACO_MIN(jo, ADomain.hi()[1]));
       Rect<2> ARect = Rect<2>(AStart, AEnd);
       if (!ADomain.contains(ARect.lo) || !ADomain.contains(ARect.hi)) {
         ARect = ARect.make_empty();
       }
       AColoring[(*itr)] = ARect;
-      Point<2> CStart = Point<2>(0, (jo * 4));
-      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1), CDomain.hi()[0]), TACO_MIN((jo * 4 + 3), CDomain.hi()[1]));
+      Point<2> CStart = Point<2>(0, jo);
+      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1), CDomain.hi()[0]), TACO_MIN(jo, CDomain.hi()[1]));
       Rect<2> CRect = Rect<2>(CStart, CEnd);
       if (!CDomain.contains(CRect.lo) || !CDomain.contains(CRect.hi)) {
         CRect = CRect.make_empty();
@@ -401,12 +401,12 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     }
     int64_t iA = i;
     int64_t kC = k;
-    for (int64_t ji = 0; ji < 4; ji++) {
-      int64_t j = jo * 4 + ji;
+    for (int64_t ji = 0; ji < 1; ji++) {
+      int64_t j = jo + ji;
       if (j >= C2_dimension)
         continue;
 
-      int64_t pointID3 = pointID2 * 4 + ji;
+      int64_t pointID3 = pointID2 * 1 + ji;
       int64_t jA = iA * A2_dimension + j;
       int64_t jC = kC * C2_dimension + j;
       A_vals_red_accessor[Point<2>(i, j)] <<= B_vals_ro_accessor[Point<1>(fposB)] * C_vals_ro_accessor[Point<2>(k, j)];
@@ -415,7 +415,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 }
 
 void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegionBatched* partitionPack, int32_t gx) {
-  int A2_dimension = A->dims[1];
+  size_t A2_dimension = A->dims[1];
   RegionWrapper A_vals = A->vals;
   auto A_vals_parent = A->valsParent;
   RegionWrapper B2_pos = B->indices[1][0];
@@ -424,13 +424,13 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
   auto B2_crd_parent = B->indicesParents[1][1];
   RegionWrapper B_vals = B->vals;
   auto B_vals_parent = B->valsParent;
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 3) / 4); jo++) {
+  for (int64_t jo = 0; jo < C2_dimension; jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -458,19 +458,19 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_2>(registrar, "task_2");
   }
   {
     TaskVariantRegistrar registrar(taskID(3), "task_3");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_3>(registrar, "task_3");
   }

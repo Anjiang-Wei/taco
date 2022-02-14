@@ -29,6 +29,7 @@ void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Proc
 
   if (backpressure || oneMapperPerNode) {
     auto proc = *local_procs.begin();
+    std::cout << "ONLY 1 MAPPER PER NODE" << std::endl;
 #ifdef TACO_USE_LOGGING_MAPPER
     runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName)), Processor::NO_PROC);
 #else
@@ -142,6 +143,11 @@ void TACOMapper::select_task_options(const Legion::Mapping::MapperContext ctx,
   if (this->multipleShardsPerNode && task.get_depth() == 0) {
     output.replicate = true;
   }
+
+  std::cout << "Task {" << task.get_task_name() << ", " << task.get_unique_id() << "} has select task options result: "
+            << "{ initial_proc: " << output.initial_proc << ", inline_task: " << output.inline_task << ", stealable: " << output.stealable
+            << ", map_locally: " << output.map_locally << ", valid_instances: " << output.valid_instances << ", memoize: " << output.memoize
+            << ", replicate: " << output.replicate << ", parent_priority: " << output.parent_priority << "}" << std::endl; 
 }
 
 void TACOMapper::map_task_impl(const Legion::Mapping::MapperContext ctx, const Legion::Task &task,
@@ -405,6 +411,14 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
                           const Legion::Task &task,
                           const MapTaskInput &input,
                           MapTaskOutput &output) {
+  std::cout << "Mapping task: " << task.get_task_name() << " " << task.get_unique_id() << " " << task.is_index_space << " " << task.index_point << std::endl;
+  // std::stringstream ss;
+  // ss << "{";
+  // for (size_t idx = 0; idx < task.regions.size(); idx++) {
+  //   ss << Utilities::to_string(runtime, ctx, task.regions[idx], idx) << ", ";
+  // }
+  // ss << "}";
+  // std::cout << "Task has regs: " << ss.str() << std::endl;
   this->map_task_impl(ctx, task, input, output);
   // If the tag is marked for untracked valid regions, then mark all of its
   // read only regions as up for collection.
@@ -423,6 +437,7 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
   }
   // Mark that we want profiling from this task if we're supposed to backpressure it.
   if ((task.tag & BACKPRESSURE_TASK) != 0 && this->enableBackpressure) {
+    std::cout << "Requesting profiling info for task: "  << task.get_task_name() << " " << task.get_unique_id() << std::endl;
     output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
   }
 }
@@ -862,11 +877,23 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
         taco_iassert(false);
     }
   }
+  std::cout  << "SLICE_TASK for "
+             << Utilities::to_string(runtime, ctx, task, false /*include_index_point*/)
+             << " <" << task.get_unique_id() << ">" << std::endl;
+  std::cout << "  INPUT: " << Utilities::to_string(runtime, ctx, input.domain) << std::endl;
+  std::cout << "  OUTPUT:" << std::endl;
+  for (std::vector<TaskSlice>::const_iterator it = output.slices.begin();
+       it != output.slices.end(); ++it) {
+    std::cout << "    " << Utilities::to_string(runtime, ctx, it->domain)
+               << " -> " << it->proc << std::endl;
+  }
+
 }
 
 void TACOMapper::report_profiling(const MapperContext ctx,
                                   const Task& task,
                                   const TaskProfilingInfo& input) {
+  std::cout << "In profiling result for task: " << task.get_task_name() << " " << task.get_unique_id() << std::endl;
   // We should only get profiling responses if we've enabled backpressuring.
   taco_iassert(this->enableBackpressure);
   // We should only get profiling responses for tasks that are supposed to be backpressured.
@@ -878,7 +905,15 @@ void TACOMapper::report_profiling(const MapperContext ctx,
   delete prof;
   // Backpressured tasks are launched in a loop, and are kept on the originating processor.
   // So, we'll use orig_proc to index into the queue.
-  auto& inflight = this->backPressureQueue[task.orig_proc];
+  // auto& inflight = this->backPressureQueue[task.orig_proc];
+  auto& inflight = this->backPressureQueue[task.target_proc];
+  std::stringstream ss;
+  ss << "{ ";
+  for (auto it : this->backPressureQueue[task.target_proc]) {
+    ss << it.id << ", ";
+  }
+  ss << "}";
+  std::cout << "For proc: " << task.target_proc << " inflight " << ss.str() << std::endl;
   MapperEvent event;
   // Find this task in the queue.
   for (auto it = inflight.begin(); it != inflight.end(); it++) {
@@ -887,6 +922,9 @@ void TACOMapper::report_profiling(const MapperContext ctx,
       inflight.erase(it);
       break;
     }
+  }
+  if (!event.exists()) {
+    std::cout << std::string(task.get_task_name()) << " " << task.index_point << " "  << task.get_unique_id() << " " << task.orig_proc << " " << task.target_proc << " " << task.current_proc << " " << inflight.size() << std::endl;
   }
   // Assert that we found a valid event.
   taco_iassert(event.exists());
@@ -899,6 +937,13 @@ void TACOMapper::report_profiling(const MapperContext ctx,
 void TACOMapper::select_tasks_to_map(const MapperContext ctx,
                                      const SelectMappingInput& input,
                                            SelectMappingOutput& output) {
+  {
+    std::stringstream ss;
+    for (auto it : input.ready_tasks) {
+      ss << "{ " << it->get_task_name() << " " << it->get_unique_id() << "}, ";
+    }
+    std::cout << "Entering call to select_tasks_to_map, have tasks: " << ss.str() << std::endl;
+  }
   if (!this->enableBackpressure) {
     DefaultMapper::select_tasks_to_map(ctx, input, output);
   } else {
@@ -928,11 +973,22 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
     {
       auto task = *it;
       bool schedule = true;
+      if (std::string(task->get_task_name()) == "task_2") {
+        taco_iassert((task->tag & BACKPRESSURE_TASK) != 0);
+      }
       if ((task->tag & BACKPRESSURE_TASK) != 0) {
         // See how many tasks we have in flight. Again, we use the orig_proc here
         // rather than target_proc to match with our heuristics for where serial task
         // launch loops go.
-        auto inflight = this->backPressureQueue[task->orig_proc];
+        // auto inflight = this->backPressureQueue[task->orig_proc];
+        auto inflight = this->backPressureQueue[task->target_proc];
+        std::stringstream ss;
+        ss << "{ ";
+        for (auto it : this->backPressureQueue[task->target_proc]) {
+          ss << it.id << ", ";
+        }
+        ss << "}";
+        std::cout << "Inflight for task: " << task->get_task_name() << " " << task->get_unique_id() << " " << ss.str() << std::endl;
         if (inflight.size() == this->maxInFlightTasks) {
           // We've hit the cap, so we can't schedule any more tasks.
           schedule = false;
@@ -947,16 +1003,32 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
         } else {
           // Otherwise, we can schedule the task. Create a new event
           // and queue it up on the processor.
-          this->backPressureQueue[task->orig_proc].push_back({
+          std::cout << "Adding event to execution queue " << std::string(task->get_task_name()) << " " << task->index_point << " " << task->orig_proc << " " << task->target_proc << " " << task->current_proc << " " << task->is_index_space << " " << task->index_point << std::endl;
+          this->backPressureQueue[task->target_proc].push_back({
             .id = task->get_unique_id(),
             .event = this->runtime->create_mapper_event(ctx),
             .schedTime = schedTime,
           });
+          std::stringstream ss;
+          ss << "{ ";
+          for (auto it : this->backPressureQueue[task->target_proc]) {
+            ss << it.id << ", ";
+          }
+          ss << "}";
+          std::cout << "target proc " << task->target_proc << " -> " << ss.str() << std::endl;
         }
       }
       // Schedule tasks that are valid and have the target depth.
       if (schedule && (*it)->get_depth() == max_depth)
       {
+        std::cout << "Adding task to map task output: " << (*it)->get_task_name() << " " << (*it)->get_unique_id() << std::endl;
+        std::stringstream ss;
+        ss << "{";
+        for (size_t idx = 0; idx < task->regions.size(); idx++) {
+          ss << Utilities::to_string(runtime, ctx, task->regions[idx], idx) << ", ";
+        }
+        ss << "}";
+        std::cout << "Task has regs: " << ss.str() << std::endl;
         output.map_tasks.insert(*it);
         count++;
       }
