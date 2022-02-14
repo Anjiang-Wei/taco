@@ -2157,37 +2157,72 @@ TEST(distributed, legionSpInnerProd) {
 
   IndexVar i("i"), j("j"), k("k"), io("io"), ii("ii"), iio("iio"), iii("iii");
   auto pieces = ir::Var::make("pieces", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
-  IndexStmt cpuStmt, gpuStmt;
+  auto pieces2 = ir::Var::make("pieces2", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
+  IndexStmt cpuStmt, cpuDDSStmt, gpuStmt, gpuDDSStmt;
   {
-    auto CHUNK_SIZE= 1024;
-    a() = B(i, j, k) * C(i, j, k);
-    cpuStmt = a.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, Grid(pieces))
-               .split(ii, iio, iii, CHUNK_SIZE)
-               .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
-               .communicate({B(i, j, k), C(i, j, k)}, io)
-               ;
+     auto CHUNK_SIZE= 1024;
+     a() = B(i, j, k) * C(i, j, k);
+     cpuStmt = a.getAssignment().concretize()
+                .distribute({i}, {io}, {ii}, Grid(pieces))
+                .split(ii, iio, iii, CHUNK_SIZE)
+                .parallelize(iio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+                .communicate({B(i, j, k), C(i, j, k)}, io)
+                ;
   }
   {
-    auto BLOCK_SIZE=256;
-    IndexVar block("block"), thread("thread");
-    a() = B(i, j, k) * C(i, j, k);
-    gpuStmt = a.getAssignment().concretize()
-               .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
-               .split(ii, block, thread, BLOCK_SIZE)
-               // Note that we have to first apply the thread parallelization before
-               // the block parallelization to get around a quirk in the parallelize
-               // command that incorrectly hoists scalars out of GPU parallel loops.
-               .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::ParallelReduction)
-               .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::Atomics)
-               .communicate({B(i, j, k), C(i, j, k)}, io)
-               ;
+     IndexVar jo("jo"), ji("ji"), jio("jio"), jii("jii");
+     Tensor<double> B2("B", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
+     Tensor<double> C2("C", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
+     auto CHUNK_SIZE= 1024;
+     a() = B2(i, j, k) * C2(i, j, k);
+     cpuDDSStmt = a.getAssignment().concretize()
+                   .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))
+                   .split(ji, jio, jii, CHUNK_SIZE)
+                   .parallelize(jio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+                   .communicate({B2(i, j, k), C2(i, j, k)}, jo)
+                   ;
+  }
+  {
+     auto BLOCK_SIZE=256;
+     IndexVar block("block"), thread("thread");
+     a() = B(i, j, k) * C(i, j, k);
+     gpuStmt = a.getAssignment().concretize()
+                .distribute({i}, {io}, {ii}, Grid(pieces), taco::ParallelUnit::DistributedGPU)
+                .split(ii, block, thread, BLOCK_SIZE)
+                // Note that we have to first apply the thread parallelization before
+                // the block parallelization to get around a quirk in the parallelize
+                // command that incorrectly hoists scalars out of GPU parallel loops.
+                .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::ParallelReduction)
+                .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::Atomics)
+                .communicate({B(i, j, k), C(i, j, k)}, io)
+                ;
+  }
+  {
+     auto BLOCK_SIZE=256;
+     IndexVar block("block"), thread("thread");
+     Tensor<double> B2("B", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
+     Tensor<double> C2("C", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
+     IndexVar jo("jo"), ji("ji"), f("f");
+     a() = B2(i, j, k) * C2(i, j, k);
+     gpuDDSStmt = a.getAssignment().concretize()
+                   .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2), taco::ParallelUnit::DistributedGPU)
+                   .fuse(ii, ji, f)
+                   .split(f, block, thread, BLOCK_SIZE)
+                   // Note that we have to first apply the thread parallelization before
+                   // the block parallelization to get around a quirk in the parallelize
+                   // command that incorrectly hoists scalars out of GPU parallel loops.
+                   .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::ParallelReduction)
+                   .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::Atomics)
+                   .communicate({B2(i, j, k), C2(i, j, k)}, io)
+                   ;
   }
 
   auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spinnerprod/", loweredCPU);
+  auto loweredCPUDDS = lowerLegionSeparatePartitionCompute(cpuDDSStmt, "computeLegionDDS", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spinnerprod/", ir::Block::make(loweredCPU, loweredCPUDDS));
   auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionCuda::compileToDirectory("../legion/spinnerprod/", loweredGPU);
+  auto loweredGPUDDS = lowerLegionSeparatePartitionCompute(gpuDDSStmt, "computeLegionDDS", false /* waitOnFutureMap */);
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spinnerprod/", ir::Block::make(loweredGPU, loweredGPUDDS));
 }
 
 TEST(distributed, legionSpVecAdd) {

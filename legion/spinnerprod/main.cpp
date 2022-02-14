@@ -13,7 +13,7 @@ typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string fileNameB, fileNameC;
-  bool dump = false;
+  bool dump = false, dds = false;
   int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensorB", fileNameB);
@@ -22,6 +22,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-n", n);
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
+  parser.add_option_bool("-dds", dds);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!fileNameB.empty()) << "Provide the B matrix with -tensorB";
@@ -34,14 +35,30 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
 
   LegionTensor B, C; ExternalHDF5LegionTensor Bex, Cex;
-  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameB, {Dense, Sparse, Sparse});
-  std::tie(C, Cex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameC, {Dense, Sparse, Sparse});
+  LegionTensorFormat format = {Dense, Sparse, Sparse};
+  if (dds) {
+    format = {Dense, Dense, Sparse};
+  }
+  std::tie(B, Bex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameB, format);
+  std::tie(C, Cex) = loadLegionTensorFromHDF5File(ctx, runtime, fileNameC, format);
 
-  auto pack = partitionForcomputeLegion(ctx, runtime, &B, &C, pieces);
+  partitionPackForcomputeLegion pack;
+  partitionPackForcomputeLegionDDS packDDS;
+  if (dds) {
+    // TODO (rohany): Experiment with the decomposition here.
+    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &B, &C, pieces, 1);
+  } else {
+    pack = partitionForcomputeLegion(ctx, runtime, &B, &C, pieces);
+  }
 
   valType a = 0;
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
-    a = computeLegion(ctx, runtime, &B, &C, &pack, pieces);
+    if (dds) {
+      // TODO (rohany): Experiment with the decomposition here.
+      a = computeLegionDDS(ctx, runtime, &B, &C, &packDDS, pieces, 1);
+    } else {
+      a = computeLegion(ctx, runtime, &B, &C, &pack, pieces);
+    }
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
