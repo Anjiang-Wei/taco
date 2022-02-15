@@ -2170,15 +2170,16 @@ TEST(distributed, legionSpInnerProd) {
                 ;
   }
   {
-     IndexVar jo("jo"), ji("ji"), jio("jio"), jii("jii");
+     IndexVar jo("jo"), ji("ji"), jio("jio"), jii("jii"), f("f"), fo("fo"), fi("fi");
      Tensor<double> B2("B", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
      Tensor<double> C2("C", {dim, dim, dim}, LgFormat({Dense, Dense, LgSparse}));
      auto CHUNK_SIZE= 1024;
      a() = B2(i, j, k) * C2(i, j, k);
      cpuDDSStmt = a.getAssignment().concretize()
                    .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))
-                   .split(ji, jio, jii, CHUNK_SIZE)
-                   .parallelize(jio, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
+                   .fuse(ii, ji, f)
+                   .split(f, fo, fi, CHUNK_SIZE)
+                   .parallelize(fo, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics)
                    .communicate({B2(i, j, k), C2(i, j, k)}, jo)
                    ;
   }

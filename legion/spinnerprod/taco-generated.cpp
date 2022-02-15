@@ -363,53 +363,52 @@ double task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   int64_t jo = getIndexPoint(task, 1);
   int64_t pointID1 = io;
   int64_t pointID2 = pointID1 * pieces2 + jo;
-  for (int64_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
-    int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    if (i >= B1_dimension)
-      continue;
+  #pragma omp parallel for schedule(dynamic, 128)
+  for (int64_t fo = 0; fo < ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1023) / 1024); fo++) {
+    int64_t pointID3 = pointID2 * ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1023) / 1024) + fo;
+    double tfia_val = 0.0;
+    bool tfia_set = 0;
+    for (int64_t fi = 0; fi < 1024; fi++) {
+      int64_t f = fo * 1024 + fi;
+      int64_t ii = f / ((B2_dimension + (pieces2 - 1)) / pieces2);
+      int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
+      if (i >= B1_dimension)
+        continue;
 
-    if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces))
-      continue;
+      if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces))
+        continue;
 
-    int64_t pointID3 = pointID2 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int64_t iB = i;
-    int64_t iC = i;
-    #pragma omp parallel for schedule(dynamic, 128)
-    for (int64_t jio = 0; jio < (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024); jio++) {
-      int64_t pointID4 = pointID3 * (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024) + jio;
-      double tjiia_val = 0.0;
-      bool tjiia_set = 0;
-      for (int64_t jii = 0; jii < 1024; jii++) {
-        int64_t ji = jio * 1024 + jii;
-        int64_t j = jo * ((B2_dimension + (pieces2 - 1)) / pieces2) + ji;
-        if (j >= B2_dimension)
-          continue;
+      int64_t ji = f % ((B2_dimension + (pieces2 - 1)) / pieces2);
+      int64_t j = jo * ((B2_dimension + (pieces2 - 1)) / pieces2) + ji;
+      if (j >= B2_dimension)
+        continue;
 
-        if (j >= (jo + 1) * ((B2_dimension + (pieces2 - 1)) / pieces2))
-          continue;
+      if (j >= (jo + 1) * ((B2_dimension + (pieces2 - 1)) / pieces2))
+        continue;
 
-        int64_t pointID5 = pointID4 * 1024 + jii;
-        int64_t jB = iB * B2_dimension + j;
-        int64_t jC = iC * C2_dimension + j;
-        int64_t kB = B3_pos_accessor[Point<2>(i, j)].lo;
-        int64_t pB3_end = B3_pos_accessor[Point<2>(i, j)].hi + 1;
-        int64_t kC = C3_pos_accessor[Point<2>(i, j)].lo;
-        int64_t pC3_end = C3_pos_accessor[Point<2>(i, j)].hi + 1;
+      int64_t pointID4 = pointID3 * 1024 + fi;
+      int64_t iC = i;
+      int64_t jC = iC * C2_dimension + j;
+      int64_t iB = i;
+      int64_t jB = iB * B2_dimension + j;
+      int64_t kB = B3_pos_accessor[Point<2>(i, j)].lo;
+      int64_t pB3_end = B3_pos_accessor[Point<2>(i, j)].hi + 1;
+      int64_t kC = C3_pos_accessor[Point<2>(i, j)].lo;
+      int64_t pC3_end = C3_pos_accessor[Point<2>(i, j)].hi + 1;
 
-        while (kB < pB3_end && kC < pC3_end) {
-          int64_t kB0 = B3_crd_accessor[(kB * 1)];
-          int64_t kC0 = C3_crd_accessor[(kC * 1)];
-          int64_t k = TACO_MIN(kB0, kC0);
-          if (kB0 == k && kC0 == k) {
-            tjiia_val = tjiia_val + B_vals_ro_accessor[Point<1>(kB)] * C_vals_ro_accessor[Point<1>(kC)];
-          }
-          kB = kB + (int64_t)(kB0 == k);
-          kC = kC + (int64_t)(kC0 == k);
+      while (kB < pB3_end && kC < pC3_end) {
+        int64_t kB0 = B3_crd_accessor[(kB * 1)];
+        int64_t kC0 = C3_crd_accessor[(kC * 1)];
+        int64_t k = TACO_MIN(kB0, kC0);
+        if (kB0 == k && kC0 == k) {
+          tfia_val = tfia_val + B_vals_ro_accessor[Point<1>(kB)] * C_vals_ro_accessor[Point<1>(kC)];
         }
+        kB = kB + (int64_t)(kB0 == k);
+        kC = kC + (int64_t)(kC0 == k);
       }
-      #pragma omp atomic
-      a_val = a_val + tjiia_val;
     }
+    #pragma omp atomic
+    a_val = a_val + tfia_val;
   }
   return a_val;
 }
@@ -459,13 +458,13 @@ double computeLegionDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<double,task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<double,task_2>(registrar, "task_2");
   }
