@@ -1,0 +1,259 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++CTF++sddmm++arabic-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench sddmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 11227.1 ms.
+BENCHID++CTF++sddmm++arabic-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench sddmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 10361.9 ms.
+BENCHID++CTF++sddmm++arabic-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench sddmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 5281.45 ms.
+BENCHID++CTF++sddmm++arabic-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench sddmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 4530.55 ms.
+BENCHID++CTF++sddmm++arabic-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.tns -dims 22744080,22744080 -n 20 -warmup 10 -bench sddmm
+Read 639999458 non-zero entries from the file.
+Average execution time: 3721.95 ms.
+BENCHID++CTF++sddmm++it-2004++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench sddmm
+Read 1150725436 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++CTF++sddmm++it-2004++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench sddmm
+Read 1150725436 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 62) terminated with signal 9
+BENCHID++CTF++sddmm++it-2004++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench sddmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 9119.45 ms.
+BENCHID++CTF++sddmm++it-2004++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench sddmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 7049.95 ms.
+BENCHID++CTF++sddmm++it-2004++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/it-2004.tns -dims 41291594,41291494 -n 20 -warmup 10 -bench sddmm
+Read 1150725436 non-zero entries from the file.
+Average execution time: 5046.8 ms.
+BENCHID++CTF++sddmm++kmer_A2a++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench sddmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 34) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_A2a++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench sddmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 54) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_A2a++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench sddmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 78) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_A2a++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench sddmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 39) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_A2a++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.tns -dims 170728175,170728175 -n 20 -warmup 10 -bench sddmm
+Read 360585172 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 154) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_V1r++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench sddmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 38) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_V1r++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench sddmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 74) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_V1r++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench sddmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 74) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_V1r++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench sddmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 318) terminated with signal 9
+BENCHID++CTF++sddmm++kmer_V1r++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.tns -dims 214005017,214005017 -n 20 -warmup 10 -bench sddmm
+Read 465410904 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 305) terminated with signal 9
+BENCHID++CTF++sddmm++mycielskian19++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench sddmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 6681.85 ms.
+BENCHID++CTF++sddmm++mycielskian19++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench sddmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 3445.65 ms.
+BENCHID++CTF++sddmm++mycielskian19++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench sddmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 1767.9 ms.
+BENCHID++CTF++sddmm++mycielskian19++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench sddmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 943.1 ms.
+BENCHID++CTF++sddmm++mycielskian19++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.tns -dims 393215,393215 -n 20 -warmup 10 -bench sddmm
+Read 903194710 non-zero entries from the file.
+Average execution time: 566.65 ms.
+BENCHID++CTF++sddmm++nlpkkt240++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench sddmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 17383.5 ms.
+BENCHID++CTF++sddmm++nlpkkt240++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench sddmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 16624.5 ms.
+BENCHID++CTF++sddmm++nlpkkt240++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench sddmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 7887.45 ms.
+BENCHID++CTF++sddmm++nlpkkt240++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench sddmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 6346.85 ms.
+BENCHID++CTF++sddmm++nlpkkt240++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.tns -dims 27993600,27993600 -n 20 -warmup 10 -bench sddmm
+Read 774472352 non-zero entries from the file.
+Average execution time: 4923.3 ms.
+BENCHID++CTF++sddmm++sk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench sddmm
+Read 1949412601 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 32) terminated with signal 9
+BENCHID++CTF++sddmm++sk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench sddmm
+Read 1949412601 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++CTF++sddmm++sk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench sddmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 12760.7 ms.
+BENCHID++CTF++sddmm++sk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench sddmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 10666.2 ms.
+BENCHID++CTF++sddmm++sk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/sk-2005.tns -dims 50636154,50636154 -n 20 -warmup 10 -bench sddmm
+Read 1949412601 non-zero entries from the file.
+Average execution time: 8629.45 ms.
+BENCHID++CTF++sddmm++twitter7++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench sddmm
+Read 1468365182 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++CTF++sddmm++twitter7++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench sddmm
+Read 1468365182 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++CTF++sddmm++twitter7++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench sddmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 13546.8 ms.
+BENCHID++CTF++sddmm++twitter7++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench sddmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 10270.9 ms.
+BENCHID++CTF++sddmm++twitter7++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/twitter7.tns -dims 41652230,41652230 -n 20 -warmup 10 -bench sddmm
+Read 1468365182 non-zero entries from the file.
+Average execution time: 7758 ms.
+BENCHID++CTF++sddmm++uk-2005++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench sddmm
+Read 936364282 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+BENCHID++CTF++sddmm++uk-2005++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench sddmm
+Read 936364282 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 17) terminated with signal 9
+BENCHID++CTF++sddmm++uk-2005++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench sddmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 8820.55 ms.
+BENCHID++CTF++sddmm++uk-2005++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench sddmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 7731.9 ms.
+BENCHID++CTF++sddmm++uk-2005++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/uk-2005.tns -dims 39459925,39459925 -n 20 -warmup 10 -bench sddmm
+Read 936364282 non-zero entries from the file.
+Average execution time: 6376.65 ms.
+BENCHID++CTF++sddmm++webbase-2001++1++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 40 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench sddmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 38) terminated with signal 9
+BENCHID++CTF++sddmm++webbase-2001++2++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 80 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench sddmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 74) terminated with signal 9
+BENCHID++CTF++sddmm++webbase-2001++4++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 160 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench sddmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 39) terminated with signal 9
+BENCHID++CTF++sddmm++webbase-2001++8++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 320 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench sddmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 317) terminated with signal 9
+BENCHID++CTF++sddmm++webbase-2001++16++nodes
+Executing command: jsrun -b rs -c 1 -r 40 -n 640 --core=none --core_delay=0 /g/g15/yadav2/ctf/bin/spbench -tensor /p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.tns -dims 118142155,118142155 -n 20 -warmup 10 -bench sddmm
+Read 1019903190 non-zero entries from the file.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 9
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3266002: <../scripts/spbenchmark.py CTF sddmm all-matrices --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py CTF sddmm all-matrices --nodes 1 2 4 8 16> was submitted from host <lassen616> by user <yadav2> in cluster <lassen> at Sun Feb 13 23:07:16 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Sun Feb 13 23:07:16 2022
+                            <40*lassen388>
+                            <40*lassen389>
+                            <40*lassen573>
+                            <40*lassen729>
+                            <40*lassen243>
+                            <40*lassen210>
+                            <40*lassen540>
+                            <40*lassen211>
+                            <40*lassen541>
+                            <40*lassen212>
+                            <40*lassen542>
+                            <40*lassen213>
+                            <40*lassen543>
+                            <40*lassen214>
+                            <40*lassen544>
+                            <40*lassen215>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Sun Feb 13 23:07:16 2022
+Terminated at Mon Feb 14 01:58:56 2022
+Results reported at Mon Feb 14 01:58:56 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py CTF sddmm all-matrices --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   7.00 sec.
+    Max Memory :                                 144 MB
+    Average Memory :                             114.05 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1427 MB
+    Max Processes :                              7
+    Max Threads :                                27
+    Run time :                                   10300 sec.
+    Turnaround time :                            10300 sec.
+
+The output (if any) is above this job summary.
+

@@ -138,6 +138,7 @@ Average time: 1222.526580 ms.
 BENCHID++PETSc++spadd3++webbase-2001++16++nodes
 Executing command: jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -matrix /p/gpfs1/yadav2/tensors/petsc/webbase-2001.petsc -n 20 -warmup 10 -bench spadd3 -add3MatrixC /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-0.petsc -add3MatrixD /p/gpfs1/yadav2/tensors/petsc/webbase-2001-rotated-1.petsc
 Average time: 906.974764 ms.
+# twitter7 90 min timeout on 1,2,4,8,16 nodes.
 
 ------------------------------------------------------------
 Sender: LSF System <lsfadmin@lassen710>

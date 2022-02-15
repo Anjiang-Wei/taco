@@ -1,0 +1,179 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++DISTAL++spttv++freebase_music++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_music.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 27.550000 ms
+BENCHID++DISTAL++spttv++freebase_music++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_music.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 18.000000 ms
+BENCHID++DISTAL++spttv++freebase_music++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_music.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 11.650000 ms
+BENCHID++DISTAL++spttv++freebase_music++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_music.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 7.550000 ms
+BENCHID++DISTAL++spttv++freebase_music++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_music.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 4.950000 ms
+BENCHID++DISTAL++spttv++freebase_sampled++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_sampled.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 41.200000 ms
+BENCHID++DISTAL++spttv++freebase_sampled++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_sampled.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 26.500000 ms
+BENCHID++DISTAL++spttv++freebase_sampled++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_sampled.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 17.000000 ms
+BENCHID++DISTAL++spttv++freebase_sampled++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_sampled.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 11.050000 ms
+BENCHID++DISTAL++spttv++freebase_sampled++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/freebase_sampled.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 7.250000 ms
+BENCHID++DISTAL++spttv++nell-2++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/nell-2.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 9.150000 ms
+BENCHID++DISTAL++spttv++nell-2++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/nell-2.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 6.550000 ms
+BENCHID++DISTAL++spttv++nell-2++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/nell-2.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 5.750000 ms
+BENCHID++DISTAL++spttv++nell-2++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/nell-2.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 6.050000 ms
+BENCHID++DISTAL++spttv++nell-2++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/nell-2.dss.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 5.900000 ms
+BENCHID++DISTAL++spttv++patents++1++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5 -pos
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 6942.300000 ms
+BENCHID++DISTAL++spttv++patents++2++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5 -pos
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 3465.200000 ms
+BENCHID++DISTAL++spttv++patents++4++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5 -pos
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1825.650000 ms
+BENCHID++DISTAL++spttv++patents++8++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5 -pos
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 878.250000 ms
+BENCHID++DISTAL++spttv++patents++16++nodes
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spttv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5 -pos
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 449.200000 ms
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3264969: <../scripts/spbenchmark.py DISTAL spttv all-ctf-3-tensors --nodes 1 2 4 8 16> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py DISTAL spttv all-ctf-3-tensors --nodes 1 2 4 8 16> was submitted from host <lassen451> by user <yadav2> in cluster <lassen> at Sun Feb 13 14:06:56 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Sun Feb 13 14:06:57 2022
+                            <40*lassen126>
+                            <40*lassen455>
+                            <40*lassen784>
+                            <40*lassen127>
+                            <40*lassen456>
+                            <40*lassen785>
+                            <40*lassen128>
+                            <40*lassen457>
+                            <40*lassen786>
+                            <40*lassen129>
+                            <40*lassen458>
+                            <40*lassen789>
+                            <40*lassen612>
+                            <40*lassen614>
+                            <40*lassen130>
+                            <40*lassen132>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Sun Feb 13 14:06:57 2022
+Terminated at Sun Feb 13 14:16:49 2022
+Results reported at Sun Feb 13 14:16:49 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py DISTAL spttv all-ctf-3-tensors --nodes 1 2 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2.00 sec.
+    Max Memory :                                 61 MB
+    Average Memory :                             60.27 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1426 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   592 sec.
+    Turnaround time :                            593 sec.
+
+The output (if any) is above this job summary.
+
