@@ -527,6 +527,20 @@ void CodeGen_C::visit(const Max* op) {
 void CodeGen_C::visit(const Allocate* op) {
   string elementType = printCType(op->var.type(), false);
 
+  auto stackAllocate = isa<Literal>(op->num_elements) && to<Literal>(op->num_elements)->getIntValue() <= 32;
+  if (stackAllocate) {
+    doIndent();
+    stream << elementType << " ";
+    op->var.accept(this);
+    stream << "_codegen_local[" << to<Literal>(op->num_elements)->getIntValue() << "];\n";
+    doIndent();
+    op->var.accept(this);
+    stream << " = ";
+    op->var.accept(this);
+    stream << "_codegen_local;\n";
+    return;
+  }
+
   doIndent();
   op->var.accept(this);
   stream << " = (";
@@ -552,7 +566,7 @@ void CodeGen_C::visit(const Allocate* op) {
   op->num_elements.accept(this);
   parentPrecedence = TOP;
   stream << ");";
-    stream << endl;
+  stream << endl;
 }
 
 void CodeGen_C::visit(const Sqrt* op) {

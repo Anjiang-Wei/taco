@@ -1920,7 +1920,6 @@ TEST(distributed, legionSpMTTKRP) {
     auto acc = A(i, l);
     acc = precomputed;
     auto stmt = sched(A.getAssignment().concretize(), A, B, C, D, precomputed, acc);
-    std::cout << stmt << std::endl;
     if (cuda) {
       gpuStmts.push_back(lowerLegionSeparatePartitionCompute(stmt, "computeLegion" + funcName, false /* waitOnFutureMap */));
     } else {
@@ -1975,7 +1974,7 @@ TEST(distributed, legionSpMTTKRP) {
     auto producer = to<Forall>(repll);
     auto consumer = Forall(l, Assignment(A(i, l), precomputed(l), Add()));
     auto where = Where(consumer, producer);
-    auto newfjio = Forall(fjio.getIndexVar(), where, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces, {}, {}, 0);
+    auto newfjio = Forall(fjio.getIndexVar(), where, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::Atomics, {}, {}, 0);
     auto newfii = Forall(fii.getIndexVar(), newfjio);
     auto newfdistFused = Forall(fdistFused.getIndexVar(), newfii, fdistFused.getParallelUnit(), fdistFused.getOutputRaceStrategy(), fdistFused.getTransfers(), fdistFused.getComputingOn(), fdistFused.getUnrollFactor());
     auto newst = SuchThat(newfdistFused, st.getPredicate(), st.getCalls());
