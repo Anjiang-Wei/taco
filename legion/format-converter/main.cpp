@@ -6,14 +6,41 @@
 #include "error.h"
 #include "taco-generated.h"
 #include <stdlib.h>
+#include "task_ids.h"
+#include "taco_mapper.h"
+
+#include "mapping_utilities.h"
 
 using namespace Legion;
-
-enum TaskIDs {
-  TID_TOP_LEVEL,
-};
+using namespace Legion::Mapping;
 
 Realm::Logger logApp("app");
+
+// Until Legion can do AOS HDF5 writes (#1136), we need to manually transpose
+// the data into SOA layout for HDF5 copies.
+class HDF5CopyMapper : public TACOMapper {
+public:
+  HDF5CopyMapper(MapperRuntime* rt, Machine& machine, const Legion::Processor& local) : TACOMapper(rt, machine, local, "TACOMapper") {
+    this->exact_region = true;
+  }
+
+  void map_copy(const MapperContext ctx,
+                const Copy& copy,
+                const MapCopyInput& input,
+                MapCopyOutput& output) {
+    if (copy.parent_task->task_id == TID_TOP_LEVEL) {
+      default_create_copy_instance<false /* is src*/>(ctx, copy, copy.dst_requirements[0], 0, output.dst_instances[0]);
+      // Map the source instance in SOA format for HDF5 to be happy.
+      default_create_copy_instance<true /* is src*/>(ctx, copy, copy.src_requirements[0], 0, output.src_instances[0]);
+    } else {
+      DefaultMapper::map_copy(ctx, copy, input, output);
+    }
+  }
+};
+
+void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& local_procs) {
+  runtime->replace_default_mapper(new HDF5CopyMapper(runtime->get_mapper_runtime(), m, *local_procs.begin()), Processor::NO_PROC);
+}
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   bool roundTrip = false, dump = false, h5dump = false;
@@ -86,7 +113,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   if (roundTrip) {
     // Let's try and load it back in to see if it somewhat round-trips.
     auto test = loadLegionTensorFromHDF5File(ctx, runtime, outputFile, format);
-    logApp.info() << test.first.toString(ctx, runtime);
+    printLegionTensor<double>(ctx, runtime, test.first);
     test.second.destroy(ctx, runtime);
   }
   if (dump) {
@@ -114,5 +141,6 @@ int main(int argc, char** argv) {
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerTacoRuntimeLibTasks();
+  Runtime::add_registration_callback(register_mapper);
   return Runtime::start(argc, argv);
 }
