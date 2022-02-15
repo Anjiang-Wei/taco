@@ -345,16 +345,16 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     int64_t iA = i;
     int64_t iB = i;
     #pragma omp parallel for schedule(dynamic, 128)
-    for (int64_t jio = 0; jio < (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024); jio++) {
-      int64_t pointID4 = pointID3 * (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024) + jio;
+    for (int64_t jio = 0; jio < (((B2_dimension + (pieces2 - 1)) / pieces2 + 1) / 2); jio++) {
+      int64_t pointID4 = pointID3 * (((B2_dimension + (pieces2 - 1)) / pieces2 + 1) / 2) + jio;
       double* precomputed = 0;
       double precomputed_codegen_local[32];
       precomputed = precomputed_codegen_local;
       for (int64_t pprecomputed = 0; pprecomputed < 32; pprecomputed++) {
         precomputed[pprecomputed] = 0.0;
       }
-      for (int64_t jii = 0; jii < 1024; jii++) {
-        int64_t ji = jio * 1024 + jii;
+      for (int64_t jii = 0; jii < 2; jii++) {
+        int64_t ji = jio * 2 + jii;
         int64_t j = jo * ((B2_dimension + (pieces2 - 1)) / pieces2) + ji;
         if (j >= B2_dimension)
           continue;
@@ -362,7 +362,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         if (j >= (jo + 1) * ((B2_dimension + (pieces2 - 1)) / pieces2))
           continue;
 
-        int64_t pointID5 = pointID4 * 1024 + jii;
+        int64_t pointID5 = pointID4 * 2 + jii;
         int64_t jB = iB * B2_dimension + j;
         int64_t jC = j;
         for (int64_t kB = B3_pos_accessor[Point<2>(i, j)].lo; kB < (B3_pos_accessor[Point<2>(i, j)].hi + 1); kB++) {
@@ -430,13 +430,13 @@ void computeLegionDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTenso
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_2>(registrar, "task_2");
   }

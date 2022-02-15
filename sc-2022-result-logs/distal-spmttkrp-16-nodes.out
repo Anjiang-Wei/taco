@@ -94,35 +94,35 @@ Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
 Average execution time: 107.050000 ms
 BENCHID++DISTAL++spmttkrp++patents++1++nodes
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dds.hdf5 -dds
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-Average execution time: 138799.000000 ms
+Average execution time: 7507.100000 ms
 BENCHID++DISTAL++spmttkrp++patents++2++nodes
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dds.hdf5 -dds
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-Average execution time: 76357.950000 ms
+Average execution time: 4051.450000 ms
 BENCHID++DISTAL++spmttkrp++patents++4++nodes
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dds.hdf5 -dds
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-Average execution time: 43534.350000 ms
+Average execution time: 3241.900000 ms
 BENCHID++DISTAL++spmttkrp++patents++8++nodes
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dds.hdf5 -dds
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-Average execution time: 22055.200000 ms
+Average execution time: 2706.500000 ms
 BENCHID++DISTAL++spmttkrp++patents++16++nodes
-Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dss.hdf5
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spmttkrp -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -tensor /p/gpfs1/yadav2/tensors/distal/patents.dds.hdf5 -dds
 Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
 Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
 Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
-Average execution time: 14739.950000 ms
+Average execution time: 2210.150000 ms
 logout
 
 ------------------------------------------------------------

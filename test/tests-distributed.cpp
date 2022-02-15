@@ -1938,7 +1938,7 @@ TEST(distributed, legionSpMTTKRP) {
   IndexVar jo("jo"), ji("ji"), jio("jio"), jii("jii"), lw("lw");
   auto pieces2 = ir::Var::make("pieces2", Int32, false /* is_ptr */, false /* is_tensor */, true /* is_parameter */);
   add("DDS", [&](IndexStmt stmt, Tensor<double> A, Tensor<double> B, Tensor<double> C, Tensor<double> D, IndexExpr precomputedExpr, IndexExpr acc) {
-    const int CHUNK_SIZE=1024;
+    const int CHUNK_SIZE=2;
     TensorVar precomputed("precomputed", Type(Float64, {ldim}), taco::dense);
     auto postSplit = stmt.reorder({i, j, k, l})
                          .distribute({i, j}, {io, jo}, {ii, ji}, Grid(pieces, pieces2))

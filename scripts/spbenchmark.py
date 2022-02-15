@@ -66,7 +66,7 @@ class DISTALBenchmark(Benchmark):
                                    "-tm:untrack_valid_regions"],
             BenchmarkKind.SpTTV: ["-tensor", self.getDISTALTensor(tensor, 'dss')] + (["-pos"] if self.gpu or tensor.name == "patents" else []),
             # TODO (rohany): Pass through the ldim here.
-            BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dss')],
+            BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dds' if tensor.name in ["patents"] else "dss")] + (["-dds"] if tensor.name in ["patents"] else []),
             # TODO (rohany): For some tensors, like the patents tensor, we might want to
             #  do a different format here.
             BenchmarkKind.SpInnerProd: ["-tensorB", self.getDISTALTensor(tensor, 'dds' if tensor.name in ["patents", "nell-2"] else "dss"), 

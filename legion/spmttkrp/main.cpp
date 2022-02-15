@@ -48,11 +48,44 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
   runtime->fill_field(ctx, D.vals, D.valsParent, FID_VAL, valType(1));
 
+  // Choose a decomposition for the patents DDS tensor.
+  int jPieces = 0;
+  if (dds) {
+    switch (pieces) {
+      case 2: {
+        pieces = 1;
+        jPieces = 2;
+        break;
+      }
+      case 4: {
+        pieces = 1;
+        jPieces = 4;
+        break;
+      }
+      case 8: {
+        pieces = 1;
+        jPieces = 8;
+        break;
+      }
+      case 16: {
+        pieces = 2;
+        jPieces = 8;
+        break;
+      }
+      case 32: {
+        pieces = 4;
+        jPieces = 8;
+        break;
+      }
+      default:
+        taco_iassert(false) << "unsupported number of pieces for DDS";
+    }
+  }
+
   partitionPackForcomputeLegion pack;
   partitionPackForcomputeLegionDDS packDDS;
   if (dds) {
-    // TODO (rohany): Experiment with the right grid size here.
-    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces, 1);
+    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces, jPieces);
   } else {
     pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
   }
@@ -74,8 +107,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (dds) {
-      // TODO (rohany): Experiment with the right grid size here.
-      computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces, 1);
+      computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces, jPieces);
     } else {
       computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
     }
