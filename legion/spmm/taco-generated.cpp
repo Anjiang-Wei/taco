@@ -257,7 +257,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < C2_dimension; jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -279,15 +279,15 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
         B2CrdRect = B2CrdRect.make_empty();
       }
       B2_crd_coloring[(*itr)] = B2CrdRect;
-      Point<2> AStart = Point<2>((0 / B2_dimension), jo);
-      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension), ADomain.hi()[0]), TACO_MIN(jo, ADomain.hi()[1]));
+      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 8));
+      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension), ADomain.hi()[0]), TACO_MIN((jo * 8 + 7), ADomain.hi()[1]));
       Rect<2> ARect = Rect<2>(AStart, AEnd);
       if (!ADomain.contains(ARect.lo) || !ADomain.contains(ARect.hi)) {
         ARect = ARect.make_empty();
       }
       AColoring[(*itr)] = ARect;
-      Point<2> CStart = Point<2>(0, jo);
-      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1), CDomain.hi()[0]), TACO_MIN(jo, CDomain.hi()[1]));
+      Point<2> CStart = Point<2>(0, (jo * 8));
+      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1), CDomain.hi()[0]), TACO_MIN((jo * 8 + 7), CDomain.hi()[1]));
       Rect<2> CRect = Rect<2>(CStart, CEnd);
       if (!CDomain.contains(CRect.lo) || !CDomain.contains(CRect.hi)) {
         CRect = CRect.make_empty();
@@ -325,7 +325,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
     launcher.add_region_requirement(RegionRequirement(BValsLogicalPart, 0, READ_ONLY, EXCLUSIVE, B_vals_parent, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_VAL));
     launcher.add_region_requirement(RegionRequirement(C_vals_partition, 0, READ_ONLY, EXCLUSIVE, C_vals_parent, Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_VAL));
     launcher.tag = launcher.tag | TACOMapper::UNTRACK_VALID_REGIONS;
-    runtime->execute_index_space(ctx, launcher);
+    // runtime->execute_index_space(ctx, launcher);
 
 
     computePartitions.APartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
@@ -401,12 +401,12 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     }
     int64_t iA = i;
     int64_t kC = k;
-    for (int64_t ji = 0; ji < 1; ji++) {
-      int64_t j = jo + ji;
+    for (int64_t ji = 0; ji < 8; ji++) {
+      int64_t j = jo * 8 + ji;
       if (j >= C2_dimension)
         continue;
 
-      int64_t pointID3 = pointID2 * 1 + ji;
+      int64_t pointID3 = pointID2 * 8 + ji;
       int64_t jA = iA * A2_dimension + j;
       int64_t jC = kC * C2_dimension + j;
       A_vals_red_accessor[Point<2>(i, j)] <<= B_vals_ro_accessor[Point<1>(fposB)] * C_vals_ro_accessor[Point<2>(k, j)];
@@ -430,7 +430,7 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < C2_dimension; jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -451,6 +451,7 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
     launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition_by_color(ctx, get_logical_region(B_vals), pointID1), 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
     launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition_by_color(ctx, get_logical_region(C_vals), pointID1), 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(FID_VAL));
     launcher.tag = launcher.tag | TACOMapper::UNTRACK_VALID_REGIONS;
+    launcher.tag = launcher.tag | TACOMapper::BACKPRESSURE_TASK;
     runtime->execute_index_space(ctx, launcher);
 
   }
@@ -458,19 +459,19 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_2>(registrar, "task_2");
   }
   {
     TaskVariantRegistrar registrar(taskID(3), "task_3");
-    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_3>(registrar, "task_3");
   }

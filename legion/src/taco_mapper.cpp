@@ -859,6 +859,12 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
     // messes up the placement that we are going for with the index launches. This
     // implementation mirrors the standard slicing strategy of the default mapper.
     auto targets = this->select_targets_for_task(ctx, task);
+    std::cout << "Targets: ";
+    for (auto it : targets) {
+      std::cout << it << " " << std::endl;
+    }
+    std::cout << std::endl;
+    bool recurse = ((task.tag & BACKPRESSURE_TASK) != 0) && input.domain.get_volume() > 1;
     switch (input.domain.get_dim()) {
 #define BLOCK(DIM) \
         case DIM:  \
@@ -867,7 +873,7 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
             Legion::Point<DIM,Legion::coord_t> num_blocks = \
               default_select_num_blocks<DIM>(targets.size(), point_space.bounds); \
             this->default_decompose_points<DIM>(point_space, targets, \
-                  num_blocks, false/*recurse*/, \
+                  num_blocks, recurse/*recurse*/, \
                   stealing_enabled, output.slices); \
             break;   \
           }
@@ -976,7 +982,7 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
       if (std::string(task->get_task_name()) == "task_2") {
         taco_iassert((task->tag & BACKPRESSURE_TASK) != 0);
       }
-      if ((task->tag & BACKPRESSURE_TASK) != 0) {
+      if ((task->tag & BACKPRESSURE_TASK) != 0 && !(task->is_index_space && task->index_domain.get_volume() > 1)) {
         // See how many tasks we have in flight. Again, we use the orig_proc here
         // rather than target_proc to match with our heuristics for where serial task
         // launch loops go.
