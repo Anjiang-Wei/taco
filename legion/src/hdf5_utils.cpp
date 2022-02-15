@@ -349,7 +349,9 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
           auto posDom = runtime->get_index_space_domain(ctx, t.indices[i][0].get_index_space());
           std::vector<hsize_t> dims(posDom.dim);
           for (int dim = 0; dim < posDom.dim; dim++) {
-            dims[dim] = posDom.hi()[dim] + 1;
+            // TODO (rohany): For some obscure reason, we have to change these dimensions to be
+            //  in backwards order for Legion and HDF5 to agree.
+            dims[posDom.dim - dim - 1] = posDom.hi()[dim] + 1;
             taco_iassert(posDom.hi()[dim] < LEGION_TENSOR_INFTY) << "writing infinitely sized region to disk";
           }
           hid_t posDataspaceID = H5Screate_simple(posDom.dim, dims.data(), NULL);
@@ -391,7 +393,9 @@ void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, L
     auto valsDom = runtime->get_index_space_domain(ctx, t.vals.get_index_space());
     std::vector<hsize_t> dims(valsDom.dim);
     for (int dim = 0; dim < valsDom.dim; dim++) {
-      dims[dim] = valsDom.hi()[dim] + 1;
+      // TODO (rohany): For some obscure reason, we have to change these dimensions to be
+      //  in backwards order for Legion and HDF5 to agree.
+      dims[valsDom.dim - dim - 1] = valsDom.hi()[dim] + 1;
       taco_iassert(valsDom.hi()[0] < LEGION_TENSOR_INFTY) << "writing infinitely sized region to disk";
     }
     auto valsDataSpace = H5Screate_simple(valsDom.dim, dims.data(), NULL);
@@ -589,8 +593,10 @@ loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std:
     lo.dim = dim;
     hi.dim = dim;
     for (int i = 0; i < dim; i++) {
-      lo[i] = 0;
-      hi[i] = dims[i] - 1;
+      // TODO (rohany): For some obscure reason, we have to change these dimensions to be
+      //  in backwards order for Legion and HDF5 to agree.
+      lo[dim - i - 1] = 0;
+      hi[dim - i - 1] = dims[i] - 1;
     }
     H5Sclose(dspace);
     H5Dclose(dset);

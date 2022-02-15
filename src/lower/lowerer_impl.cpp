@@ -3563,6 +3563,14 @@ Expr LowererImpl::getTemporarySize(Where where) {
       taco_iassert(util::contains(dimensions, indexVars[i])) << "Missing " << indexVars[i];
       size = ir::Mul::make(size, dimensions.at(indexVars[i]));
     }
+    // Hack to inline some sizes.
+    if (isa<GetProperty>(size)) {
+      auto gp = to<GetProperty>(size);
+      auto tensorVar = this->exprToTensorVar[gp->tensor];
+      if (tensorVar.getType().getShape().getDimension(gp->mode).getSize() <= 32) {
+        return int(tensorVar.getType().getShape().getDimension(gp->mode).getSize());
+      }
+    }
     return size;
   }
 
@@ -3748,7 +3756,10 @@ vector<Stmt> LowererImpl::codeToInitializeTemporary(Where where) {
 
       auto decl = VarDecl::make(values, ir::Literal::make(0));
       Stmt allocate = Allocate::make(values, size);
-      freeTemporary = Block::make(freeTemporary, Free::make(values));
+      // We won't allocate the memory with malloc if we have a small constant size.
+      if (!isa<ir::Literal>(size)) {
+        freeTemporary = Block::make(freeTemporary, Free::make(values));
+      }
       initializeTemporary = Block::make(decl, initializeTemporary, allocate);
     }
 
@@ -3879,7 +3890,12 @@ Stmt LowererImpl::lowerWhere(Where where) {
   return Block::make(initializeTemporary, producer,
                      // We need captured locators if we're assigning with atomics
                      // and the result tensor is not a scalar.
-                     (markAssignsAtomicDepth > 0 && !this->performingScalarReduction) ? capturedLocatePos : ir::Stmt(),
+                     // TODO (rohany): It doesn't seem like we ever need these captured
+                     //  locators. If we do end up needing them for an application, we'll
+                     //  have to only emit them if they are actually needed, because otherwise
+                     //  this code appears to generate useless definitions that also reference
+                     //  variables that don't exist.
+                     (markAssignsAtomicDepth > 0 && !this->performingScalarReduction && false) ? capturedLocatePos : ir::Stmt(),
                      consumer, freeTemporary);
 }
 

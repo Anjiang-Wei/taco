@@ -8,7 +8,7 @@ using namespace Legion;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
 typedef FieldAccessor<READ_WRITE,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorRWdouble2;
-typedef ReductionAccessor<SumReduction<double>,true,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorReducedouble2;
+typedef ReductionAccessor<SumReduction<double>,false,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorReduceNonExcldouble2;
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 typedef FieldAccessor<READ_ONLY,Rect<1>,2,coord_t,Realm::AffineAccessor<Rect<1>,2,coord_t>> AccessorRORect_1_2;
@@ -325,7 +325,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto C_vals_ro_accessor = createAccessor<AccessorROdouble2>(C_vals, FID_VAL);
   auto D_vals_ro_accessor = createAccessor<AccessorROdouble2>(D_vals, FID_VAL);
-  auto A_vals_red_accessor = createAccessor<AccessorReducedouble2>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto A_vals_red_accessor_non_excl = createAccessor<AccessorReduceNonExcldouble2>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
   auto B3_pos_accessor = createAccessor<AccessorRORect_1_2>(B3_pos, FID_RECT_1);
   auto B3_crd_accessor = createAccessor<AccessorROint32_t1>(B3_crd, FID_COORD);
 
@@ -348,8 +348,9 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     for (int64_t jio = 0; jio < (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024); jio++) {
       int64_t pointID4 = pointID3 * (((B2_dimension + (pieces2 - 1)) / pieces2 + 1023) / 1024) + jio;
       double* precomputed = 0;
-      precomputed = (double*)malloc(sizeof(double) * C2_dimension);
-      for (int64_t pprecomputed = 0; pprecomputed < C2_dimension; pprecomputed++) {
+      double precomputed_codegen_local[32];
+      precomputed = precomputed_codegen_local;
+      for (int64_t pprecomputed = 0; pprecomputed < 32; pprecomputed++) {
         precomputed[pprecomputed] = 0.0;
       }
       for (int64_t jii = 0; jii < 1024; jii++) {
@@ -380,9 +381,8 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
         int64_t pointID5 = pointID4 * A2_dimension + l;
         int64_t lA = iA * A2_dimension + l;
         int64_t lprecomputed = l;
-        A_vals_red_accessor[Point<2>(i, l)] <<= precomputed[lprecomputed];
+        A_vals_red_accessor_non_excl[Point<2>(i, l)] <<= precomputed[lprecomputed];
       }
-      free(precomputed);
     }
   }
 }

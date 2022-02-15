@@ -24,7 +24,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   parser.add_option_int("-ldim", lDim);
-  parser.add_option_int("-dds", dds);
+  parser.add_option_bool("-dds", dds);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!fileName.empty()) << "Provide a tensor with -tensor";
@@ -57,7 +57,18 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
   }
 
-  auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+  IndexPartition commPart;
+  if (dds) {
+    // If we're dds that means we're running with the patents tensor. That means the `i` dimension is
+    // really small and we don't care that much about creating compact sparse partitions.
+    commPart = runtime->create_equal_partition(
+        ctx,
+        A.vals.get_index_space(),
+        runtime->get_index_partition_color_space_name(ctx, packDDS.APartition.valsPartition.get_index_partition())
+    );
+  } else {
+    commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+  }
   auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
