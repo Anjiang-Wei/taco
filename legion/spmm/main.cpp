@@ -6,7 +6,12 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+
+#ifdef TACO_USE_CUDA
+#include "taco-generated.cuh"
+#else
 #include "taco-generated.h"
+#endif
 
 using namespace Legion;
 typedef double valType;
@@ -57,6 +62,11 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
   auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
 
+  // Create a long lasting instance for the C region to force communcation costs.
+  if (batched) {
+    tacoFill(ctx, runtime, C.vals, valType(1));
+  }
+
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (batched) {
@@ -97,6 +107,7 @@ int main(int argc, char** argv) {
   registerHDF5UtilTasks();
   registerTacoTasks();
   registerTacoRuntimeLibTasks();
+  registerTACOFillTasks<valType>();
   Runtime::add_registration_callback(register_taco_mapper);
   Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);

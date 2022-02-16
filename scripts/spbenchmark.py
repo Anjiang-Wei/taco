@@ -57,7 +57,7 @@ class DISTALBenchmark(Benchmark):
             BenchmarkKind.SpMV: ["-csr", self.getDISTALTensor(tensor, "csr")] + (["-tm:align128"] if self.gpu else []),
             BenchmarkKind.SpMSpV: ["-csc", self.getDISTALTensor(tensor, "csc"), "-spx", self.getUniformVec(tensor)],
             # TODO (rohany): Thread through the jdim here.
-            BenchmarkKind.SpMM: ["-tensor", self.getDISTALTensor(tensor, 'csr')] + (["-lg:eager_alloc_percentage", "5"] if self.gpu and tensor.name == "mycielskian19" else []),
+            BenchmarkKind.SpMM: ["-tensor", self.getDISTALTensor(tensor, 'csr')] + (["-lg:eager_alloc_percentage", "5"] if self.gpu and tensor.name == "mycielskian19" else []) + (["-tm:untrack_valid_regions", "-batched"] if self.gpu else []),
             # TODO (rohany): Thread through the jdim here.
             BenchmarkKind.SDDMM: ["-csr", self.getDISTALTensor(tensor, 'csr')],
             BenchmarkKind.SpAdd3: ["-tensorB", self.getDISTALTensor(tensor, 'csr'), 
