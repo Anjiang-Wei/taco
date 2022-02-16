@@ -364,12 +364,12 @@ double task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   int64_t pointID1 = io;
   int64_t pointID2 = pointID1 * pieces2 + jo;
   #pragma omp parallel for schedule(dynamic, 128)
-  for (int64_t fo = 0; fo < ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1023) / 1024); fo++) {
-    int64_t pointID3 = pointID2 * ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1023) / 1024) + fo;
+  for (int64_t fo = 0; fo < ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1) / 2); fo++) {
+    int64_t pointID3 = pointID2 * ((((B1_dimension + (pieces - 1)) / pieces) * ((B2_dimension + (pieces2 - 1)) / pieces2) + 1) / 2) + fo;
     double tfia_val = 0.0;
     bool tfia_set = 0;
-    for (int64_t fi = 0; fi < 1024; fi++) {
-      int64_t f = fo * 1024 + fi;
+    for (int64_t fi = 0; fi < 2; fi++) {
+      int64_t f = fo * 2 + fi;
       int64_t ii = f / ((B2_dimension + (pieces2 - 1)) / pieces2);
       int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
       if (i >= B1_dimension)
@@ -386,7 +386,7 @@ double task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
       if (j >= (jo + 1) * ((B2_dimension + (pieces2 - 1)) / pieces2))
         continue;
 
-      int64_t pointID4 = pointID3 * 1024 + fi;
+      int64_t pointID4 = pointID3 * 2 + fi;
       int64_t iC = i;
       int64_t jC = iC * C2_dimension + j;
       int64_t iB = i;

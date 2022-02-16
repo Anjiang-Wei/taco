@@ -34,6 +34,40 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
 
+  // Choose a decomposition for the patents DDS tensor.
+  int jPieces = 0;
+  if (dds) {
+    switch (pieces) {
+      case 2: {
+        pieces = 2;
+        jPieces = 1;
+        break;
+      }
+      case 4: {
+        pieces = 4;
+        jPieces = 1;
+        break;
+      }
+      case 8: {
+        pieces = 4;
+        jPieces = 2;
+        break;
+      }
+      case 16: {
+        pieces = 4;
+        jPieces = 4;
+        break;
+      }
+      case 32: {
+        pieces = 4;
+        jPieces = 8;
+        break;
+      }
+      default:
+        taco_iassert(false) << "unsupported number of pieces for DDS";
+    }
+  }
+
   LegionTensor B, C; ExternalHDF5LegionTensor Bex, Cex;
   LegionTensorFormat format = {Dense, Sparse, Sparse};
   if (dds) {
@@ -46,7 +80,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   partitionPackForcomputeLegionDDS packDDS;
   if (dds) {
     // TODO (rohany): Experiment with the decomposition here.
-    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &B, &C, pieces, 1);
+    packDDS = partitionForcomputeLegionDDS(ctx, runtime, &B, &C, pieces, jPieces);
   } else {
     pack = partitionForcomputeLegion(ctx, runtime, &B, &C, pieces);
   }
@@ -55,7 +89,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dds) {
       // TODO (rohany): Experiment with the decomposition here.
-      a = computeLegionDDS(ctx, runtime, &B, &C, &packDDS, pieces, 1);
+      a = computeLegionDDS(ctx, runtime, &B, &C, &packDDS, pieces, jPieces);
     } else {
       a = computeLegion(ctx, runtime, &B, &C, &pack, pieces);
     }
