@@ -25,6 +25,7 @@ struct task_2Args {
   int64_t B2Size;
   int64_t C2_dimension;
   int32_t gx;
+  int32_t gy;
   int64_t jo;
   int64_t pointID1;
 };
@@ -218,7 +219,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
 
 }
 
-partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
+partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gy, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   size_t B1_dimension = B->dims[0];
@@ -236,7 +237,7 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + (gy - 1)) / gy); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -258,15 +259,15 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
         B2CrdRect = B2CrdRect.make_empty();
       }
       B2_crd_coloring[(*itr)] = B2CrdRect;
-      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * 8));
-      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension),ADomain.hi()[0]), TACO_MIN((jo * 8 + 7),ADomain.hi()[1]));
+      Point<2> AStart = Point<2>((0 / B2_dimension), (jo * gy));
+      Point<2> AEnd = Point<2>(TACO_MIN(((B1_dimension * B2_dimension - 1) / B2_dimension),ADomain.hi()[0]), TACO_MIN((jo * gy + (gy - 1)),ADomain.hi()[1]));
       Rect<2> ARect = Rect<2>(AStart, AEnd);
       if (!ADomain.contains(ARect.lo) || !ADomain.contains(ARect.hi)) {
         ARect = ARect.make_empty();
       }
       AColoring[(*itr)] = ARect;
-      Point<2> CStart = Point<2>(0, (jo * 8));
-      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1),CDomain.hi()[0]), TACO_MIN((jo * 8 + 7),CDomain.hi()[1]));
+      Point<2> CStart = Point<2>(0, (jo * gy));
+      Point<2> CEnd = Point<2>(TACO_MIN((B1_dimension * B2_dimension - 1),CDomain.hi()[0]), TACO_MIN((jo * gy + (gy - 1)),CDomain.hi()[1]));
       Rect<2> CRect = Rect<2>(CStart, CEnd);
       if (!CDomain.contains(CRect.lo) || !CDomain.contains(CRect.hi)) {
         CRect = CRect.make_empty();
@@ -313,13 +314,19 @@ partitionPackForcomputeLegionBatched partitionForcomputeLegionBatched(Legion::Co
     computePartitions.CPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
     computePartitions.CPartition.valsPartition = C_vals_partition;
     computePartitions.CPartition.denseLevelRunPartitions[0] = CDenseRun0Partition;
+    if (jo == 0) {
+      computePartitions.dummyReg = runtime->create_logical_region(ctx, fposoIndexSpace, LogicalRegion(A_vals).get_field_space());
+      auto eqPart = runtime->create_equal_partition(ctx, computePartitions.dummyReg.get_index_space(), fposoIndexSpace);
+      computePartitions.dummyPart = runtime->get_logical_partition(ctx, computePartitions.dummyReg, eqPart);
+      runtime->fill_field(ctx, computePartitions.dummyReg, computePartitions.dummyReg, FID_VAL, double(0));
+    }
   }
 
   return computePartitions;
 }
 
 __global__
-void task_2DeviceKernel0(int64_t B2Size, int64_t fposo, int32_t gx, int64_t* i_blockStarts, int64_t pointID2, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, int64_t C2_dimension, int64_t jo, int64_t pointID1) {
+void task_2DeviceKernel0(int64_t B2Size, int64_t fposo, int32_t gx, int64_t* i_blockStarts, int64_t pointID2, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, int64_t C2_dimension, int32_t gy, int64_t jo, int64_t pointID1) {
 
   int64_t block = blockIdx.x;
   int64_t thread = (threadIdx.x % (32));
@@ -355,8 +362,8 @@ void task_2DeviceKernel0(int64_t B2Size, int64_t fposo, int32_t gx, int64_t* i_b
       i_pos = i_pos + 1;
       i = i_pos;
     }
-    for (int64_t ji = 0; ji < 8; ji++) {
-      int64_t j = jo * 8 + ji;
+    for (int64_t ji = 0; ji < gy; ji++) {
+      int64_t j = jo * gy + ji;
       if (j >= C2_dimension)
         break;
 
@@ -382,6 +389,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int64_t B2Size = args->B2Size;
   int64_t C2_dimension = args->C2_dimension;
   int32_t gx = args->gx;
+  int32_t gy = args->gy;
   int64_t jo = args->jo;
   int64_t pointID1 = args->pointID1;
 
@@ -410,11 +418,11 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   );
   int64_t pointID2 = pointID1 * gx + fposo;
   if ((((B2Size + (gx - 1)) / gx + 2047) / 2048) > 0) {
-    task_2DeviceKernel0<<<(((B2Size + (gx - 1)) / gx + 2047) / 2048), (32 * 8)>>>(B2Size, fposo, gx, i_blockStarts, pointID2, B2_pos_accessor, B2_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, C2_dimension, jo, pointID1);
+    task_2DeviceKernel0<<<(((B2Size + (gx - 1)) / gx + 2047) / 2048), (32 * 8)>>>(B2Size, fposo, gx, i_blockStarts, pointID2, B2_pos_accessor, B2_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, C2_dimension, gy, jo, pointID1);
   }
 }
 
-void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegionBatched* partitionPack, int32_t gx) {
+void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegionBatched* partitionPack, int32_t gy, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   auto A_vals_parent = A->valsParent;
   RegionWrapper B2_pos = B->indices[1][0];
@@ -429,7 +437,7 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
 
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
-  for (int64_t jo = 0; jo < ((C2_dimension + 7) / 8); jo++) {
+  for (int64_t jo = 0; jo < ((C2_dimension + (gy - 1)) / gy); jo++) {
     int64_t pointID1 = jo + TACO_PARTITION_COLOR_OFFSET;
     Point<1> lowerBound = Point<1>(0);
     Point<1> upperBound = Point<1>((gx - 1));
@@ -439,6 +447,7 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
     taskArgsRaw2.B2Size = B2Size;
     taskArgsRaw2.C2_dimension = C2_dimension;
     taskArgsRaw2.gx = gx;
+    taskArgsRaw2.gy = gy;
     taskArgsRaw2.jo = jo;
     taskArgsRaw2.pointID1 = pointID1;
     TaskArgument taskArgs = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
@@ -448,6 +457,7 @@ void computeLegionBatched(Legion::Context ctx, Legion::Runtime* runtime, LegionT
     launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition_by_color(ctx, get_logical_region(B2_crd), pointID1), 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
     launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition_by_color(ctx, get_logical_region(B_vals), pointID1), 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
     launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition_by_color(ctx, get_logical_region(C_vals), pointID1), 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(FID_VAL));
+    launcher.add_region_requirement(RegionRequirement(partitionPack->dummyPart, 0, READ_WRITE, EXCLUSIVE, partitionPack->dummyReg).add_field(FID_VAL));
     launcher.tag = launcher.tag | TACOMapper::UNTRACK_VALID_REGIONS;
     runtime->execute_index_space(ctx, launcher);
 

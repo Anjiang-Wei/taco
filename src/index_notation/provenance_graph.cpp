@@ -138,10 +138,10 @@ struct SplitRelNode::Content {
   IndexVar parentVar;
   IndexVar outerVar;
   IndexVar innerVar;
-  size_t splitFactor;
+  ir::Expr splitFactor;
 };
 
-SplitRelNode::SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t splitFactor)
+SplitRelNode::SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, ir::Expr splitFactor)
   : IndexVarRelNode(SPLIT), content(new Content) {
   content->parentVar = parentVar;
   content->outerVar = outerVar;
@@ -158,7 +158,7 @@ const IndexVar& SplitRelNode::getOuterVar() const {
 const IndexVar& SplitRelNode::getInnerVar() const {
   return content->innerVar;
 }
-const size_t& SplitRelNode::getSplitFactor() const {
+const ir::Expr& SplitRelNode::getSplitFactor() const {
   return content->splitFactor;
 }
 
@@ -193,7 +193,7 @@ std::vector<ir::Expr> SplitRelNode::computeRelativeBound(std::set<IndexVar> defi
     return parentBound; // splitting pos space does not change coordinate bounds
   }
 
-  ir::Expr splitFactorLiteral = ir::Literal::make(getSplitFactor(), variableExprs[getParentVar()].type());
+  ir::Expr splitFactorLiteral = getSplitFactor();
 
   if (!outerVarDefined && !innerVarDefined) {
     return parentBound;
@@ -230,6 +230,7 @@ std::vector<ir::Expr> SplitRelNode::deriveIterBounds(taco::IndexVar indexVar,
 
   std::vector<ir::Expr> parentBound = parentIterBounds.at(getParentVar());
   Datatype splitFactorType = parentBound[0].type();
+  auto splitFactor = this->getSplitFactor();
   if (indexVar == getOuterVar()) {
     // The outer variable must always range from 0 to the extent of the bounds (chunked up).
     // This is a noop for the common case where all of our loops start at 0. However, it is
@@ -237,11 +238,11 @@ std::vector<ir::Expr> SplitRelNode::deriveIterBounds(taco::IndexVar indexVar,
     // and instead start at a position like T_pos[i].lo.
     ir::Expr minBound = 0;
     auto upper = ir::Sub::make(parentBound[1], parentBound[0]);
-    ir::Expr maxBound = ir::Div::make(ir::Add::make(upper, ir::Literal::make(getSplitFactor()-1, splitFactorType)), ir::Literal::make(getSplitFactor(), splitFactorType));
+    ir::Expr maxBound = ir::Div::make(ir::Add::make(upper, ir::Sub::make(splitFactor, 1)), splitFactor);
     return {minBound, maxBound};
   } else if (indexVar == getInnerVar()) {
     ir::Expr minBound = 0;
-    ir::Expr maxBound = ir::Literal::make(getSplitFactor(), splitFactorType);
+    ir::Expr maxBound = this->getSplitFactor();
     return {minBound, maxBound};
   }
   taco_ierror;
@@ -257,7 +258,7 @@ ir::Expr SplitRelNode::recoverVariable(taco::IndexVar indexVar,
   // Include the lower bound of the variable being recovered. Normally, this is 0, but
   // for cases like DIVIDE_ONTO_PARTITION, it is not.
   return ir::Add::make(
-      ir::Add::make(ir::Mul::make(variableNames[getOuterVar()], ir::Literal::make(getSplitFactor(), splitFactorType)), variableNames[getInnerVar()]),
+      ir::Add::make(ir::Mul::make(variableNames[getOuterVar()], this->getSplitFactor()), variableNames[getInnerVar()]),
       parentIterBounds[indexVar][0]
   );
 }
@@ -282,7 +283,7 @@ ir::Stmt SplitRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> def
   else {
     // innerVar = parentVar - outerVar * splitFactor
     ir::Expr subStmt = ir::Sub::make(variableNames[getParentVar()],
-                                     ir::Mul::make(variableNames[getOuterVar()], ir::Literal::make(getSplitFactor(), splitFactorType)));
+                                     ir::Mul::make(variableNames[getOuterVar()], this->getSplitFactor()));
     if (emitVarDecl) {
       return ir::Stmt(ir::VarDecl::make(variableNames[getInnerVar()], subStmt));
     }

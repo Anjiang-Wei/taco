@@ -1612,7 +1612,7 @@ IndexStmt IndexStmt::concretize() const {
   return stmt;
 }
 
-IndexStmt IndexStmt::split(IndexVar i, IndexVar i1, IndexVar i2, size_t splitFactor) const {
+IndexStmt IndexStmt::split(IndexVar i, IndexVar i1, IndexVar i2, ir::Expr splitFactor) const {
   IndexVarRel rel = IndexVarRel(new SplitRelNode(i, i1, i2, splitFactor));
   string reason;
 

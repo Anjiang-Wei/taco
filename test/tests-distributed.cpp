@@ -1864,7 +1864,7 @@ TEST(distributed, legionSpMM) {
   const int BATCHED_NNZ_PER_WARP = BATCHED_NNZ_PER_THREAD * WARP_SIZE;
   const int BATCHED_NNZ_PER_TB = BATCHED_NNZ_PER_THREAD * BLOCK_SIZE;
   auto cpuConsLowered = lowerLegionSeparatePartitionCompute(cpuCons, "computeLegionBatched", false /* waitOnFutureMap */);
-  auto gpuCons = stmt.split(j, jo, ji, BATCH_SIZE)
+  auto gpuCons = stmt.split(j, jo, ji, gy)
                      .reorder({jo, i, k, ji})
                      .fuse(i, k, f)
                      .pos(f, fpos, B(i, k))

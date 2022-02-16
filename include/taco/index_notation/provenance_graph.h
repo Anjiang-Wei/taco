@@ -78,12 +78,12 @@ struct IndexVarRelNode : public util::Manageable<IndexVarRelNode>,
 /// The split relation takes a parentVar's iteration space and stripmines into an outervar that iterates over splitFactor-sized
 /// iterations over innerVar
 struct SplitRelNode : public IndexVarRelNode {
-  SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t splitFactor);
+  SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, ir::Expr splitFactor);
 
   const IndexVar& getParentVar() const;
   const IndexVar& getOuterVar() const;
   const IndexVar& getInnerVar() const;
-  const size_t& getSplitFactor() const;
+  const ir::Expr& getSplitFactor() const;
 
   void print(std::ostream& stream) const;
   bool equals(const SplitRelNode &rel) const;
