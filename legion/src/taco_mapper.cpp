@@ -864,7 +864,8 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
     //   std::cout << it << " " << std::endl;
     // }
     // std::cout << std::endl;
-    bool recurse = ((task.tag & BACKPRESSURE_TASK) != 0) && input.domain.get_volume() > 1;
+    // bool recurse = ((task.tag & BACKPRESSURE_TASK) != 0) && input.domain.get_volume() > 1;
+    bool recurse = false;
     switch (input.domain.get_dim()) {
 #define BLOCK(DIM) \
         case DIM:  \

@@ -103,9 +103,34 @@ class DISTALBenchmark(Benchmark):
                 "-ll:fsize", fbSize,
                 "-pieces", str(procs),
             ]
+        
+        def getSpMMBatchSize():
+            if tensor.name in ["arabic-2005", "mycielskian19", "nlpkkt240"]:
+                return 32
+            elif tensor.name == "it-2004":
+                return 16
+            elif tensor.name == "kmer_A2a":
+                assert(False)
+            elif tensor.name == "kmer_V1r":
+                assert(False)
+            elif tensor.name == "sk-2005":
+                # TODO (rohany): Play around with batch size at diff node counts.
+                return 4
+            elif tensor.name == "twitter7":
+                # TODO (rohany): Play around with batch size at diff node counts.
+                return 4
+            elif tensor.name == "uk-2005":
+                return 16
+            elif tensor.name == "webbase-2001":
+                assert(False)
+            else:
+                assert(False)
+        spmmBatchArgs = []
+        if benchKind == BenchmarkKind.SpMM:
+            spmmBatchArgs = ["-batchSize", str(getSpMMBatchSize())]
 
         assert(benchKind in args)
-        return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind]
+        return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind] + spmmBatchArgs
 
     def getBinary(self, benchKind):
         tacoDir = os.environ.get("TACO_BUILD_DIR", None)
