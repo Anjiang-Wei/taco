@@ -1,0 +1,728 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++DISTAL++sddmm++arabic-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c18f8b0]    3.375856 {5}{default_mapper}: Default mapper failed allocation of size 5822483712 bytes for region  requirement 6 of task task_1 (UID 95) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++arabic-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 468.150000 ms
+BENCHID++DISTAL++sddmm++arabic-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 240.650000 ms
+BENCHID++DISTAL++sddmm++arabic-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 120.000000 ms
+BENCHID++DISTAL++sddmm++arabic-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 65.000000 ms
+BENCHID++DISTAL++sddmm++arabic-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 34.200000 ms
+BENCHID++DISTAL++sddmm++it-2004++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325c1df8b0]    6.942776 {5}{default_mapper}: Default mapper failed allocation of size 9205803488 bytes for region  requirement 5 of task task_1 (UID 95) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++it-2004++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffaf8b0]    6.179909 {5}{default_mapper}: Default mapper failed allocation of size 6150232832 bytes for region  requirement 6 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++it-2004++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032c926f8b0]    5.202185 {5}{default_mapper}: Default mapper failed allocation of size 10570648064 bytes for region  requirement 7 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ffdf8b0]    5.202185 {5}{default_mapper}: Default mapper failed allocation of size 10570648064 bytes for region  requirement 7 of task task_1 (UID 98) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++it-2004++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 229.300000 ms
+BENCHID++DISTAL++sddmm++it-2004++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 123.400000 ms
+BENCHID++DISTAL++sddmm++it-2004++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 62.350000 ms
+BENCHID++DISTAL++sddmm++kmer_A2a++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]    6.178810 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 6 of task task_1 (UID 96) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_A2a++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+[0 - 20325ffaf8b0]    3.391563 {5}{default_mapper}: Default mapper failed allocation of size 21823875840 bytes for region  requirement 6 of task task_1 (UID 102) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ff5f8b0]    3.391926 {5}{default_mapper}: Default mapper failed allocation of size 21882536960 bytes for region  requirement 6 of task task_1 (UID 103) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_A2a++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032c926f8b0]    6.153878 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 98) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ffdf8b0]    6.154053 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_A2a++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fcf8b0]    5.566232 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 220) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[1 - 203253f6f8b0]    5.567232 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 203) in memory 1e00010000000007 (GPU_FB_MEM) for processor 1d00010000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[1 - 203253fbf8b0]    5.568524 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 201) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_A2a++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fef8b0]    3.708662 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 440) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[2 - 2032d8a4f8b0]    3.711615 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 398) in memory 1e00020000000005 (GPU_FB_MEM) for processor 1d00020000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 3): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 2): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[3 - 2032d8a4f8b0]    3.711551 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 403) in memory 1e00030000000006 (GPU_FB_MEM) for processor 1d00030000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[3 - 200043fdf8b0]    3.711551 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 399) in memory 1e00030000000005 (GPU_FB_MEM) for processor 1d00030000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[2 - 200043fdf8b0]    3.711814 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 402) in memory 1e00020000000006 (GPU_FB_MEM) for processor 1d00020000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 3): SIGABRT(6)
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 2): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_A2a++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 200043fbf8b0]    4.343210 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 912) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 200043f6f8b0]    4.344126 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 920) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 2): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[2 - 200043faf8b0]    4.346639 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 810) in memory 1e00020000000006 (GPU_FB_MEM) for processor 1d00020000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[2 - 200043f5f8b0]    4.347117 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 802) in memory 1e00020000000007 (GPU_FB_MEM) for processor 1d00020000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 200043faf8b0]    4.347192 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 801) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 200043f5f8b0]    4.347192 {5}{default_mapper}: Default mapper failed allocation of size 43706412800 bytes for region  requirement 7 of task task_1 (UID 793) in memory 1e00010000000005 (GPU_FB_MEM) for processor 1d00010000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 2): SIGABRT(6)
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]    7.457216 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 6 of task task_1 (UID 96) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffaf8b0]    6.661143 {5}{default_mapper}: Default mapper failed allocation of size 27492893696 bytes for region  requirement 6 of task task_1 (UID 97) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ff5f8b0]    6.661556 {5}{default_mapper}: Default mapper failed allocation of size 27292390656 bytes for region  requirement 6 of task task_1 (UID 103) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffdf8b0]    7.806765 {5}{default_mapper}: Default mapper failed allocation of size 13759972608 bytes for region  requirement 6 of task task_1 (UID 98) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032c926f8b0]    7.808507 {5}{default_mapper}: Default mapper failed allocation of size 13732921088 bytes for region  requirement 6 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fcf8b0]    7.018481 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 222) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 203253fbf8b0]    7.018619 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 201) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 203253f6f8b0]    7.018619 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 203) in memory 1e00010000000007 (GPU_FB_MEM) for processor 1d00010000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fef8b0]    4.817513 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 440) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032d8a4f8b0]    4.818715 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 444) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++kmer_V1r++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[3 - 200043f5f8b0]    4.636285 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 811) in memory 1e00030000000006 (GPU_FB_MEM) for processor 1d00030000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 3): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 3): SIGABRT(6)
+[3 - 200043faf8b0]    4.637428 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 795) in memory 1e00030000000005 (GPU_FB_MEM) for processor 1d00030000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[1 - 200043f5f8b0]    4.637668 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 801) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[1 - 200043faf8b0]    4.638370 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 793) in memory 1e00010000000005 (GPU_FB_MEM) for processor 1d00010000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+[5 - 200043faf8b0]    4.641248 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 789) in memory 1e00050000000004 (GPU_FB_MEM) for processor 1d00050000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 5): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 4): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[4 - 200043faf8b0]    4.642012 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 788) in memory 1e00040000000004 (GPU_FB_MEM) for processor 1d00040000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043f6f8b0]    4.642073 {5}{default_mapper}: Default mapper failed allocation of size 54785284352 bytes for region  requirement 7 of task task_1 (UID 912) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++mycielskian19++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]    4.449799 {5}{default_mapper}: Default mapper failed allocation of size 7225557680 bytes for region  requirement 5 of task task_1 (UID 96) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++mycielskian19++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1942.300000 ms
+BENCHID++DISTAL++sddmm++mycielskian19++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1054.550000 ms
+BENCHID++DISTAL++sddmm++mycielskian19++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 566.850000 ms
+BENCHID++DISTAL++sddmm++mycielskian19++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 294.600000 ms
+BENCHID++DISTAL++sddmm++mycielskian19++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 153.000000 ms
+BENCHID++DISTAL++sddmm++nlpkkt240++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c18f8b0]    4.545248 {5}{default_mapper}: Default mapper failed allocation of size 7166361600 bytes for region  requirement 6 of task task_1 (UID 96) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++nlpkkt240++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]    3.585850 {5}{default_mapper}: Default mapper failed allocation of size 7166361600 bytes for region  requirement 7 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffaf8b0]    3.587059 {5}{default_mapper}: Default mapper failed allocation of size 7166361600 bytes for region  requirement 7 of task task_1 (UID 100) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++nlpkkt240++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1077.750000 ms
+BENCHID++DISTAL++sddmm++nlpkkt240++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 547.150000 ms
+BENCHID++DISTAL++sddmm++nlpkkt240++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 273.350000 ms
+BENCHID++DISTAL++sddmm++nlpkkt240++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 137.050000 ms
+BENCHID++DISTAL++sddmm++sk-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325c18f8b0]   10.759883 {5}{default_mapper}: Default mapper failed allocation of size 810178256 bytes for region  requirement 3 of task task_1 (UID 95) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++sk-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]    7.780608 {5}{default_mapper}: Default mapper failed allocation of size 7797650408 bytes for region  requirement 5 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++sk-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffdf8b0]   10.430891 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 98) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 2032c926f8b0]   10.430891 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++sk-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 200043fcf8b0]    9.882264 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 216) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[1 - 203253fbf8b0]    9.882763 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 203) in memory 1e00010000000007 (GPU_FB_MEM) for processor 1d00010000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[1 - 203253f6f8b0]    9.883623 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 199) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++sk-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fef8b0]    8.957512 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 440) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 2032d8a4f8b0]    8.958217 {5}{default_mapper}: Default mapper failed allocation of size 12962855424 bytes for region  requirement 7 of task task_1 (UID 448) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++sk-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 119.250000 ms
+BENCHID++DISTAL++sddmm++twitter7++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]    7.963215 {5}{default_mapper}: Default mapper failed allocation of size 5873460728 bytes for region  requirement 4 of task task_1 (UID 96) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++twitter7++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffaf8b0]    7.188875 {5}{default_mapper}: Default mapper failed allocation of size 1850623232 bytes for region  requirement 6 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++twitter7++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffdf8b0]    8.359344 {5}{default_mapper}: Default mapper failed allocation of size 10662970880 bytes for region  requirement 7 of task task_1 (UID 101) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032c926f8b0]    8.360112 {5}{default_mapper}: Default mapper failed allocation of size 10662970880 bytes for region  requirement 7 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++twitter7++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[1 - 203253fbf8b0]    9.004289 {5}{default_mapper}: Default mapper failed allocation of size 10662970880 bytes for region  requirement 7 of task task_1 (UID 199) in memory 1e00010000000005 (GPU_FB_MEM) for processor 1d00010000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 203253f6f8b0]    9.004358 {5}{default_mapper}: Default mapper failed allocation of size 10662970880 bytes for region  requirement 7 of task task_1 (UID 203) in memory 1e00010000000007 (GPU_FB_MEM) for processor 1d00010000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++twitter7++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1651.250000 ms
+BENCHID++DISTAL++sddmm++twitter7++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 823.650000 ms
+BENCHID++DISTAL++sddmm++uk-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]    5.995705 {5}{default_mapper}: Default mapper failed allocation of size 7490914256 bytes for region  requirement 5 of task task_1 (UID 95) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++uk-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325ffaf8b0]    4.850841 {5}{default_mapper}: Default mapper failed allocation of size 10101740800 bytes for region  requirement 7 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++uk-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffdf8b0]    5.398830 {5}{default_mapper}: Default mapper failed allocation of size 10101740800 bytes for region  requirement 7 of task task_1 (UID 101) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 2032c926f8b0]    5.399946 {5}{default_mapper}: Default mapper failed allocation of size 10101740800 bytes for region  requirement 7 of task task_1 (UID 102) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++uk-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 184.000000 ms
+BENCHID++DISTAL++sddmm++uk-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 97.600000 ms
+BENCHID++DISTAL++sddmm++uk-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 47.900000 ms
+BENCHID++DISTAL++sddmm++webbase-2001++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c18f8b0]    8.755972 {5}{default_mapper}: Default mapper failed allocation of size 8159225520 bytes for region  requirement 5 of task task_1 (UID 95) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++webbase-2001++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325ffaf8b0]    6.075226 {5}{default_mapper}: Default mapper failed allocation of size 16139865344 bytes for region  requirement 6 of task task_1 (UID 99) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++webbase-2001++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 2032c926f8b0]    6.234947 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 101) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++webbase-2001++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 200043f7f8b0]   10.811889 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 218) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[1 - 203253f6f8b0]   10.812098 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 203) in memory 1e00010000000007 (GPU_FB_MEM) for processor 1d00010000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[1 - 203253fbf8b0]   10.812349 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 201) in memory 1e00010000000006 (GPU_FB_MEM) for processor 1d00010000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 1) terminated with signal 6
+BENCHID++DISTAL++sddmm++webbase-2001++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043fef8b0]    8.208520 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 440) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++sddmm++webbase-2001++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/sddmm-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -csr /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 200043f6f8b0]   10.506741 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 912) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+sddmm-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 200043fbf8b0]   10.507446 {5}{default_mapper}: Default mapper failed allocation of size 30244391680 bytes for region  requirement 7 of task task_1 (UID 928) in memory 1e00000000000006 (GPU_FB_MEM) for processor 1d00000000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3272860: <../scripts/spbenchmark.py DISTAL sddmm all-matrices --gpus 1 2 4 8 16 32> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py DISTAL sddmm all-matrices --gpus 1 2 4 8 16 32> was submitted from host <lassen587> by user <yadav2> in cluster <lassen> at Wed Feb 16 12:16:35 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb 16 12:38:04 2022
+                            <40*lassen588>
+                            <40*lassen589>
+                            <40*lassen410>
+                            <40*lassen415>
+                            <40*lassen745>
+                            <40*lassen416>
+                            <40*lassen747>
+                            <40*lassen419>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb 16 12:38:04 2022
+Terminated at Wed Feb 16 13:00:35 2022
+Results reported at Wed Feb 16 13:00:35 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py DISTAL sddmm all-matrices --gpus 1 2 4 8 16 32
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2.00 sec.
+    Max Memory :                                 62 MB
+    Average Memory :                             60.60 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1425 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   1352 sec.
+    Turnaround time :                            2640 sec.
+
+The output (if any) is above this job summary.
+

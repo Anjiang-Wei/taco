@@ -297,16 +297,16 @@ template<typename T>
 #if defined (__CUDACC__)
 __host__ __device__
 #endif
-int64_t taco_binarySearchBefore(T posArray, int64_t arrayStart, int64_t arrayEnd, int32_t target) {
+int64_t taco_binarySearchBefore(T posArray, int64_t arrayStart, int64_t arrayEnd, int64_t target) {
   if (posArray[arrayEnd].hi < target) {
     return arrayEnd;
   }
   // The binary search range must be exclusive.
-  int lowerBound = arrayStart; // always <= target
-  int upperBound = arrayEnd + 1; // always > target
+  int64_t lowerBound = arrayStart; // always <= target
+  int64_t upperBound = arrayEnd + 1; // always > target
   while (upperBound - lowerBound > 1) {
     // TOOD (rohany): Does this suffer from overflow?
-    int mid = (upperBound + lowerBound) / 2;
+    int64_t mid = (upperBound + lowerBound) / 2;
     auto midRect = posArray[mid];
     // Contains checks lo <= target <= hi.
     if (midRect.contains(target)) { return mid; }
@@ -322,15 +322,15 @@ template<typename T>
 #if defined (__CUDACC__)
 __host__ __device__
 #endif
-int64_t taco_binarySearchAfter(T array, int64_t arrayStart, int64_t arrayEnd, int32_t target) {
+int64_t taco_binarySearchAfter(T array, int64_t arrayStart, int64_t arrayEnd, int64_t target) {
   if (array[arrayStart] >= target) {
     return arrayStart;
   }
-  int lowerBound = arrayStart; // always < target
-  int upperBound = arrayEnd; // always >= target
+  int64_t lowerBound = arrayStart; // always < target
+  int64_t upperBound = arrayEnd; // always >= target
   while (upperBound - lowerBound > 1) {
-    int mid = (upperBound + lowerBound) / 2;
-    int midValue = array[mid];
+    int64_t mid = (upperBound + lowerBound) / 2;
+    int64_t midValue = array[mid];
     if (midValue < target) {
       lowerBound = mid;
     } else if (midValue > target) {

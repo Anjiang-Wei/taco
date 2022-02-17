@@ -1,0 +1,585 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
+BENCHID++DISTAL++spadd3++arabic-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   10.730045 {5}{default_mapper}: Default mapper failed allocation of size 5119995664 bytes for region  requirement 5 of task task_2 (UID 221) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++arabic-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffaf8b0]   11.741015 {5}{default_mapper}: Default mapper failed allocation of size 2640846928 bytes for region  requirement 11 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ff5f8b0]   11.741416 {5}{default_mapper}: Default mapper failed allocation of size 2479148744 bytes for region  requirement 11 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++arabic-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 358.850000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 216.900000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 131.250000 ms
+BENCHID++DISTAL++spadd3++arabic-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/arabic-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/arabic-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 120.200000 ms
+BENCHID++DISTAL++spadd3++it-2004++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c18f8b0]   16.943078 {5}{default_mapper}: Default mapper failed allocation of size 4602901748 bytes for region  requirement 7 of task task_1 (UID 184) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++it-2004++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   19.560061 {5}{default_mapper}: Default mapper failed allocation of size 2009517856 bytes for region  requirement 7 of task task_2 (UID 241) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ffaf8b0]   19.560502 {5}{default_mapper}: Default mapper failed allocation of size 5186767776 bytes for region  requirement 5 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++it-2004++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffdf8b0]   18.122489 {5}{default_mapper}: Default mapper failed allocation of size 3005063272 bytes for region  requirement 8 of task task_2 (UID 273) in memory 1e00000000000006 (GPU_FB_MEM) for processor 1d00000000000007 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++it-2004++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 428.100000 ms
+BENCHID++DISTAL++spadd3++it-2004++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 309.500000 ms
+BENCHID++DISTAL++spadd3++it-2004++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/it-2004.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/it-2004-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 291.200000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c72f8b0]   13.909651 {5}{runtime}: [error 576] LEGION ERROR: Failed to allocate DeferredBuffer/Value/Reduction in task rectCompressedGetSeqInsertEdgesLocalScan (UID 187) because Framebuffer memory for one GPU and all its SMs memory 1e00000000000004 is full. This is an eager allocation so you must adjust the percentage of this memory dedicated for eager allocations with '-lg:eager_alloc_percentage' flag on the command line. (from file /g/g15/yadav2/taco/legion/legion/runtime/legion/legion_context.cc:2100)
+For more information see:
+http://legion.stanford.edu/messages/error_code.html#error_code_576
+
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++kmer_A2a++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   12.344531 {5}{default_mapper}: Default mapper failed allocation of size 1444345008 bytes for region  requirement 8 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++kmer_A2a++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 530.450000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 297.350000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 298.750000 ms
+BENCHID++DISTAL++spadd3++kmer_A2a++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_A2a.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_A2a-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 226.300000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   13.139441 {5}{default_mapper}: Default mapper failed allocation of size 1861643620 bytes for region  requirement 7 of task task_1 (UID 184) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++kmer_V1r++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 203a40f2f8b0]   14.950916 {5}{runtime}: [error 576] LEGION ERROR: Failed to allocate DeferredBuffer/Value/Reduction in task rectCompressedGetSeqInsertEdgesLocalScan (UID 196) because Framebuffer memory for one GPU and all its SMs memory 1e00000000000004 is full. This is an eager allocation so you must adjust the percentage of this memory dedicated for eager allocations with '-lg:eager_alloc_percentage' flag on the command line. (from file /g/g15/yadav2/taco/legion/legion/runtime/legion/legion_context.cc:2100)
+For more information see:
+http://legion.stanford.edu/messages/error_code.html#error_code_576
+
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++kmer_V1r++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 643.300000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 651.650000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 369.850000 ms
+BENCHID++DISTAL++spadd3++kmer_V1r++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/kmer_V1r.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/kmer_V1r-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 252.750000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c18f8b0]   14.584768 {5}{default_mapper}: Default mapper failed allocation of size 12043644704 bytes for region  requirement 2 of task task_2 (UID 221) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++mycielskian19++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   12.747185 {5}{default_mapper}: Default mapper failed allocation of size 8027261488 bytes for region  requirement 2 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffaf8b0]   12.747868 {5}{default_mapper}: Default mapper failed allocation of size 2410092072 bytes for region  requirement 11 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++mycielskian19++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffdf8b0]   12.229824 {5}{default_mapper}: Default mapper failed allocation of size 3208388048 bytes for region  requirement 8 of task task_2 (UID 271) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++mycielskian19++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1057.800000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 671.500000 ms
+BENCHID++DISTAL++spadd3++mycielskian19++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/mycielskian19.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/mycielskian19-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 504.800000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   14.629266 {5}{default_mapper}: Default mapper failed allocation of size 8418616640 bytes for region  requirement 2 of task task_2 (UID 221) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++nlpkkt240++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325ffaf8b0]   13.307429 {5}{default_mapper}: Default mapper failed allocation of size 3073389400 bytes for region  requirement 8 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ff5f8b0]   13.307808 {5}{default_mapper}: Default mapper failed allocation of size 3122389424 bytes for region  requirement 8 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++nlpkkt240++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 325.100000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 205.150000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 119.350000 ms
+BENCHID++DISTAL++spadd3++nlpkkt240++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/nlpkkt240.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/nlpkkt240-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 105.300000 ms
+BENCHID++DISTAL++spadd3++sk-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   25.110286 {5}{default_mapper}: Default mapper failed allocation of size 7797650408 bytes for region  requirement 4 of task task_1 (UID 184) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++sk-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   29.368029 {5}{default_mapper}: Default mapper failed allocation of size 9238110608 bytes for region  requirement 2 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 20325ffaf8b0]   29.368526 {5}{default_mapper}: Default mapper failed allocation of size 9883785408 bytes for region  requirement 2 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++sk-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ffdf8b0]   28.501641 {5}{default_mapper}: Default mapper failed allocation of size 3343277152 bytes for region  requirement 8 of task task_2 (UID 267) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+[0 - 2032c926f8b0]   28.501979 {5}{default_mapper}: Default mapper failed allocation of size 2037269448 bytes for region  requirement 7 of task task_2 (UID 272) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++sk-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 623.400000 ms
+BENCHID++DISTAL++spadd3++sk-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 386.900000 ms
+BENCHID++DISTAL++spadd3++sk-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/sk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/sk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 288.250000 ms
+BENCHID++DISTAL++spadd3++twitter7++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   21.301299 {5}{default_mapper}: Default mapper failed allocation of size 5873460732 bytes for region  requirement 7 of task task_1 (UID 184) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++twitter7++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   22.584371 {5}{default_mapper}: Default mapper failed allocation of size 18347311152 bytes for region  requirement 2 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffaf8b0]   22.585084 {5}{default_mapper}: Default mapper failed allocation of size 2542458224 bytes for region  requirement 8 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++twitter7++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 2032c926f8b0]   21.480392 {5}{default_mapper}: Default mapper failed allocation of size 13845951984 bytes for region  requirement 2 of task task_2 (UID 267) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffdf8b0]   21.481039 {5}{default_mapper}: Default mapper failed allocation of size 2253222136 bytes for region  requirement 8 of task task_2 (UID 272) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++twitter7++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 200043f7f8b0]   25.778744 {5}{default_mapper}: Default mapper failed allocation of size 9760182904 bytes for region  requirement 2 of task task_2 (UID 568) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++twitter7++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 2032d8a4f8b0]   31.188165 {5}{default_mapper}: Default mapper failed allocation of size 2931558840 bytes for region  requirement 8 of task task_2 (UID 1120) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++twitter7++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/twitter7.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/twitter7-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 1921.250000 ms
+BENCHID++DISTAL++spadd3++uk-2005++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325c1df8b0]   17.308445 {5}{default_mapper}: Default mapper failed allocation of size 8981512584 bytes for region  requirement 2 of task task_2 (UID 221) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++uk-2005++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 20325ff5f8b0]   14.429261 {5}{default_mapper}: Default mapper failed allocation of size 3013688776 bytes for region  requirement 8 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ffaf8b0]   14.429808 {5}{default_mapper}: Default mapper failed allocation of size 4477225480 bytes for region  requirement 5 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++uk-2005++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[0 - 2032c926f8b0]   14.625857 {5}{default_mapper}: Default mapper failed allocation of size 2679379224 bytes for region  requirement 11 of task task_2 (UID 274) in memory 1e00000000000007 (GPU_FB_MEM) for processor 1d00000000000008 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++uk-2005++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 361.000000 ms
+BENCHID++DISTAL++spadd3++uk-2005++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 215.450000 ms
+BENCHID++DISTAL++spadd3++uk-2005++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/uk-2005.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/uk-2005-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 165.950000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++1++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 1 -ll:fsize 15G -pieces 1 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325c1df8b0]   16.635476 {5}{default_mapper}: Default mapper failed allocation of size 4079612764 bytes for region  requirement 7 of task task_1 (UID 184) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++webbase-2001++2++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 2 -ll:fsize 15G -pieces 2 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 20325ffaf8b0]   18.481375 {5}{default_mapper}: Default mapper failed allocation of size 5125475328 bytes for region  requirement 2 of task task_2 (UID 236) in memory 1e00000000000004 (GPU_FB_MEM) for processor 1d00000000000005 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[0 - 20325ff5f8b0]   18.481886 {5}{default_mapper}: Default mapper failed allocation of size 5800118456 bytes for region  requirement 2 of task task_2 (UID 242) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++webbase-2001++4++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 4 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 2032c926f8b0]   18.198422 {5}{default_mapper}: Default mapper failed allocation of size 2034454768 bytes for region  requirement 11 of task task_2 (UID 272) in memory 1e00000000000005 (GPU_FB_MEM) for processor 1d00000000000006 (TOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+spadd3-cuda: /g/g15/yadav2/taco/legion/legion/runtime/mappers/default_mapper.cc:2640: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+ERROR:  One or more process (first noticed rank 0) terminated with signal 6
+BENCHID++DISTAL++spadd3++webbase-2001++8++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 8 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 417.650000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++16++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 15G -pieces 16 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 329.500000 ms
+BENCHID++DISTAL++spadd3++webbase-2001++32++gpus
+Executing command: jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spadd3-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -ll:gpu 4 -ll:fsize 14.5G -pieces 32 -n 20 -warmup 10 -tensorB /p/gpfs1/yadav2/tensors/distal/webbase-2001.csr.hdf5 -tensorC /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-0.csr.hdf5 -tensorD /p/gpfs1/yadav2/tensors/distal/webbase-2001-rotated-1.csr.hdf5 -tm:untrack_valid_regions -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 201.650000 ms
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3272864: <../scripts/spbenchmark.py DISTAL spadd3 all-matrices --gpus 1 2 4 8 16 32> in cluster <lassen> Done
+
+Job <../scripts/spbenchmark.py DISTAL spadd3 all-matrices --gpus 1 2 4 8 16 32> was submitted from host <lassen587> by user <yadav2> in cluster <lassen> at Wed Feb 16 12:22:40 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb 16 12:38:04 2022
+                            <40*lassen749>
+                            <40*lassen420>
+                            <40*lassen750>
+                            <40*lassen425>
+                            <40*lassen754>
+                            <40*lassen426>
+                            <40*lassen755>
+                            <40*lassen427>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb 16 12:38:04 2022
+Terminated at Wed Feb 16 13:20:16 2022
+Results reported at Wed Feb 16 13:20:16 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+../scripts/spbenchmark.py DISTAL spadd3 all-matrices --gpus 1 2 4 8 16 32
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2.00 sec.
+    Max Memory :                                 277 MB
+    Average Memory :                             65.72 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1425 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   2532 sec.
+    Turnaround time :                            3456 sec.
+
+The output (if any) is above this job summary.
+

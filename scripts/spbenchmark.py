@@ -63,10 +63,10 @@ class DISTALBenchmark(Benchmark):
             BenchmarkKind.SpAdd3: ["-tensorB", self.getDISTALTensor(tensor, 'csr'), 
                                    "-tensorC", self.getShiftedTensor(tensor, 'csr', 0), 
                                    "-tensorD", self.getShiftedTensor(tensor, 'csr', 1),
-                                   "-tm:untrack_valid_regions"],
+                                   "-tm:untrack_valid_regions"] + (["-lg:eager_alloc_percentage", "5"] if self.gpu else []),
             BenchmarkKind.SpTTV: ["-tensor", self.getDISTALTensor(tensor, 'dss')] + (["-pos"] if self.gpu or tensor.name == "patents" else []),
             # TODO (rohany): Pass through the ldim here.
-            BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dds' if tensor.name in ["patents"] else "dss")] + (["-dds"] if tensor.name in ["patents"] else []),
+            BenchmarkKind.SpMTTKRP: ["-tensor", self.getDISTALTensor(tensor, 'dds' if tensor.name in ["patents"] and not self.gpu else "dss")] + (["-dds"] if tensor.name in ["patents"] and not self.gpu else []),
             # TODO (rohany): For some tensors, like the patents tensor, we might want to
             #  do a different format here.
             BenchmarkKind.SpInnerProd: ["-tensorB", self.getDISTALTensor(tensor, 'dds' if tensor.name in ["patents", "nell-2"] else "dss"), 

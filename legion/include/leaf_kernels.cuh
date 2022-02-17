@@ -199,7 +199,7 @@ void cu_ttv(TTVPack pack, T* A_vals, const T* B_vals, const T* C_vals) {
 // to be searching for positions offset by the start of the values partition that we
 // are considering.
 template<typename T, typename R>
-__global__ void taco_binarySearchBeforeBlock(T posArray, R* __restrict__ results, int arrayStart, int arrayEnd, int values_per_block, int num_blocks, int offset) {
+__global__ void taco_binarySearchBeforeBlock(T posArray, R* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, int values_per_block, int num_blocks, int64_t offset) {
   int thread = threadIdx.x;
   int block = blockIdx.x;
   int idx = block * blockDim.x + thread;
@@ -211,19 +211,19 @@ __global__ void taco_binarySearchBeforeBlock(T posArray, R* __restrict__ results
 }
 
 template<typename T>
-__host__ void taco_binarySearchBeforeBlockLaunch(T posArray, int32_t* __restrict__ results, int arrayStart, int arrayEnd, int values_per_block, int block_size, int num_blocks, int offset = 0) {
+__host__ void taco_binarySearchBeforeBlockLaunch(T posArray, int32_t* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, int values_per_block, int block_size, int num_blocks, int64_t offset = 0) {
   int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
   taco_binarySearchBeforeBlock<T, int32_t><<<num_search_blocks, block_size>>>(posArray, results, arrayStart, arrayEnd, values_per_block, num_blocks, offset);
 }
 
 template<typename T>
-__host__ void taco_binarySearchBeforeBlockLaunch(T posArray, int64_t* __restrict__ results, int arrayStart, int arrayEnd, int values_per_block, int block_size, int num_blocks, int offset = 0) {
+__host__ void taco_binarySearchBeforeBlockLaunch(T posArray, int64_t* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, int values_per_block, int block_size, int num_blocks, int64_t offset = 0) {
   int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
   taco_binarySearchBeforeBlock<T, int64_t><<<num_search_blocks, block_size>>>(posArray, results, arrayStart, arrayEnd, values_per_block, num_blocks, offset);
 }
 
 template<typename T, typename R>
-__global__ void taco_binarySearchIndirectBeforeBlock(T array, R* __restrict__ results, int arrayStart, int arrayEnd, R* __restrict__ targets, int num_blocks) {
+__global__ void taco_binarySearchIndirectBeforeBlock(T array, R* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, R* __restrict__ targets, int num_blocks) {
   int thread = threadIdx.x;
   int block = blockIdx.x;
   int idx = block * blockDim.x + thread;
@@ -234,13 +234,13 @@ __global__ void taco_binarySearchIndirectBeforeBlock(T array, R* __restrict__ re
 }
 
 template<typename T>
-__host__ void taco_binarySearchIndirectBeforeBlockLaunch(T array, int32_t* __restrict__ results, int arrayStart, int arrayEnd, int32_t* __restrict__ targets, int block_size, int num_blocks) {
+__host__ void taco_binarySearchIndirectBeforeBlockLaunch(T array, int32_t* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, int32_t* __restrict__ targets, int block_size, int num_blocks) {
   int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
   taco_binarySearchIndirectBeforeBlock<T, int32_t><<<num_search_blocks, block_size>>>(array, results, arrayStart, arrayEnd, targets, num_blocks);
 }
 
 template<typename T>
-__host__ void taco_binarySearchIndirectBeforeBlockLaunch(T array, int64_t* __restrict__ results, int arrayStart, int arrayEnd, int64_t* __restrict__ targets, int block_size, int num_blocks) {
+__host__ void taco_binarySearchIndirectBeforeBlockLaunch(T array, int64_t* __restrict__ results, int64_t arrayStart, int64_t arrayEnd, int64_t* __restrict__ targets, int block_size, int num_blocks) {
   int num_search_blocks = (num_blocks + 1 + block_size - 1) / block_size;
   taco_binarySearchIndirectBeforeBlock<T, int64_t><<<num_search_blocks, block_size>>>(array, results, arrayStart, arrayEnd, targets, num_blocks);
 }

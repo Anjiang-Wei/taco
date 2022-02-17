@@ -6,7 +6,11 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+#ifdef TACO_USE_CUDA
+#include "taco-generated.cuh"
+#else
 #include "taco-generated.h"
+#endif
 
 using namespace Legion;
 typedef double valType;
@@ -28,6 +32,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!fileName.empty()) << "Provide a tensor with -tensor";
+
+#ifdef TACO_USE_CUDA
+  taco_uassert(!dds) << "DDS unsupported with GPUs";
+#endif
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -83,15 +91,20 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   }
 
   partitionPackForcomputeLegion pack;
+#ifndef TACO_USE_CUDA
   partitionPackForcomputeLegionDDS packDDS;
+#endif
   if (dds) {
+#ifndef TACO_USE_CUDA
     packDDS = partitionForcomputeLegionDDS(ctx, runtime, &A, &B, &C, &D, pieces, jPieces);
+#endif
   } else {
     pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, &D, pieces);
   }
 
   IndexPartition commPart;
   if (dds) {
+#ifndef TACO_USE_CUDA
     // If we're dds that means we're running with the patents tensor. That means the `i` dimension is
     // really small and we don't care that much about creating compact sparse partitions.
     commPart = runtime->create_equal_partition(
@@ -99,6 +112,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
         A.vals.get_index_space(),
         runtime->get_index_partition_color_space_name(ctx, packDDS.APartition.valsPartition.get_index_partition())
     );
+#endif
   } else {
     commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
   }
@@ -107,7 +121,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
     if (dds) {
+#ifndef TACO_USE_CUDA
       computeLegionDDS(ctx, runtime, &A, &B, &C, &D, &packDDS, pieces, jPieces);
+#endif
     } else {
       computeLegion(ctx, runtime, &A, &B, &C, &D, &pack, pieces);
     }
