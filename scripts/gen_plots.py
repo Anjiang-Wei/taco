@@ -71,10 +71,12 @@ for system, left in benchSet.items():
         print(f"!!! System {system} is missing benchmarks: {map} !!!")
 
 
+# Much of the logic to generate the broken plot was taken from here:
+# https://gist.github.com/pfandzelter/0ae861f0dee1fb4fd1d11344e3f85c9e.
 def brokenSpeedupPlot(data):
     palette = seaborn.color_palette()
     markers = ["o", "X", "d", "P"]
-    fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2)# , sharex=True)
+    fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2)
     ax1 = seaborn.lineplot(ax=ax1, data=data[data["System"] != "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette[0:3], markers=markers[0:3])
     ax2 = seaborn.lineplot(ax=ax2, data=data[data["System"] == "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette[3:4], markers=markers[3:4])
 
@@ -113,11 +115,13 @@ def brokenSpeedupPlot(data):
     ax2.get_legend().remove()
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
-    # TODO (rohany): Can set the location with an (x, y) pair.
+    # This pair of location coordinates must be in [0, 1).
     fig.legend(lines, labels, loc=(0.15, 0.68))
+
     # Add to remove the lines between each of the subplots.
     # ax1.spines["bottom"].set_visible(False)
     # ax2.spines["top"].set_visible(False)
+
     # Add the "line break" visual.
     d = .01  # how big to make the diagonal lines in axes coordinates
     # arguments to pass to plot, just so we don't keep repeating them
