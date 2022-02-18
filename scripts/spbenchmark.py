@@ -1,41 +1,18 @@
 #!/usr/bin/env python3
 
 import argparse
-from enum import Enum, auto
 import os
 from pathlib import Path
 import subprocess
 import sys
 
 from registry import *
+from benchkinds import *
 
 def getTensorDir():
     if "TENSOR_DIR" not in os.environ:
         raise AssertionError("TENSOR_DIR must be set in the environment.")
     return os.environ["TENSOR_DIR"]
-
-class BenchmarkKind(Enum):
-    SpMV = auto()
-    SpMSpV = auto()
-    SpMM = auto()
-    SDDMM = auto()
-    SpAdd3 = auto()
-    SpTTV = auto()
-    SpMTTKRP = auto()
-    SpInnerProd = auto()
-
-    def __str__(self):
-        return self.name.lower()
-
-    @staticmethod
-    def names():
-        return [str(b) for b in BenchmarkKind]
-
-    @staticmethod
-    def getByName(name):
-        filtered = list(filter(lambda bk: str(bk) == name, list(BenchmarkKind)))
-        assert(len(filtered) == 1)
-        return filtered[0]
 
 # Parent class for all benchmarks.
 class Benchmark:
