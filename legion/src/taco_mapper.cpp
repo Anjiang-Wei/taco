@@ -151,7 +151,7 @@ void TACOMapper::map_task(const Legion::Mapping::MapperContext ctx,
   if ((task.tag & UNTRACK_VALID_REGIONS) != 0 && this->untrackValidRegions) {
     for (size_t i = 0; i < task.regions.size(); i++) {
       auto &rg = task.regions[i];
-      if (rg.privilege == READ_ONLY) {
+      if (rg.privilege == READ_ONLY && i == 4) {
         output.untracked_valid_regions.insert(i);
       }
     }
@@ -579,15 +579,27 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
     // messes up the placement that we are going for with the index launches. This
     // implementation mirrors the standard slicing strategy of the default mapper.
     auto targets = this->select_targets_for_task(ctx, task);
+    bool recurse = ((task.tag & BACKPRESSURE_TASK) != 0) && (input.domain.get_volume() > 1);
+    if (input.domain.get_volume() == 1 && task.target_proc.exists()) {
+      targets = {task.target_proc};
+    }
+    // We can't recurse here???? But we have to make sure that all of the blocks have size 1 I think.
+    recurse = false;
+    // bool recurse = false;
+    // std::cout << "RECURSE FOR TASK: " << task.get_task_name() << " " << task.index_domain << " " << recurse << " " << input.domain << std::endl;
     switch (input.domain.get_dim()) {
 #define BLOCK(DIM) \
         case DIM:  \
           {        \
             Legion::DomainT<DIM,Legion::coord_t> point_space = input.domain; \
+            auto targetSize = targets.size();       \
+            if (((task.tag & BACKPRESSURE_TASK) != 0) && (input.domain.get_volume() > 1)) { \
+              targetSize = input.domain.get_volume(); \
+            }       \
             Legion::Point<DIM,Legion::coord_t> num_blocks = \
-              default_select_num_blocks<DIM>(targets.size(), point_space.bounds); \
+              default_select_num_blocks<DIM>(targetSize, point_space.bounds); \
             this->default_decompose_points<DIM>(point_space, targets, \
-                  num_blocks, false/*recurse*/, \
+                  num_blocks, recurse, \
                   stealing_enabled, output.slices); \
             break;   \
           }
@@ -596,6 +608,16 @@ void TACOMapper::slice_task(const Legion::Mapping::MapperContext ctx,
       default:
         taco_iassert(false);
     }
+  }
+  std::cout  << "SLICE_TASK for "
+             << Utilities::to_string(runtime, ctx, task, false /*include_index_point*/)
+             << " <" << task.get_unique_id() << ">" << std::endl;
+  std::cout << "  INPUT: " << Utilities::to_string(runtime, ctx, input.domain) << std::endl;
+  std::cout << "  OUTPUT:" << std::endl;
+  for (std::vector<TaskSlice>::const_iterator it = output.slices.begin();
+       it != output.slices.end(); ++it) {
+    std::cout << "    " << Utilities::to_string(runtime, ctx, it->domain)
+               << " -> " << it->proc << std::endl;
   }
 }
 
@@ -611,13 +633,16 @@ void TACOMapper::report_profiling(const MapperContext ctx,
   taco_iassert(prof->result == Realm::ProfilingMeasurements::OperationStatus::COMPLETED_SUCCESSFULLY);
   // Clean up after ourselves.
   delete prof;
+
+  // std::cout << "Report profiling for task: " << task.get_task_name() << " " << task.get_unique_id() << " " << task.index_domain << " " << task.index_point << std::endl;
+
   // Backpressured tasks are launched in a loop, and are kept on the originating processor.
   // So, we'll use orig_proc to index into the queue.
   auto& inflight = this->backPressureQueue[task.orig_proc];
   MapperEvent event;
   // Find this task in the queue.
   for (auto it = inflight.begin(); it != inflight.end(); it++) {
-    if (it->id == task.get_unique_id()) {
+    if (it->id == std::make_pair(task.get_slice_domain(), task.get_context_index())) {
       event = it->event;
       inflight.erase(it);
       break;
@@ -663,7 +688,9 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
     {
       auto task = *it;
       bool schedule = true;
-      if ((task->tag & BACKPRESSURE_TASK) != 0) {
+      // TODO (rohany): Handle a case here when the total index space volume is also equal 1.
+      if (((task->tag & BACKPRESSURE_TASK) != 0) && !(task->is_index_space && task->get_slice_domain().get_volume() > 1)) {
+        // std::cout << "Visiting task: " << task->get_task_name() << " " << task->get_unique_id() << " " << task->index_domain << " " << task->index_point << " " << task->get_slice_domain() << std::endl;
         // See how many tasks we have in flight. Again, we use the orig_proc here
         // rather than target_proc to match with our heuristics for where serial task
         // launch loops go.
@@ -683,7 +710,7 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
           // Otherwise, we can schedule the task. Create a new event
           // and queue it up on the processor.
           this->backPressureQueue[task->orig_proc].push_back({
-            .id = task->get_unique_id(),
+            .id = std::make_pair(task->get_slice_domain(), task->get_context_index()),
             .event = this->runtime->create_mapper_event(ctx),
             .schedTime = schedTime,
           });
@@ -692,6 +719,8 @@ void TACOMapper::select_tasks_to_map(const MapperContext ctx,
       // Schedule tasks that are valid and have the target depth.
       if (schedule && (*it)->get_depth() == max_depth)
       {
+        auto dom = task->get_slice_domain();
+        // std::cout << "Putting task in output map queue: " << Utilities::to_string(runtime, ctx, *task) << " " << task->index_domain << " " << (dom.exists() ? dom : Domain(Rect<1>(0, 0))) << std::endl;
         output.map_tasks.insert(*it);
         count++;
       }

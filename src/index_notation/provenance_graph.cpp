@@ -762,12 +762,7 @@ ir::Expr PosRelNode::recoverVariable(taco::IndexVar indexVar,
   ModeFunction segment_bounds = accessIterator.posBounds(parentPos);
 
   // positions should be with respect to entire array not just segment so don't need to offset variable when projecting.
-  ir::Expr project_result = ir::Load::make(coord_array, variableNames.at(getPosVar()));
-
-  // but need to subtract parentvars start corodbound
-  ir::Expr parent_value = ir::Sub::make(project_result, parentCoordBounds[getParentVar()][0]);
-
-  return parent_value;
+  return ir::Load::make(coord_array, variableNames.at(getPosVar()));
 }
 
 ir::Stmt PosRelNode::recoverChild(IndexVar indexVar, std::vector<IndexVar> definedVarOrder,

@@ -1843,10 +1843,49 @@ TEST(distributed, legionSpMM) {
                      .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
                      .communicate({A(i, j), B(i, k), C(k, j)}, fposo)
                      ;
+
+  auto memConsCPU = stmt.reorder({i, j, k})
+                        .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
+                        .communicate({A(i, j), B(i, k), C(k, j)}, jo)
+                        ;
+
+  const int BATCHED_NNZ_PER_THREAD = 8;
+  const int BATCHED_NNZ_PER_WARP = BATCHED_NNZ_PER_THREAD * WARP_SIZE;
+  const int BATCHED_NNZ_PER_TB = BATCHED_NNZ_PER_THREAD * BLOCK_SIZE;
+  const int ROWS_PER_WARP = 1;
+  const int ROWS_PER_TB = ROWS_PER_WARP * BLOCK_SIZE;
+  
+  IndexVar fpos1("fpos1"), fpos2("fpos2"), thread_nz("thread_nz"), block_row("block_row"), warp_row("warp_row");
+  auto memConsGPU = stmt.reorder({i, j, k})
+                        .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy), taco::ParallelUnit::DistributedGPU)
+                        .reorder({ii, k, ji})
+                        .split(ii, block, block_row, ROWS_PER_TB)
+                        .split(block_row, warp_row, warp, BLOCK_SIZE / WARP_SIZE)
+                        .pos(k, kpos, B(i, k))
+                        .split(kpos, thread_nz, thread, WARP_SIZE)
+                        .reorder({block, warp, warp_row, thread, thread_nz})
+                        .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+                        .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+                        // TODO (rohany): Is it possible to use a temporary here?
+                        .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+                        // .fuse(ii, k, f)
+                        // .pos(f, fpos, B(i, k))
+                        // // TODO (rohany): This can probably be optimized further.
+                        // .split(fpos, block, fpos1, BATCHED_NNZ_PER_TB)
+                        // .split(fpos1, warp, fpos2, BATCHED_NNZ_PER_WARP)
+                        // .split(fpos2, thread, thread_nz, BATCHED_NNZ_PER_THREAD)
+                        // .reorder({block, warp, thread, thread_nz})
+                        // .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+                        // .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+                        // .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics)
+                        .communicate({A(i, j), B(i, k), C(k, j)}, jo)
+                        ;
   auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
   auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", loweredCPU);
-  ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", loweredGPU);
+  auto loweredMemConsCPU = lowerLegionSeparatePartitionCompute(memConsCPU, "computeLegionConsMem", false /* waitOnFutureMap */);
+  auto loweredMemConsGPU = lowerLegionSeparatePartitionCompute(memConsGPU, "computeLegionConsMem", false /* waitOnFutureMap */);
+  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", ir::Block::make(loweredCPU, loweredMemConsCPU));
+  ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", ir::Block::make(loweredGPU, loweredMemConsGPU));
 }
 
 TEST(distributed, legionSpSDDMM) {

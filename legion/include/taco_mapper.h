@@ -197,7 +197,9 @@ private:
   // InFlightTask represents a task currently being executed.
   struct InFlightTask {
     // Unique identifier of the task instance.
-    Legion::UniqueID id;
+    // Legion::UniqueID id;
+    // TODO (rohany): Comment.
+    std::pair<Legion::Domain, size_t> id;
     // An event that will be triggered when the task finishes.
     Legion::Mapping::MapperEvent event;
     // A clock measurement from when the task was scheduled.

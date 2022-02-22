@@ -6,17 +6,21 @@
 #include "legion_utils.h"
 #include "legion_string_utils.h"
 #include "error.h"
+#ifdef TACO_USE_CUDA
+#include "taco-generated.cuh"
+#else
 #include "taco-generated.h"
+#endif
 
 using namespace Legion;
 typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
-  bool dump = false;
+  bool dump = false, consMem = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
-  int n = 10, pieces = 0, warmup = 5, jDim = 32;
+  int n = 10, pieces = 0, warmup = 5, jDim = 32, gx = 0, gy = 0;
   Realm::CommandLineParser parser;
   parser.add_option_string("-tensor", csrFileName);
   parser.add_option_bool("-dump", dump);
@@ -24,12 +28,16 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   parser.add_option_int("-jdim", jDim);
+  // Arguments for memory-conserving schedule.
+  parser.add_option_bool("-consMem", consMem);
+  parser.add_option_int("-gx", gx);
+  parser.add_option_int("-gy", gy);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
 
   // Figure out how many pieces to chop up the data into.
-  if (pieces == 0) {
+  if (!consMem && pieces == 0) {
     pieces = getNumPieces(ctx, runtime);
     taco_uassert(pieces != 0) << "Please provide a number of pieces to split into with -pieces. Unable to automatically find.";
   }
@@ -41,20 +49,41 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0));
   runtime->fill_field(ctx, C.vals, C.valsParent, FID_VAL, valType(1));
 
-  auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+// #ifdef TACO_USE_CUDA
+  partitionPackForcomputeLegion pack;
+  partitionPackForcomputeLegionConsMem packCons;
+  if (consMem) {
+    packCons = partitionForcomputeLegionConsMem(ctx, runtime, &A, &B, &C, gx, gy);
+  } else {
+    pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+  }
+// #else
+//   auto pack = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, pieces);
+//   taco_iassert(!consMem);
+// #endif
 
-  auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
-  auto commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
+
+  LogicalPartition commLPart;
+  if (!consMem) {
+    auto commPart = createSparseAliasingPartitions(ctx, runtime, A.vals.get_index_space(), pack.APartition.valsPartition.get_index_partition());
+    commLPart = runtime->get_logical_partition(ctx, A.vals, commPart);
+  }
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
     if (dump) { runtime->fill_field(ctx, A.vals, A.valsParent, FID_VAL, valType(0)); }
-    computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
-#ifdef TACO_USE_CUDA
-    // Collapse our reduction buffers. We use sparse instances to force just the communication
-    // that we want. We only do this for the GPU schedule, as the CPU schedule does not
-    // use Legion reductions.
-    launchDummyReadOverPartition(ctx, runtime, A.vals, commLPart, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */, false /* cpuOnly */, true /* sparse */);
-#endif
+// #ifdef TACO_USE_CUDA
+    if (consMem) {
+      computeLegionConsMem(ctx, runtime, &A, &B, &C, &packCons, gx, gy);
+    } else {
+      computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
+      // Collapse our reduction buffers. We use sparse instances to force just the communication
+      // that we want. We only do this for the GPU schedule, as the CPU schedule does not
+      // use Legion reductions.
+      launchDummyReadOverPartition(ctx, runtime, A.vals, commLPart, FID_VAL, Rect<1>(0, pieces - 1), false /* wait */, true /* untrack */, false /* cpuOnly */, true /* sparse */);
+    }
+// #else
+//     computeLegion(ctx, runtime, &A, &B, &C, &pack, pieces);
+// #endif
   });
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "Average execution time: %lf ms\n", avgTime);
 
