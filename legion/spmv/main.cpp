@@ -24,7 +24,7 @@ void initX(const Task* task, const std::vector<PhysicalRegion>& regions, Context
   auto dom = runtime->get_index_space_domain(x.get_logical_region().get_index_space());
   AccessorD xAcc(x, FID_VAL);
   #pragma omp parallel for schedule(static)
-  for (size_t i = dom.lo()[0]; i < size_t(dom.hi()[0]); i++) {
+  for (size_t i = dom.lo()[0]; i <= size_t(dom.hi()[0]); i++) {
     xAcc[i] = i;
   }
 }
@@ -42,6 +42,158 @@ void copyRect1(const Task* task, const std::vector<PhysicalRegion>& regions, Con
     xAcc[i] = yAcc[i].lo;
   }
   xAcc[dom.hi()[0]] = yAcc[dom.hi()[0] - 1].hi + 1;
+}
+
+enum WEAK_SCALE_INPUT_TIDS {
+  TID_INIT_POS_ROWS = 4200,
+  TID_INIT_CRD_ROWS,
+};
+
+const size_t NNZ_TARGET = 700000000;
+const size_t NNZ_PER_ROW = 501;
+
+void initWeakScalePos(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  int dim = *(int*)task->args;
+  FieldAccessor<WRITE_ONLY,int64_t,1,coord_t,Realm::AffineAccessor<int64_t,1,coord_t>> acc(regions[0], FID_VAL);
+  auto dom = runtime->get_index_space_domain(ctx, regions[0].get_logical_region().get_index_space());
+  int count = 0;
+  #pragma omp parallel for schedule(static)
+  for (int i = dom.lo()[0]; i <= dom.hi()[0]; i++) {
+    int count = 0;
+    for (int j = (i - (int(NNZ_PER_ROW) / 2)); j <= (i + (int(NNZ_PER_ROW) / 2)); j++) {
+      if (j >= 0 && j < dim) {
+        count++;
+      }
+    }
+    acc[i] = count;
+  }
+}
+
+void initWeakScaleCrd(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+  int dim = *(int*)task->args;
+  FieldAccessor<WRITE_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> crdAcc(regions[0], FID_COORD);
+  FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> posAcc(regions[1], FID_RECT_1);
+  auto dom = runtime->get_index_space_domain(ctx, regions[1].get_logical_region().get_index_space());
+  #pragma omp parallel for schedule(static)
+  for (int i = dom.lo()[0]; i <= dom.hi()[0]; i++) {
+    size_t position = posAcc[i].lo;
+    for (int j = (i - (NNZ_PER_ROW / 2)); j <= (i + (NNZ_PER_ROW / 2)); j++) {
+      if (j >= 0 && j < dim) {
+        crdAcc[position] = j;
+        position++;
+      }
+    }
+  }
+}
+
+LegionTensor weakScaleBandedInput(Context ctx, Runtime* runtime) {
+  auto nodes = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_NODE_COUNT).get<size_t>();
+  auto gpus = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_GPUS).get<size_t>();
+  auto omps = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+  auto cpus = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_CPUS).get<size_t>();
+
+  auto scaleFactor = gpus;
+  if (scaleFactor == 0) {
+    scaleFactor = nodes;
+  }
+
+  size_t dim = NNZ_TARGET / NNZ_PER_ROW * scaleFactor;
+
+  LegionTensor result;
+  result.order = 2;
+  result.dims = {int32_t(dim), int32_t(dim)};
+  result.format = {Dense, Sparse};
+
+  auto posFSpace = createFieldSpaceWithSize(ctx, runtime, FID_RECT_1, sizeof(Rect<1>));
+  auto crdFSpace = createFieldSpaceWithSize(ctx, runtime, FID_COORD, sizeof(int32_t));
+  auto valsFSpace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(valType));
+
+  auto posISpace = runtime->create_index_space(ctx, Rect<1>(0, dim - 1));
+  auto posReg = runtime->create_logical_region(ctx, posISpace, posFSpace);
+
+  auto pieces = gpus;
+  if (pieces == 0) {
+    pieces = omps;
+  }
+  if (pieces == 0) {
+    pieces = cpus;
+  }
+  taco_iassert(pieces != 0);
+
+  auto colorSpaceDom = Rect<1>(0, pieces - 1);
+  auto colorSpace = runtime->create_index_space(ctx, colorSpaceDom);
+
+  auto posIPart = runtime->create_equal_partition(ctx, posISpace, colorSpace);
+  auto posLPart = runtime->get_logical_partition(ctx, posReg, posIPart);
+  auto tempFSpace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
+  auto tempReg = runtime->create_logical_region(ctx, posISpace, tempFSpace);
+
+  // Initialize the number of entries in each row in a temporary nnz assembly-like region.
+  {
+    IndexLauncher launcher(TID_INIT_POS_ROWS, colorSpaceDom, TaskArgument(&dim, sizeof(int32_t)), ArgumentMap());
+    launcher.add_region_requirement(RegionRequirement(runtime->get_logical_partition(ctx, tempReg, posIPart), 0, WRITE_ONLY, EXCLUSIVE, tempReg).add_field(FID_VAL));
+    runtime->execute_index_space(ctx, launcher);
+  }
+
+  // Now, we'll do a distributed scan and set up the pos region.
+  auto resultPack = RectCompressedGetSeqInsertEdges::compute(ctx, runtime, colorSpace, posReg, FID_RECT_1, tempReg, FID_VAL);
+
+  // Use the resulting information to make a crd and values array.
+  auto crdISpace = runtime->create_index_space(ctx, Rect<1>(0, resultPack.scanResult - 1));
+  auto crdReg = runtime->create_logical_region(ctx, crdISpace, crdFSpace);
+  auto valsReg = runtime->create_logical_region(ctx, crdISpace, valsFSpace);
+
+  // Perform a downwards partitioning op to get the pieces of crd that we can write into.
+  auto crdIPart = RectCompressedPosPartitionDownwards::apply(ctx, runtime, crdISpace, resultPack.partition, posReg, FID_RECT_1);
+  auto crdLPart = runtime->get_logical_partition(ctx, crdReg, crdIPart);
+  {
+    IndexLauncher launcher(TID_INIT_CRD_ROWS, colorSpaceDom, TaskArgument(&dim, sizeof(int32_t)), ArgumentMap());
+    launcher.add_region_requirement(RegionRequirement(crdLPart, 0, WRITE_ONLY, EXCLUSIVE, crdReg).add_field(FID_COORD));
+    launcher.add_region_requirement(RegionRequirement(posLPart, 0, READ_ONLY, EXCLUSIVE, posReg).add_field(FID_RECT_1));
+    runtime->execute_index_space(ctx, launcher);
+  }
+  // Initialize the values to all 1's.
+  runtime->fill_field(ctx, valsReg, valsReg, FID_VAL, valType(1));
+
+  // Finally, let's set up the remaining fields in the LegionTensor.
+  result.indices = std::vector<std::vector<LogicalRegion>>(2);
+  result.indicesParents = std::vector<std::vector<LogicalRegion>>(2);
+  result.indices[1].push_back(posReg);
+  result.indicesParents[1].push_back(posReg);
+  result.indices[1].push_back(crdReg);
+  result.indicesParents[1].push_back(crdReg);
+  result.vals = valsReg;
+  result.valsParent = valsReg;
+  result.denseLevelRuns = {posReg.get_index_space()};
+
+  return result;
+}
+
+void registerWeakScaleInputCreationTasks() {
+  {
+    TaskVariantRegistrar registrar(TID_INIT_POS_ROWS, "initWeakScalePosRows");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<initWeakScalePos>(registrar, "initWeakScalePosRows");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_INIT_POS_ROWS, "initWeakScalePosRows");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<initWeakScalePos>(registrar, "initWeakScalePosRows");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_INIT_CRD_ROWS, "initWeakScaleCrdRows");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<initWeakScaleCrd>(registrar, "initWeakScaleCrdRows");
+  }
+  {
+    TaskVariantRegistrar registrar(TID_INIT_CRD_ROWS, "initWeakScaleCrdRows");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_leaf();
+    Runtime::preregister_task_variant<initWeakScaleCrd>(registrar, "initWeakScaleCrdRows");
+  }
 }
 
 void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, LegionTensor& tensor, partitionPackForcomputeLegionRowSplit& pack, ExternalHDF5LegionTensor& attached) {
@@ -94,11 +246,12 @@ enum Configuration {
   CSR_POS_SPLIT,
   DCSR_POS_SPLIT,
   CSC_SPC,
+  WEAK_SCALE,
 };
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName, dcsrFileName, cscFileName, spxFile;
-  bool dump = false, pos = false;
+  bool dump = false, pos = false, weakScale = false;
   int n = 10, pieces = 0, warmup = 5;
   Realm::CommandLineParser parser;
   parser.add_option_string("-csr", csrFileName);
@@ -110,9 +263,10 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-pieces", pieces);
   parser.add_option_int("-warmup", warmup);
   parser.add_option_bool("-pos", pos);
+  parser.add_option_bool("-weak_scale", weakScale);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
-  taco_uassert(!csrFileName.empty() || !dcsrFileName.empty() || !cscFileName.empty()) << "Provide a matrix with -csr, -dcsr or -csc.";
+  taco_uassert(!csrFileName.empty() || !dcsrFileName.empty() || !cscFileName.empty() || weakScale) << "Provide a matrix with -csr, -dcsr or -csc.";
 
   // Figure out how many pieces to chop up the data into.
   if (pieces == 0) {
@@ -128,6 +282,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   } else if (!dcsrFileName.empty()) {
     taco_iassert(pos) << "Must use pos split with DCSR matrix";
     conf = DCSR_POS_SPLIT;
+  } else if (weakScale) {
+    conf = WEAK_SCALE;
   } else {
     taco_iassert(!cscFileName.empty());
     taco_iassert(!spxFile.empty()) << "Must provide sparse X vector file with CSC configuration.";
@@ -139,9 +295,13 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, csrFileName, {Dense, Sparse});
   } else if (conf == DCSR_POS_SPLIT) {
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, dcsrFileName, {Sparse, Sparse});
-  } else {
-    taco_iassert(conf == CSC_SPC);
+  } else if (conf == CSC_SPC) {
     std::tie(A, Aex) = loadLegionTensorFromHDF5File(ctx, runtime, cscFileName, {Dense, Sparse});
+  } else {
+    taco_iassert(conf == WEAK_SCALE);
+    A = weakScaleBandedInput(ctx, runtime);
+    // After this point, we treat this as a normal CSR row split operation.
+    conf = CSR_ROW_SPLIT;
   }
 
   // Initialize CuSparse if we are running with GPUs.
@@ -263,6 +423,7 @@ int main(int argc, char** argv) {
   registerDummyReadTasks();
   registerTacoRuntimeLibTasks();
   initCuSparseAtStartup();
+  registerWeakScaleInputCreationTasks();
   Runtime::add_registration_callback(register_taco_mapper);
   Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);
