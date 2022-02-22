@@ -108,11 +108,14 @@ class DISTALBenchmark(Benchmark):
             if tensor.name in ["arabic-2005", "mycielskian19", "nlpkkt240"]:
                 return 32
             elif tensor.name == "it-2004":
-                return 16
+                if procs <= 4:
+                    return 16
+                else:
+                    return 32
             elif tensor.name == "kmer_A2a":
-                assert(False)
+                return 4
             elif tensor.name == "kmer_V1r":
-                assert(False)
+                return 4
             elif tensor.name == "sk-2005":
                 # TODO (rohany): Play around with batch size at diff node counts.
                 return 4
@@ -122,12 +125,14 @@ class DISTALBenchmark(Benchmark):
             elif tensor.name == "uk-2005":
                 return 16
             elif tensor.name == "webbase-2001":
-                assert(False)
+                return 4
             else:
                 assert(False)
         spmmBatchArgs = []
         if benchKind == BenchmarkKind.SpMM:
-            spmmBatchArgs = ["-batchSize", str(getSpMMBatchSize())]
+            spmmBatchArgs = ["-batchSize", str(getSpMMBatchSize())]#, "-tm:fill_cpu"]
+            if 'SPMM_CPU_C' in os.environ:
+                spmmBatchArgs += ["-tm:fill_cpu", "-Ccpu"]
 
         assert(benchKind in args)
         return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind] + spmmBatchArgs
