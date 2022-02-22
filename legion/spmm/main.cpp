@@ -18,7 +18,7 @@ typedef double valType;
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   std::string csrFileName;
-  bool dump = false, batched = false;
+  bool dump = false, batched = false, CCpu = false;
   // The j-dimension if the computation will commonly have a small value
   // that is divisible by 32, as per Stephen and Chang-wan.
   int n = 10, pieces = 0, warmup = 5, jDim = 32, batchSize = 2;
@@ -31,6 +31,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_int("-jdim", jDim);
   parser.add_option_bool("-batched", batched);
   parser.add_option_int("-batchSize", batchSize);
+  parser.add_option_bool("-Ccpu", CCpu);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!csrFileName.empty()) << "Provide a matrix with -tensor";
@@ -65,7 +66,26 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   // Create a long lasting instance for the C region to force communcation costs.
   if (batched) {
-    tacoFill(ctx, runtime, C.vals, valType(1));
+    auto colorSpace = runtime->create_index_space(ctx, Rect<1>(0, pieces - 1));
+    taco_iassert(pieces <= 32);
+    auto dom = runtime->get_index_space_domain(ctx, C.vals.get_index_space());
+    auto size = jDim / pieces;
+    DomainPointColoring coloring;
+    for (int i = 0; i < pieces; i++) {
+      coloring[i] = Rect<2>({dom.lo()[0], i * size}, {dom.hi()[0], (i+1) * size - 1});
+    }
+    auto ipart = runtime->create_index_partition(ctx, C.valsParent.get_index_space(), Rect<1>(0, pieces - 1), coloring);
+    auto lpart = runtime->get_logical_partition(ctx, C.vals, ipart);
+    tacoFill(ctx, runtime, C.vals, lpart, valType(1));
+    if (CCpu) {
+      auto numOMPs = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();
+      // TODO (rohany): I'm hacking here, but this distribution could be easily done using
+      //  DISTAL's data distribution language.
+      IndexTaskLauncher launcher(TID_DUMMY_READ_REGION, Rect<1>(0, numOMPs - 1), TaskArgument(), ArgumentMap());
+      launcher.add_region_requirement(RegionRequirement(C.vals, READ_ONLY, EXCLUSIVE, C.valsParent).add_field(FID_VAL));
+      launcher.tag |= TACOMapper::MAP_TO_OMP_OR_LOC;
+      runtime->execute_index_space(ctx, launcher).wait_all_results();
+    }
   }
 
   auto avgTime = benchmarkAsyncCallWithWarmup(ctx, runtime, warmup, n, [&]() {
