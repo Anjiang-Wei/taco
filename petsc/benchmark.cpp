@@ -109,6 +109,55 @@ void spmv(Mat A, int warmup, int niter) {
   PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
 }
 
+void spmvWeakScale(int warmup, int niter) {
+  const size_t NNZ_TARGET = 700000000;
+  const size_t NNZ_PER_ROW = 501;
+  PetscInt size;
+  MPI_Comm_size(PETSC_COMM_WORLD, &size);
+  // TODO (rohany): Extract this logic to make it composable?
+  // Get the number of processes per node.
+  size = size / 40;
+  int dim = NNZ_TARGET / NNZ_PER_ROW * size_t(size);
+  
+  Mat B;
+  MatCreate(PETSC_COMM_WORLD, &B);
+  MatSetSizes(B, PETSC_DECIDE, PETSC_DECIDE, dim, dim);
+  MatSetFromOptions(B);
+  MatSetUp(B);
+  MatMPIAIJSetPreallocation(B, NNZ_PER_ROW, PETSC_NULL, NNZ_PER_ROW, PETSC_NULL);
+  
+  // Fill the bands of B up.
+  PetscInt rStart, rEnd;
+  // TODO (rohany): This call requires the mpiaij matrix type.
+  MatGetOwnershipRange(B, &rStart, &rEnd);
+  for (int i = rStart; i < rEnd; i++) {
+    for (int j = (i - (int(NNZ_PER_ROW) / 2)); j <= (i + (int(NNZ_PER_ROW) / 2)); j++) {
+      if (j >= 0 && j < dim) {
+        MatSetValue(B, i, j, 1.0, INSERT_VALUES);
+      } 
+    }
+  }
+  MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(B, MAT_FINAL_ASSEMBLY);
+  
+  Vec x, y;
+  PetscScalar one = 1.0, zero = 0.0;
+  VecCreate(PETSC_COMM_WORLD, &x);
+  VecSetFromOptions(x);
+  VecSetSizes(x, PETSC_DECIDE, dim);
+  VecCreate(PETSC_COMM_WORLD, &y);
+  VecSetFromOptions(y);
+  VecSetSizes(y, PETSC_DECIDE, dim);
+  VecSet(x, one);
+  VecSet(y, zero);
+
+  auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
+    MatMult(B, x, y);
+  }); 
+
+  PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
+}
+
 void spmm(Mat B, int warmup, int niter, int jdim) {
   Mat A, C;
   PetscInt i, j = jdim, k;
@@ -226,10 +275,14 @@ int main(int argc, char** argv) {
 
   // Load the input matrix from the file.
   Mat A;
-  ierr = loadMatrixFromFile(&A, matrixInputFile); CHKERRQ(ierr);
+  if (benchmark != "spmv-weak-scale") {
+    ierr = loadMatrixFromFile(&A, matrixInputFile); CHKERRQ(ierr);
+  }
 
   if (benchmark == "spmv") {
     spmv(A, warmup, nIter);
+  } else if (benchmark == "spmv-weak-scale") {
+    spmvWeakScale(warmup, nIter);
   } else if (benchmark == "spmm") {
     spmm(A, warmup, nIter, spmmJdim);
   } else if (benchmark == "spadd3") {
