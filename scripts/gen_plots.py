@@ -295,7 +295,7 @@ else:
     ticks = ax.get_xticks()
     labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
     ax.set_xticklabels(labels)
-    ax.set_ylabel("Iterations / second")
+    ax.set_ylabel("Throughput / Node (Iterations / second")
     ax.set_xlabel("Nodes (GPUs)")
     plt.title("SpMV Weak-Scaling on Synthetic Banded Matrices")
     plt.show()
