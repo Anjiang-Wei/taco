@@ -214,7 +214,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   ));
 }
 
-void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces) {
+void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, partitionPackForcomputeLegionRowSplit* partitionPack, int32_t pieces, LogicalRegion replX, LogicalPartition replXLPart) {
   auto a_vals_parent = a->valsParent;
   int B2_dimension = B->dims[1];
   auto B2_pos_parent = B->indicesParents[1][0];
@@ -237,9 +237,9 @@ void computeLegionRowSplit(Legion::Context ctx, Legion::Runtime* runtime, Legion
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_pos_parent)).add_field(FID_RECT_1));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.indicesPartitions[1][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(B2_crd_parent)).add_field(FID_COORD));
   launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(get_logical_region(c_vals), READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(replXLPart, 0, READ_ONLY, EXCLUSIVE, replX).add_field(FID_VAL));
+  // launcher.add_region_requirement(RegionRequirement(get_logical_region(c_vals), READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
   runtime->execute_index_space(ctx, launcher);
-
 }
 
 partitionPackForcomputeLegionPosSplit partitionForcomputeLegionPosSplit(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* B, LegionTensor* c, int32_t pieces) {

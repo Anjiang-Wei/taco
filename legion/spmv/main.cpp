@@ -327,7 +327,24 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
       launcher.add_region_requirement(RegionRequirement(xEqLPart, 0, WRITE_ONLY, EXCLUSIVE, x.valsParent).add_field(FID_VAL));
       runtime->execute_index_space(ctx, launcher);
     }
-  }
+  } 
+
+  LogicalRegion replX;
+  LogicalPartition replXLPart;
+  if (weakScale) {
+    // To get around not having collective instances we need to manually replicate the x vector.
+    auto replIndexSpace = runtime->create_index_space(ctx, Rect<1>(0, (size_t(pieces) * size_t(A.dims[1])) - 1));
+    replX = runtime->create_logical_region(ctx, replIndexSpace, y.vals.get_field_space());
+    DomainPointColoring xColoring;
+    for (size_t i = 0; i < pieces; i++) {
+      size_t lo = i * size_t(A.dims[1]);
+      size_t hi = ((i + 1) * size_t(A.dims[1])) - 1;
+      xColoring[i] = Rect<1>(lo, hi);
+    }
+    auto xIndexPart = runtime->create_index_partition(ctx, replIndexSpace, eqPartDomain, xColoring, LEGION_DISJOINT_COMPLETE_KIND);
+    replXLPart = runtime->get_logical_partition(ctx, replX, xIndexPart);
+    runtime->fill_field(ctx, replX, replX, FID_VAL, valType(1));
+  } 
 
   // Create a partition of y for forcing reductions.
   auto yEqIndexPart = runtime->create_equal_partition(ctx, y.vals.get_index_space(), eqPartIspace);
@@ -363,7 +380,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     if (dump) { runtime->fill_field(ctx, y.vals, y.valsParent, FID_VAL, valType(0)); }
     switch (conf) {
       case CSR_ROW_SPLIT:
-        computeLegionRowSplit(ctx, runtime, &y, &A, &x, &rowPack, pieces); break;
+        computeLegionRowSplit(ctx, runtime, &y, &A, &x, &rowPack, pieces, replX, replXLPart); break;
       case CSR_POS_SPLIT:
         computeLegionPosSplit(ctx, runtime, &y, &A, &x, &posPack, pieces);
         launchDummyReadOverPartition(ctx, runtime, y.vals, yEqLPart, FID_VAL, eqPartDomain);
