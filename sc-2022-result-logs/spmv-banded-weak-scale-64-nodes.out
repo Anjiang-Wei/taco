@@ -1,0 +1,291 @@
+/g/g15/yadav2/.bashrc: line 1: module: command not found
+/g/g15/yadav2/.bashrc: line 2: module: command not found
+/g/g15/yadav2/.bashrc: line 3: module: command not found
+/g/g15/yadav2/.bashrc: line 6: module: command not found
+stty: standard input: Inappropriate ioctl for device
++ set -e
++ NODES='1 2 4 8 16 32 64'
+DISTAL CPU
++ echo 'DISTAL CPU'
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 35.350000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 35.450000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 35.550000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 35.850000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 36.250000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 32 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 36.350000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 64 /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 200003a50000]    0.000000 {4}{gex}: outbuf count raised from requested 64 to required minimum 126 - if memory capacity issues result, reduce outbuf size using -gex:obsize
+Average execution time: 36.850000 ms
++ echo 'DISTAL GPU'
+DISTAL GPU
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 1 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 10.200000 ms
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 2 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 10.300000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 12.050000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 2 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 11.400000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 12.300000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 11.950000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 16 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 13.900000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 32 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+Average execution time: 13.550000 ms
++ for n in '$NODES'
++ jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 64 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+[0 - 2000254808b0]    0.000000 {4}{gex}: outbuf count raised from requested 64 to required minimum 126 - if memory capacity issues result, reduce outbuf size using -gex:obsize
+Average execution time: 13.950000 ms
+PETSc CPU
++ echo 'PETSc CPU'
++ for n in '$NODES'
++ jsrun -n 40 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.798894 ms.
++ for n in '$NODES'
++ jsrun -n 80 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.803419 ms.
++ for n in '$NODES'
++ jsrun -n 160 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.797835 ms.
++ for n in '$NODES'
++ jsrun -n 320 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.796860 ms.
++ for n in '$NODES'
++ jsrun -n 640 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.799792 ms.
++ for n in '$NODES'
++ jsrun -n 1280 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.804533 ms.
++ for n in '$NODES'
++ jsrun -n 2560 -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+Average time: 32.796666 ms.
++ echo 'PETSc GPU'
+PETSc GPU
++ jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.671896 ms.
++ jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.690018 ms.
++ for n in '$NODES'
++ jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.696189 ms.
++ for n in '$NODES'
++ jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.710442 ms.
++ for n in '$NODES'
++ jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.734999 ms.
++ for n in '$NODES'
++ jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.708588 ms.
++ for n in '$NODES'
++ jsrun -n 64 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.708581 ms.
++ for n in '$NODES'
++ jsrun -n 128 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.710429 ms.
++ for n in '$NODES'
++ jsrun -n 256 -g 1 -r 4 -c 10 -b rs -M -gpu /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+Average time: 14.734746 ms.
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 3289228: <../scripts/spmv-weak-scale.sh> in cluster <lassen> Done
+
+Job <../scripts/spmv-weak-scale.sh> was submitted from host <lassen745> by user <yadav2> in cluster <lassen> at Wed Feb 23 09:07:18 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <yadav2> in cluster <lassen> at Wed Feb 23 09:07:21 2022
+                            <40*lassen253>
+                            <40*lassen584>
+                            <40*lassen585>
+                            <40*lassen257>
+                            <40*lassen588>
+                            <40*lassen88>
+                            <40*lassen410>
+                            <40*lassen740>
+                            <40*lassen411>
+                            <40*lassen741>
+                            <40*lassen412>
+                            <40*lassen742>
+                            <40*lassen743>
+                            <40*lassen414>
+                            <40*lassen416>
+                            <40*lassen746>
+                            <40*lassen590>
+                            <40*lassen747>
+                            <40*lassen591>
+                            <40*lassen418>
+                            <40*lassen748>
+                            <40*lassen263>
+                            <40*lassen593>
+                            <40*lassen595>
+                            <40*lassen596>
+                            <40*lassen94>
+                            <40*lassen751>
+                            <40*lassen423>
+                            <40*lassen753>
+                            <40*lassen754>
+                            <40*lassen757>
+                            <40*lassen429>
+                            <40*lassen758>
+                            <40*lassen277>
+                            <40*lassen100>
+                            <40*lassen102>
+                            <40*lassen104>
+                            <40*lassen762>
+                            <40*lassen435>
+                            <40*lassen766>
+                            <40*lassen438>
+                            <40*lassen767>
+                            <40*lassen439>
+                            <40*lassen288>
+                            <40*lassen110>
+                            <40*lassen771>
+                            <40*lassen114>
+                            <40*lassen444>
+                            <40*lassen773>
+                            <40*lassen116>
+                            <40*lassen774>
+                            <40*lassen117>
+                            <40*lassen290>
+                            <40*lassen446>
+                            <40*lassen775>
+                            <40*lassen118>
+                            <40*lassen447>
+                            <40*lassen776>
+                            <40*lassen448>
+                            <40*lassen777>
+                            <40*lassen604>
+                            <40*lassen451>
+                            <40*lassen780>
+                            <40*lassen609>
+</g/g15/yadav2> was used as the home directory.
+</g/g15/yadav2/taco/build> was used as the working directory.
+Started at Wed Feb 23 09:07:21 2022
+Terminated at Wed Feb 23 09:24:53 2022
+Results reported at Wed Feb 23 09:24:53 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+
+set -x
+set -e
+
+NODES="1 2 4 8 16 32 64"
+
+echo "DISTAL CPU"
+for n in $NODES; do
+	jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n $n /g/g15/yadav2/taco/build/bin/spmv -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale
+done
+
+echo "DISTAL GPU"
+# 1 and 2 GPUs.
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 1 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 1 /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 2 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+for n in $NODES; do
+    jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n $n /g/g15/yadav2/taco/build/bin/spmv-cuda -ll:ocpu 2 -ll:othr 18 -ll:onuma 1 -ll:nsize 100G -ll:ncsize 0 -ll:util 2 -tm:numa_aware_alloc -n 20 -warmup 10 -weak_scale -ll:gpu 4 -ll:fsize 14.5G -tm:align128 -lg:eager_alloc_percentage 5
+done
+
+echo "PETSc CPU"
+for n in $NODES; do
+	jsrun -n $((40 * $n)) -r 40 -c 1 -b rs /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -bench spmv-weak-scale
+done
+
+echo "PETSc GPU"
+# 1 and 2 GPUs.
+jsrun -n 1 -g 1 -r 1 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+for n in $NODES; do
+	jsrun -n $(($n * 4)) -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/petsc/bin/benchmark -n 20 -warmup 10 -enable_gpu -vec_type cuda -bench spmv-weak-scale -mat_type mpiaij
+done
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4.00 sec.
+    Max Memory :                                 186 MB
+    Average Memory :                             119.89 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1428 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   1051 sec.
+    Turnaround time :                            1055 sec.
+
+The output (if any) is above this job summary.
+
