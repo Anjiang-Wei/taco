@@ -122,6 +122,48 @@ def constructSpeedupData(raw, procKey, benchKind, maxProcs=16, dump=False):
             print(f"!!! System {system} is missing benchmarks: {map} !!!")
     return normalized
 
+def loadWeakScalingData():
+    tacoDir = os.getenv("TACO_DIR", default=None)
+    assert(tacoDir is not None)
+    file = f"{tacoDir}/sc-2022-result-logs/spmv-banded-weak-scale-64-nodes.out"
+    data = []
+    with open(file, 'r') as f:
+        for line in f.readlines():
+            if "Average" in line and "ms" in line:
+                matched = timeRegex.findall(line)
+                assert(len(matched) == 1)
+                currentResult = float(matched[0])
+                data.append(currentResult)
+    # We'll drop the 1 and 2 GPU times to get full 1->64 node results.
+    columns = ["System", "Nodes", "Iter/Sec"]
+    rows = []
+    nodes = [1, 2, 4, 8, 16, 32, 64]
+    # DISTAL CPU.
+    for i, node in enumerate(nodes):
+        # We'll compute iterations / sec.
+        row = ["DISTAL", node, 1000.0 / data[i]]
+        rows.append(row)
+    data = data[len(nodes):]
+    # Shave off 1 and 2 GPUs.
+    data = data[2:]
+    for i, node in enumerate(nodes):
+        row = ["DISTAL-GPU", node, 1000.0 / data[i]]
+        rows.append(row)
+    data = data[len(nodes):]
+    for i, node in enumerate(nodes):
+        row = ["PETSc", node, 1000.0 / data[i]]
+        rows.append(row)
+    data = data[len(nodes):]
+    # Shave off 1 and 2 GPUs.
+    data = data[2:]
+    for i, node in enumerate(nodes):
+        row = ["PETSc-GPU", node, 1000.0 / data[i]]
+        rows.append(row)
+    data = data[len(nodes):]
+    assert(len(data) == 0)
+    result = pandas.DataFrame(rows, columns=columns)
+    return result
+
 rawPalette = seaborn.color_palette()
 palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "Trilinos": rawPalette[2], "CTF": rawPalette[3]}
 markers = {"DISTAL": "o", "PETSc": "X", "Trilinos": "d", "CTF": "P"}
@@ -231,10 +273,29 @@ def speedupPlot(data, benchKind):
 
 # TODO (rohany): Handle when some systems timeout / OOM.
 
-for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
-    data = defaultLoadExperimentData(bench)
-    normalized = constructSpeedupData(data, "Nodes", bench)
-    if bench in [BenchmarkKind.SpMV]:
-        brokenSpeedupPlot(normalized, bench)
-    else:
-        speedupPlot(normalized, bench)
+parser = argparse.ArgumentParser()
+parser.add_argument("kind", type=str, choices=["strong-scaling", "weak-scaling"], default="strong-scaling")
+args = parser.parse_args()
+
+if args.kind == "strong-scaling":
+    for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+        data = defaultLoadExperimentData(bench)
+        normalized = constructSpeedupData(data, "Nodes", bench)
+        if bench in [BenchmarkKind.SpMV]:
+            brokenSpeedupPlot(normalized, bench)
+        else:
+            speedupPlot(normalized, bench)
+else:
+    data = loadWeakScalingData()
+    palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "DISTAL-GPU": rawPalette[2], "PETSc-GPU": rawPalette[3]}
+    markers = {"DISTAL": "o", "PETSc": "X", "DISTAL-GPU": "d", "PETSc-GPU": "P"}
+    ax = seaborn.lineplot(data=data, x="Nodes", y="Iter/Sec", hue="System", style="System", markers=markers, palette=palette)
+    ax.set_xscale("log", base=2)
+    ax.get_xaxis().set_major_formatter(xFormatter)
+    ticks = ax.get_xticks()
+    labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Iterations / second")
+    ax.set_xlabel("Nodes (GPUs)")
+    plt.title("SpMV Weak-Scaling on Synthetic Banded Matrices")
+    plt.show()
