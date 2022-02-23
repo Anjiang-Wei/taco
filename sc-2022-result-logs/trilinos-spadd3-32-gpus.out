@@ -1,0 +1,685 @@
+# arabic-2005 1 GPU timeout.
+BENCHID++Trilinos++spadd3++arabic-2005++2++gpus
+Executing command: jsrun -n 2 -g 1 -r 2 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 2
+
+ 1D Distribution:
+     np     = 2
+
+ 1D Distribution:
+     np     = 2
+============================================================================================================
+
+                                   TimeMonitor results over 2 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      364.8 (1.92e+05)    433.5 (1.92e+05)    502.2 (1.92e+05)    0.002258 (1.92e+05)
+RMM    selectNonzeros    741.1 (1.92e+05)    809.8 (1.92e+05)    878.5 (1.92e+05)    0.004218 (1.92e+05)
+SpAdd3                   2562 (20)           2562 (20)           2562 (20)           128.1 (20)
+============================================================================================================
+Average time: 128100 ms.
+BENCHID++Trilinos++spadd3++arabic-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+============================================================================================================
+
+                                   TimeMonitor results over 4 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      786.4 (1.92e+05)    796.2 (1.92e+05)    811.5 (1.92e+05)    0.004147 (1.92e+05)
+RMM    selectNonzeros    702 (1.92e+05)      717.3 (1.92e+05)    727.1 (1.92e+05)    0.003736 (1.92e+05)
+SpAdd3                   658.7 (20)          658.7 (20)          658.7 (20)          32.93 (20)
+============================================================================================================
+Average time: 32933.8 ms.
+BENCHID++Trilinos++spadd3++arabic-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+============================================================================================================
+
+                                   TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      766.4 (1.92e+05)    798.3 (1.92e+05)    864.3 (1.92e+05)    0.004158 (1.92e+05)
+RMM    selectNonzeros    510.9 (1.92e+05)    576.9 (1.92e+05)    608.7 (1.92e+05)    0.003005 (1.92e+05)
+SpAdd3                   108.9 (20)          108.9 (20)          108.9 (20)          5.446 (20)
+============================================================================================================
+Average time: 5445.85 ms.
+BENCHID++Trilinos++spadd3++arabic-2005++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+============================================================================================================
+
+                                   TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      667.4 (1.92e+05)    687.8 (1.92e+05)    713.4 (1.92e+05)    0.003582 (1.92e+05)
+RMM    selectNonzeros    486 (1.92e+05)      511.6 (1.92e+05)    532 (1.92e+05)      0.002665 (1.92e+05)
+SpAdd3                   57.88 (20)          57.88 (20)          57.88 (20)          2.894 (20)
+============================================================================================================
+Average time: 2893.9 ms.
+BENCHID++Trilinos++spadd3++arabic-2005++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/arabic-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+============================================================================================================
+
+                                   TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      456.2 (1.92e+05)    467.7 (1.92e+05)    473.7 (1.92e+05)    0.002436 (1.92e+05)
+RMM    selectNonzeros    470.6 (1.92e+05)    476.6 (1.92e+05)    488.1 (1.92e+05)    0.002482 (1.92e+05)
+SpAdd3                   32.77 (20)          32.77 (20)          32.77 (20)          1.639 (20)
+============================================================================================================
+Average time: 1638.5 ms.
+
+# it-2004 1,2,4 GPU timeout.
+BENCHID++Trilinos++spadd3++it-2004++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/it-2004.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+=============================================================================================================
+
+                                    TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+-------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1451 (3.452e+05)    1538 (3.452e+05)    1595 (3.452e+05)    0.004455 (3.452e+05)
+RMM    selectNonzeros    1010 (3.452e+05)    1067 (3.452e+05)    1154 (3.452e+05)    0.003091 (3.452e+05)
+SpAdd3                   909.6 (20)          909.6 (20)          909.6 (20)          45.48 (20)
+=============================================================================================================
+Average time: 45478.8 ms.
+BENCHID++Trilinos++spadd3++it-2004++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/it-2004.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+===============================================================================================================
+
+                                    TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs        MeanOverCallCounts
+---------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1370 (3.452e+05)     1495 (3.452e+05)     1556 (3.452e+05)    0.004331 (3.452e+05)
+RMM    selectNonzeros    888.9 (3.452e+05)    949.8 (3.452e+05)    1075 (3.452e+05)    0.002751 (3.452e+05)
+SpAdd3                   203.9 (20)           203.9 (20)           203.9 (20)          10.19 (20)
+===============================================================================================================
+Average time: 10194.2 ms.
+BENCHID++Trilinos++spadd3++it-2004++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/it-2004.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/it-2004-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+================================================================================================================
+
+                                     TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      826.8 (3.452e+05)    887.5 (3.452e+05)    911.1 (3.452e+05)    0.002571 (3.452e+05)
+RMM    selectNonzeros    852.2 (3.452e+05)    875.8 (3.452e+05)    936.5 (3.452e+05)    0.002537 (3.452e+05)
+SpAdd3                   100.4 (20)           100.4 (20)           100.4 (20)           5.019 (20)
+================================================================================================================
+Average time: 5018.9 ms.
+
+# kmer_A2a 1 GPU timeout. Error 2 GPU.
+BENCHID++Trilinos++spadd3++kmer_A2a++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+==============================================================================================================
+
+                                    TimeMonitor results over 4 processors
+
+Timer Name               MinOverProcs         MeanOverProcs      MaxOverProcs         MeanOverCallCounts
+--------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      376.1 (9.015e+04)    382 (9.015e+04)    392 (9.015e+04)      0.004237 (9.015e+04)
+RMM    selectNonzeros    366 (9.015e+04)      376 (9.015e+04)    381.9 (9.015e+04)    0.004171 (9.015e+04)
+SpAdd3                   2261 (20)            2261 (20)          2261 (20)            113 (20)
+==============================================================================================================
+Average time: 113032 ms.
+BENCHID++Trilinos++spadd3++kmer_A2a++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+================================================================================================================
+
+                                     TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      319.7 (9.015e+04)    323 (9.015e+04)      340.2 (9.015e+04)    0.003583 (9.015e+04)
+RMM    selectNonzeros    277.4 (9.015e+04)    294.4 (9.015e+04)    297.9 (9.015e+04)    0.003266 (9.015e+04)
+SpAdd3                   961.8 (20)           961.8 (20)           961.8 (20)           48.09 (20)
+================================================================================================================
+Average time: 48091.2 ms.
+BENCHID++Trilinos++spadd3++kmer_A2a++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+================================================================================================================
+
+                                     TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      289.4 (9.015e+04)    292.7 (9.015e+04)    301.5 (9.015e+04)    0.003247 (9.015e+04)
+RMM    selectNonzeros    258.5 (9.015e+04)    267.3 (9.015e+04)    270.4 (9.015e+04)    0.002965 (9.015e+04)
+SpAdd3                   543.1 (20)           543.1 (20)           543.2 (20)           27.16 (20)
+================================================================================================================
+Average time: 27157.4 ms.
+BENCHID++Trilinos++spadd3++kmer_A2a++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_A2a-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+================================================================================================================
+
+                                     TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      240.5 (9.015e+04)    243.6 (9.015e+04)    248.8 (9.015e+04)    0.002702 (9.015e+04)
+RMM    selectNonzeros    248.6 (9.015e+04)    253.8 (9.015e+04)    256.9 (9.015e+04)    0.002815 (9.015e+04)
+SpAdd3                   278.7 (20)           278.7 (20)           278.7 (20)           13.94 (20)
+================================================================================================================
+Average time: 13935.5 ms.
+
+# kmer_V1r 1 GPU timeout. Error 2,4 GPUs.
+BENCHID++Trilinos++spadd3++kmer_V1r++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+================================================================================================================
+
+                                     TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      415 (1.164e+05)      422.7 (1.164e+05)    445.2 (1.164e+05)    0.003633 (1.164e+05)
+RMM    selectNonzeros    359.2 (1.164e+05)    381.5 (1.164e+05)    389.5 (1.164e+05)    0.003279 (1.164e+05)
+SpAdd3                   1381 (20)            1381 (20)            1381 (20)            69.06 (20)
+================================================================================================================
+Average time: 69064.9 ms.
+BENCHID++Trilinos++spadd3++kmer_V1r++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+================================================================================================================
+
+                                     TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      379.5 (1.164e+05)    383.8 (1.164e+05)    395.2 (1.164e+05)    0.003298 (1.164e+05)
+RMM    selectNonzeros    336 (1.164e+05)      346.9 (1.164e+05)    351.7 (1.164e+05)    0.002982 (1.164e+05)
+SpAdd3                   735.8 (20)           735.8 (20)           735.8 (20)           36.79 (20)
+================================================================================================================
+Average time: 36791.3 ms.
+BENCHID++Trilinos++spadd3++kmer_V1r++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/kmer_V1r-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+================================================================================================================
+
+                                     TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      334.6 (1.164e+05)    338.1 (1.164e+05)    346.4 (1.164e+05)    0.002906 (1.164e+05)
+RMM    selectNonzeros    321.9 (1.164e+05)    330.2 (1.164e+05)    333.7 (1.164e+05)    0.002838 (1.164e+05)
+SpAdd3                   373.1 (20)           373.1 (20)           373.1 (20)           18.65 (20)
+================================================================================================================
+Average time: 18654.8 ms.
+
+# mycielskian19 1,2,4 GPU Timeout.
+BENCHID++Trilinos++spadd3++mycielskian19++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+===============================================================================================================
+
+                                     TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs        MeanOverCallCounts
+---------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      890.6 (2.258e+05)    1110 (2.258e+05)     1247 (2.258e+05)    0.004914 (2.258e+05)
+RMM    selectNonzeros    565.7 (2.258e+05)    702.4 (2.258e+05)    921 (2.258e+05)     0.003111 (2.258e+05)
+SpAdd3                   1721 (20)            1721 (20)            1721 (20)           86.03 (20)
+===============================================================================================================
+Average time: 86032.8 ms.
+BENCHID++Trilinos++spadd3++mycielskian19++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+================================================================================================================
+
+                                     TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      794.9 (2.258e+05)    1000 (2.258e+05)     1067 (2.258e+05)     0.004429 (2.258e+05)
+RMM    selectNonzeros    530.5 (2.258e+05)    597.1 (2.258e+05)    802.1 (2.258e+05)    0.002644 (2.258e+05)
+SpAdd3                   276.2 (20)           276.2 (20)           276.2 (20)           13.81 (20)
+================================================================================================================
+Average time: 13812 ms.
+BENCHID++Trilinos++spadd3++mycielskian19++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/mycielskian19-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+================================================================================================================
+
+                                     TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      560 (2.258e+05)      729.9 (2.258e+05)    756.1 (2.258e+05)    0.003232 (2.258e+05)
+RMM    selectNonzeros    519.9 (2.258e+05)    546 (2.258e+05)      715.9 (2.258e+05)    0.002418 (2.258e+05)
+SpAdd3                   48.41 (20)           48.41 (20)           48.41 (20)           2.42 (20)
+================================================================================================================
+Average time: 2420.35 ms.
+
+# nlpkkt240 1,2 GPU timeout.
+BENCHID++Trilinos++spadd3++nlpkkt240++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+============================================================================================================
+
+                                   TimeMonitor results over 4 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      898.6 (1.95e+05)    938.6 (1.95e+05)    973.2 (1.95e+05)    0.004813 (1.95e+05)
+RMM    selectNonzeros    866.3 (1.95e+05)    900.9 (1.95e+05)    940.9 (1.95e+05)    0.00462 (1.95e+05)
+SpAdd3                   654.5 (20)          654.5 (20)          654.5 (20)          32.73 (20)
+============================================================================================================
+Average time: 32726.2 ms.
+
+BENCHID++Trilinos++spadd3++nlpkkt240++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+===========================================================================================================
+
+                                   TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs       MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+-----------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1075 (1.95e+05)    1099 (1.95e+05)     1155 (1.95e+05)     0.005637 (1.95e+05)
+RMM    selectNonzeros    681 (1.95e+05)     736.5 (1.95e+05)    761.2 (1.95e+05)    0.003776 (1.95e+05)
+SpAdd3                   90.7 (20)          90.7 (20)           90.7 (20)           4.535 (20)
+===========================================================================================================
+Average time: 4534.9 ms.
+
+BENCHID++Trilinos++spadd3++nlpkkt240++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+============================================================================================================
+
+                                   TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      869 (1.95e+05)      886.2 (1.95e+05)    920.1 (1.95e+05)    0.004544 (1.95e+05)
+RMM    selectNonzeros    601.6 (1.95e+05)    634.7 (1.95e+05)    651.6 (1.95e+05)    0.003254 (1.95e+05)
+SpAdd3                   45.16 (20)          45.16 (20)          45.16 (20)          2.258 (20)
+============================================================================================================
+Average time: 2257.95 ms.
+BENCHID++Trilinos++spadd3++nlpkkt240++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/nlpkkt240-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+============================================================================================================
+
+                                   TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      794.1 (1.95e+05)    844.1 (1.95e+05)    865.6 (1.95e+05)    0.004328 (1.95e+05)
+RMM    selectNonzeros    577.1 (1.95e+05)    598.7 (1.95e+05)    648.6 (1.95e+05)    0.00307 (1.95e+05)
+SpAdd3                   23.18 (20)          23.18 (20)          23.18 (20)          1.159 (20)
+============================================================================================================
+Average time: 1159 ms.
+
+# sk-2005 timeout 1,2,4,8,16 GPU.
+BENCHID++Trilinos++spadd3++sk-2005++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/sk-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/sk-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+=============================================================================================================
+
+                                   TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+-------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1559 (5.848e+05)    1671 (5.848e+05)    1704 (5.848e+05)    0.002857 (5.848e+05)
+RMM    selectNonzeros    1456 (5.848e+05)    1488 (5.848e+05)    1600 (5.848e+05)    0.002545 (5.848e+05)
+SpAdd3                   100.3 (20)          100.3 (20)          100.3 (20)          5.016 (20)
+=============================================================================================================
+Average time: 5016.35 ms.
+
+# twitter7 timeout 1,2,4,8,16,32 GPU.
+
+# uk-2005 timeout 1,2 GPU.
+BENCHID++Trilinos++spadd3++uk-2005++4++gpus
+Executing command: jsrun -n 4 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+
+ 1D Distribution:
+     np     = 4
+===============================================================================================================
+
+                                     TimeMonitor results over 4 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs        MeanOverCallCounts
+---------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      875.1 (2.809e+05)    991.3 (2.809e+05)    1044 (2.809e+05)    0.003529 (2.809e+05)
+RMM    selectNonzeros    957.4 (2.809e+05)    1010 (2.809e+05)     1126 (2.809e+05)    0.003596 (2.809e+05)
+SpAdd3                   1218 (20)            1218 (20)            1218 (20)           60.9 (20)
+===============================================================================================================
+Average time: 60903.3 ms.
+BENCHID++Trilinos++spadd3++uk-2005++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+===============================================================================================================
+
+                                     TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+---------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1095 (2.809e+05)     1197 (2.809e+05)     1288 (2.809e+05)     0.00426 (2.809e+05)
+RMM    selectNonzeros    771.4 (2.809e+05)    862.3 (2.809e+05)    963.8 (2.809e+05)    0.00307 (2.809e+05)
+SpAdd3                   586.9 (20)           586.9 (20)           586.9 (20)           29.34 (20)
+===============================================================================================================
+Average time: 29343.2 ms.
+BENCHID++Trilinos++spadd3++uk-2005++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+================================================================================================================
+
+                                     TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs         MeanOverCallCounts
+----------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      993 (2.809e+05)      1085 (2.809e+05)     1127 (2.809e+05)     0.003863 (2.809e+05)
+RMM    selectNonzeros    722.8 (2.809e+05)    765.3 (2.809e+05)    858.3 (2.809e+05)    0.002724 (2.809e+05)
+SpAdd3                   105 (20)             105 (20)             105 (20)             5.251 (20)
+================================================================================================================
+Average time: 5251.4 ms.
+BENCHID++Trilinos++spadd3++uk-2005++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/uk-2005-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+==============================================================================================================
+
+                                    TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs         MeanOverProcs        MaxOverProcs       MeanOverCallCounts
+--------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      661.9 (2.809e+05)    690.9 (2.809e+05)    706 (2.809e+05)    0.002459 (2.809e+05)
+RMM    selectNonzeros    694.9 (2.809e+05)    710 (2.809e+05)      739 (2.809e+05)    0.002528 (2.809e+05)
+SpAdd3                   59.93 (20)           59.93 (20)           59.94 (20)         2.997 (20)
+==============================================================================================================
+Average time: 2996.65 ms.
+
+# webbase-2001 timeout 1,2,4 GPU.
+
+BENCHID++Trilinos++spadd3++webbase-2001++8++gpus
+Executing command: jsrun -n 8 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+
+ 1D Distribution:
+     np     = 8
+============================================================================================================
+
+                                   TimeMonitor results over 8 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1211 (3.06e+05)     1251 (3.06e+05)     1323 (3.06e+05)     0.004089 (3.06e+05)
+RMM    selectNonzeros    877.2 (3.06e+05)    948.6 (3.06e+05)    988.4 (3.06e+05)    0.0031 (3.06e+05)
+SpAdd3                   853.8 (20)          853.8 (20)          853.8 (20)          42.69 (20)
+============================================================================================================
+Average time: 42691.2 ms.
+BENCHID++Trilinos++spadd3++webbase-2001++16++gpus
+Executing command: jsrun -n 16 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+
+ 1D Distribution:
+     np     = 16
+===========================================================================================================
+
+                                  TimeMonitor results over 16 processors
+
+Timer Name               MinOverProcs       MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+-----------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      1138 (3.06e+05)    1171 (3.06e+05)     1205 (3.06e+05)     0.003827 (3.06e+05)
+RMM    selectNonzeros    816 (3.06e+05)     850.6 (3.06e+05)    884.4 (3.06e+05)    0.00278 (3.06e+05)
+SpAdd3                   155.9 (20)         155.9 (20)          155.9 (20)          7.793 (20)
+===========================================================================================================
+Average time: 7793.15 ms.
+BENCHID++Trilinos++spadd3++webbase-2001++32++gpus
+Executing command: jsrun -n 32 -g 1 -r 4 -c 10 -b rs -M "-gpu" /g/g15/yadav2/taco/trilinos/build/../trilinos_run_wrapper.sh /g/g15/yadav2/taco/trilinos/build/bin/benchmark-cuda --file=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001.mtx --n=20 --warmup=10 --bench=spadd3 --add3TensorC=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-0.mtx --add3TensorD=/p/gpfs1/yadav2/tensors/coo-txt/webbase-2001-rotated-1.mtx
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+
+ 1D Distribution:
+     np     = 32
+============================================================================================================
+
+                                   TimeMonitor results over 32 processors
+
+Timer Name               MinOverProcs        MeanOverProcs       MaxOverProcs        MeanOverCallCounts
+------------------------------------------------------------------------------------------------------------
+RMM    readNonzeros      756.2 (3.06e+05)    774.5 (3.06e+05)    791.2 (3.06e+05)    0.002531 (3.06e+05)
+RMM    selectNonzeros    774.7 (3.06e+05)    791.5 (3.06e+05)    809.8 (3.06e+05)    0.002587 (3.06e+05)
+SpAdd3                   85.18 (20)          85.18 (20)          85.19 (20)          4.259 (20)
+============================================================================================================
+Average time: 4258.95 ms.
+
+
+
