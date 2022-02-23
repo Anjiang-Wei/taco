@@ -228,7 +228,7 @@ void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, Le
 
   // Delete the old region, as this is important to not OOM on some benchmarks.
   // Before we do so though, detach the region from the external allocation.
-  size_t toDelete = 0;
+  int toDelete = -1;
   for (size_t i = 0; i < attached.attachedRegions.size(); i++) {
     auto phys = attached.attachedRegions[i];
     if (phys.get_logical_region() == oldReg) {
@@ -236,7 +236,9 @@ void convertDISTALCSRToStandardCSR(Context ctx, Runtime* runtime, int pieces, Le
       runtime->detach_external_resource(ctx, phys);
     }
   }
-  attached.attachedRegions.erase(attached.attachedRegions.begin() + toDelete);
+  if (!attached.attachedRegions.empty() && toDelete != -1) {
+    attached.attachedRegions.erase(attached.attachedRegions.begin() + toDelete);
+  }
   runtime->destroy_logical_region(ctx, oldReg);
 }
 
@@ -351,9 +353,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // If we are using CUDA and using a row-split schedule, we're going to use CuSparse
   // at the leaves. Therefore, we need to convert the DISTAL pos region into a standard
   // CSR region to be compatible with CuSparse.
-  if (conf == CSR_ROW_SPLIT) {
-    convertDISTALCSRToStandardCSR(ctx, runtime, pieces, A, rowPack, Aex);
-  }
+  // if (conf == CSR_ROW_SPLIT) {
+  //   convertDISTALCSRToStandardCSR(ctx, runtime, pieces, A, rowPack, Aex);
+  // }
 #endif
 
   // Benchmark the computation.

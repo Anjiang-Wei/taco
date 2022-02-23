@@ -102,6 +102,18 @@ partitionPackForcomputeLegionRowSplit partitionForcomputeLegionRowSplit(Legion::
   return computePartitions;
 }
 
+__global__
+void constructValidPos(size_t elems, const Rect<1>* posGlobal, int32_t* posLocal) {
+  const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= elems) {
+    return;
+  }
+  posLocal[idx] = posGlobal[idx].lo - posGlobal[0].lo;
+  if (idx == 0) {
+    posLocal[elems] = posGlobal[elems - 1].hi + 1;
+  }
+}
+
 void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
@@ -119,10 +131,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   int64_t B2_dimension = args->B2_dimension;
   int32_t pieces = args->pieces;
 
+  cusparseHandle_t handle = getCuSparse();
+  cudaStream_t taskStream = cudaStream_t();
+  cudaStreamCreate(&(taskStream));
+
   auto B_vals_ro_accessor = createAccessor<AccessorROdouble1>(B_vals, FID_VAL);
   auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
   auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
-  auto B2_pos_accessor = createAccessor<AccessorROint32_t1>(B2_pos, FID_RECT_1);
+  auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
   auto posDomain = runtime->get_index_space_domain(ctx, get_index_space(B2_pos));
@@ -131,20 +147,25 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto BValsDomain = runtime->get_index_space_domain(ctx, get_index_space(B_vals));
   auto cValsDomain = runtime->get_index_space_domain(ctx, get_index_space(c_vals));
   double alpha = 1.0000000000000000;
-  cusparseHandle_t handle = getCuSparse();
-  cudaStream_t taskStream = cudaStream_t();
-  cudaStreamCreate(&(taskStream));
   CHECK_CUSPARSE(cusparseSetStream(handle, taskStream));
   cusparseMatDescr_t mat = cusparseMatDescr_t();
   CHECK_CUSPARSE(cusparseCreateMatDescr(&(mat)));
   CHECK_CUSPARSE(cusparseSetMatIndexBase(mat, CUSPARSE_INDEX_BASE_ZERO));
   CHECK_CUSPARSE(cusparseSetMatType(mat, CUSPARSE_MATRIX_TYPE_GENERAL));
+
+  // We have to convert this globally addressed pos array into a local pos array.
   uint64_t bufferSize = 0;
+  Legion::DeferredBuffer<int32_t, 1> posBuf(Rect<1>(0, posDomain.get_volume()), Memory::Kind::GPU_FB_MEM);
+  const int THREADS_PER_BLOCK = 256;
+  auto blocks = (posDomain.get_volume() + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+  taco_iassert(blocks != 0);
+  constructValidPos<<<blocks, THREADS_PER_BLOCK, 0, taskStream>>>(posDomain.get_volume(), B2_pos_accessor.ptr(posDomain.lo()), posBuf.ptr(0));
+
   CHECK_CUSPARSE(cusparseCsrmvEx_bufferSize(
     handle,
     CUSPARSE_ALG_MERGE_PATH,
     CUSPARSE_OPERATION_NON_TRANSPOSE,
-    (posDomain.get_volume() - 1),
+    posDomain.get_volume(),
     B2_dimension,
     crdDomain.get_volume(),
     &(alpha),
@@ -152,7 +173,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     mat,
     B_vals_ro_accessor.ptr(BValsDomain.lo()),
     CUDA_R_64F,
-    B2_pos_accessor.ptr(posDomain.lo()),
+    posBuf.ptr(0),
     B2_crd_accessor.ptr(crdDomain.lo()),
     c_vals_ro_accessor.ptr(cValsDomain.lo()),
     CUDA_R_64F,
@@ -172,7 +193,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     handle,
     CUSPARSE_ALG_MERGE_PATH,
     CUSPARSE_OPERATION_NON_TRANSPOSE,
-    (posDomain.get_volume() - 1),
+    posDomain.get_volume(),
     B2_dimension,
     crdDomain.get_volume(),
     &(alpha),
@@ -180,7 +201,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     mat,
     B_vals_ro_accessor.ptr(BValsDomain.lo()),
     CUDA_R_64F,
-    B2_pos_accessor.ptr(posDomain.lo()),
+    posBuf.ptr(0),
     B2_crd_accessor.ptr(crdDomain.lo()),
     c_vals_ro_accessor.ptr(cValsDomain.lo()),
     CUDA_R_64F,
