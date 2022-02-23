@@ -114,11 +114,15 @@ void spmvWeakScale(int warmup, int niter) {
   const size_t NNZ_PER_ROW = 501;
   PetscInt size;
   MPI_Comm_size(PETSC_COMM_WORLD, &size);
-  // TODO (rohany): Extract this logic to make it composable?
-  // Get the number of processes per node.
-  size = size / 40;
+  // Get the number of processes per node. If we have GPUs then there's
+  // just 1 per GPU.
+  if (!GPUENABLED) {
+    size = size / 40;
+  }
   int dim = NNZ_TARGET / NNZ_PER_ROW * size_t(size);
-  
+ 
+  // I get segfaults when I directly make this an MPIAIJ matrix, so we require passing
+  // in `-mat_type mpiaij` in the command line for this to work correctly for GPUs. 
   Mat B;
   MatCreate(PETSC_COMM_WORLD, &B);
   MatSetSizes(B, PETSC_DECIDE, PETSC_DECIDE, dim, dim);
@@ -128,7 +132,6 @@ void spmvWeakScale(int warmup, int niter) {
   
   // Fill the bands of B up.
   PetscInt rStart, rEnd;
-  // TODO (rohany): This call requires the mpiaij matrix type.
   MatGetOwnershipRange(B, &rStart, &rEnd);
   for (int i = rStart; i < rEnd; i++) {
     for (int j = (i - (int(NNZ_PER_ROW) / 2)); j <= (i + (int(NNZ_PER_ROW) / 2)); j++) {
@@ -151,8 +154,17 @@ void spmvWeakScale(int warmup, int niter) {
   VecSet(x, one);
   VecSet(y, zero);
 
+  // Insertion seems to be too slow into a MPIAIJCUSPARSE matrix by default, so we
+  // have to make a normal MPIAIJ matrix and then convert it into MPIAIJCUSPARSE.
+  Mat BFinal;
+  if (GPUENABLED) {
+    MatConvert(B, MATMPIAIJCUSPARSE, MAT_INITIAL_MATRIX, &BFinal);
+  } else {
+    BFinal = B;
+  }
+
   auto avgTime = benchmarkWithWarmup(warmup, niter, [&]() {
-    MatMult(B, x, y);
+    MatMult(BFinal, x, y);
   }); 
 
   PetscPrintf(PETSC_COMM_WORLD, "Average time: %lf ms.\n", avgTime * 1000);
