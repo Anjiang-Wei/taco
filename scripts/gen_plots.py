@@ -17,13 +17,9 @@ from benchkinds import *
 
 reg = SparseTensorRegistry.initialize()
 filterFunc = lambda t : t.order == 2
-nodes = [1, 2, 4, 8, 16]
-benchSet = {
-    'DISTAL': set(itertools.product(reg.getAllNames(filterFunc=filterFunc), nodes)),
-    'PETSc': set(itertools.product(reg.getAllNames(filterFunc=filterFunc), nodes)),
-    'Trilinos': set(itertools.product(reg.getAllNames(filterFunc=filterFunc), nodes)),
-    'CTF': set(itertools.product(reg.getAllNames(filterFunc=filterFunc), nodes)),
-}
+# nodes = [1, 2, 4, 8, 16]
+# nodes = [1, 2, 4, 8]
+nodes = [1, 2, 4, 8, 16, 32]
 validMatrices = set(reg.getAllNames(filterFunc=filterFunc))
 validTensors = set(reg.getAllNames(filterFunc=lambda t : t.order == 3))
 benchOrds = {
@@ -76,7 +72,18 @@ def defaultLoadExperimentData(benchKind):
     tacoDir = os.getenv("TACO_DIR", default=None)
     assert(tacoDir is not None)
     benchKindStr = str(benchKind)
-    files = glob.glob(f"{tacoDir}/sc-2022-result-logs/*-{benchKindStr}-*nodes*")
+    # files = glob.glob(f"{tacoDir}/sc-2022-result-logs/*-{benchKindStr}-*nodes*")
+    files = glob.glob(f"{tacoDir}/sc-2022-result-logs/*-{benchKindStr}-*gpus*")
+    dfs = []
+    for f in files:
+        dfs.append(processRawExperimentOutput(f))
+    return pandas.concat(dfs)
+
+def loadExperimentData(benchKind, system, proc):
+    tacoDir = os.getenv("TACO_DIR", default=None)
+    assert(tacoDir is not None)
+    benchKindStr = str(benchKind)
+    files = glob.glob(f"{tacoDir}/sc-2022-result-logs/{system}-{benchKindStr}-*{proc}*")
     dfs = []
     for f in files:
         dfs.append(processRawExperimentOutput(f))
@@ -93,12 +100,21 @@ def constructSpeedupData(raw, procKey, benchKind, maxProcs=16, dump=False):
     validTensorSet = set(validMatrices)
     if (benchOrds[benchKind] == 3):
         validTensorSet = set(validTensors)
+
+    benchSet = {
+        'DISTAL': set(itertools.product(validTensorSet, nodes)),
+        'PETSc': set(itertools.product(validTensorSet, nodes)),
+        'Trilinos': set(itertools.product(validTensorSet, nodes)),
+        'CTF': set(itertools.product(validTensorSet, nodes)),
+    }
+
     for _, row in data.iterrows():
-        if (row["Tensor"], row[procKey]) in benchSet[row["System"]]:
-            benchSet[row["System"]].remove((row["Tensor"], row[procKey]))
+        # if (row["Tensor"], row[procKey]) in benchSet[row["System"]]:
+        #     benchSet[row["System"]].remove((row["Tensor"], row[procKey]))
         if (row["Tensor"] not in validTensorSet):
             continue
-        normTime = distalTimes[(row["Benchmark"], row["Tensor"], 1)]
+        normTime = distalTimes[(row["Benchmark"], row["Tensor"], row[procKey])]
+        # normTime = distalTimes[(row["Benchmark"], row["Tensor"], 1)]
         row["Time (ms)"] = normTime / row["Time (ms)"]
         normalizedData.append(list(row))
 
@@ -188,7 +204,7 @@ def brokenSpeedupPlot(data, benchKind):
     idealLine, = ax1.plot(xpoints, ypoints, color="black")
 
     # xmin and xmax are fractions of the plot width, not data elements.
-    ax1.axhline(y=1, color='gray', linestyle='dotted', xmin=0.05, xmax=0.95)
+    ax1.axhline(y=1, color='gray', xmin=0.0, xmax=1.0)
 
     ax1.set_xscale("log", base=2)
     ax1.set_yscale("log", base=2)
@@ -253,7 +269,7 @@ def speedupPlot(data, benchKind):
     ax.set_yticks(ticks)
 
     # xmin and xmax are fractions of the plot width, not data elements.
-    ax.axhline(y=1, color='gray', linestyle='dotted', xmin=0.05, xmax=0.95)
+    ax.axhline(y=1, color='gray', xmin=0.0, xmax=1.0)
 
     ax.get_legend().remove()
     lines_labels = sorted(zip(*ax.get_legend_handles_labels()[::-1]))
@@ -278,13 +294,98 @@ parser.add_argument("kind", type=str, choices=["strong-scaling", "weak-scaling"]
 args = parser.parse_args()
 
 if args.kind == "strong-scaling":
-    for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
-        data = defaultLoadExperimentData(bench)
-        normalized = constructSpeedupData(data, "Nodes", bench)
-        if bench in [BenchmarkKind.SpMV]:
-            brokenSpeedupPlot(normalized, bench)
-        else:
-            speedupPlot(normalized, bench)
+    # for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+    # for bench in [BenchmarkKind.SpMV]:
+    # for bench in [BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+    #     print(bench)
+    #     data = defaultLoadExperimentData(bench)
+    #     # normalized = constructSpeedupData(data, "Nodes", bench)
+    #     normalized = constructSpeedupData(data, "GPUs", bench)
+    #     # if bench in [BenchmarkKind.SpMV]:
+    #     #     brokenSpeedupPlot(normalized, bench)
+    #     # else:
+    #     #     speedupPlot(normalized, bench)
+
+    # GPU related plotting.
+    for bench in [BenchmarkKind.SpAdd3]:
+        distalGPU = loadExperimentData(bench, "distal", "gpus")
+        trilinosGPU = loadExperimentData(bench, "trilinos", "gpus")
+        distalCPU = loadExperimentData(bench, "distal", "nodes")
+        newDistalGPURows = []
+        for _, row in distalGPU.iterrows():
+            if row["GPUs"] // 4 > 0:
+                newRow = ["DISTAL-GPU", row["Benchmark"], row["Tensor"], row["GPUs"] // 4, row["Time (ms)"]]
+                newDistalGPURows.append(newRow)
+        distalGPU = pandas.DataFrame(newDistalGPURows, columns=["System", "Benchmark", "Tensor", "Nodes", "Time (ms)"])
+        newTrilinosGPURows = []
+        for _, row in trilinosGPU.iterrows():
+            if row["GPUs"] // 4 > 0:
+                newRow = ["Trilinos-GPU", row["Benchmark"], row["Tensor"], row["GPUs"] // 4, row["Time (ms)"]]
+                newTrilinosGPURows.append(newRow)
+        trilinosGPU = pandas.DataFrame(newTrilinosGPURows, columns=["System", "Benchmark", "Tensor", "Nodes", "Time (ms)"])
+        data = pandas.concat([distalGPU, trilinosGPU, distalCPU])
+        # print(data)
+        speedup = constructSpeedupData(data, "Nodes", bench)
+        speedup = speedup[speedup["System"] != "DISTAL"]
+        pandas.set_option("display.max_rows", None)
+        print(speedup)
+        newSpeedupRows = []
+        for _, row in speedup.iterrows():
+            newSpeedupRows.append([row["System"] + row["Tensor"], row["Nodes"], row["Normalized Time to DISTAL"]])
+        speedup = pandas.DataFrame(newSpeedupRows, columns=["Tensor", "Nodes", "Normalized Time to DISTAL"])
+        ax = seaborn.lineplot(data=speedup, x="Nodes", y="Normalized Time to DISTAL", hue="Tensor", style="Tensor", markers=True)
+        ax.axhline(y=1, color='gray', xmin=0.0, xmax=1.0)
+        ax.set_xscale("log", base=2)
+        ax.set_yscale("log")
+        plt.title(str(bench))
+        yFormatter = ticker.FuncFormatter(makeYAxisFormatter(ax))
+        ax.get_yaxis().set_major_formatter(yFormatter)
+        ax.get_xaxis().set_major_formatter(xFormatter)
+        ticks = ax.get_xticks()
+        labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
+        ax.set_xticklabels(labels)
+        ax.set_xlabel("Nodes (GPUs)")
+        plt.show()
+
+
+
+    for bench in [BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP, BenchmarkKind.SDDMM]:
+        distalGPU = loadExperimentData(bench, "distal", "gpus")
+        distalCPU = loadExperimentData(bench, "distal", "nodes")
+        # data = pandas.concat([distalGPU, distalCPU])
+        # print(data)
+
+        newDistalGPURows = []
+        for _, row in distalGPU.iterrows():
+            if row["GPUs"] // 4 > 0:
+                newRow = ["DISTAL-GPU", row["Benchmark"], row["Tensor"], row["GPUs"] // 4, row["Time (ms)"]]
+                newDistalGPURows.append(newRow)
+        distalGPU = pandas.DataFrame(newDistalGPURows, columns=["System", "Benchmark", "Tensor", "Nodes", "Time (ms)"])
+        data = pandas.concat([distalGPU, distalCPU])
+        # print(data)
+        speedup = constructSpeedupData(data, "Nodes", bench)
+        speedup = speedup[speedup["System"] != "DISTAL"]
+        # print(speedup)
+        # squishedRows = []
+        # for _, row in data.iterrows():
+        #     squishedRows.append([row["System"] + "-" + row["Tensor"], row["Nodes"], row["Time (ms)"]])
+        # data = pandas.DataFrame(squishedRows, columns=["System", "Nodes", "Time (ms)"])
+
+        ax = seaborn.lineplot(data=speedup, x="Nodes", y="Normalized Time to DISTAL", hue="Tensor", style="Tensor", markers=True)
+        ax.axhline(y=1, color='gray', xmin=0.0, xmax=1.0)
+        ax.set_xscale("log", base=2)
+        ax.set_yscale("log")
+        plt.title(str(bench))
+        yFormatter = ticker.FuncFormatter(makeYAxisFormatter(ax))
+        ax.get_yaxis().set_major_formatter(yFormatter)
+        ax.get_xaxis().set_major_formatter(xFormatter)
+        ticks = ax.get_xticks()
+        labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
+        ax.set_xticklabels(labels)
+        ax.set_xlabel("Nodes (GPUs)")
+        plt.show()
+
+
 else:
     data = loadWeakScalingData()
     palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "DISTAL-GPU": rawPalette[2], "PETSc-GPU": rawPalette[3]}
