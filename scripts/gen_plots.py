@@ -3,6 +3,7 @@
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+from matplotlib.colors import LinearSegmentedColormap
 import pandas
 import seaborn
 import sys
@@ -11,6 +12,7 @@ import glob
 import os
 from pathlib import Path
 import re
+import numpy
 
 from registry import *
 from benchkinds import *
@@ -72,11 +74,11 @@ def processRawExperimentOutput(file):
         pdData.append(list(keys) + [val])
     return pandas.DataFrame(pdData, columns=header)
 
-def defaultLoadExperimentData(benchKind):
+def defaultLoadExperimentData(benchKind, kind="nodes", system="*"):
     tacoDir = os.getenv("TACO_DIR", default=None)
     assert(tacoDir is not None)
     benchKindStr = str(benchKind)
-    files = glob.glob(f"{tacoDir}/sc-2022-result-logs/*-{benchKindStr}-*nodes*")
+    files = glob.glob(f"{tacoDir}/sc-2022-result-logs/{system}-{benchKindStr}-*{kind}*")
     dfs = []
     for f in files:
         dfs.append(processRawExperimentOutput(f))
@@ -271,8 +273,91 @@ def speedupPlot(data, benchKind):
     plt.suptitle(f"Speedup for {benchKind}", fontsize=16)
     plt.show()
 
-# TODO (rohany): Handle when some systems timeout / OOM.
 
+def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, includesFailure=True, cbarLabels=None, cbarTicks=None, xLabel=None, xtickLabels=None):
+    # Here, we need to construct an n-d array of tensors by procs and fill it in with data.
+    # We'll also construct a sidecar array of labels that we'll display in the heatmap.
+    heatmapData = numpy.ndarray((len(tensors), len(procs)), dtype=numpy.int32)
+    heatmapLabels = numpy.ndarray((len(tensors), len(procs)), dtype=object)
+    for i in range(0, len(tensors)):
+        for j in range(0, len(procs)):
+            tensor = tensors[i]
+            proc = procs[j]
+            times = []
+            for system in systems:
+                # Find an entry in data that matches the current tensor, system and proc.
+                # If we can't find one, that means the system OOM'd or errored out. We'll
+                # do this by just filtering the dataframe, hopefully it is not too slow.
+                target = data[(data["System"] == system) & (data[procKey] == proc) & (data["Tensor"] == tensor)]
+                if len(target) == 0:
+                    times.append(None)
+                else:
+                    times.append(target.iloc[0]["Time (ms)"])
+            minVal = None
+            for t in times:
+                if t is None:
+                    continue
+                elif minVal is None:
+                    minVal = t
+                else:
+                    minVal = min(minVal, t)
+            index = -1
+            if minVal is not None:
+                index = times.index(minVal)
+            heatmapData[i, j] = index
+            labels = []
+            for k in range(0, len(times)):
+                time = times[k]
+                if time is not None:
+                    s = "{:.1f}".format(time)
+                    if len(s) > 5:
+                        s = "{:.0e}".format(time).replace("e+0", "e+")
+                    if k == index:
+                        BOLD = r'$\bf{'
+                        END = '}$'
+                        s = BOLD + s + END
+                    labels.append(s)
+                else:
+                    labels.append("DNC")
+            heatmapLabels[i, j] = "\n".join(labels)
+    ax = seaborn.heatmap(
+        heatmapData,
+        annot=heatmapLabels,
+        xticklabels=procs if xtickLabels is None else xtickLabels,
+        yticklabels=tensors,
+        square=True,
+        fmt="",
+        linewidths=1.0,
+        cmap=cmap,
+    )
+    if cbarLabels is not None:
+        ax.collections[0].colorbar.ax.set_yticks(cbarTicks)
+        ax.collections[0].colorbar.ax.set_yticklabels(cbarLabels)
+    else:
+        # Some magic here to compute tick labels and offsets for where to put those
+        # labels for colors in the heatmaps.
+        numColors = len(systems)
+        if includesFailure:
+            numColors += 1
+        lo = 0
+        if includesFailure:
+            lo = -1.0
+        hi = float(len(systems) - 1)
+        ticks = []
+        size = (hi - lo) / numColors
+        for i in range(0, numColors):
+            ticks.append(lo + (size / 2) + i * size)
+        ax.collections[0].colorbar.ax.set_yticks(ticks)
+        ax.collections[0].colorbar.ax.set_yticklabels((["DNC"] if includesFailure else []) + systems)
+
+    if xLabel is not None:
+        ax.set_xlabel(xLabel)
+    else:
+        ax.set_xlabel(procKey)
+    plt.title(str(bench))
+    plt.show()
+
+# TODO (rohany): Handle when some systems timeout / OOM.
 parser = argparse.ArgumentParser()
 parser.add_argument("kind", type=str, choices=["strong-scaling", "weak-scaling"], default="strong-scaling")
 args = parser.parse_args()
@@ -285,6 +370,41 @@ if args.kind == "strong-scaling":
             brokenSpeedupPlot(normalized, bench)
         else:
             speedupPlot(normalized, bench)
+
+    # Generation of heatmap plots for select GPU results.
+    matrices = sorted([str(t) for t in validMatrices])
+    tensors = sorted([str(t) for t in validTensors])
+
+    # For all of these color maps, we add on black to the beginning to give the "DNC" label the same
+    # color in all of the graphs.
+
+    # Benchmarks where we have a comparison.
+    colorMap = LinearSegmentedColormap.from_list('Custom', [(0, 0, 0), rawPalette[0], rawPalette[1], rawPalette[2]], 4)
+    constructHeatMap(BenchmarkKind.SpMV, defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"), "GPUs", [1, 2, 4, 8], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap)
+    constructHeatMap(BenchmarkKind.SpMM, defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus"), "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap)
+    colorMap = LinearSegmentedColormap.from_list('Custom', [(0, 0, 0), rawPalette[0], rawPalette[1]], 3)
+    constructHeatMap(BenchmarkKind.SpAdd3, defaultLoadExperimentData(BenchmarkKind.SpAdd3, kind="gpus"), "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos"], colorMap)
+
+    # Benchmarks where we don't have a comparison (i.e. we'll use ourselves).
+    def loadGPUCPUData(bench):
+        distalGPU = defaultLoadExperimentData(bench, kind="gpus", system="distal")
+        distalCPU = defaultLoadExperimentData(bench, kind="nodes", system="distal")
+        newDistalGPURows = []
+        for _, row in distalGPU.iterrows():
+            if row["GPUs"] // 4 > 0:
+                newRow = ["DISTAL-GPU", row["Benchmark"], row["Tensor"], row["GPUs"] // 4, row["Time (ms)"]]
+                newDistalGPURows.append(newRow)
+        distalGPU = pandas.DataFrame(newDistalGPURows, columns=["System", "Benchmark", "Tensor", "Nodes", "Time (ms)"])
+        return pandas.concat([distalGPU, distalCPU])
+    colorMap = LinearSegmentedColormap.from_list('Custom', [rawPalette[0], rawPalette[3]], 2)
+    xLabel = "Nodes(GPUs)"
+    nodeLabels = ["1(4)", "2(8)", "4(16)", "8(32)"]
+    constructHeatMap(BenchmarkKind.SDDMM, loadGPUCPUData(BenchmarkKind.SDDMM), "Nodes", [1, 2, 4, 8], matrices, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
+    constructHeatMap(BenchmarkKind.SpMTTKRP, loadGPUCPUData(BenchmarkKind.SpMTTKRP), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
+    # Custom HeatMap palette here because GPU always wins in the SpTTV case.
+    colorMap = LinearSegmentedColormap.from_list('Custom', [rawPalette[3], rawPalette[3]], 2)
+    constructHeatMap(BenchmarkKind.SpTTV, loadGPUCPUData(BenchmarkKind.SpTTV), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, cbarLabels=["DISTAL-GPU"], cbarTicks=[1.0], xLabel=xLabel, xtickLabels=nodeLabels)
+
 else:
     data = loadWeakScalingData()
     palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "DISTAL-GPU": rawPalette[2], "PETSc-GPU": rawPalette[3]}
