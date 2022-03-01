@@ -70,19 +70,58 @@ class DISTALBenchmark(Benchmark):
             else:
                 gpus = 4
             # Allocate as much GPU memory as physically possible.
-            fbSize = "15.3G"
+            # TODO (rohany): Comment...
+            fbSize = "15G"
+            if procs >= 8:
+                # For some reason we get OOM errors at 32 GPUs if we try to take up too much of the 
+                # GPU memory and we aren't able to allocate enough for GASNet-Ex.
+                fbSize = "14.5G"
             if benchKind == BenchmarkKind.SpMV:
                 # We'll allocate slightly less memory in this case for CuSparse, as the cusparseHandle_t
                 # takes up a non-trivial amount of memory.
-                fbSize = "15G"
+                fbSize = "14.5G"
             legionArgs += [
                 "-ll:gpu", str(gpus),
                 "-ll:fsize", fbSize,
                 "-pieces", str(procs),
             ]
+        
+        spmmArgs = []
+        if self.gpu and benchKind == BenchmarkKind.SpMM:
+            spmmArgs += ["-consMem", "-tm:enable_backpressure", "-tm:backpressure_max_in_flight", "1", "-tm:untrack_valid_regions"]
+            if tensor.name in ["arabic-2005", "mycielskian19", "nlpkkt240"]:
+                # These inputs don't need any backpressuring, so overwrite the backpressuring args.
+                spmmArgs = ["-consMem", "-gx", str(procs), "-gy", "1"]
+            elif tensor.name == "it-2004":
+                if procs <= 8:
+                    spmmArgs += ["-gx", "2", "-gy", "4"]
+                else:
+                    spmmArgs += ["-gx", str(procs // 4), "-gy", "4"]
+            elif tensor.name == "sk-2005":
+                if procs <= 16:
+                    spmmArgs += ["-gx", "4", "-gy", "4"]
+                else:
+                    spmmArgs += ["-gx", str(procs // 4), "-gy", "4"]
+            elif tensor.name == "twitter7":
+                if procs <= 32:
+                    spmmArgs += ["-gx", "4", "-gy", "8"]
+                else:
+                    spmmArgs += ["-gx", str(procs // 8), "-gy", "4"]
+            elif tensor.name == "uk-2005":
+                if procs <= 8:
+                    spmmArgs += ["-gx", "4", "-gy", "2"]
+                else:
+                    spmmArgs += ["-gx", str(procs // 2), "-gy", "2"]
+            elif tensor.name == "webbase-2001":
+                # TODO (rohany): We can get 4,32 working on 1 node.
+                spmmArgs += ["-gx", "4", "-gy", "16"]
+            elif "kmer" in tensor.name:
+                    spmmArgs += ["-gx", "8", "-gy", "8"]
+            else:
+                assert(False)
 
         assert(benchKind in args)
-        return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind]
+        return lassenPrefix + [self.getBinary(benchKind)] + legionArgs + commonArgs + args[benchKind] + spmmArgs
 
     def getBinary(self, benchKind):
         tacoDir = os.environ.get("TACO_BUILD_DIR", None)
@@ -129,7 +168,7 @@ class CTFBenchmark(Benchmark):
             BenchmarkKind.SpMTTKRP: ["-bench", "spmttkrp"],
             BenchmarkKind.SpInnerProd: ["-bench", "spinnerprod", "-tensorC", self.getShiftedTensor(tensor, 0)],
         }
-        lassenPrefix = ["jsrun", "-b", "rs", "-c", "1", "-r", "40", "-n", str(40 * nodes)]
+        lassenPrefix = ["jsrun", "-b", "rs", "-c", "1", "-r", "40", "-n", str(40 * nodes), "--core=none", "--core_delay=0"]
         commonArgs = ["-tensor", self.getCTFTensor(tensor), "-dims", ",".join([str(d) for d in tensor.dims]), "-n", str(self.niter), "-warmup", str(self.warmup)]
         ctfDir = os.environ.get("CTF_DIR", None)
         if (ctfDir is None):
