@@ -180,10 +180,10 @@ def makeYAxisFormatter(ax):
 
 # Much of the logic to generate the broken plot was taken from here:
 # https://gist.github.com/pfandzelter/0ae861f0dee1fb4fd1d11344e3f85c9e.
-def brokenSpeedupPlot(data, benchKind):
+def brokenSpeedupPlot(data, benchKind, outdir):
     fig, (ax1, ax2) = plt.subplots(ncols=1, nrows=2, gridspec_kw={'height_ratios' : [2, 1]})
-    ax1 = seaborn.lineplot(ax=ax1, data=data[data["System"] != "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette, markers=markers)
-    ax2 = seaborn.lineplot(ax=ax2, data=data[data["System"] == "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette, markers=markers)
+    ax1 = seaborn.lineplot(ax=ax1, data=data[data["System"] != "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette, markers=markers, dashes=False)
+    ax2 = seaborn.lineplot(ax=ax2, data=data[data["System"] == "CTF"], x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, palette=palette, markers=markers, dashes=False)
 
     xpoints = [1, 16]
     ypoints = [1, 16]
@@ -234,10 +234,15 @@ def brokenSpeedupPlot(data, benchKind):
     ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
     ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
     fig.suptitle(f"Speedup for {benchKind}", fontsize=16)
-    # TODO (rohany): Change this to dump to a file?
-    plt.show()
+    fig.set_size_inches(8, 6)
+    if outdir is not None:
+        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")))
+        plt.clf()
+    else:
+        plt.show()
 
-def speedupPlot(data, benchKind):
+
+def speedupPlot(data, benchKind, outdir):
     ax = seaborn.lineplot(data=data, x="Nodes", y="Normalized Time to DISTAL", hue="System", style="System", err_style="band", ci=99, markers=markers, palette=palette)
     xpoints = [1, 16]
     ypoints = [1, 16]
@@ -258,23 +263,31 @@ def speedupPlot(data, benchKind):
     ax.axhline(y=1, color='gray', linestyle='dotted', xmin=0.05, xmax=0.95)
 
     ax.get_legend().remove()
-    lines_labels = sorted(zip(*ax.get_legend_handles_labels()[::-1]))
+    lines_labels = sorted(zip(*ax.get_legend_handles_labels()[::-1]), key=lambda x: x[0])
     lines = []
     labels = []
     for (la, li) in lines_labels:
         lines.append(li)
         labels.append(la)
     # This pair of location coordinates must be in [0, 1).
-    plt.legend([idealLine] + lines, ["Ideal"] + labels, loc=(0.05, 0.70))
+    loc = (0.02, 0.75)
+    if benchKind in [BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+        loc = (0.02, 0.80)
+    plt.legend([idealLine] + lines, ["Ideal"] + labels, loc=loc)
 
     yFormatter = ticker.FuncFormatter(makeYAxisFormatter(ax))
     ax.get_xaxis().set_major_formatter(xFormatter)
     ax.get_yaxis().set_major_formatter(yFormatter)
     plt.suptitle(f"Speedup for {benchKind}", fontsize=16)
-    plt.show()
+    fig = plt.gcf()
+    fig.set_size_inches(8, 6)
+    if outdir is not None:
+        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")))
+        plt.clf()
+    else:
+        plt.show()
 
-
-def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, includesFailure=True, cbarLabels=None, cbarTicks=None, xLabel=None, xtickLabels=None):
+def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, outdir, includesFailure=True, cbarLabels=None, cbarTicks=None, xLabel=None, xtickLabels=None):
     # Here, we need to construct an n-d array of tensors by procs and fill it in with data.
     # We'll also construct a sidecar array of labels that we'll display in the heatmap.
     heatmapData = numpy.ndarray((len(tensors), len(procs)), dtype=numpy.int32)
@@ -354,12 +367,23 @@ def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, includ
         ax.set_xlabel(xLabel)
     else:
         ax.set_xlabel(procKey)
+    fig = plt.gcf()
+    if bench in [BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+        fig.set_size_inches(6, 4)
+    else:
+        fig.set_size_inches(8, 10)
     plt.title(str(bench))
-    plt.show()
+
+    if outdir is not None:
+        plt.savefig(str(Path(outdir, f"gpu-strong-scaling-{bench}.pdf")))
+        plt.clf()
+    else:
+        plt.show()
 
 # TODO (rohany): Handle when some systems timeout / OOM.
 parser = argparse.ArgumentParser()
 parser.add_argument("kind", type=str, choices=["strong-scaling", "weak-scaling"], default="strong-scaling")
+parser.add_argument("--outdir", type=str, default=None)
 args = parser.parse_args()
 
 if args.kind == "strong-scaling":
@@ -367,9 +391,9 @@ if args.kind == "strong-scaling":
         data = defaultLoadExperimentData(bench)
         normalized = constructSpeedupData(data, "Nodes", bench)
         if bench in [BenchmarkKind.SpMV]:
-            brokenSpeedupPlot(normalized, bench)
+            brokenSpeedupPlot(normalized, bench, args.outdir)
         else:
-            speedupPlot(normalized, bench)
+            speedupPlot(normalized, bench, args.outdir)
 
     # Generation of heatmap plots for select GPU results.
     matrices = sorted([str(t) for t in validMatrices])
@@ -380,7 +404,9 @@ if args.kind == "strong-scaling":
     DNC = (0.5, 0.5, 0.5)
     # Benchmarks where we have a comparison.
     colorMap = LinearSegmentedColormap.from_list('Custom', [DNC, rawPalette[0], rawPalette[1], rawPalette[2]], 4)
-    constructHeatMap(BenchmarkKind.SpMV, defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"), "GPUs", [1, 2, 4, 8], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap)
+    constructHeatMap(BenchmarkKind.SpMV, defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"), "GPUs", [1, 2, 4, 8], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap, args.outdir)
+    colorMap = LinearSegmentedColormap.from_list('Custom', [DNC, rawPalette[0], rawPalette[2]], 3)
+    constructHeatMap(BenchmarkKind.SpAdd3, defaultLoadExperimentData(BenchmarkKind.SpAdd3, kind="gpus"), "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos"], colorMap, args.outdir)
     colorMap = LinearSegmentedColormap.from_list('Custom', [DNC, rawPalette[0], rawPalette[1], rawPalette[2]], 4)
     batchedData = defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distalbatched")
     batchedData["System"] = batchedData["System"].apply(lambda x: "DISTAL-Batched")
@@ -391,7 +417,7 @@ if args.kind == "strong-scaling":
         defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="trilinos"),
         batchedData,
     ])
-    constructHeatMap(BenchmarkKind.SpMM, data, "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos", "PETSc", "DISTAL-Batched"], colorMap)
+    constructHeatMap(BenchmarkKind.SpMM, data, "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos", "PETSc", "DISTAL-Batched"], colorMap, args.outdir)
 
     # Benchmarks where we don't have a comparison (i.e. we'll use ourselves).
     def loadGPUCPUData(bench):
@@ -407,12 +433,11 @@ if args.kind == "strong-scaling":
     colorMap = LinearSegmentedColormap.from_list('Custom', [rawPalette[0], rawPalette[3]], 2)
     xLabel = "Nodes(GPUs)"
     nodeLabels = ["1(4)", "2(8)", "4(16)", "8(32)"]
-    constructHeatMap(BenchmarkKind.SDDMM, loadGPUCPUData(BenchmarkKind.SDDMM), "Nodes", [1, 2, 4, 8], matrices, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
-    constructHeatMap(BenchmarkKind.SpMTTKRP, loadGPUCPUData(BenchmarkKind.SpMTTKRP), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
+    constructHeatMap(BenchmarkKind.SDDMM, loadGPUCPUData(BenchmarkKind.SDDMM), "Nodes", [1, 2, 4, 8], matrices, ["DISTAL", "DISTAL-GPU"], colorMap, args.outdir, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
+    constructHeatMap(BenchmarkKind.SpMTTKRP, loadGPUCPUData(BenchmarkKind.SpMTTKRP), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, args.outdir, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
     # Custom HeatMap palette here because GPU always wins in the SpTTV case.
     colorMap = LinearSegmentedColormap.from_list('Custom', [rawPalette[3], rawPalette[3]], 2)
-    constructHeatMap(BenchmarkKind.SpTTV, loadGPUCPUData(BenchmarkKind.SpTTV), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, includesFailure=False, cbarLabels=["DISTAL-GPU"], cbarTicks=[1.0], xLabel=xLabel, xtickLabels=nodeLabels)
-
+    constructHeatMap(BenchmarkKind.SpTTV, loadGPUCPUData(BenchmarkKind.SpTTV), "Nodes", [1, 2, 4, 8], tensors, ["DISTAL", "DISTAL-GPU"], colorMap, args.outdir, includesFailure=False, cbarLabels=["DISTAL-GPU"], cbarTicks=[1.0], xLabel=xLabel, xtickLabels=nodeLabels)
 else:
     data = loadWeakScalingData()
     palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "DISTAL-GPU": rawPalette[2], "PETSc-GPU": rawPalette[3]}
@@ -438,5 +463,8 @@ else:
     set("PETSc-GPU", 1)
     set("PETSc", 2)
     set("DISTAL", 3)
-    plt.legend(newLines, newLabels)
-    plt.show()
+    if args.outdir is not None:
+        plt.savefig(str(Path(args.outdir, f"weak-scaling-spmv.pdf")))
+        plt.clf()
+    else:
+        plt.show()
