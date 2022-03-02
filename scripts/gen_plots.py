@@ -375,15 +375,23 @@ if args.kind == "strong-scaling":
     matrices = sorted([str(t) for t in validMatrices])
     tensors = sorted([str(t) for t in validTensors])
 
-    # For all of these color maps, we add on black to the beginning to give the "DNC" label the same
+    # For all of these color maps, we add on gray to the beginning to give the "DNC" label the same
     # color in all of the graphs.
-
+    DNC = (0.5, 0.5, 0.5)
     # Benchmarks where we have a comparison.
-    colorMap = LinearSegmentedColormap.from_list('Custom', [(0, 0, 0), rawPalette[0], rawPalette[1], rawPalette[2]], 4)
+    colorMap = LinearSegmentedColormap.from_list('Custom', [DNC, rawPalette[0], rawPalette[1], rawPalette[2]], 4)
     constructHeatMap(BenchmarkKind.SpMV, defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"), "GPUs", [1, 2, 4, 8], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap)
-    constructHeatMap(BenchmarkKind.SpMM, defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus"), "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos", "PETSc"], colorMap)
-    colorMap = LinearSegmentedColormap.from_list('Custom', [(0, 0, 0), rawPalette[0], rawPalette[1]], 3)
-    constructHeatMap(BenchmarkKind.SpAdd3, defaultLoadExperimentData(BenchmarkKind.SpAdd3, kind="gpus"), "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos"], colorMap)
+    colorMap = LinearSegmentedColormap.from_list('Custom', [DNC, rawPalette[0], rawPalette[1], rawPalette[2]], 4)
+    batchedData = defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distalbatched")
+    batchedData["System"] = batchedData["System"].apply(lambda x: "DISTAL-Batched")
+    pandas.set_option("display.max_rows", None)
+    data = pandas.concat([
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distal"),
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="petsc"),
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="trilinos"),
+        batchedData,
+    ])
+    constructHeatMap(BenchmarkKind.SpMM, data, "GPUs", [1, 2, 4, 8, 16, 32], matrices, ["DISTAL", "Trilinos", "PETSc", "DISTAL-Batched"], colorMap)
 
     # Benchmarks where we don't have a comparison (i.e. we'll use ourselves).
     def loadGPUCPUData(bench):
@@ -415,7 +423,20 @@ else:
     ticks = ax.get_xticks()
     labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
     ax.set_xticklabels(labels)
+    ax.set_ylim([0, 100])
     ax.set_ylabel("Throughput / Node (Iterations / second")
     ax.set_xlabel("Nodes (GPUs)")
     plt.title("SpMV Weak-Scaling on Synthetic Banded Matrices")
+    labels, lines = ax.get_legend_handles_labels()[::-1]
+    newLabels = [None] * len(labels)
+    newLines = [None] * len(lines)
+    def set(system, idx):
+        i = labels.index(system)
+        newLabels[idx] = labels[i]
+        newLines[idx] = lines[i]
+    set("DISTAL-GPU", 0)
+    set("PETSc-GPU", 1)
+    set("PETSc", 2)
+    set("DISTAL", 3)
+    plt.legend(newLines, newLabels)
     plt.show()
