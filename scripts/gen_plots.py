@@ -236,7 +236,7 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     fig.suptitle(f"Speedup for {benchKind}", fontsize=16)
     fig.set_size_inches(8, 6)
     if outdir is not None:
-        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")))
+        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")), bbox_inches="tight")
         plt.clf()
     else:
         plt.show()
@@ -282,7 +282,7 @@ def speedupPlot(data, benchKind, outdir):
     fig = plt.gcf()
     fig.set_size_inches(8, 6)
     if outdir is not None:
-        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")))
+        plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")), bbox_inches="tight")
         plt.clf()
     else:
         plt.show()
@@ -375,7 +375,7 @@ def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, outdir
     plt.title(str(bench))
 
     if outdir is not None:
-        plt.savefig(str(Path(outdir, f"gpu-strong-scaling-{bench}.pdf")))
+        plt.savefig(str(Path(outdir, f"gpu-strong-scaling-{bench}.pdf")), bbox_inches="tight")
         plt.clf()
     else:
         plt.show()
@@ -464,7 +464,7 @@ else:
     set("PETSc", 2)
     set("DISTAL", 3)
     if args.outdir is not None:
-        plt.savefig(str(Path(args.outdir, f"weak-scaling-spmv.pdf")))
+        plt.savefig(str(Path(args.outdir, f"weak-scaling-spmv.pdf")), bbox_inches="tight")
         plt.clf()
     else:
         plt.show()
