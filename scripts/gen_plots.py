@@ -202,7 +202,7 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     ax1.set_ylabel("")
     ax2.set_ylabel("")
     # First argument is x position (bigger is farther right), second is y position (bigger is more up).
-    fig.text(0.03, 0.50, 'Speedup over DISTAL 1 Node', va='center', rotation='vertical')
+    fig.text(0.065, 0.50, 'Speedup over DISTAL 1 Node', va='center', rotation='vertical')
 
     ax1.get_xaxis().set_major_formatter(xFormatter)
     ax2.get_xaxis().set_major_formatter(xFormatter)
@@ -218,7 +218,7 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     lines_labels = sorted([ax.get_legend_handles_labels()[::-1] for ax in fig.axes])
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)][::-1]
     # This pair of location coordinates must be in [0, 1).
-    fig.legend([idealLine] + lines, ["Ideal"] + labels, loc=(0.15, 0.63))
+    fig.legend([idealLine] + lines, ["Ideal"] + labels, loc=(0.15, 0.70))
 
     # Add to remove the lines between each of the subplots.
     # ax1.spines["bottom"].set_visible(False)
@@ -233,7 +233,6 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
     ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
     ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
-    fig.suptitle(f"Speedup for {benchKind}", fontsize=16)
     fig.set_size_inches(8, 6)
     if outdir is not None:
         plt.savefig(str(Path(outdir, f"cpu-strong-scaling-{benchKind}.pdf")), bbox_inches="tight")
@@ -262,6 +261,8 @@ def speedupPlot(data, benchKind, outdir):
     # xmin and xmax are fractions of the plot width, not data elements.
     ax.axhline(y=1, color='gray', linestyle='dotted', xmin=0.05, xmax=0.95)
 
+    ax.set_ylabel("Speedup over DISTAL 1 Node")
+
     ax.get_legend().remove()
     lines_labels = sorted(zip(*ax.get_legend_handles_labels()[::-1]), key=lambda x: x[0])
     lines = []
@@ -278,7 +279,6 @@ def speedupPlot(data, benchKind, outdir):
     yFormatter = ticker.FuncFormatter(makeYAxisFormatter(ax))
     ax.get_xaxis().set_major_formatter(xFormatter)
     ax.get_yaxis().set_major_formatter(yFormatter)
-    plt.suptitle(f"Speedup for {benchKind}", fontsize=16)
     fig = plt.gcf()
     fig.set_size_inches(8, 6)
     if outdir is not None:
