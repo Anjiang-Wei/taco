@@ -374,6 +374,7 @@ def constructHeatMap(bench, data, procKey, procs, tensors, systems, cmap, outdir
         fig.set_size_inches(8, 10)
     plt.title(str(bench))
 
+    plt.yticks(rotation=0) 
     if outdir is not None:
         plt.savefig(str(Path(outdir, f"gpu-strong-scaling-{bench}.pdf")), bbox_inches="tight")
         plt.clf()
