@@ -12,6 +12,9 @@ class BenchmarkKind(Enum):
     def __str__(self):
         return self.name.lower()
 
+    def fancyStr(self):
+        return self.name
+
     @staticmethod
     def names():
         return [str(b) for b in BenchmarkKind]
