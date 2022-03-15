@@ -381,7 +381,7 @@ def constructHeatmapGroup(tag, benches, datas, procKey, procsPerBench, tensors, 
         axn[i].set_xticklabels(labels, rotation=0)
 
         if i == 0:
-            if tag == "linalg":
+            if tag == "linalg" or tag == "sddmm":
                 axn[i].set_ylabel("Matrix")
             else:
                 axn[i].set_ylabel("Tensor")
