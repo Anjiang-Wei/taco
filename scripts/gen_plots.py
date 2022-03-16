@@ -333,8 +333,8 @@ def processHeatmapData(data, tensors, procs, systems, procKey, ratio=False):
                     time = times[k]
                     if time is not None:
                         s = "{:.1f}".format(time)
-                        if len(s) > 5:
-                            s = "{:.0e}".format(time).replace("e+0", "e+")
+                        if len(s) > 5 or True:
+                            s = "{:.1e}".format(time).replace("e+0", "e+").replace("e+0", "")
                         if k == index:
                             BOLD = r'$\bf{'
                             END = '}$'
