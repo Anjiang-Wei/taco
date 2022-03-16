@@ -346,18 +346,23 @@ def processHeatmapData(data, tensors, procs, systems, procKey, ratio=False):
     return heatmapData, heatmapLabels
 
 
-def constructHeatmapGroup(tag, benches, datas, procKey, procsPerBench, tensors, systemsPerBench, palette, outdir, xLabel=None, xtickLabels=None, includesFailure=True, ratio=False):
+def constructHeatmapGroup(tag, benches, datas, procKeyPerBench, procsPerBench, tensors, systemsPerBench, palette, outdir, xLabels=None, xtickLabelList=None, includesFailure=True, ratio=False, failurePerBench=[], cbar=False):
     widths = [len(p) for p in procsPerBench]
     fig, axn = plt.subplots(1, len(benches), gridspec_kw={'width_ratios': widths})
     if len(benches) == 1:
         axn = [axn]
-    # Color bar nonsense taken from https://stackoverflow.com/questions/28356359/one-colorbar-for-seaborn-heatmaps-in-subplot.
-    axArgs = [.91, .4, .03, .2]
-    if tag == "sddmm":
-        axArgs = [.65, .45, .03, .1]
-    cbar_ax = fig.add_axes(axArgs)
     for i in range(len(benches)):
-        bench, data, procs, systems = benches[i], datas[i], procsPerBench[i], systemsPerBench[i]
+        bench, data, procs, systems, procKey = benches[i], datas[i], procsPerBench[i], systemsPerBench[i], procKeyPerBench[i]
+        if xLabels is None:
+            xLabel = None
+        else:
+            xLabel = xLabels[i]
+        if xtickLabelList is None:
+            xtickLabels = None
+        else:
+            xtickLabels = xtickLabelList[i]
+        if len(failurePerBench) != 0:
+            includesFailure = failurePerBench[i]
         # Construct a color map out of the possible systems.
         colors = [palette["DNC"]] if includesFailure else []
         for s in reversed(systems):
@@ -368,7 +373,6 @@ def constructHeatmapGroup(tag, benches, datas, procKey, procsPerBench, tensors, 
         if tag == "hot" and bench == BenchmarkKind.SpTTV:
             cmap = LinearSegmentedColormap.from_list("Custom", [palette["DISTAL-GPU"], palette["DISTAL-GPU"]], len(colors))
         heatmapData, heatmapLabels = processHeatmapData(data, tensors, procs, systems, procKey, ratio=ratio)
-        addCBar = i == 1 or (i == 0 and tag == "sddmm")
         seaborn.heatmap(
             heatmapData,
             ax=axn[i],
@@ -378,20 +382,13 @@ def constructHeatmapGroup(tag, benches, datas, procKey, procsPerBench, tensors, 
             square=True,
             fmt="",
             linewidths=1.0,
-            cbar=addCBar,
+            cbar=False,
             cmap=cmap,
-            cbar_ax=None if not addCBar else cbar_ax,
         )
         axn[i].set_title(f"{bench.fancyStr()}")
 
         labels = axn[i].get_xticklabels()
         axn[i].set_xticklabels(labels, rotation=0)
-
-        if i == 0:
-            if tag == "linalg" or tag == "sddmm":
-                axn[i].set_ylabel("Matrix")
-            else:
-                axn[i].set_ylabel("Tensor")
 
         if xLabel is not None:
             axn[i].set_xlabel(xLabel)
@@ -399,26 +396,9 @@ def constructHeatmapGroup(tag, benches, datas, procKey, procsPerBench, tensors, 
             axn[i].set_xlabel("GPUs")
         if i > 0:
             axn[i].yaxis.set_ticks([])
-        if addCBar:
-            # Some magic here to compute tick labels and offsets for where to put those
-            # labels for colors in the heatmaps.
-            ax = axn[i]
-            numColors = len(systems)
-            if includesFailure:
-                numColors += 1
-            lo = 0
-            if includesFailure:
-                lo = -1.0
-            hi = float(len(systems) - 1)
-            ticks = []
-            size = (hi - lo) / numColors
-            for i in range(0, numColors):
-                ticks.append(lo + (size / 2) + i * size)
-            ax.collections[0].colorbar.ax.set_yticks(ticks)
-            ax.collections[0].colorbar.ax.set_yticklabels((["DNC"] if includesFailure else []) + list(reversed(systems)))
 
     if tag == "linalg":
-        fig.set_size_inches(16, 10)
+        fig.set_size_inches(22, 10)
     elif tag == "sddmm":
         fig.set_size_inches(9, 7)
 
@@ -485,13 +465,13 @@ parser.add_argument("--outdir", type=str, default=None)
 args = parser.parse_args()
 
 if args.kind == "strong-scaling":
-    for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
-        data = defaultLoadExperimentData(bench)
-        normalized = constructSpeedupData(data, "Nodes", bench)
-        if bench in [BenchmarkKind.SpMV]:
-            brokenSpeedupPlot(normalized, bench, args.outdir)
-        else:
-            speedupPlot(normalized, bench, args.outdir)
+    # for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+    #     data = defaultLoadExperimentData(bench)
+    #     normalized = constructSpeedupData(data, "Nodes", bench)
+    #     if bench in [BenchmarkKind.SpMV]:
+    #         brokenSpeedupPlot(normalized, bench, args.outdir)
+    #     else:
+    #         speedupPlot(normalized, bench, args.outdir)
 
     # Generation of heatmap plots for select GPU results.
     matrices = sorted([str(t) for t in validMatrices])
@@ -501,38 +481,6 @@ if args.kind == "strong-scaling":
     # color in all of the graphs.
     DNC = (0.5, 0.5, 0.5)
     DISTALBatched = (0.635, 0.80, 1.0)
-
-    # Grouping several plots together for easier presentation / space saving.
-    benches = [
-        BenchmarkKind.SpMV,
-        BenchmarkKind.SpMM,
-        BenchmarkKind.SpAdd3,
-    ]
-    batchedData = defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distalbatched")
-    batchedData["System"] = batchedData["System"].apply(lambda x: "DISTAL-Batched")
-    spmmData = pandas.concat([
-        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distal"),
-        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="petsc"),
-        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="trilinos"),
-        batchedData,
-    ])
-    datas = [
-        defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"),
-        spmmData,
-        defaultLoadExperimentData(BenchmarkKind.SpAdd3, kind="gpus"),
-    ]
-    procsPerBench = [
-        [1, 2, 4, 8],
-        [1, 2, 4, 8, 16, 32],
-        [1, 2, 4, 8, 16, 32],
-    ]
-    systemsPerBench = [
-        ["DISTAL", "Trilinos", "PETSc"],
-        ["DISTAL", "DISTAL-Batched", "Trilinos", "PETSc"],
-        ["DISTAL", "Trilinos"],
-    ]
-    palette = {"DNC": DNC, "DISTAL": rawPalette[0], "Trilinos": rawPalette[1], "PETSc": rawPalette[2], "DISTAL-Batched": DISTALBatched}
-    constructHeatmapGroup("linalg", benches, datas, "GPUs", procsPerBench, matrices, systemsPerBench, palette, args.outdir)
 
     # Benchmarks where we don't have a comparison (i.e. we'll use ourselves).
     def loadGPUCPUData(bench):
@@ -546,6 +494,66 @@ if args.kind == "strong-scaling":
                 newDistalGPURows.append(newRow)
         distalGPU = pandas.DataFrame(newDistalGPURows, columns=["System", "Benchmark", "Tensor", "Nodes", "Time (ms)"])
         return pandas.concat([distalGPU, distalCPU])
+
+    # Grouping several plots together for easier presentation / space saving.
+    benches = [
+        BenchmarkKind.SpMV,
+        BenchmarkKind.SpMM,
+        BenchmarkKind.SpAdd3,
+        BenchmarkKind.SDDMM,
+    ]
+    batchedData = defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distalbatched")
+    batchedData["System"] = batchedData["System"].apply(lambda x: "DISTAL-Batched")
+    spmmData = pandas.concat([
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="distal"),
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="petsc"),
+        defaultLoadExperimentData(BenchmarkKind.SpMM, kind="gpus", system="trilinos"),
+        batchedData,
+    ])
+    datas = [
+        defaultLoadExperimentData(BenchmarkKind.SpMV, kind="gpus"),
+        spmmData,
+        defaultLoadExperimentData(BenchmarkKind.SpAdd3, kind="gpus"),
+        loadGPUCPUData(BenchmarkKind.SDDMM),
+    ]
+    procsPerBench = [
+        [1, 2, 4, 8],
+        [1, 2, 4, 8, 16, 32],
+        [1, 2, 4, 8, 16, 32],
+        [1, 2, 4, 8],
+    ]
+    systemsPerBench = [
+        ["DISTAL", "Trilinos", "PETSc"],
+        ["DISTAL", "DISTAL-Batched", "Trilinos", "PETSc"],
+        ["DISTAL", "Trilinos"],
+        ["DISTAL-GPU", "DISTAL-CPU"]
+    ]
+    procKeyPerBench = [
+        "GPUs",
+        "GPUs",
+        "GPUs",
+        "Nodes",
+    ]
+    failurePerBench = [
+        True,
+        True,
+        True,
+        False,
+    ]
+    xLabels = [
+        "GPUs",
+        "GPUs",
+        "GPUs",
+        "Nodes(GPUs)"
+    ]
+    xtickLabelList = [
+        [1, 2, 4, 8],
+        [1, 2, 4, 8, 16, 32],
+        [1, 2, 4, 8, 16, 32],
+        ["1(4)", "2(8)", "4(16)", "8(32)"],
+    ]
+    palette = {"DNC": DNC, "DISTAL": rawPalette[0], "Trilinos": rawPalette[1], "PETSc": rawPalette[2], "DISTAL-Batched": DISTALBatched, "DISTAL-GPU": rawPalette[0], "DISTAL-CPU": rawPalette[4]}
+    constructHeatmapGroup("linalg", benches, datas, procKeyPerBench, procsPerBench, matrices, systemsPerBench, palette, args.outdir, failurePerBench=failurePerBench, xLabels=xLabels, xtickLabelList=xtickLabelList)
 
     # Another grouped heatmap.
     benches = [
@@ -564,12 +572,22 @@ if args.kind == "strong-scaling":
         ["DISTAL-GPU", "DISTAL-CPU"],
         ["DISTAL-GPU", "DISTAL-CPU"],
     ]
-
+    procKeyPerBench = [
+        "Nodes",
+        "Nodes",
+    ]
+    xLabels = [
+        "Nodes(GPUs)",
+        "Nodes(GPUs)"
+    ]
+    xtickLabelList = [
+        ["1(4)", "2(8)", "4(16)", "8(32)"],
+        ["1(4)", "2(8)", "4(16)", "8(32)"],
+    ]
     xLabel = "Nodes(GPUs)"
     nodeLabels = ["1(4)", "2(8)", "4(16)", "8(32)"]
     palette = {"DNC": DNC, "DISTAL-GPU": rawPalette[0], "DISTAL-CPU": rawPalette[4]}
-    constructHeatmapGroup("hot", benches, datas, "Nodes", procsPerBench, tensors, systemsPerBench, palette, args.outdir, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels, ratio=True)
-    constructHeatmapGroup("sddmm", [BenchmarkKind.SDDMM], [loadGPUCPUData(BenchmarkKind.SDDMM)], "Nodes", [[1, 2, 4, 8]], matrices, [["DISTAL-GPU", "DISTAL-CPU"]], palette, args.outdir, includesFailure=False, xLabel=xLabel, xtickLabels=nodeLabels)
+    constructHeatmapGroup("hot", benches, datas, procKeyPerBench, procsPerBench, tensors, systemsPerBench, palette, args.outdir, includesFailure=False, xLabels=xLabels, xtickLabelList=xtickLabelList, ratio=True)
 else:
     data = loadWeakScalingData()
     palette = {"DISTAL": rawPalette[0], "PETSc": rawPalette[1], "DISTAL-GPU": rawPalette[2], "PETSc-GPU": rawPalette[3]}
