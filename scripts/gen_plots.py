@@ -87,7 +87,7 @@ def defaultLoadExperimentData(benchKind, kind="nodes", system="*"):
 def constructSpeedupData(raw, procKey, benchKind, maxProcs=16, dump=False):
     distalTimes = {}
     # Record all of DISTAL's times for look up later.
-    for _, row in data.iterrows():
+    for _, row in raw.iterrows():
         if row["System"] == "DISTAL":
             time = row["Time (ms)"]
             distalTimes[(row["Benchmark"], row["Tensor"], row[procKey])] = time
@@ -95,7 +95,7 @@ def constructSpeedupData(raw, procKey, benchKind, maxProcs=16, dump=False):
     validTensorSet = set(validMatrices)
     if (benchOrds[benchKind] == 3):
         validTensorSet = set(validTensors)
-    for _, row in data.iterrows():
+    for _, row in raw.iterrows():
         if (row["Tensor"], row[procKey]) in benchSet[row["System"]]:
             benchSet[row["System"]].remove((row["Tensor"], row[procKey]))
         if (row["Tensor"] not in validTensorSet):
@@ -104,7 +104,7 @@ def constructSpeedupData(raw, procKey, benchKind, maxProcs=16, dump=False):
         row["Time (ms)"] = normTime / row["Time (ms)"]
         normalizedData.append(list(row))
 
-    columns = list(data.columns)
+    columns = list(raw.columns)
     columns[-1] = "Normalized Time to DISTAL"
     normalized = pandas.DataFrame(data=normalizedData, columns=columns)
     if dump:
@@ -201,8 +201,9 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     ax1.get_xaxis().set_visible(False)
     ax1.set_ylabel("")
     ax2.set_ylabel("")
+    ax2.set_xlabel("Nodes", fontsize=14)
     # First argument is x position (bigger is farther right), second is y position (bigger is more up).
-    fig.text(0.065, 0.50, 'Speedup over DISTAL 1 Node', va='center', rotation='vertical')
+    fig.text(0.04, 0.50, 'Speedup over DISTAL 1 Node', va='center', rotation='vertical', fontsize=14)
 
     ax1.get_xaxis().set_major_formatter(xFormatter)
     ax2.get_xaxis().set_major_formatter(xFormatter)
@@ -211,6 +212,9 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     ax1.get_yaxis().set_major_formatter(yFormatter)
     ax2.get_yaxis().set_major_formatter(yFormatter)
 
+    ax1.tick_params(axis='both', labelsize=14)
+    ax2.tick_params(axis='both', labelsize=14)
+
     # Use the make subplots closer together.
     # plt.subplots_adjust(wspace=0, hspace=0)
     ax1.get_legend().remove()
@@ -218,7 +222,7 @@ def brokenSpeedupPlot(data, benchKind, outdir):
     lines_labels = sorted([ax.get_legend_handles_labels()[::-1] for ax in fig.axes])
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)][::-1]
     # This pair of location coordinates must be in [0, 1).
-    fig.legend([idealLine] + lines, ["Ideal"] + labels, loc=(0.15, 0.70))
+    fig.legend([idealLine] + lines, ["Ideal"] + labels, loc=(0.15, 0.70), prop={'size': 11})
 
     # Add to remove the lines between each of the subplots.
     # ax1.spines["bottom"].set_visible(False)
@@ -261,7 +265,9 @@ def speedupPlot(data, benchKind, outdir):
     # xmin and xmax are fractions of the plot width, not data elements.
     ax.axhline(y=1, color='gray', linestyle='dotted', xmin=0.05, xmax=0.95)
 
-    ax.set_ylabel("Speedup over DISTAL 1 Node")
+    ax.tick_params(axis='both', labelsize=14)
+    ax.set_ylabel("Speedup over DISTAL 1 Node", fontsize=14)
+    ax.set_xlabel("Nodes", fontsize=14)
 
     ax.get_legend().remove()
     lines_labels = sorted(zip(*ax.get_legend_handles_labels()[::-1]), key=lambda x: x[0])
@@ -271,10 +277,10 @@ def speedupPlot(data, benchKind, outdir):
         lines.append(li)
         labels.append(la)
     # This pair of location coordinates must be in [0, 1).
-    loc = (0.02, 0.75)
+    loc = (0.02, 0.73)
     if benchKind in [BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
         loc = (0.02, 0.80)
-    plt.legend([idealLine] + lines, ["Ideal"] + labels, loc=loc)
+    plt.legend([idealLine] + lines, ["Ideal"] + labels, loc=loc, prop={'size': 11})
 
     yFormatter = ticker.FuncFormatter(makeYAxisFormatter(ax))
     ax.get_xaxis().set_major_formatter(xFormatter)
@@ -465,13 +471,13 @@ parser.add_argument("--outdir", type=str, default=None)
 args = parser.parse_args()
 
 if args.kind == "strong-scaling":
-    # for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
-    #     data = defaultLoadExperimentData(bench)
-    #     normalized = constructSpeedupData(data, "Nodes", bench)
-    #     if bench in [BenchmarkKind.SpMV]:
-    #         brokenSpeedupPlot(normalized, bench, args.outdir)
-    #     else:
-    #         speedupPlot(normalized, bench, args.outdir)
+    for bench in [BenchmarkKind.SpMV, BenchmarkKind.SpMM, BenchmarkKind.SDDMM, BenchmarkKind.SpAdd3, BenchmarkKind.SpTTV, BenchmarkKind.SpMTTKRP]:
+        data = defaultLoadExperimentData(bench)
+        normalized = constructSpeedupData(data, "Nodes", bench)
+        if bench in [BenchmarkKind.SpMV]:
+            brokenSpeedupPlot(normalized, bench, args.outdir)
+        else:
+            speedupPlot(normalized, bench, args.outdir)
 
     # Generation of heatmap plots for select GPU results.
     matrices = sorted([str(t) for t in validMatrices])
