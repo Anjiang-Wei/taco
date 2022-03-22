@@ -607,9 +607,10 @@ else:
     labels = [f"{int(n)} ({int(n * 4)})" for n in ticks]
     ax.set_xticklabels(labels)
     ax.set_ylim([0, 100])
-    ax.set_ylabel("Throughput / Node (Iterations / second)")
-    ax.set_xlabel("Nodes (GPUs)")
-    plt.title("SpMV Weak-Scaling on Synthetic Banded Matrices")
+    ax.set_ylabel("Throughput / Node (Iterations / second)", fontsize=14)
+    ax.set_xlabel("Nodes (GPUs)", fontsize=14)
+    ax.tick_params(axis='both', labelsize=12)
+    plt.title("SpMV Weak-Scaling on Synthetic Banded Matrices", fontsize=14)
     labels, lines = ax.get_legend_handles_labels()[::-1]
     newLabels = [None] * len(labels)
     newLines = [None] * len(lines)
