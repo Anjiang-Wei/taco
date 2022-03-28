@@ -9,20 +9,27 @@ LegionTensor::LegionTensor(LegionTensorFormat format, std::vector<int32_t> dims)
   dims(dims),
   indices(std::vector<std::vector<LogicalRegion>>(format.size())),
   indicesParents(std::vector<std::vector<LogicalRegion>>(format.size())),
+  indicesFieldIDs(std::vector<std::vector<FieldID>>(format.size())),
   format(format),
   indicesEqPartitions(std::vector<std::vector<LogicalPartition>>(format.size()))
   {}
 
 LegionTensor::LegionTensor(LegionTensorFormat format, int32_t order, std::vector<int32_t> dims,
                            std::vector<std::vector<Legion::LogicalRegion>> indices,
-                           std::vector<std::vector<Legion::LogicalRegion>> indicesParents, Legion::LogicalRegion vals,
-                           Legion::LogicalRegion valsParent, std::vector<Legion::IndexSpace> denseLevelRuns) :
+                           std::vector<std::vector<Legion::LogicalRegion>> indicesParents,
+                           std::vector<std::vector<Legion::FieldID>> indicesFieldIDs,
+                           Legion::LogicalRegion vals,
+                           Legion::LogicalRegion valsParent,
+                           Legion::FieldID valsFieldID,
+                           std::vector<Legion::IndexSpace> denseLevelRuns) :
     order(order),
     dims(dims),
     indices(indices),
     indicesParents(indicesParents),
+    indicesFieldIDs(indicesFieldIDs),
     vals(vals),
     valsParent(valsParent),
+    valsFieldID(valsFieldID),
     denseLevelRuns(denseLevelRuns),
     format(format),
     indicesEqPartitions(std::vector<std::vector<LogicalPartition>>(order)) {}

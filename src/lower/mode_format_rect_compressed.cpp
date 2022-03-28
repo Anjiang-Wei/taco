@@ -138,7 +138,7 @@ ir::Stmt RectCompressedModeFormat::getFinalizeYieldPos(ir::Expr, Mode mode) cons
       ir::runtime,
       this->getRegion(mode.getModePack(), POS),
       ir::FieldAccess::make(this->getSeqInsertEdgesResultVar(mode), "partition", false /* deref */, Auto),
-      this->fidRect1,
+      this->getFidRect1(mode.getTensorExpr(), mode.getLevel()),
     },
     Auto
   );
@@ -171,7 +171,7 @@ ir::Stmt RectCompressedModeFormat::getSeqInsertEdges(ir::Expr parentPos, std::ve
       ir::runtime,
       colorSpace,
       this->getRegion(mode.getModePack(), POS),
-      this->fidRect1,
+      this->getFidRect1(mode.getTensorExpr(), mode.getLevel()),
       queries[0].getResult({}, "nnz"),
       ir::fidVal
     },
@@ -227,6 +227,8 @@ std::vector<ModeRegion> RectCompressedModeFormat::getRegions(ir::Expr tensor, in
   auto arrays = this->getArrays(tensor, 0, level);
   auto posReg = arrays[POS].as<ir::GetProperty>();
   auto crdReg = arrays[CRD].as<ir::GetProperty>();
+  auto fidRect1 = this->getFidRect1(tensor, level);
+  auto fidCoord = this->getFidCoord(tensor, level);
 
   // Set up our accessors too.
   auto makePosAcc = [&](ir::RegionPrivilege priv) {
@@ -274,6 +276,7 @@ ir::Stmt RectCompressedModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, 
     return storeIdx;
   }
 
+  auto fidCoord = this->getFidCoord(mode.getTensorExpr(), mode.getLevel());
   auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
   auto newCrdAcc = ir::makeCreateAccessor(crdAcc, idxArray, fidCoord);
   auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc), ir::readWrite);
@@ -335,6 +338,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitEdges(ir::Expr parentPos, ir::Ex
     taco_iassert(to<ir::Literal>(pPrevBegin)->equalsScalar(0));
     return ir::Stmt();
   }
+  auto fidRect1 = this->getFidRect1(mode.getTensorExpr(), mode.getLevel());
 
   // If the parent mode has append (is sparse), all we need to do is
   // potentially double the size of the pos array.
@@ -385,6 +389,9 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
     posCapacity = getPosCapacity(mode);
     initStmts.push_back(ir::VarDecl::make(posCapacity, initCapacity));
   }
+
+  auto fidRect1 = this->getFidRect1(mode.getTensorExpr(), mode.getLevel());
+  auto fidCoord = this->getFidCoord(mode.getTensorExpr(), mode.getLevel());
 
   // If we have a sparse ancestor, then we'll need to perform an initial
   // allocation of the pos region. Otherwise, the dimensions of the pos
@@ -444,6 +451,7 @@ ir::Stmt RectCompressedModeFormat::getAppendInitLevel(ir::Expr szPrev, ir::Expr 
 ir::Stmt RectCompressedModeFormat::getAppendFinalizeLevel(ir::Expr parentPos, ir::Expr szPrev, ir::Expr sz, Mode mode) const {
   auto pack = mode.getModePack();
   ModeFormat parentModeType = mode.getParentModeType();
+  auto fidRect1 = this->getFidRect1(mode.getTensorExpr(), mode.getLevel());
 
   auto getSubregionCasts = [&]() {
     std::vector<ir::Stmt> result;
@@ -642,7 +650,7 @@ ModeFunction RectCompressedModeFormat::getCreatePartitionWithCoordinateColoring(
       ir::runtime,
       this->getRegion(pack, CRD),
       this->getRegion(pack, CRD_PARENT),
-      fidCoord,
+      this->getFidCoord(mode.getTensorExpr(), mode.getLevel()),
       coloring,
       colorSpace,
     }),
@@ -681,7 +689,7 @@ ModeFunction RectCompressedModeFormat::getPartitionFromParent(ir::Expr parentPar
       ir::MethodCall::make(this->getRegion(pack, CRD), "get_index_space", {}, false /* deref */, Auto),
       posPart,
       this->getRegion(pack, POS_PARENT),
-      fidRect1,
+      this->getFidRect1(mode.getTensorExpr(), mode.getLevel()),
     }),
     Auto
   );
@@ -723,7 +731,16 @@ ModeFunction RectCompressedModeFormat::getPartitionFromChild(ir::Expr childParti
 }
 
 ir::Expr RectCompressedModeFormat::getRegion(ModePack pack, RECT_COMPRESSED_REGIONS reg) const {
-  return pack.getArray(int(reg));
+  const auto regions = this->getRegions(pack.getTensor(), pack.getLevel());
+  switch (reg) {
+    case RECT_COMPRESSED_REGIONS::POS: return regions[RECT_COMPRESSED_REGIONS::POS].region;
+    case RECT_COMPRESSED_REGIONS::POS_PARENT: return regions[RECT_COMPRESSED_REGIONS::POS].regionParent;
+    case RECT_COMPRESSED_REGIONS::CRD: return regions[RECT_COMPRESSED_REGIONS::CRD].region;
+    case RECT_COMPRESSED_REGIONS::CRD_PARENT: return regions[RECT_COMPRESSED_REGIONS::CRD].regionParent;
+    default:
+      taco_iassert(false);
+  }
+  return ir::Expr();
 }
 
 ir::Expr RectCompressedModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg, ir::RegionPrivilege priv) const {
@@ -828,7 +845,7 @@ ModeFunction RectCompressedModeFormat::partitionPosFromCrd(Mode mode, ir::Expr c
           crdIndexPartition,
           this->getRegion(pack, POS),
           this->getRegion(pack, POS_PARENT),
-          fidRect1,
+          this->getFidRect1(mode.getTensorExpr(), mode.getLevel()),
           ir::Call::make("runtime->get_index_partition_color_space_name", {ir::ctx, crdIndexPartition}, Auto)
       },
       Auto
@@ -841,6 +858,16 @@ ModeFunction RectCompressedModeFormat::partitionPosFromCrd(Mode mode, ir::Expr c
   auto createPosPart = ir::VarDecl::make(posPart, ir::Call::make("runtime->get_logical_partition",
                                                                  {ir::ctx, this->getRegion(pack, POS), posIndexPart}, Auto));
   return ModeFunction(ir::Block::make({definedPosSparsePart, createPosIndexPart, createPosPart}), {posPart});
+}
+
+ir::Expr RectCompressedModeFormat::getFidRect1(ir::Expr tensor, int level) const {
+  std::string name = util::toString(tensor) + std::to_string(level);
+  return ir::GetProperty::makeIndicesFieldID(tensor, name, level - 1, 0);
+}
+
+ir::Expr RectCompressedModeFormat::getFidCoord(ir::Expr tensor, int level) const {
+  std::string name = util::toString(tensor) + std::to_string(level);
+  return ir::GetProperty::makeIndicesFieldID(tensor, name, level - 1, 1);
 }
 
 }

@@ -111,6 +111,13 @@ protected:
         // tensor needs to be included as well.
         auto values = ir::GetProperty::make(op->tensor, TensorProperty::Values);
         values.accept(this);
+        // TODO (rohany): This is a big hack, as we don't want to include generating
+        //  the values field access for query results. The real solution here is to
+        //  treat query results more like real tensors, that have get properties etc.
+        if (op->name.find("_nnz") == std::string::npos) {
+          auto valuesField = ir::GetProperty::make(op->tensor, TensorProperty::ValuesFieldID);
+          valuesField.accept(this);
+        }
         break;
       }
       case TensorProperty::IndicesAccessor: {
@@ -118,6 +125,8 @@ protected:
         // need to make another property here since we are carrying around
         // the property that we are referencing.
         op->accessorArgs.regionAccessing.accept(this);
+        // We also need to make sure that the field gets checked.
+        op->accessorArgs.field.accept(this);
         break;
       }
       default:
@@ -399,7 +408,8 @@ void CodegenLegionC::visit(const Function* func) {
         if (g->property == TensorProperty::Dimension || util::contains(regionArgs, it.first) ||
             g->property == TensorProperty::ValuesParent || g->property == TensorProperty::IndicesParents ||
             g->property == TensorProperty::DenseLevelRun || g->property == TensorProperty::Indices ||
-            g->property == TensorProperty::Values) {
+            g->property == TensorProperty::Values || g->property == TensorProperty::ValuesFieldID ||
+            g->property == TensorProperty::IndicesFieldID) {
           toRemove.push_back(g);
         }
       }

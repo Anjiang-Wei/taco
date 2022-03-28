@@ -91,6 +91,7 @@ Stmt LgSingletonModeFormat::getAppendCoord(ir::Expr pos, ir::Expr coord, Mode mo
     return storeIdx;
   }
 
+  auto fidCoord = this->getFidCoord(mode.getTensorExpr(), mode.getLevel());
   auto crdAcc = this->getAccessor(pack, CRD, ir::RW);
   auto newCrdAcc = ir::makeCreateAccessor(crdAcc, idxArray, fidCoord);
   auto maybeResizeIdx = lgDoubleSizeIfFull(idxArray, getCoordCapacity(mode), pos, idxArrayParent, idxArray, fidCoord, ir::Assign::make(crdAcc, newCrdAcc), ir::readWrite);
@@ -109,6 +110,7 @@ Stmt LgSingletonModeFormat::getAppendInitLevel(ir::Expr parentSize, ir::Expr siz
   auto crdParent = this->getRegion(pack, CRD_PARENT);
   auto crdAcc = this->getAccessor(pack, CRD, RW);
   auto initCrdCapacity = VarDecl::make(crdCapacity, defaultCapacity);
+  auto fidCoord = this->getFidCoord(mode.getTensorExpr(), mode.getLevel());
   auto allocCrd = ir::makeLegionMalloc(crdArray, crdCapacity, crdParent, fidCoord, ir::readWrite);
   auto newCrdAcc = ir::makeCreateAccessor(crdAcc, crdArray, fidCoord);
   auto updateAcc = ir::Assign::make(crdAcc, newCrdAcc);
@@ -139,6 +141,7 @@ std::vector<ModeRegion> LgSingletonModeFormat::getRegions(ir::Expr tensor, int l
   // TODO (rohany): getArrays does not the mode argument, so we omit it here.
   auto arrays = this->getArrays(tensor, 0, level);
   auto crdReg = arrays[CRD].as<ir::GetProperty>();
+  auto fidCoord = this->getFidCoord(tensor, level);
 
   // TODO (rohany): Do the crd arrays need to be int64's?
   auto makeCrdAcc = [&](ir::RegionPrivilege priv) {
@@ -180,6 +183,11 @@ ir::Expr LgSingletonModeFormat::getAccessor(ModePack pack, RECT_COMPRESSED_REGIO
 ir::Expr LgSingletonModeFormat::getCoordCapacity(Mode mode) const {
   const std::string varName = mode.getName() + "_crd_size";
   return this->getModeVar(mode, varName, Int());
+}
+
+ir::Expr LgSingletonModeFormat::getFidCoord(ir::Expr tensor, int level) const {
+  std::string name = util::toString(tensor) + std::to_string(level);
+  return ir::GetProperty::makeIndicesFieldID(tensor, name, level - 1, 0);
 }
 
 }

@@ -159,6 +159,9 @@ Datatype Vector(Datatype elemType);
 // Represents a templated C++ std::unique_ptr.
 Datatype UniquePtr(Datatype elemType);
 
+// Legion FieldIDs.
+extern Datatype FieldID;
+
 Datatype max_type(Datatype a, Datatype b);
 
 template<typename T> inline Datatype type() {

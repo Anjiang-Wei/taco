@@ -24,9 +24,25 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
   } else if (op->property == TensorProperty::ValuesReadAccessor || op->property == TensorProperty::ValuesWriteAccessor) {
     // We can't just use the tensor's name when constructing the value accessors, as for child
     // tasks the value array is not just the tensor's name.
-    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL);\n";
+    // TODO (rohany): This is a hack, as I don't want to thread more information through
+    //  the GetProperty or unify how we set the FieldID for the query results.
+    ir::Expr fid;
+    if (varname.find("_nnz") != std::string::npos) {
+      fid = ir::Symbol::make("FID_VAL");
+    } else {
+      fid = ir::GetProperty::make(tensor, TensorProperty::ValuesFieldID);
+    }
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", " << fid << ");\n";
   } else if (op->property == TensorProperty::ValuesReductionAccessor || op->property == TensorProperty::ValuesReductionNonExclusiveAccessor) {
-    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", FID_VAL, " << LegionRedopString(op->type) << ");\n";
+    // TODO (rohany): This is a hack, as I don't want to thread more information through
+    //  the GetProperty or unify how we set the FieldID for the query results.
+    ir::Expr fid;
+    if (varname.find("_nnz") != std::string::npos) {
+      fid = ir::Symbol::make("FID_VAL");
+    } else {
+      fid = ir::GetProperty::make(tensor, TensorProperty::ValuesFieldID);
+    }
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << values << ", " << fid << ", " << LegionRedopString(op->type) << ");\n";
   } else if (op->property == TensorProperty::DenseLevelRun) {
     ret << "IndexSpace " << varname << " = " << tensor->name << "->denseLevelRuns[" << op->index << "];\n";
   } else if (op->property == TensorProperty::Values) {
@@ -44,9 +60,21 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
     ret << "auto " << varname << " = " << tensor->name << "->indicesParents[" << op->mode << "][" << op->index
         << "];\n";
   } else if (op->property == TensorProperty::IndicesAccessor) {
-    auto fid = op->accessorArgs.field.as<ir::Symbol>()->name;
+    std::string fid;
+    if (op->accessorArgs.field.as<ir::Symbol>()) {
+      fid = op->accessorArgs.field.as<ir::Symbol>()->name;
+    } else if (op->accessorArgs.field.as<ir::GetProperty>()) {
+      fid = op->accessorArgs.field.as<ir::GetProperty>()->name;
+    } else {
+      taco_iassert(false);
+    }
     auto regionAccessing = op->accessorArgs.regionAccessing;
-    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << regionAccessing << ", " << fid << ");\n";
+    ret << "auto " << varname << " = createAccessor<" << accessorTypeString(op) << ">(" << regionAccessing << ", "
+        << fid << ");\n";
+  } else if (op->property == TensorProperty::ValuesFieldID) {
+    ret << "auto " << varname << " = " << tensor->name << "->valsFieldID;\n";
+  } else if (op->property == TensorProperty::IndicesFieldID) {
+    ret << "auto " << varname << " = " << tensor->name << "->indicesFieldIDs[" << op->mode << "][" << op->index << "];\n";
   } else {
     return CodeGen::unpackTensorProperty(varname, op, is_output_prop);
   }
@@ -338,13 +366,37 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
         }
       }
 
-      // We don't want to visit the variables within GetProperty objects.
+      // We don't want to visit the variables within GetProperty objects. In
+      // this function, we also mark certain GetProperty objects as needed
+      // when we see other GetProperties i.e. adding the ValuesField GetProperty
+      // when we see Values.
       void visit(const GetProperty* g) {
-        if (g->property == TensorProperty::Dimension || g->property == TensorProperty::DenseLevelRun) {
+        if (g->property == TensorProperty::Dimension ||
+            g->property == TensorProperty::DenseLevelRun) {
           if (this->usedVars.size() == 0) {
             this->usedVars.push_back({});
           }
           this->usedVars.back().insert(g);
+        }
+        else if (g->property == TensorProperty::IndicesAccessor) {
+          if (isa<GetProperty>(g->accessorArgs.field)) {
+            if (this->usedVars.size() == 0) {
+              this->usedVars.push_back({});
+            }
+            this->usedVars.back().insert(g->accessorArgs.field);
+          }
+        } else if ((g->property == TensorProperty::ValuesReadAccessor ||
+                   g->property == TensorProperty::ValuesWriteAccessor ||
+                   g->property == TensorProperty::ValuesReductionAccessor ||
+                   g->property == TensorProperty::ValuesReductionNonExclusiveAccessor) &&
+                   // TODO (rohany): This is a big hack, as we don't want to include generating
+                   //  the values field access for query results. The real solution here is to
+                   //  treat query results more like real tensors, that have get properties etc.
+                   g->name.find("_nnz") == std::string::npos) {
+          if (this->usedVars.size() == 0) {
+            this->usedVars.push_back({});
+          }
+          this->usedVars.back().insert(ir::GetProperty::make(g->tensor, TensorProperty::ValuesFieldID));
         }
       }
 
@@ -411,22 +463,15 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
       v.usedVars[i-1].insert(uses.begin(), uses.end());
 
       // Deduplicate any GetProperty uses so that they aren't emitted twice.
-      std::vector<const GetProperty*> collected;
+      std::set<GetProperty::Hashable> collected;
       std::vector<Expr> newUses;
       for (auto& e : uses) {
         if (isa<GetProperty>(e)) {
           // See if this GetProperty is already present.
-          bool found = false;
           auto gp = e.as<GetProperty>();
-          for (auto c : collected) {
-            if (gp->tensor == c->tensor && gp->property == c->property && gp->mode == c->mode) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
+          if (!util::contains(collected, gp->toHashable())) {
             newUses.push_back(e);
-            collected.push_back(gp);
+            collected.insert(gp->toHashable());
           }
         } else {
           newUses.push_back(e);

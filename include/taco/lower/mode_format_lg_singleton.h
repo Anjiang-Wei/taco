@@ -35,7 +35,7 @@ private:
   ir::Expr getAccessor(ModePack pack, RECT_COMPRESSED_REGIONS reg, ir::RegionPrivilege priv = ir::RO) const;
   ir::Expr getCoordCapacity(Mode mode) const;
 
-  static inline ir::Expr fidCoord = ir::Symbol::make("FID_COORD");
+  ir::Expr getFidCoord(ir::Expr tensor, int level) const;
   const long long allocSize;
 };
 

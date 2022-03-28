@@ -38,6 +38,10 @@ struct task_4Args {
 };
 
 struct task_5Args {
+  Legion::FieldID A_vals_field_id;
+  Legion::FieldID B_vals_field_id;
+  Legion::FieldID C_vals_field_id;
+  Legion::FieldID D_vals_field_id;
   int32_t gridX;
   int32_t gridY;
   int32_t gridZ;
@@ -203,6 +207,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, partitionPackForplaceLegionA* partitionPack, int32_t gridX, int32_t gridY, int32_t gridZ) {
   auto A_vals_parent = A->valsParent;
+  auto A_vals_field_id = A->valsFieldID;
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), 0, 0);
@@ -220,7 +225,7 @@ void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A
   taskArgsRaw1.gridZ = gridZ;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, A_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, A_vals_parent).add_field(A_vals_field_id));
   launcher.tag = TACOMapper::PLACEMENT_SHARD;
   auto fm = runtime->execute_index_space(ctx, launcher);
   fm.wait_all_results();
@@ -278,6 +283,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, partitionPackForplaceLegionB* partitionPack, int32_t gridX, int32_t gridY, int32_t gridZ) {
   auto B_vals_parent = B->valsParent;
+  auto B_vals_field_id = B->valsFieldID;
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), (gridY - 1), (gridZ - 1));
@@ -289,7 +295,7 @@ void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B
   taskArgsRaw2.gridZ = gridZ;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
   IndexLauncher launcher = IndexLauncher(taskID(2), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(B_vals_field_id));
   auto fm = runtime->execute_index_space(ctx, launcher);
   fm.wait_all_results();
 
@@ -343,6 +349,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* C, partitionPackForplaceLegionC* partitionPack, int32_t gridY, int32_t gridX, int32_t gridZ) {
   auto C_vals_parent = C->valsParent;
+  auto C_vals_field_id = C->valsFieldID;
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>(0, (gridY - 1), 0);
@@ -360,7 +367,7 @@ void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* C
   taskArgsRaw3.gridZ = gridZ;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw3, sizeof(task_3Args));
   IndexLauncher launcher = IndexLauncher(taskID(3), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->CPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->CPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(C_vals_field_id));
   launcher.tag = TACOMapper::PLACEMENT_SHARD;
   auto fm = runtime->execute_index_space(ctx, launcher);
   fm.wait_all_results();
@@ -415,6 +422,7 @@ void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void placeLegionD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* D, partitionPackForplaceLegionD* partitionPack, int32_t gridZ, int32_t gridX, int32_t gridY) {
   auto D_vals_parent = D->valsParent;
+  auto D_vals_field_id = D->valsFieldID;
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>(0, 0, (gridZ - 1));
@@ -432,7 +440,7 @@ void placeLegionD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* D
   taskArgsRaw4.gridZ = gridZ;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw4, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->DPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, D_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->DPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, D_vals_parent).add_field(D_vals_field_id));
   launcher.tag = TACOMapper::PLACEMENT_SHARD;
   auto fm = runtime->execute_index_space(ctx, launcher);
   fm.wait_all_results();
@@ -539,14 +547,18 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t distFused = task->index_point[0];
   task_5Args* args = (task_5Args*)(task->args);
+  Legion::FieldID A_vals_field_id = args->A_vals_field_id;
+  Legion::FieldID B_vals_field_id = args->B_vals_field_id;
+  Legion::FieldID C_vals_field_id = args->C_vals_field_id;
+  Legion::FieldID D_vals_field_id = args->D_vals_field_id;
   int32_t gridX = args->gridX;
   int32_t gridY = args->gridY;
   int32_t gridZ = args->gridZ;
 
-  auto C_vals_ro_accessor = createAccessor<AccessorROdouble2>(C_vals, FID_VAL);
-  auto D_vals_ro_accessor = createAccessor<AccessorROdouble2>(D_vals, FID_VAL);
-  auto B_vals_ro_accessor = createAccessor<AccessorROdouble3>(B_vals, FID_VAL);
-  auto A_vals_red_accessor = createAccessor<AccessorReducedouble2>(A_vals, FID_VAL, LEGION_REDOP_SUM_FLOAT64);
+  auto C_vals_ro_accessor = createAccessor<AccessorROdouble2>(C_vals, C_vals_field_id);
+  auto D_vals_ro_accessor = createAccessor<AccessorROdouble2>(D_vals, D_vals_field_id);
+  auto B_vals_ro_accessor = createAccessor<AccessorROdouble3>(B_vals, B_vals_field_id);
+  auto A_vals_red_accessor = createAccessor<AccessorReducedouble2>(A_vals, A_vals_field_id, LEGION_REDOP_SUM_FLOAT64);
 
   auto aDomain = runtime->get_index_space_domain(ctx, A_vals.get_logical_region().get_index_space());
   auto bDomain = runtime->get_index_space_domain(ctx, B_vals.get_logical_region().get_index_space());
@@ -571,24 +583,32 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, partitionPackForcomputeLegion* partitionPack, int32_t gridX, int32_t gridY, int32_t gridZ) {
   auto A_vals_parent = A->valsParent;
+  auto A_vals_field_id = A->valsFieldID;
   auto B_vals_parent = B->valsParent;
+  auto B_vals_field_id = B->valsFieldID;
   auto C_vals_parent = C->valsParent;
+  auto C_vals_field_id = C->valsFieldID;
   auto D_vals_parent = D->valsParent;
+  auto D_vals_field_id = D->valsFieldID;
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), (gridY - 1), (gridZ - 1));
   auto distFusedIndexSpace = runtime->create_index_space(ctx, Rect<3>(lowerBound, upperBound));
   DomainT<3> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<3>(distFusedIndexSpace));
   task_5Args taskArgsRaw5;
+  taskArgsRaw5.A_vals_field_id = A_vals_field_id;
+  taskArgsRaw5.B_vals_field_id = B_vals_field_id;
+  taskArgsRaw5.C_vals_field_id = C_vals_field_id;
+  taskArgsRaw5.D_vals_field_id = D_vals_field_id;
   taskArgsRaw5.gridX = gridX;
   taskArgsRaw5.gridY = gridY;
   taskArgsRaw5.gridZ = gridZ;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw5, sizeof(task_5Args));
   IndexLauncher launcher = IndexLauncher(taskID(5), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, A_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->CPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->DPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, D_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->APartition.valsPartition, 0, LEGION_REDOP_SUM_FLOAT64, LEGION_SIMULTANEOUS, A_vals_parent).add_field(A_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->BPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, B_vals_parent).add_field(B_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->CPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, C_vals_parent).add_field(C_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->DPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, D_vals_parent).add_field(D_vals_field_id));
   runtime->execute_index_space(ctx, launcher);
 
 }

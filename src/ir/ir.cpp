@@ -1059,6 +1059,17 @@ Expr GetProperty::makeIndicesAccessor(Expr tensor, std::string nameBase, int mod
   return gp;
 }
 
+Expr GetProperty::makeIndicesFieldID(Expr tensor, std::string nameBase, int mode, int index) {
+  GetProperty* gp = new GetProperty;
+  gp->tensor = tensor;
+  gp->property = TensorProperty::IndicesFieldID;
+  gp->mode = mode;
+  gp->index = index;
+  gp->name = nameBase + "_indices_field_id_" + util::toString(mode) + "_" + util::toString(index);
+  gp->type = FieldID;
+  return gp;
+}
+
 GetProperty::Hashable GetProperty::toHashable() const {
   return Hashable {
     .tensor = this->tensor,
@@ -1184,7 +1195,10 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
       taco_ierror << "Must provide both mode and index for the Indices property";
       break;
     case TensorProperty::IndicesParents:
-      taco_ierror << "Must provide both mode and index for the Indices property";
+      taco_ierror << "Must provide both mode and index for the IndicesParents property";
+      break;
+    case TensorProperty::IndicesFieldID:
+      taco_ierror << "Must provide both mode and index for the IndicesFieldID property";
       break;
     case TensorProperty::DenseLevelRun:
       taco_ierror << "Must provide index for the DenseLevelRun property";
@@ -1221,6 +1235,10 @@ Expr GetProperty::make(Expr tensor, TensorProperty property, int mode) {
     case TensorProperty::ValuesReductionNonExclusiveAccessor:
       gp->type = tensor.type();
       gp->name = tensorVar->name + "_vals_red_accessor_non_excl";
+      break;
+    case TensorProperty ::ValuesFieldID:
+      gp->type = FieldID;
+      gp->name = tensorVar->name + "_vals_field_id";
       break;
   }
   
@@ -1365,6 +1383,10 @@ ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
 ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
 ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
 ir::Expr readWrite = ir::Symbol::make("READ_WRITE");
+// FID_VAL should _never_ be used to directly access the values region of an
+// argument tensor, as these are now controlled by data inside of the tensor.
+// This is only acceptable to be used when accessing / constructing a query
+// result that doesn't count as a user-controllable input tensor.
 ir::Expr fidVal = ir::Symbol::make("FID_VAL");
 
 } // namespace ir

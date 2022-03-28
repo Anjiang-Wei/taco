@@ -12,6 +12,8 @@ struct task_1Args {
   int64_t b1_dimension;
   int64_t b2_dimension;
   int64_t b3_dimension;
+  Legion::FieldID b_vals_field_id;
+  Legion::FieldID c_vals_field_id;
   int32_t pieces;
 };
 
@@ -80,10 +82,12 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   int64_t b1_dimension = args->b1_dimension;
   int64_t b2_dimension = args->b2_dimension;
   int64_t b3_dimension = args->b3_dimension;
+  Legion::FieldID b_vals_field_id = args->b_vals_field_id;
+  Legion::FieldID c_vals_field_id = args->c_vals_field_id;
   int32_t pieces = args->pieces;
 
-  auto b_vals_ro_accessor = createAccessor<AccessorROdouble3>(b_vals, FID_VAL);
-  auto c_vals_ro_accessor = createAccessor<AccessorROdouble3>(c_vals, FID_VAL);
+  auto b_vals_ro_accessor = createAccessor<AccessorROdouble3>(b_vals, b_vals_field_id);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble3>(c_vals, c_vals_field_id);
 
   #pragma omp parallel for schedule(static)
   for (int64_t io = 0; io < ((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension + 3) / 4); io++) {
@@ -118,7 +122,9 @@ double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor
   int b2_dimension = b->dims[1];
   int b3_dimension = b->dims[2];
   auto b_vals_parent = b->valsParent;
+  auto b_vals_field_id = b->valsFieldID;
   auto c_vals_parent = c->valsParent;
+  auto c_vals_field_id = c->valsFieldID;
 
   double a_val = 0.0;
 
@@ -131,11 +137,13 @@ double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor
   taskArgsRaw1.b1_dimension = b1_dimension;
   taskArgsRaw1.b2_dimension = b2_dimension;
   taskArgsRaw1.b3_dimension = b3_dimension;
+  taskArgsRaw1.b_vals_field_id = b_vals_field_id;
+  taskArgsRaw1.c_vals_field_id = c_vals_field_id;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, b_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, b_vals_parent).add_field(b_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(c_vals_field_id));
   a_val = runtime->execute_index_space(ctx, launcher, LEGION_REDOP_SUM_FLOAT64).get<double>();
 
 

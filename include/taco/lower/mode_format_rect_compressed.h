@@ -103,6 +103,8 @@ protected:
   ir::Stmt initCrdBounds(Mode mode) const;
   ir::Expr getCrdColoring(Mode mode) const;
   ir::Expr getSeqInsertEdgesResultVar(Mode mode) const;
+  ir::Expr getFidCoord(ir::Expr tensor, int level) const;
+  ir::Expr getFidRect1(ir::Expr tensor, int level) const;
 
   ModeFunction partitionPosFromCrd(Mode mode, ir::Expr crdIndexPartition,
                                    std::function<std::vector<ir::Expr>(std::vector<ir::Expr>)> maybeAddColor) const;
@@ -114,8 +116,6 @@ protected:
 
   std::string getModeSizeVarName(Mode& mode) const;
 
-  static inline ir::Expr fidRect1 = ir::Symbol::make("FID_RECT_1");
-  static inline ir::Expr fidCoord = ir::Symbol::make("FID_COORD");
   const long long allocSize;
   int posDim = -1;
 };
