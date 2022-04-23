@@ -2611,13 +2611,12 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // up everything and add on a get_logical_partition call to return.
     if (this->isPartitionCode) {
       partitionStmts = transfers;
-      // TODO (rohany): I'm asserting false here because this codepath uses the old (and deleted)
-      //  partitionings variable, so I'm not sure what it does.
-      taco_iassert(false);
-      // auto pair = partitionings.begin();
-      // auto region = this->tensorVars[pair->first];
-      // auto part = pair->second;
-      // partitionStmts.push_back(ir::Return::make(ir::Call::make("runtime->get_logical_partition", {ctx, getLogicalRegion(region), part}, Auto)));
+      // If we're generating partitioning code, then there should be only
+      // one tensor in the tensorLogicalPartitions map.
+      auto pair = tensorLogicalPartitions.begin();
+      auto tv = pair->first;
+      auto part = pair->second[tv.getOrder()][0];
+      partitionStmts.push_back(ir::Return::make(part));
     } else if (this->legionLoweringKind == PARTITION_ONLY && this->distLoopDepth == 0) {
       // TODO (rohany): Move this into a helper method?
 
@@ -6587,9 +6586,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   if (this->isPlacementCode && this->distLoopDepth == 0 && this->legionLoweringKind == PARTITION_AND_COMPUTE) {
     auto tv = this->tensorVars.begin()->first;
     auto tvIR = this->tensorVars.begin()->second;
-    taco_iassert(false); // Asserting false here because the code uses the now-defunct partitionings variable.
-    // auto call = ir::Call::make("runtime->get_logical_partition", {ctx, getLogicalRegion(tvIR), partitionings.at(tv)}, LogicalPartition);
-    // itlStmts.push_back(ir::Return::make(call));
+    auto part = tensorLogicalPartitions[tv][tv.getOrder()][0];
+    itlStmts.push_back(ir::Return::make(part));
   }
 
   // Set the returned unpackTensorData.

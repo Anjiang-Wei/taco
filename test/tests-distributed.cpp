@@ -554,16 +554,11 @@ TEST(distributed, ttv) {
                // .parallelize(ii, taco::ParallelUnit::CPUThread, taco::OutputRaceStrategy::NoRaces)
                ;
   auto lowered = lowerNoWait(stmt, "computeLegion");
+//  std::cout << lowered << std::endl;
   auto all = ir::Block::make({partitionA, partitionB, placeALowered, placeBLowered, placeCLowered, lowered});
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(all);
-  // Also write it into a file.
-  {
-    ofstream f("../legion/ttv/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(all);
-    f.close();
-  }
+  // auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
+  // codegen->compile(all);
+  ir::CodegenLegionC::compileToDirectory("../legion/ttv/", all);
 }
 
 TEST(distributed, cuda_ttv) {

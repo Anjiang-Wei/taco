@@ -477,12 +477,39 @@ ir::Stmt simplify(const ir::Stmt& stmt) {
     RemoveRedundantStmts(const std::set<Stmt>& necessaryDecls) : 
         necessaryDecls(necessaryDecls) {}
 
+    // Remove empty for loops, for aesthetic reasons.
+    void visit(const For* op) {
+      Expr var = rewrite(op->var);
+      Expr start = rewrite(op->start);
+      Expr end = rewrite(op->end);
+      Expr increment = rewrite(op->increment);
+      Stmt contents = rewrite(op->contents);
+
+      if (isa<Scope>(contents) && isa<Block>(to<Scope>(contents)->scopedStmt)
+          && to<Block>(to<Scope>(contents)->scopedStmt)->contents.empty()) {
+        this->stmt = ir::Block::make();
+      } else {
+        this->stmt = For::make(var, start, end, increment, contents, op->kind,
+                         op->parallel_unit, op->unrollFactor, op->vec_width, op->isTask, op->taskID);
+      }
+    }
+
     void visit(const VarDecl* decl) {
-      if (isa<ir::Call>(decl->rhs)) { // don't remove function calls that might have side effects
+      // There are some function calls that we would like to enable removing
+      // if the results are unused.
+      const std::set<std::string> constFuncCalls = {
+        "runtime->get_index_space_domain",
+        "getIndexPoint",
+      };
+      // Don't remove function calls that might have side effects, unless the
+      // function was listed as "const" above.
+      // TODO (rohany): We might also need to recurse into the RHS's arguments
+      //  to ensure that they don't contain side-effecting statements.
+      if (isa<ir::Call>(decl->rhs) && !util::contains(constFuncCalls, to<ir::Call>(decl->rhs)->func)) {
         stmt = decl;
         return;
       }
-      stmt = util::contains(necessaryDecls, decl)? decl : Block::make();
+      stmt = util::contains(necessaryDecls, decl) ? decl : Block::make();
     }
   };
 

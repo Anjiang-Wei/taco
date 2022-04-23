@@ -747,7 +747,7 @@ IndexStmt Distribute::apply(IndexStmt stmt, std::string* reason) const {
   // Sanity check some user-provided input sizes.
   taco_iassert(this->content->original.size() == this->content->distVars.size());
   taco_iassert(this->content->original.size() == this->content->innerVars.size());
-  taco_iassert(this->content->original.size() == size_t(this->content->grid.getDim()));
+  taco_iassert((this->content->original.size() == size_t(this->content->grid.getDim())) || !this->content->onto.empty());
 
   ProvenanceGraph pg(stmt);
 
@@ -2061,9 +2061,14 @@ ir::Stmt TTV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<Tens
   std::vector<ir::Stmt> results;
   auto ctx = ir::Symbol::make("ctx");
 
-  auto aIndexSpace = ir::GetProperty::make(A, ir::TensorProperty::IndexSpace);
-  auto bIndexSpace = ir::GetProperty::make(B, ir::TensorProperty::IndexSpace);
-  auto cIndexSpace = ir::GetProperty::make(C, ir::TensorProperty::IndexSpace);
+  auto getIndexSpace = [&](ir::Expr reg) {
+    auto vals = ir::GetProperty::make(reg, ir::TensorProperty::Values);
+    auto logreg = ir::MethodCall::make(vals, "get_logical_region", {}, false /* deref */, Auto);
+    return ir::MethodCall::make(logreg, "get_index_space", {}, false /* deref */, Auto);
+  };
+  auto aIndexSpace = getIndexSpace(A);
+  auto bIndexSpace = getIndexSpace(B);
+  auto cIndexSpace = getIndexSpace(C);
 
   // Unpack domains for each variable.
   auto aDomain = ir::Var::make("aDomain", Auto);
