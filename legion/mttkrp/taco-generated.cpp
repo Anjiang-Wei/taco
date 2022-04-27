@@ -498,13 +498,13 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     }
     DColoring[(*itr)] = DRect;
   }
-  auto A_dense_run_0_Partition = runtime->create_index_partition(ctx, A_dense_run_0, domain, AColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto A_dense_run_0_Partition = runtime->create_index_partition(ctx, A_dense_run_0, domain, AColoring, LEGION_COMPUTE_KIND);
   auto A_vals_partition = copyPartition(ctx, runtime, A_dense_run_0_Partition, get_logical_region(A_vals));
-  auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_COMPUTE_KIND);
   auto B_vals_partition = copyPartition(ctx, runtime, B_dense_run_0_Partition, get_logical_region(B_vals));
-  auto C_dense_run_0_Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto C_dense_run_0_Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_COMPUTE_KIND);
   auto C_vals_partition = copyPartition(ctx, runtime, C_dense_run_0_Partition, get_logical_region(C_vals));
-  auto D_dense_run_0_Partition = runtime->create_index_partition(ctx, D_dense_run_0, domain, DColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto D_dense_run_0_Partition = runtime->create_index_partition(ctx, D_dense_run_0, domain, DColoring, LEGION_COMPUTE_KIND);
   auto D_vals_partition = copyPartition(ctx, runtime, D_dense_run_0_Partition, get_logical_region(D_vals));
   auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);

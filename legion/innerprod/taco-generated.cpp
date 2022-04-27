@@ -51,9 +51,9 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     }
     cColoring[(*itr)] = cRect;
   }
-  auto b_dense_run_0_Partition = runtime->create_index_partition(ctx, b_dense_run_0, domain, bColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto b_dense_run_0_Partition = runtime->create_index_partition(ctx, b_dense_run_0, domain, bColoring, LEGION_COMPUTE_KIND);
   auto b_vals_partition = copyPartition(ctx, runtime, b_dense_run_0_Partition, get_logical_region(b_vals));
-  auto c_dense_run_0_Partition = runtime->create_index_partition(ctx, c_dense_run_0, domain, cColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto c_dense_run_0_Partition = runtime->create_index_partition(ctx, c_dense_run_0, domain, cColoring, LEGION_COMPUTE_KIND);
   auto c_vals_partition = copyPartition(ctx, runtime, c_dense_run_0_Partition, get_logical_region(c_vals));
   auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.bPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);

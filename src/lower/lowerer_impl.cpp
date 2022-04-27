@@ -6031,7 +6031,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     assert(aliasingVarsCount <= t.getAccess().getIndexVars().size());
     size_t partitionedVars = t.getAccess().getIndexVars().size() - aliasingVarsCount;
     if (partitionedVars < distIvars.size()) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If none of the variables in the access are changing in this loop, then we're
@@ -6047,13 +6047,13 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       }
     }
     if (!accessIter) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If we're doing a reduction, we're most likely not operating on a disjoint partition.
     // So, fall back to an aliased partition.
     if (forall.getOutputRaceStrategy() == OutputRaceStrategy::ParallelReduction) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If we're lowering placement code, it's too hard to figure this out (for now).
