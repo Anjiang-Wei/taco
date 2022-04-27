@@ -1,118 +1,142 @@
 #include "taco_legion_header.h"
 #include "taco_mapper.h"
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
+#define TACO_MAX(_a,_b) ((_a) < (_b) ? (_b) : (_a))
 using namespace Legion;
+
+#include "taco-generated.h"
 typedef FieldAccessor<READ_ONLY,double,3,coord_t,Realm::AffineAccessor<double,3,coord_t>> AccessorROdouble3;
 
 struct task_1Args {
   double a_val;
-  int32_t b1_dimension;
-  int32_t b2_dimension;
-  int32_t b3_dimension;
+  int64_t b1_dimension;
+  int64_t b2_dimension;
+  int64_t b3_dimension;
+  int32_t pieces;
 };
 
-LogicalPartition partition3Tensor(Context ctx, Runtime* runtime, LogicalRegion b, int32_t pieces) {
-  int b1_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[0] + 1;
-  int b2_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[1] + 1;
-  int b3_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[2] + 1;
-  auto b_index_space = get_index_space(b);
+
+partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, LegionTensor* c, int32_t pieces) {
+  int b1_dimension = b->dims[0];
+  int b2_dimension = b->dims[1];
+  int b3_dimension = b->dims[2];
+  RegionWrapper b_vals = b->vals;
+  IndexSpace b_dense_run_0 = b->denseLevelRuns[0];
+  RegionWrapper c_vals = c->vals;
+  IndexSpace c_dense_run_0 = c->denseLevelRuns[0];
+
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
   auto inIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(inIndexSpace));
-  auto bDomain = runtime->get_index_space_domain(ctx, b_index_space);
+  auto bDomain = runtime->get_index_space_domain(ctx, b_dense_run_0);
+  auto cDomain = runtime->get_index_space_domain(ctx, c_dense_run_0);
   DomainPointColoring bColoring = DomainPointColoring();
+  DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    int32_t in = (*itr)[0];
-    Point<3> bStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces) + 0 / pieces), 0, 0);
-    Point<3> bEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), bDomain.hi()[0]), TACO_MIN(b2_dimension, bDomain.hi()[1]), TACO_MIN(b3_dimension, bDomain.hi()[2]));
+    int64_t in = (*itr)[0];
+    Point<3> bStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), (0 % b2_dimension), 0);
+    Point<3> bEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), bDomain.hi()[0]), TACO_MIN(((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension - 1) % b2_dimension), bDomain.hi()[1]), TACO_MIN(b3_dimension, bDomain.hi()[2]));
     Rect<3> bRect = Rect<3>(bStart, bEnd);
     if (!bDomain.contains(bRect.lo) || !bDomain.contains(bRect.hi)) {
       bRect = bRect.make_empty();
     }
     bColoring[(*itr)] = bRect;
+    Point<3> cStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), (0 % b2_dimension), 0);
+    Point<3> cEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), cDomain.hi()[0]), TACO_MIN(((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension - 1) % b2_dimension), cDomain.hi()[1]), TACO_MIN(b3_dimension, cDomain.hi()[2]));
+    Rect<3> cRect = Rect<3>(cStart, cEnd);
+    if (!cDomain.contains(cRect.lo) || !cDomain.contains(cRect.hi)) {
+      cRect = cRect.make_empty();
+    }
+    cColoring[(*itr)] = cRect;
   }
-  auto bPartition = runtime->create_index_partition(ctx, b_index_space, domain, bColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  return runtime->get_logical_partition(ctx, get_logical_region(b), bPartition);
+  auto b_dense_run_0_Partition = runtime->create_index_partition(ctx, b_dense_run_0, domain, bColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto b_vals_partition = copyPartition(ctx, runtime, b_dense_run_0_Partition, get_logical_region(b_vals));
+  auto c_dense_run_0_Partition = runtime->create_index_partition(ctx, c_dense_run_0, domain, cColoring, LEGION_ALIASED_COMPLETE_KIND);
+  auto c_vals_partition = copyPartition(ctx, runtime, c_dense_run_0_Partition, get_logical_region(c_vals));
+  auto computePartitions = partitionPackForcomputeLegion();
+  computePartitions.bPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
+  computePartitions.bPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
+  computePartitions.bPartition.valsPartition = b_vals_partition;
+  computePartitions.bPartition.denseLevelRunPartitions[0] = b_dense_run_0_Partition;
+  computePartitions.cPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
+  computePartitions.cPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
+  computePartitions.cPartition.valsPartition = c_vals_partition;
+  computePartitions.cPartition.denseLevelRunPartitions[0] = c_dense_run_0_Partition;
+
+  return computePartitions;
 }
 
 double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  PhysicalRegion b = regions[0];
-  PhysicalRegion c = regions[1];
+  PhysicalRegion b_vals = regions[0];
+  LogicalRegion b_vals_parent = regions[0].get_logical_region();
+  PhysicalRegion c_vals = regions[1];
+  LogicalRegion c_vals_parent = regions[1].get_logical_region();
 
-  int32_t in = task->index_point[0];
+  int64_t in = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
   double a_val = args->a_val;
-  int32_t b1_dimension = args->b1_dimension;
-  int32_t b2_dimension = args->b2_dimension;
-  int32_t b3_dimension = args->b3_dimension;
+  int64_t b1_dimension = args->b1_dimension;
+  int64_t b2_dimension = args->b2_dimension;
+  int64_t b3_dimension = args->b3_dimension;
+  int32_t pieces = args->pieces;
 
-  auto b_index_space = get_index_space(b);
-  AccessorROdouble3 b_vals(b, FID_VAL);
-  AccessorROdouble3 c_vals(c, FID_VAL);
+  auto b_vals_ro_accessor = createAccessor<AccessorROdouble3>(b_vals, FID_VAL);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble3>(c_vals, FID_VAL);
 
-  auto bPartitionBounds = runtime->get_index_space_domain(ctx, b_index_space);
-  int64_t bPartitionBounds0lo = bPartitionBounds.lo()[0];
-  int64_t bPartitionBounds0hi = bPartitionBounds.hi()[0];
   #pragma omp parallel for schedule(static)
-  for (int32_t io = 0; io < ((((bPartitionBounds0hi - bPartitionBounds0lo) + 1) + 3) / 4); io++) {
+  for (int64_t io = 0; io < ((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension + 3) / 4); io++) {
     double tiia_val = 0.0;
     #pragma clang loop interleave(enable) vectorize(enable)
-    for (int32_t ii = 0; ii < 4; ii++) {
-      int32_t il = io * 4 + ii;
-      int32_t i = il + bPartitionBounds0lo;
+    for (int64_t ii = 0; ii < 4; ii++) {
+      int64_t f = io * 4 + ii;
+      int64_t il = f / b2_dimension;
+      int64_t i = in * ((b1_dimension + (pieces - 1)) / pieces) + il;
       if (i >= b1_dimension)
         continue;
 
-      if (i > bPartitionBounds0hi)
+      if (i >= (in + 1) * ((b1_dimension + (pieces - 1)) / pieces))
         continue;
 
-      for (int32_t j = 0; j < b2_dimension; j++) {
-        int32_t jb = i * 10 + j;
-        int32_t jc = i * 10 + j;
-        for (int32_t k = 0; k < b3_dimension; k++) {
-          Point<3> b_access_point = Point<3>(i, j, k);
-          Point<3> c_access_point = Point<3>(i, j, k);
-          tiia_val += b_vals[b_access_point] * c_vals[c_access_point];
-        }
+      int64_t j = f % b2_dimension;
+      if (j >= b2_dimension)
+        continue;
+
+      for (int64_t k = 0; k < b3_dimension; k++) {
+        tiia_val = tiia_val + b_vals_ro_accessor[Point<3>(i, j, k)] * c_vals_ro_accessor[Point<3>(i, j, k)];
       }
     }
     #pragma omp atomic
-    a_val += tiia_val;
+    a_val = a_val + tiia_val;
   }
   return a_val;
 }
 
-double computeLegion(Context ctx, Runtime* runtime, LogicalRegion b, LogicalRegion c, LogicalPartition bPartition, LogicalPartition cPartition) {
-  int b1_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[0] + 1;
-  int b2_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[1] + 1;
-  int b3_dimension = runtime->get_index_space_domain(get_index_space(b)).hi()[2] + 1;
+double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
+  int b1_dimension = b->dims[0];
+  int b2_dimension = b->dims[1];
+  int b3_dimension = b->dims[2];
+  auto b_vals_parent = b->valsParent;
+  auto c_vals_parent = c->valsParent;
 
   double a_val = 0.0;
 
-  DomainT<1> domain = runtime->get_index_partition_color_space(ctx, get_index_partition(bPartition));
-  for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
-    DomainPoint domPoint = (*itr);
-    auto bPartitionBounds = runtime->get_index_space_domain(runtime->get_logical_subregion_by_color(ctx, bPartition, domPoint).get_index_space());
-  }
-  RegionRequirement bReq = RegionRequirement(bPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(b));
-  bReq.add_field(FID_VAL);
-  RegionRequirement cReq = RegionRequirement(cPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(c));
-  cReq.add_field(FID_VAL);
-  task_1Args taskArgsRaw;
-  taskArgsRaw.a_val = a_val;
-  taskArgsRaw.b1_dimension = b1_dimension;
-  taskArgsRaw.b2_dimension = b2_dimension;
-  taskArgsRaw.b3_dimension = b3_dimension;
-  TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_1Args));
+  Point<1> lowerBound = Point<1>(0);
+  Point<1> upperBound = Point<1>((pieces - 1));
+  auto inIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
+  DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(inIndexSpace));
+  task_1Args taskArgsRaw1;
+  taskArgsRaw1.a_val = a_val;
+  taskArgsRaw1.b1_dimension = b1_dimension;
+  taskArgsRaw1.b2_dimension = b2_dimension;
+  taskArgsRaw1.b3_dimension = b3_dimension;
+  taskArgsRaw1.pieces = pieces;
+  TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(bReq);
-  launcher.add_region_requirement(cReq);
-  launcher.tag |= TACOMapper::UNTRACK_VALID_REGIONS;
-  auto fm = runtime->execute_index_space(ctx, launcher);
-  auto reduced = runtime->reduce_future_map(ctx, fm, LEGION_REDOP_SUM_FLOAT64);
-  a_val = reduced.get<double>();
+  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, b_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  a_val = runtime->execute_index_space(ctx, launcher, LEGION_REDOP_SUM_FLOAT64).get<double>();
 
 
   return a_val;
