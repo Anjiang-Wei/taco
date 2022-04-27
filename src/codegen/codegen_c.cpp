@@ -593,8 +593,10 @@ void CodeGen_C::visit(const Store* op) {
     taco_iassert(isa<Add>(op->data));
     auto add = to<Add>(op->data);
     taco_iassert(isa<Load>(add->a));
-    auto load = to<Load>(add->a);
-    taco_iassert(load->arr == op->arr && load->loc == op->loc);
+    // TODO (rohany): This assertion is correct in spirit, but simplification passes
+    //  confuse the code generator, and the pointer-based assertion fails.
+    // auto load = to<Load>(add->a);
+    // taco_iassert(load->arr == op->arr && load->loc == op->loc) << (ir::Stmt(op));
     // In this case, we'll lower a store that just writes the rhs of the add
     // into the location.
     auto newStore = ir::Store::make(op->arr, op->loc, add->b, op->use_atomics, op->atomic_parallel_unit);

@@ -2242,9 +2242,6 @@ ir::Stmt CuSparseSpMV::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std:
   auto getBounds = [](ir::Expr e, std::string func) {
     return ir::MethodCall::make(e, func, {}, false, Int64);
   };
-  auto noConst = [](ir::Expr e, Datatype type) {
-    return ir::Call::make("const_cast<" + util::toString(type) + "*>", {e}, Auto);
-  };
 
   auto alpha = ir::Var::make("alpha", Float64);
   results.push_back(ir::VarDecl::make(alpha, ir::Literal::make((double)1, Float64)));

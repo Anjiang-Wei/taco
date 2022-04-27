@@ -14,13 +14,11 @@ typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,
 typedef FieldAccessor<READ_WRITE,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRWRect_1_1;
 
 struct task_2Args {
-  int64_t A1_dimension;
   int64_t B1_dimension;
   int32_t pieces;
 };
 
 struct task_1Args {
-  int64_t A1_dimension;
   IndexSpace A_dense_run_0;
   int64_t B1_dimension;
   int32_t pieces;
@@ -28,7 +26,6 @@ struct task_1Args {
 
 
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, int32_t pieces) {
-  RegionWrapper A2_crd = A->indices[1][1];
   int B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
@@ -47,10 +44,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
   RegionWrapper A2_nnz_vals;
 
-  int64_t A2Size = runtime->get_index_space_domain(ctx, get_index_space(A2_crd)).hi()[0] + 1;
-  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
-  int64_t C2Size = runtime->get_index_space_domain(ctx, get_index_space(C2_crd)).hi()[0] + 1;
-  int64_t D2Size = runtime->get_index_space_domain(ctx, get_index_space(D2_crd)).hi()[0] + 1;
 
   IndexSpace A2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((B1_dimension - 1))));
   FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
@@ -101,33 +94,33 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     DColoring[(*itr)] = DRect;
   }
   IndexPartition A2_nnz_index_partition = runtime->create_index_partition(ctx, A2_nnz_vals.get_index_space(), domain, A2_nnzColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition A2_nnz_logical_partition = runtime->get_logical_partition(ctx, A2_nnz_vals, A2_nnz_index_partition);
+  Legion::LogicalPartition A2_nnz_logical_partition = runtime->get_logical_partition(ctx, A2_nnz_vals, A2_nnz_index_partition);
   auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
-  LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, B2_crd.get_index_space(), posPartB2, B2_pos_parent, FID_RECT_1));
+  Legion::LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
+  Legion::LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, B2_crd.get_index_space(), posPartB2, B2_pos_parent, FID_RECT_1));
   auto B_vals_partition = copyPartition(ctx, runtime, crdPartB2, get_logical_region(B_vals));
   auto C_dense_run_0_Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition posPartC2 = copyPartition(ctx, runtime, C_dense_run_0_Partition, C2_pos);
-  LogicalPartition crdPartC2 = runtime->get_logical_partition(ctx, C2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, C2_crd.get_index_space(), posPartC2, C2_pos_parent, FID_RECT_1));
+  Legion::LogicalPartition posPartC2 = copyPartition(ctx, runtime, C_dense_run_0_Partition, C2_pos);
+  Legion::LogicalPartition crdPartC2 = runtime->get_logical_partition(ctx, C2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, C2_crd.get_index_space(), posPartC2, C2_pos_parent, FID_RECT_1));
   auto C_vals_partition = copyPartition(ctx, runtime, crdPartC2, get_logical_region(C_vals));
   auto D_dense_run_0_Partition = runtime->create_index_partition(ctx, D_dense_run_0, domain, DColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition posPartD2 = copyPartition(ctx, runtime, D_dense_run_0_Partition, D2_pos);
-  LogicalPartition crdPartD2 = runtime->get_logical_partition(ctx, D2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, D2_crd.get_index_space(), posPartD2, D2_pos_parent, FID_RECT_1));
+  Legion::LogicalPartition posPartD2 = copyPartition(ctx, runtime, D_dense_run_0_Partition, D2_pos);
+  Legion::LogicalPartition crdPartD2 = runtime->get_logical_partition(ctx, D2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, D2_crd.get_index_space(), posPartD2, D2_pos_parent, FID_RECT_1));
   auto D_vals_partition = copyPartition(ctx, runtime, crdPartD2, get_logical_region(D_vals));
   auto computePartitions = partitionPackForcomputeLegion();
-  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
   computePartitions.BPartition.indicesPartitions[1].push_back(crdPartB2);
   computePartitions.BPartition.valsPartition = B_vals_partition;
   computePartitions.BPartition.denseLevelRunPartitions[0] = B_dense_run_0_Partition;
-  computePartitions.CPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.CPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.CPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.CPartition.indicesPartitions[1].push_back(posPartC2);
   computePartitions.CPartition.indicesPartitions[1].push_back(crdPartC2);
   computePartitions.CPartition.valsPartition = C_vals_partition;
   computePartitions.CPartition.denseLevelRunPartitions[0] = C_dense_run_0_Partition;
-  computePartitions.DPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.DPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.DPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.DPartition.indicesPartitions[1].push_back(posPartD2);
   computePartitions.DPartition.indicesPartitions[1].push_back(crdPartD2);
@@ -165,7 +158,6 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t io = task->index_point[0];
   task_2Args* args = (task_2Args*)(task->args);
-  int64_t A1_dimension = args->A1_dimension;
   int64_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
 
@@ -182,7 +174,6 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto C2_crd_accessor = createAccessor<AccessorROint32_t1>(C2_crd, FID_COORD);
   auto D2_crd_accessor = createAccessor<AccessorROint32_t1>(D2_crd, FID_COORD);
 
-  int64_t pointID1 = io;
   #pragma omp parallel for schedule(dynamic, 128)
   for (int64_t ii = 0; ii < ((B1_dimension + (pieces - 1)) / pieces); ii++) {
     int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
@@ -192,11 +183,6 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     if (i >= (io + 1) * ((B1_dimension + (pieces - 1)) / pieces))
       continue;
 
-    int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + ii;
-    int64_t iB = i;
-    int64_t iC = i;
-    int64_t iD = i;
-    int64_t iA = i;
     int64_t jB = B2_pos_accessor[Point<1>(i)].lo;
     int64_t pB2_end = B2_pos_accessor[Point<1>(i)].hi + 1;
     int64_t jC = C2_pos_accessor[Point<1>(i)].lo;
@@ -205,191 +191,153 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     int64_t pD2_end = D2_pos_accessor[Point<1>(i)].hi + 1;
 
     while ((jB < pB2_end && jC < pC2_end) && jD < pD2_end) {
-      int64_t jB0 = B2_crd_accessor[(jB * 1)];
-      int64_t jC0 = C2_crd_accessor[(jC * 1)];
-      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t jB0 = B2_crd_accessor[jB];
+      int64_t jC0 = C2_crd_accessor[jC];
+      int64_t jD0 = D2_crd_accessor[jD];
       int64_t j = TACO_MIN(jB0, TACO_MIN(jC0, jD0));
       if ((jB0 == j && jC0 == j) && jD0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA2 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA2;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = (B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)]) + D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA2] = j;
+        A_vals_rw_accessor[Point<1>(pA2)] = (B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)]) + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j && jD0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA20 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA20;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA20] = j;
+        A_vals_rw_accessor[Point<1>(pA20)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jC0 == j && jD0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA21 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA21;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA21] = j;
+        A_vals_rw_accessor[Point<1>(pA21)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j && jC0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA22 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA22;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
+        A2_crd_accessor[pA22] = j;
+        A_vals_rw_accessor[Point<1>(pA22)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
       }
       else if (jB0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA23 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA23;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
+        A2_crd_accessor[pA23] = j;
+        A_vals_rw_accessor[Point<1>(pA23)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else if (jC0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA24 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA24;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
+        A2_crd_accessor[pA24] = j;
+        A_vals_rw_accessor[Point<1>(pA24)] = C_vals_ro_accessor[Point<1>(jC)];
       }
       else {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA25 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA25;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA25] = j;
+        A_vals_rw_accessor[Point<1>(pA25)] = D_vals_ro_accessor[Point<1>(jD)];
       }
       jB = jB + (int64_t)(jB0 == j);
       jC = jC + (int64_t)(jC0 == j);
       jD = jD + (int64_t)(jD0 == j);
     }
     while (jB < pB2_end && jD < pD2_end) {
-      int64_t jB0 = B2_crd_accessor[(jB * 1)];
-      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t jB0 = B2_crd_accessor[jB];
+      int64_t jD0 = D2_crd_accessor[jD];
       int64_t j = TACO_MIN(jB0, jD0);
       if (jB0 == j && jD0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA26 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA26;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA26] = j;
+        A_vals_rw_accessor[Point<1>(pA26)] = B_vals_ro_accessor[Point<1>(jB)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jB0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA27 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA27;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
+        A2_crd_accessor[pA27] = j;
+        A_vals_rw_accessor[Point<1>(pA27)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA28 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA28;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA28] = j;
+        A_vals_rw_accessor[Point<1>(pA28)] = D_vals_ro_accessor[Point<1>(jD)];
       }
       jB = jB + (int64_t)(jB0 == j);
       jD = jD + (int64_t)(jD0 == j);
     }
     while (jC < pC2_end && jD < pD2_end) {
-      int64_t jC0 = C2_crd_accessor[(jC * 1)];
-      int64_t jD0 = D2_crd_accessor[(jD * 1)];
+      int64_t jC0 = C2_crd_accessor[jC];
+      int64_t jD0 = D2_crd_accessor[jD];
       int64_t j = TACO_MIN(jC0, jD0);
       if (jC0 == j && jD0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA29 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA29;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA29] = j;
+        A_vals_rw_accessor[Point<1>(pA29)] = C_vals_ro_accessor[Point<1>(jC)] + D_vals_ro_accessor[Point<1>(jD)];
       }
       else if (jC0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA210 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA210;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
+        A2_crd_accessor[pA210] = j;
+        A_vals_rw_accessor[Point<1>(pA210)] = C_vals_ro_accessor[Point<1>(jC)];
       }
       else {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA211 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA211;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
+        A2_crd_accessor[pA211] = j;
+        A_vals_rw_accessor[Point<1>(pA211)] = D_vals_ro_accessor[Point<1>(jD)];
       }
       jC = jC + (int64_t)(jC0 == j);
       jD = jD + (int64_t)(jD0 == j);
     }
     while (jB < pB2_end && jC < pC2_end) {
-      int64_t jB0 = B2_crd_accessor[(jB * 1)];
-      int64_t jC0 = C2_crd_accessor[(jC * 1)];
+      int64_t jB0 = B2_crd_accessor[jB];
+      int64_t jC0 = C2_crd_accessor[jC];
       int64_t j = TACO_MIN(jB0, jC0);
       if (jB0 == j && jC0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA212 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA212;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
+        A2_crd_accessor[pA212] = j;
+        A_vals_rw_accessor[Point<1>(pA212)] = B_vals_ro_accessor[Point<1>(jB)] + C_vals_ro_accessor[Point<1>(jC)];
       }
       else if (jB0 == j) {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA213 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA213;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
+        A2_crd_accessor[pA213] = j;
+        A_vals_rw_accessor[Point<1>(pA213)] = B_vals_ro_accessor[Point<1>(jB)];
       }
       else {
-        int64_t iA = 0 * A1_dimension + i;
         int64_t pA214 = A2_pos_accessor[Point<1>(i)].lo;
         A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-        int64_t jA = pA214;
-        A2_crd_accessor[jA * 1] = j;
-        A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
+        A2_crd_accessor[pA214] = j;
+        A_vals_rw_accessor[Point<1>(pA214)] = C_vals_ro_accessor[Point<1>(jC)];
       }
       jB = jB + (int64_t)(jB0 == j);
       jC = jC + (int64_t)(jC0 == j);
     }
     while (jB < pB2_end) {
-      int64_t j = B2_crd_accessor[(jB * 1)];
-      int64_t iA = 0 * A1_dimension + i;
+      int64_t j = B2_crd_accessor[jB];
       int64_t pA215 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int64_t jA = pA215;
-      A2_crd_accessor[jA * 1] = j;
-      A_vals_rw_accessor[Point<1>(jA)] = B_vals_ro_accessor[Point<1>(jB)];
+      A2_crd_accessor[pA215] = j;
+      A_vals_rw_accessor[Point<1>(pA215)] = B_vals_ro_accessor[Point<1>(jB)];
       jB = jB + 1;
     }
     while (jC < pC2_end) {
-      int64_t j = C2_crd_accessor[(jC * 1)];
-      int64_t iA = 0 * A1_dimension + i;
+      int64_t j = C2_crd_accessor[jC];
       int64_t pA216 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int64_t jA = pA216;
-      A2_crd_accessor[jA * 1] = j;
-      A_vals_rw_accessor[Point<1>(jA)] = C_vals_ro_accessor[Point<1>(jC)];
+      A2_crd_accessor[pA216] = j;
+      A_vals_rw_accessor[Point<1>(pA216)] = C_vals_ro_accessor[Point<1>(jC)];
       jC = jC + 1;
     }
     while (jD < pD2_end) {
-      int64_t j = D2_crd_accessor[(jD * 1)];
-      int64_t iA = 0 * A1_dimension + i;
+      int64_t j = D2_crd_accessor[jD];
       int64_t pA217 = A2_pos_accessor[Point<1>(i)].lo;
       A2_pos_accessor[Point<1>(i)].lo = A2_pos_accessor[Point<1>(i)].lo + 1;
-      int64_t jA = pA217;
-      A2_crd_accessor[jA * 1] = j;
-      A_vals_rw_accessor[Point<1>(jA)] = D_vals_ro_accessor[Point<1>(jD)];
+      A2_crd_accessor[pA217] = j;
+      A_vals_rw_accessor[Point<1>(pA217)] = D_vals_ro_accessor[Point<1>(jD)];
       jD = jD + 1;
     }
   }
@@ -419,7 +367,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t qio = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int64_t A1_dimension = args->A1_dimension;
   IndexSpace A_dense_run_0 = args->A_dense_run_0;
   int64_t B1_dimension = args->B1_dimension;
   int32_t pieces = args->pieces;
@@ -432,10 +379,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto C2_crd_accessor = createAccessor<AccessorROint32_t1>(C2_crd, FID_COORD);
   auto D2_crd_accessor = createAccessor<AccessorROint32_t1>(D2_crd, FID_COORD);
 
-  DomainT<1> B2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(B2_crd));
-  DomainT<1> C2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(C2_crd));
-  DomainT<1> D2_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(D2_crd));
-  int64_t pointID1 = qio;
   #pragma omp parallel for schedule(dynamic, 128)
   for (int64_t qii = 0; qii < ((B1_dimension + (pieces - 1)) / pieces); qii++) {
     int64_t qi = qio * ((B1_dimension + (pieces - 1)) / pieces) + qii;
@@ -445,10 +388,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     if (qi >= (qio + 1) * ((B1_dimension + (pieces - 1)) / pieces))
       continue;
 
-    int64_t pointID2 = pointID1 * ((B1_dimension + (pieces - 1)) / pieces) + qii;
-    int64_t qiB = qi;
-    int64_t qiC = qi;
-    int64_t qiD = qi;
     int64_t qjB = B2_pos_accessor[Point<1>(qi)].lo;
     int64_t pB2_end = B2_pos_accessor[Point<1>(qi)].hi + 1;
     int64_t qjC = C2_pos_accessor[Point<1>(qi)].lo;
@@ -457,9 +396,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     int64_t pD2_end = D2_pos_accessor[Point<1>(qi)].hi + 1;
 
     while ((qjB < pB2_end && qjC < pC2_end) && qjD < pD2_end) {
-      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
-      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qjB0 = B2_crd_accessor[qjB];
+      int64_t qjC0 = C2_crd_accessor[qjC];
+      int64_t qjD0 = D2_crd_accessor[qjD];
       int64_t qj = TACO_MIN(qjB0, TACO_MIN(qjC0, qjD0));
       if ((qjB0 == qj && qjC0 == qj) && qjD0 == qj) {
         A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
@@ -487,8 +426,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjB < pB2_end && qjD < pD2_end) {
-      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qjB0 = B2_crd_accessor[qjB];
+      int64_t qjD0 = D2_crd_accessor[qjD];
       int64_t qj = TACO_MIN(qjB0, qjD0);
       if (qjB0 == qj && qjD0 == qj) {
         A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
@@ -503,8 +442,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjC < pC2_end && qjD < pD2_end) {
-      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
-      int64_t qjD0 = D2_crd_accessor[(qjD * 1)];
+      int64_t qjC0 = C2_crd_accessor[qjC];
+      int64_t qjD0 = D2_crd_accessor[qjD];
       int64_t qj = TACO_MIN(qjC0, qjD0);
       if (qjC0 == qj && qjD0 == qj) {
         A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
@@ -519,8 +458,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       qjD = qjD + (int64_t)(qjD0 == qj);
     }
     while (qjB < pB2_end && qjC < pC2_end) {
-      int64_t qjB0 = B2_crd_accessor[(qjB * 1)];
-      int64_t qjC0 = C2_crd_accessor[(qjC * 1)];
+      int64_t qjB0 = B2_crd_accessor[qjB];
+      int64_t qjC0 = C2_crd_accessor[qjC];
       int64_t qj = TACO_MIN(qjB0, qjC0);
       if (qjB0 == qj && qjC0 == qj) {
         A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
@@ -535,17 +474,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
       qjC = qjC + (int64_t)(qjC0 == qj);
     }
     while (qjB < pB2_end) {
-      int64_t qj = B2_crd_accessor[(qjB * 1)];
       A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjB = qjB + 1;
     }
     while (qjC < pC2_end) {
-      int64_t qj = C2_crd_accessor[(qjC * 1)];
       A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjC = qjC + 1;
     }
     while (qjD < pD2_end) {
-      int64_t qj = D2_crd_accessor[(qjD * 1)];
       A2_nnz_vals_rw_accessor[Point<1>(qi)] = A2_nnz_vals_rw_accessor[Point<1>(qi)] + (int64_t)1;
       qjD = qjD + 1;
     }
@@ -553,7 +489,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 }
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
-  int A1_dimension = A->dims[0];
   RegionWrapper A2_pos = A->indices[1][0];
   RegionWrapper A2_crd = A->indices[1][1];
   auto A2_pos_parent = A->indicesParents[1][0];
@@ -562,24 +497,17 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto A_vals_parent = A->valsParent;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   int B1_dimension = B->dims[0];
-  RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
-  RegionWrapper C2_crd = C->indices[1][1];
   auto C2_pos_parent = C->indicesParents[1][0];
   auto C2_crd_parent = C->indicesParents[1][1];
   auto C_vals_parent = C->valsParent;
-  RegionWrapper D2_crd = D->indices[1][1];
   auto D2_pos_parent = D->indicesParents[1][0];
   auto D2_crd_parent = D->indicesParents[1][1];
   auto D_vals_parent = D->valsParent;
   RegionWrapper A2_nnz_vals;
 
-  int64_t A2Size = runtime->get_index_space_domain(ctx, get_index_space(A2_crd)).hi()[0] + 1;
-  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
-  int64_t C2Size = runtime->get_index_space_domain(ctx, get_index_space(C2_crd)).hi()[0] + 1;
-  int64_t D2Size = runtime->get_index_space_domain(ctx, get_index_space(D2_crd)).hi()[0] + 1;
 
   IndexSpace A2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((B1_dimension - 1))));
   FieldSpace A2_nnzfspace = createFieldSpaceWithSize(ctx, runtime, FID_VAL, sizeof(int64_t));
@@ -603,9 +531,8 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
     A2_nnzColoring[(*itr)] = A2_nnzRect;
   }
   IndexPartition A2_nnz_index_partition = runtime->create_index_partition(ctx, A2_nnz_vals.get_index_space(), domain, A2_nnzColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition A2_nnz_logical_partition = runtime->get_logical_partition(ctx, A2_nnz_vals, A2_nnz_index_partition);
+  Legion::LogicalPartition A2_nnz_logical_partition = runtime->get_logical_partition(ctx, A2_nnz_vals, A2_nnz_index_partition);
   task_1Args taskArgsRaw1;
-  taskArgsRaw1.A1_dimension = A1_dimension;
   taskArgsRaw1.A_dense_run_0 = A_dense_run_0;
   taskArgsRaw1.B1_dimension = B1_dimension;
   taskArgsRaw1.pieces = pieces;
@@ -656,11 +583,10 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
     AColoring[(*itr0)] = ARect;
   }
   auto A_dense_run_0_Partition = runtime->create_index_partition(ctx, A_dense_run_0, domain0, AColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition posPartA2 = copyPartition(ctx, runtime, A_dense_run_0_Partition, A2_pos);
-  LogicalPartition crdPartA2 = runtime->get_logical_partition(ctx, A2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, A2_crd.get_index_space(), posPartA2, A2_pos_parent, FID_RECT_1));
+  Legion::LogicalPartition posPartA2 = copyPartition(ctx, runtime, A_dense_run_0_Partition, A2_pos);
+  Legion::LogicalPartition crdPartA2 = runtime->get_logical_partition(ctx, A2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, A2_crd.get_index_space(), posPartA2, A2_pos_parent, FID_RECT_1));
   auto A_vals_partition = copyPartition(ctx, runtime, crdPartA2, get_logical_region(A_vals));
   task_2Args taskArgsRaw2;
-  taskArgsRaw2.A1_dimension = A1_dimension;
   taskArgsRaw2.B1_dimension = B1_dimension;
   taskArgsRaw2.pieces = pieces;
   TaskArgument taskArgs0 = TaskArgument(&taskArgsRaw2, sizeof(task_2Args));
