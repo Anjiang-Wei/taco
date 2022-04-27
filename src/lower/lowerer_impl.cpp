@@ -960,7 +960,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
   } else if ((this->isPartitionCode || this->isPlacementCode) && this->legionLoweringKind != COMPUTE_ONLY) {
     // The result for partition and placement codes is a LogicalPartition.
     taco_iassert(returnType.getKind() == Datatype::Undefined);
-    returnType = Datatype("LogicalPartition");
+    returnType = LogicalPartition;
   }
 
   if (this->legion) {

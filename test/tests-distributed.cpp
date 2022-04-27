@@ -410,7 +410,7 @@ TEST(distributed, mttkrp) {
                .distribute({i, j, k}, {in, jn, kn}, {il, jl, kl}, grid3)
                .reorder({il, jl, kl, l})
                .communicate(A(i, l), kn)
-               .communicate(B(i, j, l), kn)
+               .communicate(B(i, j, k), kn)
                .communicate(C(j, l), kn)
                .communicate(D(k, l), kn)
                .swapLeafKernel(il, mttkrp)
@@ -433,15 +433,7 @@ TEST(distributed, mttkrp) {
     placeALowered, placeBLowered, placeCLowered, placeDLowered,
     lowered
   });
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(all);
-  // Also write it into a file.
-  {
-    ofstream f("../legion/mttkrp/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(all);
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/mttkrp/", all);
 }
 
 TEST(distributed, cuda_mttkrp) {
@@ -543,10 +535,12 @@ TEST(distributed, ttv) {
   IndexVar ii("ii"), io("io");
   A(i, j) = B(i, j, k) * C(k);
   std::shared_ptr<LeafCallInterface> ttv = std::make_shared<TTV>();
+  // TODO (rohany): Distribute onto just doesn't work. I think the best thing is to just wait
+  //  for collective instances to be ready.
   auto stmt = A.getAssignment().concretize()
                // TODO (rohany): This use of distributing onto C(k) is a hack to workaround a Legion bug.
                .distribute({i, j}, {in, jn}, {il, jl}, std::vector<Access>{B(i, j, k), A(i, j), C(k)})
-               .communicate(C(k), jn)
+               .communicate({B(i, j, k), A(i, j), C(k)}, jn)
                .reorder({il, jl, k})
                .swapLeafKernel(il, ttv)
                // .split(il, ii, io, 4)
