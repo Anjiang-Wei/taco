@@ -492,6 +492,7 @@ public:
   std::pair<bool, ir::Expr> isDividedOntoPartition(IndexVar indexVar) const;
   std::vector<IndexVar> getMultiFusedParents(IndexVar indexVar) const;
   std::pair<bool, IndexVar> getStaggeredVar(IndexVar indexVar) const;
+  bool isFused(IndexVar indexVar) const;
 
   ir::Expr getPartitionColorSpaceVar() const;
   const std::map<TensorVar, std::map<int, std::pair<ir::Expr, ir::Expr>>>& getPartitionBounds() const;

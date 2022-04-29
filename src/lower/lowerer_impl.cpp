@@ -650,6 +650,16 @@ LowererImpl::lower(IndexStmt stmt, string name,
     void visit(const AccessNode* node) {
       // For each variable of the access, find its bounds.
       for (auto& var : node->indexVars) {
+        // Variables that have been directly fused are problematic for us. To handle
+        // this somewhat un-gracefully, we'll just say that any variable that has
+        // been fused will extend its full iteration bounds (which is true!). This
+        // encapsulates us from future splitting and dividing that may happen to
+        // the fused variable, for which it is hard to say what the bounds on
+        // the variables have been fused together are.
+        if (this->pg.isFused(var)) {
+          this->derivedBounds[node->tensorVar].push_back(this->pg.deriveIterBounds(var, this->definedIndexVars, this->underivedBounds, this->indexVarToExprMap, this->iterators));
+          continue;
+        }
         auto children = this->pg.getChildren(var);
         // If the index variable has no children, then it is a raw access.
         if (children.size() == 0) {
@@ -960,7 +970,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
   } else if ((this->isPartitionCode || this->isPlacementCode) && this->legionLoweringKind != COMPUTE_ONLY) {
     // The result for partition and placement codes is a LogicalPartition.
     taco_iassert(returnType.getKind() == Datatype::Undefined);
-    returnType = Datatype("LogicalPartition");
+    returnType = LogicalPartition;
   }
 
   if (this->legion) {
@@ -2611,13 +2621,12 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // up everything and add on a get_logical_partition call to return.
     if (this->isPartitionCode) {
       partitionStmts = transfers;
-      // TODO (rohany): I'm asserting false here because this codepath uses the old (and deleted)
-      //  partitionings variable, so I'm not sure what it does.
-      taco_iassert(false);
-      // auto pair = partitionings.begin();
-      // auto region = this->tensorVars[pair->first];
-      // auto part = pair->second;
-      // partitionStmts.push_back(ir::Return::make(ir::Call::make("runtime->get_logical_partition", {ctx, getLogicalRegion(region), part}, Auto)));
+      // If we're generating partitioning code, then there should be only
+      // one tensor in the tensorLogicalPartitions map.
+      auto pair = tensorLogicalPartitions.begin();
+      auto tv = pair->first;
+      auto part = pair->second[tv.getOrder()][0];
+      partitionStmts.push_back(ir::Return::make(part));
     } else if (this->legionLoweringKind == PARTITION_ONLY && this->distLoopDepth == 0) {
       // TODO (rohany): Move this into a helper method?
 
@@ -6032,7 +6041,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     assert(aliasingVarsCount <= t.getAccess().getIndexVars().size());
     size_t partitionedVars = t.getAccess().getIndexVars().size() - aliasingVarsCount;
     if (partitionedVars < distIvars.size()) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If none of the variables in the access are changing in this loop, then we're
@@ -6048,13 +6057,13 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       }
     }
     if (!accessIter) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If we're doing a reduction, we're most likely not operating on a disjoint partition.
     // So, fall back to an aliased partition.
     if (forall.getOutputRaceStrategy() == OutputRaceStrategy::ParallelReduction) {
-      partKind = aliasedPart;
+      partKind = computePart;
     }
 
     // If we're lowering placement code, it's too hard to figure this out (for now).
@@ -6587,9 +6596,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   if (this->isPlacementCode && this->distLoopDepth == 0 && this->legionLoweringKind == PARTITION_AND_COMPUTE) {
     auto tv = this->tensorVars.begin()->first;
     auto tvIR = this->tensorVars.begin()->second;
-    taco_iassert(false); // Asserting false here because the code uses the now-defunct partitionings variable.
-    // auto call = ir::Call::make("runtime->get_logical_partition", {ctx, getLogicalRegion(tvIR), partitionings.at(tv)}, LogicalPartition);
-    // itlStmts.push_back(ir::Return::make(call));
+    auto part = tensorLogicalPartitions[tv][tv.getOrder()][0];
+    itlStmts.push_back(ir::Return::make(part));
   }
 
   // Set the returned unpackTensorData.
@@ -7090,7 +7098,6 @@ void LowererImpl::BoundsInferenceExprRewriter::visit(const Var* var) {
     // If this ivar is in scope of the request, then access along it is fixed.
     expr = var;
   } else {
-
     // If a variable being derived is not even going to be present in the loop
     // (i.e. a variable that we split again), then we might want to expand it
     // into the variables that derive it. However, if neither of those variables

@@ -30,6 +30,7 @@ private:
   void visit(const DeclareStruct* node) override;
   void visit(const Allocate* node) override;
   void emitHeaders(std::ostream& o);
+  ir::Stmt simplifyFunctionBodies(ir::Stmt stmt);
   // TODO (rohany): It also doesn't seem like I can avoid duplicating this class.
   class FindVars;
   Stmt stmt;

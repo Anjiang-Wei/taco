@@ -1,73 +1,49 @@
 #include "legion.h"
 #include "taco_mapper.h"
 #include "legion_utils.h"
+#include "realm/cmdline.h"
+
+#include "taco-generated.h"
 
 using namespace Legion;
 
 typedef double valType;
 
-// Defined by the generated TACO code.
-void registerTacoTasks();
-LogicalPartition partitionLegionA(Context ctx, Runtime* runtime, LogicalRegion A, int32_t gridX, int32_t gridY);
-LogicalPartition partitionLegionB(Context ctx, Runtime* runtime, LogicalRegion B, int32_t gridX, int32_t gridY);
-LogicalPartition placeLegionA(Context ctx, Runtime* runtime, LogicalRegion A, int32_t gridX, int32_t gridY);
-LogicalPartition placeLegionB(Context ctx, Runtime* runtime, LogicalRegion B, int32_t gridX, int32_t gridY);
-LogicalPartition placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, int32_t gridX, int32_t gridY);
-void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion B, LogicalRegion C, LogicalPartition bPartition, LogicalPartition aPartition, LogicalPartition cPartition);
-
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  // Create the regions.
-  auto args = runtime->get_input_args();
-  int n = -1;
-  int gx = -1;
-  int gy = -1;
-  bool validate = false;
   // Parse input args.
-  for (int i = 1; i < args.argc; i++) {
-    if (strcmp(args.argv[i], "-n") == 0) {
-      n = atoi(args.argv[++i]);
-      continue;
-    }
-    if (strcmp(args.argv[i], "-gx") == 0) {
-      gx = atoi(args.argv[++i]);
-      continue;
-    }
-    if (strcmp(args.argv[i], "-gy") == 0) {
-      gy = atoi(args.argv[++i]);
-      continue;
-    }
-    if (strcmp(args.argv[i], "-validate") == 0) {
-      validate = true;
-      continue;
-    }
-  }
-  if (n == -1) {
-    std::cout << "Please provide an input matrix size with -n." << std::endl;
-    return;
-  }
-  if (gx == -1) {
-    std::cout << "Please provide a grid x size with -gx." << std::endl;
-    return;
-  }
-  if (gy == -1) {
-    std::cout << "Please provide a grid y size with -gy." << std::endl;
-    return;
-  }
+  Realm::CommandLineParser parser;
+  int n = 10, gx = 2, gy = 2;
+  bool validate = false;
+  parser.add_option_int("-n", n);
+  parser.add_option_int("-gx", gx);
+  parser.add_option_int("-gy", gy);
+  parser.add_option_bool("-validate", validate);
+  auto args = runtime->get_input_args();
+  parser.parse_command_line(args.argc, args.argv);
 
+  // Create the tensors.
   auto fspace = runtime->create_field_space(ctx);
   allocate_tensor_fields<valType>(ctx, runtime, fspace);
 
-  auto aISpace = runtime->create_index_space(ctx, Rect<2>({0, 0}, {n - 1, n - 1}));
-  auto bISpace = runtime->create_index_space(ctx, Rect<3>({0, 0, 0}, {n - 1, n - 1, n - 1}));
-  // Create a "replicated" version of C.
-  auto cISpace = runtime->create_index_space(ctx, Rect<1>({0, (n * gx * gy) - 1}));
-  auto A = runtime->create_logical_region(ctx, aISpace, fspace); runtime->attach_name(A, "A");
-  auto B = runtime->create_logical_region(ctx, bISpace, fspace); runtime->attach_name(B, "B");
-  auto C = runtime->create_logical_region(ctx, cISpace, fspace); runtime->attach_name(C, "C");
+  auto A = createDenseTensor<2, valType>(ctx, runtime, {n, n}, FID_VAL);
+  auto B = createDenseTensor<3, valType>(ctx, runtime, {n, n, n}, FID_VAL);
 
   // Create initial partitions.
-  auto aPart = partitionLegionA(ctx, runtime, A, gx, gy);
-  auto bPart = partitionLegionB(ctx, runtime, B, gx, gy);
+  auto aValsPart = partitionLegionA(ctx, runtime, &A, gx, gy);
+  auto bValsPart = partitionLegionB(ctx, runtime, &B, gx, gy);
+  // Perform an initial fill on the values.
+  // TODO (rohany): Add a function that fills over a LegionTensorPartition.
+  tacoFill<valType>(ctx, runtime, A.vals, aValsPart, 0);
+  tacoFill<valType>(ctx, runtime, B.vals, bValsPart, 1);
+
+  // To get around a Legion issue (before we have collective instances),
+  // we need to manually replicate the c vector.
+  auto cISpace = runtime->create_index_space(ctx, Rect<1>({0, (n * gx * gy) - 1}));
+  auto Cvals = runtime->create_logical_region(ctx, cISpace, fspace); runtime->attach_name(Cvals, "C");
+  LegionTensor C({Dense}, {n});
+  C.vals = Cvals;
+  C.valsParent = Cvals;
+
   // Create a "replicated" partition of C.
   DomainPointColoring cColoring;
   Point<2> lowerBound = Point<2>(0, 0);
@@ -82,23 +58,21 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     cColoring[*itr] = Rect<1>(start, end);
   }
   auto cIndexPart = runtime->create_index_partition(ctx, cISpace, dom, cColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  auto cPart = runtime->get_logical_partition(ctx, C, cIndexPart);
+  auto cPart = runtime->get_logical_partition(ctx, Cvals, cIndexPart);
 
-  tacoFill<valType>(ctx, runtime, A, aPart, 0);
-  tacoFill<valType>(ctx, runtime, B, bPart, 1);
-  tacoFill<valType>(ctx, runtime, C, cPart, 1);
+  tacoFill<valType>(ctx, runtime, Cvals, cPart, 1);
 
-  placeLegionA(ctx, runtime, A, gx, gy);
-  placeLegionB(ctx, runtime, B, gx, gy);
+  placeLegionA(ctx, runtime, &A, gx, gy);
+  placeLegionB(ctx, runtime, &B, gx, gy);
 
   // Run the function once to warm up the runtime system and validate the result.
-  computeLegion(ctx, runtime, A, B, C, bPart, aPart, cPart);
-  tacoValidate<valType>(ctx, runtime, A, aPart, valType(n));
+  computeLegion(ctx, runtime, &A, &B, &C, bValsPart, aValsPart, cPart);
+  tacoValidate<valType>(ctx, runtime, A.vals, aValsPart, valType(n));
 
   std::vector<size_t> times;
   benchmarkAsyncCall(ctx, runtime, times, [&]() {
     for (int i = 0; i < 10; i++) {
-      computeLegion(ctx, runtime, A, B, C, bPart, aPart, cPart);
+      computeLegion(ctx, runtime, &A, &B, &C, bValsPart, aValsPart, cPart);
     }
   });
 

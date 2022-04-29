@@ -1362,7 +1362,6 @@ ir::Expr runtime = ir::Symbol::make("runtime");
 ir::Expr AffineProjectionBot = ir::Symbol::make("AffineProjection::BOT");
 ir::Expr GPUFBMem = ir::Symbol::make("Legion::Memory::Kind::GPU_FB_MEM");
 ir::Expr disjointPart = ir::Symbol::make("LEGION_DISJOINT_COMPLETE_KIND");
-ir::Expr aliasedPart = ir::Symbol::make("LEGION_ALIASED_COMPLETE_KIND");
 ir::Expr computePart = ir::Symbol::make("LEGION_COMPUTE_KIND");
 ir::Expr readOnly = ir::Symbol::make("READ_ONLY");
 ir::Expr readWrite = ir::Symbol::make("READ_WRITE");

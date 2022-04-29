@@ -9,6 +9,7 @@
 #include <cassert>
 #include "cblas.h"
 #include "legion.h"
+#include "realm_defines.h"
 
 // An argument pack for MTTKRP.
 struct MTTKRPPack {
@@ -40,7 +41,11 @@ void mttkrp(MTTKRPPack pack, T* A_vals, const T* B_vals, const T* C_vals, const 
   int ldB3 = pack.ldB3;
 
   // Allocate an intermediate result T(i, j, l).
+#ifdef REALM_USE_OPENMP
   Legion::DeferredBuffer<T, 1> buf(Legion::Memory::Kind::SOCKET_MEM, Legion::DomainT<1>(Legion::Rect<1>(0, B1_dimension * C1_dimension * D2_dimension - 1)));
+#else
+  Legion::DeferredBuffer<T, 1> buf(Legion::Memory::Kind::SYSTEM_MEM, Legion::DomainT<1>(Legion::Rect<1>(0, B1_dimension * C1_dimension * D2_dimension - 1)));
+#endif
   T* inter = buf.ptr(0);
   // Initialize the buffer. TODO (rohany): Once CPU fills are fast enough, use the deferred
   // buffer initialization rather than this.

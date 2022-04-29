@@ -12,7 +12,6 @@ typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,
 typedef FieldAccessor<READ_ONLY,Rect<1>,1,coord_t,Realm::AffineAccessor<Rect<1>,1,coord_t>> AccessorRORect_1_1;
 
 struct task_1Args {
-  int64_t A2_dimension;
   int64_t B1_dimension;
   int64_t C2_dimension;
   int32_t gx;
@@ -29,9 +28,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
   int C2_dimension = C->dims[1];
-  IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
 
-  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((gx - 1));
@@ -39,7 +36,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   auto ADomain = runtime->get_index_space_domain(ctx, A_dense_run_0);
   auto BDomain = runtime->get_index_space_domain(ctx, B_dense_run_0);
-  auto CDomain = runtime->get_index_space_domain(ctx, C_dense_run_0);
   DomainPointColoring AColoring = DomainPointColoring();
   DomainPointColoring BColoring = DomainPointColoring();
   DomainPointColoring CColoring = DomainPointColoring();
@@ -63,15 +59,15 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto A_dense_run_0_Partition = runtime->create_index_partition(ctx, A_dense_run_0, domain, AColoring, LEGION_DISJOINT_COMPLETE_KIND);
   auto A_vals_partition = copyPartition(ctx, runtime, A_dense_run_0_Partition, get_logical_region(A_vals));
   auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
-  LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, B2_crd.get_index_space(), posPartB2, B2_pos_parent, FID_RECT_1));
+  Legion::LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
+  Legion::LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, B2_crd.get_index_space(), posPartB2, B2_pos_parent, FID_RECT_1));
   auto B_vals_partition = copyPartition(ctx, runtime, crdPartB2, get_logical_region(B_vals));
   auto computePartitions = partitionPackForcomputeLegion();
-  computePartitions.APartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.valsPartition = A_vals_partition;
   computePartitions.APartition.denseLevelRunPartitions[0] = A_dense_run_0_Partition;
-  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<LogicalPartition>>(2);
+  computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
   computePartitions.BPartition.indicesPartitions[1].push_back(crdPartB2);
@@ -95,7 +91,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
-  int64_t A2_dimension = args->A2_dimension;
   int64_t B1_dimension = args->B1_dimension;
   int64_t C2_dimension = args->C2_dimension;
   int32_t gx = args->gx;
@@ -106,7 +101,6 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto B2_pos_accessor = createAccessor<AccessorRORect_1_1>(B2_pos, FID_RECT_1);
   auto B2_crd_accessor = createAccessor<AccessorROint32_t1>(B2_crd, FID_COORD);
 
-  int64_t pointID1 = io;
   #pragma omp parallel for schedule(dynamic, 128)
   for (int64_t ii = 0; ii < ((B1_dimension + (gx - 1)) / gx); ii++) {
     int64_t i = io * ((B1_dimension + (gx - 1)) / gx) + ii;
@@ -116,16 +110,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     if (i >= (io + 1) * ((B1_dimension + (gx - 1)) / gx))
       continue;
 
-    int64_t pointID2 = pointID1 * ((B1_dimension + (gx - 1)) / gx) + ii;
-    int64_t iA = i;
-    int64_t iB = i;
     for (int64_t kB = B2_pos_accessor[Point<1>(i)].lo; kB < (B2_pos_accessor[Point<1>(i)].hi + 1); kB++) {
-      int64_t k = B2_crd_accessor[(kB * 1)];
-      int64_t kC = k;
+      int64_t k = B2_crd_accessor[kB];
       for (int64_t j = 0; j < C2_dimension; j++) {
-        int64_t pointID3 = pointID2 * C2_dimension + j;
-        int64_t jA = iA * A2_dimension + j;
-        int64_t jC = kC * C2_dimension + j;
         A_vals_rw_accessor[Point<2>(i, j)] = A_vals_rw_accessor[Point<2>(i, j)] + B_vals_ro_accessor[Point<1>(kB)] * C_vals_ro_accessor[Point<2>(k, j)];
       }
     }
@@ -133,10 +120,8 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 }
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegion* partitionPack, int32_t gx) {
-  int A2_dimension = A->dims[1];
   auto A_vals_parent = A->valsParent;
   int B1_dimension = B->dims[0];
-  RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
@@ -144,14 +129,12 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
 
-  int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((gx - 1));
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   task_1Args taskArgsRaw1;
-  taskArgsRaw1.A2_dimension = A2_dimension;
   taskArgsRaw1.B1_dimension = B1_dimension;
   taskArgsRaw1.C2_dimension = C2_dimension;
   taskArgsRaw1.gx = gx;
@@ -168,7 +151,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
 void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }

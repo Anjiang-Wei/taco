@@ -2,6 +2,7 @@
 #include "codegen_c.h"
 #include "taco/util/strings.h"
 #include "taco/ir/ir_rewriter.h"
+#include "taco/ir/simplify.h"
 #include <algorithm>
 #include <fstream>
 
@@ -185,6 +186,32 @@ void CodegenLegionC::visit(const UnpackTensorData*) {}
 // This operation is also a no-op for a similar reason.
 void CodegenLegionC::visit(const DeclareStruct*) {}
 
+ir::Stmt CodegenLegionC::simplifyFunctionBodies(ir::Stmt stmt) {
+  struct FunctionBodySimplifier : IRRewriter {
+    using IRRewriter::visit;
+
+    // It is a little unfortunate, but the simplifier right now does not
+    // handle the following case:
+    // int a = 0;
+    // int b = a + 1;
+    // < remaining code doesn't use b >
+    // The first pass of the simplifier removes b, leaving a behind, and
+    // doesn't think about going back and removing a. The rest of the
+    // simplification infrastructure doesn't appear to be set up to
+    // handle iteratively simplifying until the input no longer changes
+    // (or at least it isn't a trivial check), so I'll just heuristically
+    // loop a few times of simplification before calling it.
+    void visit(const Function* func) {
+      ir::Stmt body = func->body;
+      for (int i = 0; i < 5; i++) {
+        body = ir::simplify(body);
+      }
+      stmt = Function::make(func->name, func->outputs, func->inputs, body, func->returnType);
+    }
+  };
+  return FunctionBodySimplifier().rewrite(stmt);
+}
+
 void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
   // If we're outputting a header, emit the necessary defines.
   if (this->outputKind == HeaderGen) {
@@ -192,6 +219,9 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
     out << "#define TACO_GENERATED_H\n";
   }
 
+  // Simplify function bodies first, as this hides some bugs
+  // of incorrect variables generated during lowering.
+   stmt = this->simplifyFunctionBodies(stmt);
   this->stmt = stmt;
   // Collect all of the individual functions that we need to generate code for.
   this->collectAllFunctions(stmt);

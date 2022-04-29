@@ -52,7 +52,6 @@ void packLegionCOOToCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
 
   IndexSpace T2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((TCOO1_dimension - 1))));
@@ -187,14 +186,8 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
-  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
-  int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
-  int64_t T3Size = runtime->get_index_space_domain(ctx, get_index_space(T3_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
-  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
   T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
   T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
   T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
@@ -202,7 +195,6 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   T1_crd = legionMalloc(ctx, runtime, T1_crd_parent, T1_crd_size, FID_COORD, READ_WRITE);
   T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
   int64_t iT = 0;
-  DomainT<1> T2_pos_domain = runtime->get_index_space_domain(ctx, T2_pos.get_index_space());
   int64_t T2_pos_size = 1;
   T2_pos = legionMalloc(ctx, runtime, T2_pos_parent, T2_pos_size, FID_RECT_1, READ_WRITE);
   T2_pos_accessor = createAccessor<AccessorRWRect_1_1>(T2_pos, FID_RECT_1);
@@ -211,7 +203,6 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   T2_crd = legionMalloc(ctx, runtime, T2_crd_parent, T2_crd_size, FID_COORD, READ_WRITE);
   T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, FID_COORD);
   int64_t jT = 0;
-  DomainT<1> T3_pos_domain = runtime->get_index_space_domain(ctx, T3_pos.get_index_space());
   int64_t T3_pos_size = 1;
   T3_pos = legionMalloc(ctx, runtime, T3_pos_parent, T3_pos_size, FID_RECT_1, READ_WRITE);
   T3_pos_accessor = createAccessor<AccessorRWRect_1_1>(T3_pos, FID_RECT_1);
@@ -230,9 +221,9 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   int64_t pTCOO1_end = TCOO1_pos_accessor[Point<1>(0)].hi + 1;
 
   while (iTCOO < pTCOO1_end) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     int64_t TCOO1_segend = iTCOO + 1;
-    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
+    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[TCOO1_segend] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
     int64_t pT2_begin = jT;
@@ -246,9 +237,9 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
     int64_t pTCOO2_end = (TCOO1_segend - 1) + 1;
 
     while (jTCOO < pTCOO2_end) {
-      int64_t j = TCOO2_crd_accessor[(jTCOO * 1 + 0)];
+      int64_t j = TCOO2_crd_accessor[jTCOO];
       int64_t TCOO2_segend = jTCOO + 1;
-      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[(TCOO2_segend * 1 + 0)] == j) {
+      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[TCOO2_segend] == j) {
         TCOO2_segend = TCOO2_segend + 1;
       }
       int64_t pT3_begin = kT;
@@ -259,7 +250,7 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
       }
 
       for (int64_t kTCOO = jTCOO; kTCOO < ((TCOO2_segend - 1) + 1); kTCOO++) {
-        int64_t k = TCOO3_crd_accessor[(kTCOO * 1 + 0)];
+        int64_t k = TCOO3_crd_accessor[kTCOO];
         if (T_capacity <= kT) {
           T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
           T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
@@ -271,7 +262,7 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
           T3_crd_accessor = createAccessor<AccessorRWint32_t1>(T3_crd, FID_COORD);
           T3_crd_size = T3_crd_size * 2;
         }
-        T3_crd_accessor[kT * 1] = k;
+        T3_crd_accessor[kT] = k;
         kT = kT + 1;
       }
 
@@ -283,7 +274,7 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
           T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, FID_COORD);
           T2_crd_size = T2_crd_size * 2;
         }
-        T2_crd_accessor[jT * 1] = j;
+        T2_crd_accessor[jT] = j;
         jT = jT + 1;
       }
       jTCOO = TCOO2_segend;
@@ -297,7 +288,7 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
         T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
         T1_crd_size = T1_crd_size * 2;
       }
-      T1_crd_accessor[iT * 1] = i;
+      T1_crd_accessor[iT] = i;
       iT = iT + 1;
     }
     iTCOO = TCOO1_segend;
@@ -306,7 +297,7 @@ void packLegionCOOToSSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
   T1_pos_accessor[Point<1>(0)].hi = iT - 1;
 
-  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, 0));
   T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
 
   T->indices[1][0] = getSubRegion(ctx, runtime, T2_pos_parent, Rect<1>(0, (iT - 1)));
@@ -374,11 +365,7 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
-  int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
-  int64_t T3Size = runtime->get_index_space_domain(ctx, get_index_space(T3_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
   DomainT<1> T2_pos_domain = runtime->get_index_space_domain(ctx, T2_pos.get_index_space());
   T2_pos = legionMalloc(ctx, runtime, T2_pos, T2_pos_parent, FID_RECT_1, READ_WRITE);
@@ -391,7 +378,6 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   T2_crd = legionMalloc(ctx, runtime, T2_crd_parent, T2_crd_size, FID_COORD, READ_WRITE);
   T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, FID_COORD);
   int64_t jT = 0;
-  DomainT<1> T3_pos_domain = runtime->get_index_space_domain(ctx, T3_pos.get_index_space());
   int64_t T3_pos_size = 1;
   T3_pos = legionMalloc(ctx, runtime, T3_pos_parent, T3_pos_size, FID_RECT_1, READ_WRITE);
   T3_pos_accessor = createAccessor<AccessorRWRect_1_1>(T3_pos, FID_RECT_1);
@@ -408,21 +394,20 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   int64_t pTCOO1_end = TCOO1_pos_accessor[Point<1>(0)].hi + 1;
 
   while (iTCOO < pTCOO1_end) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     int64_t TCOO1_segend = iTCOO + 1;
-    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
+    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[TCOO1_segend] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
-    int64_t iT = i;
     int64_t pT2_begin = jT;
 
     int64_t jTCOO = iTCOO;
     int64_t pTCOO2_end = (TCOO1_segend - 1) + 1;
 
     while (jTCOO < pTCOO2_end) {
-      int64_t j = TCOO2_crd_accessor[(jTCOO * 1 + 0)];
+      int64_t j = TCOO2_crd_accessor[jTCOO];
       int64_t TCOO2_segend = jTCOO + 1;
-      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[(TCOO2_segend * 1 + 0)] == j) {
+      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[TCOO2_segend] == j) {
         TCOO2_segend = TCOO2_segend + 1;
       }
       int64_t pT3_begin = kT;
@@ -433,7 +418,7 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
       }
 
       for (int64_t kTCOO = jTCOO; kTCOO < ((TCOO2_segend - 1) + 1); kTCOO++) {
-        int64_t k = TCOO3_crd_accessor[(kTCOO * 1 + 0)];
+        int64_t k = TCOO3_crd_accessor[kTCOO];
         if (T_capacity <= kT) {
           T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
           T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
@@ -445,7 +430,7 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
           T3_crd_accessor = createAccessor<AccessorRWint32_t1>(T3_crd, FID_COORD);
           T3_crd_size = T3_crd_size * 2;
         }
-        T3_crd_accessor[kT * 1] = k;
+        T3_crd_accessor[kT] = k;
         kT = kT + 1;
       }
 
@@ -457,7 +442,7 @@ void packLegionCOOToDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
           T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, FID_COORD);
           T2_crd_size = T2_crd_size * 2;
         }
-        T2_crd_accessor[jT * 1] = j;
+        T2_crd_accessor[jT] = j;
         jT = jT + 1;
       }
       jTCOO = TCOO2_segend;
@@ -534,7 +519,6 @@ void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
 
   IndexSpace T3_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<2>((TCOO1_dimension - 1), (TCOO2_dimension - 1))));
@@ -644,7 +628,6 @@ void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
 }
 
 void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
-  int T2_dimension = T->dims[1];
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
   RegionWrapper T3_pos = T->indices[2][0];
@@ -687,13 +670,8 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
-  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
-  int64_t T3Size = runtime->get_index_space_domain(ctx, get_index_space(T3_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
-  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
   T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
   T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
   T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
@@ -720,9 +698,9 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   int64_t pTCOO1_end = TCOO1_pos_accessor[Point<1>(0)].hi + 1;
 
   while (iTCOO < pTCOO1_end) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     int64_t TCOO1_segend = iTCOO + 1;
-    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
+    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[TCOO1_segend] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
     if (T3_pos_size <= iT) {
@@ -738,16 +716,15 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
     int64_t pTCOO2_end = (TCOO1_segend - 1) + 1;
 
     while (jTCOO < pTCOO2_end) {
-      int64_t j = TCOO2_crd_accessor[(jTCOO * 1 + 0)];
+      int64_t j = TCOO2_crd_accessor[jTCOO];
       int64_t TCOO2_segend = jTCOO + 1;
-      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[(TCOO2_segend * 1 + 0)] == j) {
+      while (TCOO2_segend < pTCOO2_end && TCOO2_crd_accessor[TCOO2_segend] == j) {
         TCOO2_segend = TCOO2_segend + 1;
       }
-      int64_t jT = iT * T2_dimension + j;
       int64_t pT3_begin = kT;
 
       for (int64_t kTCOO = jTCOO; kTCOO < ((TCOO2_segend - 1) + 1); kTCOO++) {
-        int64_t k = TCOO3_crd_accessor[(kTCOO * 1 + 0)];
+        int64_t k = TCOO3_crd_accessor[kTCOO];
         if (T_capacity <= kT) {
           T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
           T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
@@ -759,7 +736,7 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
           T3_crd_accessor = createAccessor<AccessorRWint32_t1>(T3_crd, FID_COORD);
           T3_crd_size = T3_crd_size * 2;
         }
-        T3_crd_accessor[kT * 1] = k;
+        T3_crd_accessor[kT] = k;
         kT = kT + 1;
       }
 
@@ -771,7 +748,7 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
       T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
       T1_crd_size = T1_crd_size * 2;
     }
-    T1_crd_accessor[iT * 1] = i;
+    T1_crd_accessor[iT] = i;
     iT = iT + 1;
     iTCOO = TCOO1_segend;
   }
@@ -779,7 +756,7 @@ void packLegionCOOToSDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
   T1_pos_accessor[Point<1>(0)].hi = iT - 1;
 
-  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, 0));
   T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
 
   runtime->unmap_region(ctx, T3_pos);
@@ -849,13 +826,8 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
-  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
-  int64_t T2Size = runtime->get_index_space_domain(ctx, get_index_space(T2_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
-  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
   T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
   T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
   T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
@@ -863,7 +835,6 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
   T1_crd = legionMalloc(ctx, runtime, T1_crd_parent, T1_crd_size, FID_COORD, READ_WRITE);
   T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
   int64_t iT = 0;
-  DomainT<1> T2_pos_domain = runtime->get_index_space_domain(ctx, T2_pos.get_index_space());
   int64_t T2_pos_size = 1;
   T2_pos = legionMalloc(ctx, runtime, T2_pos_parent, T2_pos_size, FID_RECT_1, READ_WRITE);
   T2_pos_accessor = createAccessor<AccessorRWRect_1_1>(T2_pos, FID_RECT_1);
@@ -882,9 +853,9 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
   int64_t pTCOO1_end = TCOO1_pos_accessor[Point<1>(0)].hi + 1;
 
   while (iTCOO < pTCOO1_end) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     int64_t TCOO1_segend = iTCOO + 1;
-    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
+    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[TCOO1_segend] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
     int64_t pT2_begin = jT;
@@ -895,7 +866,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
     }
 
     for (int64_t jTCOO = iTCOO; jTCOO < ((TCOO1_segend - 1) + 1); jTCOO++) {
-      int64_t j = TCOO2_crd_accessor[(jTCOO * 1 + 0)];
+      int64_t j = TCOO2_crd_accessor[jTCOO];
       if (T_capacity <= jT) {
         T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
         T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
@@ -907,7 +878,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
         T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, FID_COORD);
         T2_crd_size = T2_crd_size * 2;
       }
-      T2_crd_accessor[jT * 1] = j;
+      T2_crd_accessor[jT] = j;
       jT = jT + 1;
     }
 
@@ -919,7 +890,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
         T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
         T1_crd_size = T1_crd_size * 2;
       }
-      T1_crd_accessor[iT * 1] = i;
+      T1_crd_accessor[iT] = i;
       iT = iT + 1;
     }
     iTCOO = TCOO1_segend;
@@ -928,7 +899,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
   T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
   T1_pos_accessor[Point<1>(0)].hi = iT - 1;
 
-  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, 0));
   T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
 
   T->indices[1][0] = getSubRegion(ctx, runtime, T2_pos_parent, Rect<1>(0, (iT - 1)));
@@ -980,12 +951,8 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
-  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
-  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
   T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
   T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
   T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
@@ -1003,9 +970,9 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
   int64_t pTCOO1_end = TCOO1_pos_accessor[Point<1>(0)].hi + 1;
 
   while (iTCOO < pTCOO1_end) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     int64_t TCOO1_segend = iTCOO + 1;
-    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[(TCOO1_segend * 1)] == i) {
+    while (TCOO1_segend < pTCOO1_end && TCOO1_crd_accessor[TCOO1_segend] == i) {
       TCOO1_segend = TCOO1_segend + 1;
     }
     if (T_capacity <= iT) {
@@ -1019,8 +986,7 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
     }
 
     for (int64_t jTCOO = iTCOO; jTCOO < ((TCOO1_segend - 1) + 1); jTCOO++) {
-      int64_t j = TCOO2_crd_accessor[(jTCOO * 1 + 0)];
-      int64_t jT = iT * T2_dimension + j;
+      int64_t j = TCOO2_crd_accessor[jTCOO];
       T_vals_rw_accessor[Point<2>(iT, j)] = TCOO_vals_ro_accessor[Point<1>(jTCOO)];
     }
     if (T1_crd_size <= iT) {
@@ -1028,7 +994,7 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
       T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
       T1_crd_size = T1_crd_size * 2;
     }
-    T1_crd_accessor[iT * 1] = i;
+    T1_crd_accessor[iT] = i;
     iT = iT + 1;
     iTCOO = TCOO1_segend;
   }
@@ -1036,7 +1002,7 @@ void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTens
   T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
   T1_pos_accessor[Point<1>(0)].hi = iT - 1;
 
-  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, 0));
   T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
 
   T->vals = getSubRegion(ctx, runtime, T_vals_parent, Rect<1>(0, (iT - 1)));
@@ -1085,7 +1051,6 @@ void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  DomainT<1> TCOO1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd));
 
 
   IndexSpace T2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((TCOO2_dimension - 1))));
@@ -1199,10 +1164,7 @@ void packLegionCOOToVec(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   TCOO_vals = legionMalloc(ctx, runtime, TCOO_vals, TCOO_vals_parent, FID_VAL, READ_ONLY);
   TCOO_vals_ro_accessor = createAccessor<AccessorROdouble1>(TCOO_vals, FID_VAL);
 
-  int64_t T1Size = runtime->get_index_space_domain(ctx, get_index_space(T1_crd)).hi()[0] + 1;
-  int64_t TCOO1Size = runtime->get_index_space_domain(ctx, get_index_space(TCOO1_crd)).hi()[0] + 1;
 
-  DomainT<1> T1_pos_domain = runtime->get_index_space_domain(ctx, T1_pos.get_index_space());
   T1_pos = legionMalloc(ctx, runtime, T1_pos_parent, 1, FID_RECT_1, READ_WRITE);
   T1_pos_accessor = createAccessor<AccessorRWRect_1_1>(T1_pos, FID_RECT_1);
   T1_pos_accessor[Point<1>(0)] = Rect<1>(0, -1);
@@ -1217,7 +1179,7 @@ void packLegionCOOToVec(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   int64_t pT1_begin = iT;
 
   for (int64_t iTCOO = TCOO1_pos_accessor[Point<1>(0)].lo; iTCOO < (TCOO1_pos_accessor[Point<1>(0)].hi + 1); iTCOO++) {
-    int64_t i = TCOO1_crd_accessor[(iTCOO * 1)];
+    int64_t i = TCOO1_crd_accessor[iTCOO];
     if (T_capacity <= iT) {
       T_vals = legionRealloc(ctx, runtime, T_vals_parent, T_vals, T_capacity * 2, FID_VAL, READ_WRITE);
       T_vals_rw_accessor = createAccessor<AccessorRWdouble1>(T_vals, FID_VAL);
@@ -1229,14 +1191,14 @@ void packLegionCOOToVec(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
       T1_crd_accessor = createAccessor<AccessorRWint32_t1>(T1_crd, FID_COORD);
       T1_crd_size = T1_crd_size * 2;
     }
-    T1_crd_accessor[iT * 1] = i;
+    T1_crd_accessor[iT] = i;
     iT = iT + 1;
   }
 
   T1_pos_accessor[Point<1>(0)].lo = pT1_begin;
   T1_pos_accessor[Point<1>(0)].hi = iT - 1;
 
-  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, (1 - 1)));
+  T->indices[0][0] = getSubRegion(ctx, runtime, T1_pos_parent, Rect<1>(0, 0));
   T->indices[0][1] = getSubRegion(ctx, runtime, T1_crd_parent, Rect<1>(0, (iT - 1)));
 
   T->vals = getSubRegion(ctx, runtime, T_vals_parent, Rect<1>(0, (iT - 1)));
