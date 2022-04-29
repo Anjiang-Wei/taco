@@ -91,6 +91,7 @@ enum class TensorProperty {
   ValuesParent,
   ValuesSize,
   IndexSpace,
+  ValuesFieldID,
   ValuesReadAccessor,
   ValuesWriteAccessor,
   ValuesReductionAccessor,
@@ -98,6 +99,7 @@ enum class TensorProperty {
   DenseLevelRun,
   // TODO (rohany): Not sure if I need a read or write accessor distinction here. I probably will
   //  need a write accessor, but I doubt a reduction accessor will be necessary.
+  IndicesFieldID,
   IndicesAccessor,
 };
 
@@ -986,6 +988,7 @@ struct GetProperty : public ExprNode<GetProperty> {
                    int index, std::string name);
   static Expr makeDenseLevelRun(Expr tensor, int index);
   static Expr makeIndicesAccessor(Expr tensor, std::string nameBase, int mode, int index, AccessorArgs args);
+  static Expr makeIndicesFieldID(Expr tensor, std::string nameBase, int mode, int index);
 
   Hashable toHashable() const;
 

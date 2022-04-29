@@ -478,5 +478,6 @@ Datatype Vector(Datatype elemType) {
 Datatype UniquePtr(Datatype elemType) {
   return Datatype("std::unique_ptr<" + util::toString(elemType) + ">");
 }
+Datatype FieldID = Datatype("Legion::FieldID");
 
 }

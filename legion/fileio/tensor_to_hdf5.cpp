@@ -32,7 +32,7 @@ enum TaskIDs {
 enum FieldIDs {
   FID_DIM,
   FID_VALUE,
-  FID_COORD, // This must be the last defined field.
+  FID_COORDINATE, // This must be the last defined field.
 };
 
 static size_t numIntsToCompare = 0;
@@ -328,7 +328,7 @@ void readHDF5Coords(const Task* task, const std::vector<PhysicalRegion> &regions
   // Create an accessor for each of the fields corresponding to coordinates.
   std::vector<AccessorI> coords;
   for (size_t i = 0; i < order; i++) {
-    coords.push_back(AccessorI(region, FID_COORD + i));
+    coords.push_back(AccessorI(region, FID_COORDINATE + i));
   }
 
   // Create an accessor for the values.
@@ -345,7 +345,7 @@ void readHDF5Coords(const Task* task, const std::vector<PhysicalRegion> &regions
 std::vector<FieldID> fieldIDs(int order) {
   std::vector<FieldID> result;
   for (int i = 0; i < order; i++) {
-    result.push_back(FID_COORD + i);
+    result.push_back(FID_COORDINATE + i);
   }
   result.push_back(FID_VALUE);
   return result;

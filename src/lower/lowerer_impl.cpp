@@ -864,9 +864,10 @@ LowererImpl::lower(IndexStmt stmt, string name,
           auto tv = acc->tensor;
           auto values = ir::GetProperty::make(tv, TensorProperty::Values);
           auto valuesParent = ir::GetProperty::make(tv, TensorProperty::ValuesParent);
-          auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, fidVal, readOnly}, Auto);
+          auto valsFID = ir::GetProperty::make(tv, TensorProperty::ValuesFieldID);
+          auto alloc = ir::Call::make("legionMalloc", {ctx, runtime, values, valuesParent, valsFID, readOnly}, Auto);
           mallocRhsRegions.push_back(ir::Assign::make(values, alloc));
-          mallocRhsRegions.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, values, fidVal)));
+          mallocRhsRegions.push_back(ir::Assign::make(acc, ir::makeCreateAccessor(acc, values, valsFID)));
         } else if (acc->property == TensorProperty::IndicesAccessor) {
           auto region = acc->accessorArgs.regionAccessing;
           auto regionParent = acc->accessorArgs.regionParent;
@@ -2390,7 +2391,11 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
           auto rcmf = posIter.getMode().getModeFormat().as<RectCompressedModeFormat>();
           auto pack = posIter.getMode().getModePack();
           auto crdParent = rcmf->getRegion(pack, RectCompressedModeFormat::CRD_PARENT);
-          auto crdAcc = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO).as<ir::GetProperty>();
+          // For some reason, I need to extract the crdAccRaw into a variable before
+          // calling `as` on it. If I don't, the resulting pointer seems to have lost
+          // the dynamic type information.
+          auto crdAccRaw = rcmf->getAccessor(pack, RectCompressedModeFormat::CRD, ir::RO);
+          auto crdAcc = crdAccRaw.as<ir::GetProperty>();
           auto crdField = crdAcc->accessorArgs.field;
           auto crdPart = tensorLogicalPartitions[posTensor][posLevel][1];
           createDenseRunPart = ir::MethodCall::make(sparseGatherProjection, "apply", maybeAddPartColor(
@@ -4187,7 +4192,7 @@ Stmt LowererImpl::lowerAssemble(Assemble assemble) {
           if (acc->property == TensorProperty::ValuesWriteAccessor) {
             region = ir::GetProperty::make(acc->tensor, TensorProperty::Values);
             regionParent = ir::GetProperty::make(acc->tensor, TensorProperty::ValuesParent);
-            field = fidVal;
+            field = ir::GetProperty::make(acc->tensor, TensorProperty::ValuesFieldID);
             priv = readWrite;
           } else if (acc->property == TensorProperty::IndicesAccessor) {
             auto args = acc->accessorArgs;
@@ -4583,9 +4588,10 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
           // TODO (rohany): This allocation should be scaled so that it doesn't allocate too much
           //  memory for a multi-dimensional allocation.
           // Allocate a new values array, and update the accessor.
-          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, fidVal, readWrite));
+          auto valsFid = ir::GetProperty::make(tensor, TensorProperty::ValuesFieldID);
+          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, valsFid, readWrite));
           auto valsAcc = this->getValuesArray(write.getTensorVar());
-          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {valuesArr, fidVal}, Auto);
+          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {valuesArr, valsFid}, Auto);
           initArrays.push_back(ir::Assign::make(valsAcc, newValsAcc));
         } else {
           initArrays.push_back(Allocate::make(valuesArr, capacityVar, false /* is_realloc */, Expr() /* old_elements */,
@@ -4686,6 +4692,7 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     Expr tensor = getTensorVar(write.getTensorVar());
     Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
     Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
+    Expr valsFID = GetProperty::make(tensor, TensorProperty::ValuesFieldID);
     if (this->legion) {
       auto field = ir::FieldAccess::make(this->tensorVars[write.getTensorVar()], "vals", true /* isDeref*/, Auto);
       // If the vals region is multi-dimensional, then the deepest sparse level will
@@ -4699,7 +4706,7 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     if (!generateComputeCode()) {
       // Allocate memory for values array after assembly if not also computing
       if (this->legion) {
-        result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, fidVal, readWrite));
+        result.push_back(makeLegionMalloc(valuesArr, parentSize, valuesArr, valsFID, readWrite));
       } else {
         result.push_back(Allocate::make(valuesArr, parentSize, false /* is_realloc */, Expr() /* old_elements */,
                                             clearValuesAllocation));
@@ -4811,15 +4818,16 @@ Stmt LowererImpl::initResultArrays(IndexVar var, vector<Access> writes,
         // Resize values array if not large enough
         Expr capacityVar = getCapacityVar(tensor);
         Expr size = simplify(ir::Mul::make(resultParentPosNext, stride));
+        Expr valsFID = GetProperty::make(tensor, TensorProperty::ValuesFieldID);
 
         if (this->legion) {
           auto valsAcc = this->getValuesArray(write.getTensorVar());
-          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
+          auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, valsFID}, Auto);
           // resultParentPos is the position variable of the deepest sparse level
           // above the values array. This position will always be the first index
           // into the values array, so we use that instead of the multiplication-based
           // size variable.
-          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc), readWrite));
+          result.push_back(lgAtLeastDoubleSizeIfFull(values, capacityVar, resultParentPos, valuesParent, values, valsFID, ir::Assign::make(valsAcc, newValsAcc), readWrite));
         } else {
           result.push_back(atLeastDoubleSizeIfFull(values, capacityVar, size));
         }
@@ -4871,14 +4879,15 @@ Stmt LowererImpl::resizeAndInitValues(const std::vector<Iterator>& appenders,
     taco_iassert(tv.defined());
     Expr values = GetProperty::make(tensor, TensorProperty::Values);
     Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
+    Expr valsFID = GetProperty::make(tensor, TensorProperty::ValuesFieldID);
     Expr capacity = getCapacityVar(appender.getTensor());
     Expr pos = appender.getIteratorVar();
 
     if (generateAssembleCode()) {
       if (this->legion) {
         auto valsAcc = this->getValuesArray(tv);
-        auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, fidVal}, Auto);
-        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, valuesParent, values, fidVal, ir::Assign::make(valsAcc, newValsAcc), readWrite));
+        auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {values, valsFID}, Auto);
+        result.push_back(lgDoubleSizeIfFull(values, capacity, pos, valuesParent, values, valsFID, ir::Assign::make(valsAcc, newValsAcc), readWrite));
       } else {
         result.push_back(doubleSizeIfFull(values, capacity, pos));
       }
@@ -6420,7 +6429,7 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
       };
     }
     req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
-    req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
+    req = ir::MethodCall::make(req, "add_field", {ir::GetProperty::make(tvIR, TensorProperty::ValuesFieldID)}, false /* deref */, Auto);
     regionReqs.push_back(req);
 
     // Remember the order in which we are packing regions.
@@ -6455,7 +6464,15 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
       };
     }
     auto req = ir::makeConstructor(RegionRequirement, regionReqArgs);
-    req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
+    // Query results use fidVal as their values field, while normal tensors we can look up
+    // into the tensor metadata to find it.
+    ir::Expr valsField;
+    if (util::contains(this->assembleQueryResults, tv)) {
+      valsField = fidVal;
+    } else {
+      valsField = ir::GetProperty::make(vals, TensorProperty::ValuesFieldID);
+    }
+    req = ir::MethodCall::make(req, "add_field", {valsField}, false /* deref */, Auto);
     regionReqs.push_back(req);
 
     packedTensorData.push_back(vals);
@@ -6772,7 +6789,7 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
       };
     }
     req = ir::makeConstructor(RegionRequirement, maybeAddTag(regionReqArgs, tag));
-    req = ir::MethodCall::make(req, "add_field", {fidVal}, false /* deref */, Auto);
+    req = ir::MethodCall::make(req, "add_field", {ir::GetProperty::make(tvIR, TensorProperty::ValuesFieldID)}, false /* deref */, Auto);
     regionReqs.push_back(req);
 
     // Remember the order in which we are packing regions.

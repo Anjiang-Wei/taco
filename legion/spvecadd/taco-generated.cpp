@@ -10,7 +10,12 @@ typedef FieldAccessor<READ_WRITE,double,1,coord_t,Realm::AffineAccessor<double,1
 typedef FieldAccessor<READ_ONLY,int32_t,1,coord_t,Realm::AffineAccessor<int32_t,1,coord_t>> AccessorROint32_t1;
 
 struct task_1Args {
+  Legion::FieldID a_vals_field_id;
   int64_t b1_dimension;
+  Legion::FieldID b1_indices_field_id_0_1;
+  Legion::FieldID b_vals_field_id;
+  Legion::FieldID c1_indices_field_id_0_1;
+  Legion::FieldID c_vals_field_id;
   int32_t pieces;
 };
 
@@ -24,11 +29,15 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto b1_pos_parent = b->indicesParents[0][0];
   auto b1_crd_parent = b->indicesParents[0][1];
   RegionWrapper b_vals = b->vals;
+  auto b1_indices_field_id_0_0 = b->indicesFieldIDs[0][0];
+  auto b1_indices_field_id_0_1 = b->indicesFieldIDs[0][1];
   RegionWrapper c1_pos = c->indices[0][0];
   RegionWrapper c1_crd = c->indices[0][1];
   auto c1_pos_parent = c->indicesParents[0][0];
   auto c1_crd_parent = c->indicesParents[0][1];
   RegionWrapper c_vals = c->vals;
+  auto c1_indices_field_id_0_0 = c->indicesFieldIDs[0][0];
+  auto c1_indices_field_id_0_1 = c->indicesFieldIDs[0][1];
 
 
   Point<1> lowerBound = Point<1>(0);
@@ -73,11 +82,11 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     runtime,
     b1_crd,
     b1_crd_parent,
-    FID_COORD,
+    b1_indices_field_id_0_1,
     bColoring,
     ioIndexSpace
   );
-  IndexPartition posSparsePartb1 = runtime->create_partition_by_preimage_range(ctx, b1_crd_part.get_index_partition(), b1_pos, b1_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, b1_crd_part.get_index_partition()));
+  IndexPartition posSparsePartb1 = runtime->create_partition_by_preimage_range(ctx, b1_crd_part.get_index_partition(), b1_pos, b1_pos_parent, b1_indices_field_id_0_0, runtime->get_index_partition_color_space_name(ctx, b1_crd_part.get_index_partition()));
   IndexPartition posIndexPartb1 = densifyPartition(ctx, runtime, get_index_space(b1_pos), posSparsePartb1);
   Legion::LogicalPartition posPartb1 = runtime->get_logical_partition(ctx, b1_pos, posIndexPartb1);
   auto b_vals_partition = copyPartition(ctx, runtime, b1_crd_part, get_logical_region(b_vals));
@@ -86,11 +95,11 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     runtime,
     c1_crd,
     c1_crd_parent,
-    FID_COORD,
+    c1_indices_field_id_0_1,
     cColoring,
     ioIndexSpace
   );
-  IndexPartition posSparsePartc1 = runtime->create_partition_by_preimage_range(ctx, c1_crd_part.get_index_partition(), c1_pos, c1_pos_parent, FID_RECT_1, runtime->get_index_partition_color_space_name(ctx, c1_crd_part.get_index_partition()));
+  IndexPartition posSparsePartc1 = runtime->create_partition_by_preimage_range(ctx, c1_crd_part.get_index_partition(), c1_pos, c1_pos_parent, c1_indices_field_id_0_0, runtime->get_index_partition_color_space_name(ctx, c1_crd_part.get_index_partition()));
   IndexPartition posIndexPartc1 = densifyPartition(ctx, runtime, get_index_space(c1_pos), posSparsePartc1);
   Legion::LogicalPartition posPartc1 = runtime->get_logical_partition(ctx, c1_pos, posIndexPartc1);
   auto c_vals_partition = copyPartition(ctx, runtime, c1_crd_part, get_logical_region(c_vals));
@@ -131,14 +140,19 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
   int64_t io = task->index_point[0];
   task_1Args* args = (task_1Args*)(task->args);
+  Legion::FieldID a_vals_field_id = args->a_vals_field_id;
   int64_t b1_dimension = args->b1_dimension;
+  Legion::FieldID b1_indices_field_id_0_1 = args->b1_indices_field_id_0_1;
+  Legion::FieldID b_vals_field_id = args->b_vals_field_id;
+  Legion::FieldID c1_indices_field_id_0_1 = args->c1_indices_field_id_0_1;
+  Legion::FieldID c_vals_field_id = args->c_vals_field_id;
   int32_t pieces = args->pieces;
 
-  auto b_vals_ro_accessor = createAccessor<AccessorROdouble1>(b_vals, FID_VAL);
-  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, FID_VAL);
-  auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, FID_VAL);
-  auto b1_crd_accessor = createAccessor<AccessorROint32_t1>(b1_crd, FID_COORD);
-  auto c1_crd_accessor = createAccessor<AccessorROint32_t1>(c1_crd, FID_COORD);
+  auto b_vals_ro_accessor = createAccessor<AccessorROdouble1>(b_vals, b_vals_field_id);
+  auto c_vals_ro_accessor = createAccessor<AccessorROdouble1>(c_vals, c_vals_field_id);
+  auto a_vals_rw_accessor = createAccessor<AccessorRWdouble1>(a_vals, a_vals_field_id);
+  auto b1_crd_accessor = createAccessor<AccessorROint32_t1>(b1_crd, b1_indices_field_id_0_1);
+  auto c1_crd_accessor = createAccessor<AccessorROint32_t1>(c1_crd, c1_indices_field_id_0_1);
 
   DomainT<1> b1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(b1_crd));
   DomainT<1> c1_crd_domain = runtime->get_index_space_domain(ctx, get_index_space(c1_crd));
@@ -244,13 +258,20 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
   auto a_vals_parent = a->valsParent;
+  auto a_vals_field_id = a->valsFieldID;
   int b1_dimension = b->dims[0];
   auto b1_pos_parent = b->indicesParents[0][0];
   auto b1_crd_parent = b->indicesParents[0][1];
   auto b_vals_parent = b->valsParent;
+  auto b_vals_field_id = b->valsFieldID;
+  auto b1_indices_field_id_0_0 = b->indicesFieldIDs[0][0];
+  auto b1_indices_field_id_0_1 = b->indicesFieldIDs[0][1];
   auto c1_pos_parent = c->indicesParents[0][0];
   auto c1_crd_parent = c->indicesParents[0][1];
   auto c_vals_parent = c->valsParent;
+  auto c_vals_field_id = c->valsFieldID;
+  auto c1_indices_field_id_0_0 = c->indicesFieldIDs[0][0];
+  auto c1_indices_field_id_0_1 = c->indicesFieldIDs[0][1];
 
 
   Point<1> lowerBound = Point<1>(0);
@@ -258,17 +279,22 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto ioIndexSpace = runtime->create_index_space(ctx, Rect<1>(lowerBound, upperBound));
   DomainT<1> domain = runtime->get_index_space_domain(ctx, IndexSpaceT<1>(ioIndexSpace));
   task_1Args taskArgsRaw1;
+  taskArgsRaw1.a_vals_field_id = a_vals_field_id;
   taskArgsRaw1.b1_dimension = b1_dimension;
+  taskArgsRaw1.b1_indices_field_id_0_1 = b1_indices_field_id_0_1;
+  taskArgsRaw1.b_vals_field_id = b_vals_field_id;
+  taskArgsRaw1.c1_indices_field_id_0_1 = c1_indices_field_id_0_1;
+  taskArgsRaw1.c_vals_field_id = c_vals_field_id;
   taskArgsRaw1.pieces = pieces;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw1, sizeof(task_1Args));
   IndexLauncher launcher = IndexLauncher(taskID(1), domain, taskArgs, ArgumentMap());
-  launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, a_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(b1_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_RECT_1));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(b1_crd_parent)).add_field(FID_COORD));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, b_vals_parent).add_field(FID_VAL));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(FID_RECT_1));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_crd_parent)).add_field(FID_COORD));
-  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(FID_VAL));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->aPartition.valsPartition, 0, READ_WRITE, EXCLUSIVE, a_vals_parent).add_field(a_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(b1_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(b1_indices_field_id_0_0));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(b1_crd_parent)).add_field(b1_indices_field_id_0_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->bPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, b_vals_parent).add_field(b_vals_field_id));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][0], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_pos_parent), Mapping::DefaultMapper::VIRTUAL_MAP).add_field(c1_indices_field_id_0_0));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.indicesPartitions[0][1], 0, READ_ONLY, EXCLUSIVE, get_logical_region(c1_crd_parent)).add_field(c1_indices_field_id_0_1));
+  launcher.add_region_requirement(RegionRequirement(partitionPack->cPartition.valsPartition, 0, READ_ONLY, EXCLUSIVE, c_vals_parent).add_field(c_vals_field_id));
   launcher.tag = launcher.tag | TACOMapper::UNTRACK_VALID_REGIONS;
   runtime->execute_index_space(ctx, launcher);
 

@@ -29,8 +29,12 @@ struct LegionTensor {
   // Construct for a LegionTensor that explicitly sets all necessary fields.
   LegionTensor(LegionTensorFormat format, int32_t order, std::vector<int32_t> dims,
                std::vector<std::vector<Legion::LogicalRegion>> indices,
-               std::vector<std::vector<Legion::LogicalRegion>> indicesParents, Legion::LogicalRegion vals,
-               Legion::LogicalRegion valsParent, std::vector<Legion::IndexSpace> denseLevelRuns);
+               std::vector<std::vector<Legion::LogicalRegion>> indicesParents,
+               std::vector<std::vector<Legion::FieldID>> indicesFieldIDs,
+               Legion::LogicalRegion vals,
+               Legion::LogicalRegion valsParent,
+               Legion::FieldID valsFieldID,
+               std::vector<Legion::IndexSpace> denseLevelRuns);
 
   // The number of modes the tensor has.
   int32_t order;
@@ -44,10 +48,15 @@ struct LegionTensor {
   // that we can pass the region to child tasks and partitioning operators that need to
   // read the regions.
   std::vector<std::vector<Legion::LogicalRegion>> indicesParents;
+  // FieldIDs to access each of the indices regions with. This vector should
+  // have parallel structure with the indices vector.
+  std::vector<std::vector<Legion::FieldID>> indicesFieldIDs;
 
   // We have a vals region just like the taco_tensor_t, and also must maintain its parent.
   Legion::LogicalRegion vals;
   Legion::LogicalRegion valsParent;
+  // FieldID that the values are stored in.
+  Legion::FieldID valsFieldID;
 
   // denseLevelRuns is a set of index spaces corresponding to each run of dense
   // levels in the tensor. It is used to create partitions of the dense levels
@@ -126,6 +135,7 @@ LegionTensor createDenseTensor(Legion::Context ctx, Legion::Runtime* runtime, st
   LegionTensor result(LegionTensorFormat(DIM, Dense), dims);
   result.vals = reg;
   result.valsParent = reg;
+  result.valsFieldID = valsField;
   result.denseLevelRuns = {ispaceCopy};
   return result;
 }
@@ -227,6 +237,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
         auto crdReg = runtime->create_logical_region(ctx, crdIspace, crdFspace);
         result.indices[level] = {posReg, crdReg};
         result.indicesParents[level] = {posReg, crdReg};
+        result.indicesFieldIDs[level] = {posField, crdField};
 
         // Fill the regions as well.
         runtime->fill_field(ctx, posReg, posReg, posField, Legion::Rect<1>(0, 0));
@@ -256,6 +267,7 @@ LegionTensor createSparseTensorForPack(Legion::Context ctx, Legion::Runtime* run
   auto vals = runtime->create_logical_region(ctx, valsIspace, valFspace);
   result.vals = vals;
   result.valsParent = vals;
+  result.valsFieldID = valsField;
   runtime->fill_field(ctx, vals, vals, valsField, T(0));
 
   // Make sure the last dense run is added to the tensor.
@@ -326,6 +338,7 @@ LegionTensor copyNonZeroStructure(Legion::Context ctx, Legion::Runtime* runtime,
         result.indicesParents[level].push_back(posReg);
         result.indices[level].push_back(crdReg);
         result.indicesParents[level].push_back(crdReg);
+        result.indicesFieldIDs[level] = src.indicesFieldIDs[level];
 
         // Now copy the regions over from the source into the destination.
         // For simplicity, we'll assert that some partitions of the source tensor
@@ -372,6 +385,7 @@ LegionTensor copyNonZeroStructure(Legion::Context ctx, Legion::Runtime* runtime,
   auto vals = runtime->create_logical_region(ctx, valsIspace, src.vals.get_field_space());
   result.vals = vals;
   result.valsParent = vals;
+  result.valsFieldID = src.valsFieldID;
   runtime->fill_field(ctx, vals, vals, getField(vals), T(0));
   return result;
 }

@@ -6,6 +6,7 @@
 
 #include "legion.h"
 #include "legion_tensor.h"
+#include "taco_legion_header.h"
 
 // Constants for coordinate list HDF5 storage.
 const char* const COODimsField = "dims";
@@ -57,7 +58,7 @@ const char* const LegionTensorValsField = "vals";
 void dumpLegionTensorToHDF5File(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor &t, std::string &filename);
 // TODO (rohany): Template this over the value type?
 std::pair<LegionTensor, ExternalHDF5LegionTensor>
-loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename, LegionTensorFormat format);
+loadLegionTensorFromHDF5File(Legion::Context ctx, Legion::Runtime *runtime, std::string &filename, LegionTensorFormat format, Legion::FieldID posField = FID_RECT_1, Legion::FieldID crdField = FID_COORD, Legion::FieldID valsField = FID_VAL);
 
 // Registration function that must be called during initialization if any hdf5_utils task are to be used.
 void registerHDF5UtilTasks();
