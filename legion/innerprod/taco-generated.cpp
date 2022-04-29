@@ -36,15 +36,15 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   DomainPointColoring cColoring = DomainPointColoring();
   for (PointInDomainIterator<1> itr = PointInDomainIterator<1>(domain); itr.valid(); itr++) {
     int64_t in = (*itr)[0];
-    Point<3> bStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), (0 % b2_dimension), 0);
-    Point<3> bEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), bDomain.hi()[0]), TACO_MIN(((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension - 1) % b2_dimension), bDomain.hi()[1]), TACO_MIN(b3_dimension, bDomain.hi()[2]));
+    Point<3> bStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), 0, 0);
+    Point<3> bEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), bDomain.hi()[0]), TACO_MIN(b2_dimension, bDomain.hi()[1]), TACO_MIN(b3_dimension, bDomain.hi()[2]));
     Rect<3> bRect = Rect<3>(bStart, bEnd);
     if (!bDomain.contains(bRect.lo) || !bDomain.contains(bRect.hi)) {
       bRect = bRect.make_empty();
     }
     bColoring[(*itr)] = bRect;
-    Point<3> cStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), (0 % b2_dimension), 0);
-    Point<3> cEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), cDomain.hi()[0]), TACO_MIN(((((b1_dimension + (pieces - 1)) / pieces) * b2_dimension - 1) % b2_dimension), cDomain.hi()[1]), TACO_MIN(b3_dimension, cDomain.hi()[2]));
+    Point<3> cStart = Point<3>((in * ((b1_dimension + (pieces - 1)) / pieces)), 0, 0);
+    Point<3> cEnd = Point<3>(TACO_MIN((in * ((b1_dimension + (pieces - 1)) / pieces) + ((b1_dimension + (pieces - 1)) / pieces - 1)), cDomain.hi()[0]), TACO_MIN(b2_dimension, cDomain.hi()[1]), TACO_MIN(b3_dimension, cDomain.hi()[2]));
     Rect<3> cRect = Rect<3>(cStart, cEnd);
     if (!cDomain.contains(cRect.lo) || !cDomain.contains(cRect.hi)) {
       cRect = cRect.make_empty();

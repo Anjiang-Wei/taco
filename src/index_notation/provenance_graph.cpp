@@ -1811,6 +1811,17 @@ std::pair<bool, IndexVar> ProvenanceGraph::getStaggeredVar(IndexVar indexVar) co
   return std::make_pair(false, IndexVar());
 }
 
+bool ProvenanceGraph::isFused(IndexVar indexVar) const {
+  auto children = this->getChildren(indexVar);
+  if (!children.empty()) {
+    auto rel = this->childRelMap.at(indexVar);
+    if (rel.getRelType() == FUSE) {
+      return true;
+    }
+  }
+  return false;
+}
+
 ir::Expr ProvenanceGraph::getPartitionColorSpaceVar() const {
   return this->partitionColorSpace;
 }

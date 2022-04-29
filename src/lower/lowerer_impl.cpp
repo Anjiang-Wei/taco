@@ -650,6 +650,16 @@ LowererImpl::lower(IndexStmt stmt, string name,
     void visit(const AccessNode* node) {
       // For each variable of the access, find its bounds.
       for (auto& var : node->indexVars) {
+        // Variables that have been directly fused are problematic for us. To handle
+        // this somewhat un-gracefully, we'll just say that any variable that has
+        // been fused will extend its full iteration bounds (which is true!). This
+        // encapsulates us from future splitting and dividing that may happen to
+        // the fused variable, for which it is hard to say what the bounds on
+        // the variables have been fused together are.
+        if (this->pg.isFused(var)) {
+          this->derivedBounds[node->tensorVar].push_back(this->pg.deriveIterBounds(var, this->definedIndexVars, this->underivedBounds, this->indexVarToExprMap, this->iterators));
+          continue;
+        }
         auto children = this->pg.getChildren(var);
         // If the index variable has no children, then it is a raw access.
         if (children.size() == 0) {
@@ -7088,7 +7098,6 @@ void LowererImpl::BoundsInferenceExprRewriter::visit(const Var* var) {
     // If this ivar is in scope of the request, then access along it is fixed.
     expr = var;
   } else {
-
     // If a variable being derived is not even going to be present in the loop
     // (i.e. a variable that we split again), then we might want to expand it
     // into the variables that derive it. However, if neither of those variables
