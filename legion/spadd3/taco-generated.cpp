@@ -50,7 +50,7 @@ struct task_1Args {
 
 
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, int32_t pieces) {
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
@@ -70,6 +70,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
   auto D2_indices_field_id_1_0 = D->indicesFieldIDs[1][0];
   RegionWrapper A2_nnz_vals;
+
+  auto computePartitions = partitionPackForcomputeLegion();
 
 
   IndexSpace A2_nnzispace = runtime->create_index_space(ctx, createSimpleDomain(Point<1>((B1_dimension - 1))));
@@ -134,7 +136,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   Legion::LogicalPartition posPartD2 = copyPartition(ctx, runtime, D_dense_run_0_Partition, D2_pos);
   Legion::LogicalPartition crdPartD2 = runtime->get_logical_partition(ctx, D2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, D2_crd.get_index_space(), posPartD2, D2_pos_parent, D2_indices_field_id_1_0));
   auto D_vals_partition = copyPartition(ctx, runtime, crdPartD2, get_logical_region(D_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
@@ -550,7 +551,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   auto A2_indices_field_id_1_0 = A->indicesFieldIDs[1][0];
   auto A2_indices_field_id_1_1 = A->indicesFieldIDs[1][1];
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;

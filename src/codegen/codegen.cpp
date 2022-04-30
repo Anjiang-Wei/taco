@@ -236,7 +236,7 @@ string CodeGen::printTensorProperty(string varname, const GetProperty* op, bool 
   // for a Fixed level, ptr is an int
   // all others are int*
   if (op->property == TensorProperty::Dimension) {
-    tp = "int" + star;
+    tp = "size_t " + star;
     ret << tp << " " << varname;
   } else {
     taco_iassert(op->property == TensorProperty::Indices);

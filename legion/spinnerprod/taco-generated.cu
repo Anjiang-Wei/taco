@@ -46,7 +46,7 @@ struct task_2Args {
 
 
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, LegionTensor* C, int32_t pieces) {
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   RegionWrapper B3_pos = B->indices[2][0];
@@ -68,6 +68,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto C2_indices_field_id_1_0 = C->indicesFieldIDs[1][0];
   auto C3_indices_field_id_2_0 = C->indicesFieldIDs[2][0];
 
+  auto computePartitions = partitionPackForcomputeLegion();
 
 
   Point<1> lowerBound = Point<1>(0);
@@ -135,7 +136,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     C3_indices_field_id_2_0
   ));
   auto C_vals_partition = copyPartition(ctx, runtime, crdPartC3, get_logical_region(C_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
   computePartitions.BPartition.indicesPartitions[1].push_back(posPartB2);
@@ -157,7 +157,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 }
 
 __global__
-void task_1DeviceKernel0(double* bufPtr, AccessorRORect_1_1 B2_pos_accessor, AccessorRORect_1_1 C2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 C2_crd_accessor, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 C3_pos_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorROint32_t1 C3_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 C_vals_ro_accessor, int64_t B1_dimension, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B3_indices_field_id_2_0, Legion::FieldID B3_indices_field_id_2_1, Legion::FieldID B_vals_field_id, Legion::FieldID C2_indices_field_id_1_0, Legion::FieldID C2_indices_field_id_1_1, Legion::FieldID C3_indices_field_id_2_0, Legion::FieldID C3_indices_field_id_2_1, Legion::FieldID C_vals_field_id, double a_val, int32_t pieces, int64_t io) {
+void task_1DeviceKernel0(double* bufPtr, int64_t io, int64_t pointID1, AccessorRORect_1_1 B2_pos_accessor, AccessorRORect_1_1 C2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 C2_crd_accessor, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 C3_pos_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorROint32_t1 C3_crd_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble1 C_vals_ro_accessor, int64_t B1_dimension, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B3_indices_field_id_2_0, Legion::FieldID B3_indices_field_id_2_1, Legion::FieldID B_vals_field_id, Legion::FieldID C2_indices_field_id_1_0, Legion::FieldID C2_indices_field_id_1_1, Legion::FieldID C3_indices_field_id_2_0, Legion::FieldID C3_indices_field_id_2_1, Legion::FieldID C_vals_field_id, double a_val, int32_t pieces) {
 
   int64_t block = blockIdx.x;
   int64_t thread = (threadIdx.x % (256));
@@ -165,7 +165,7 @@ void task_1DeviceKernel0(double* bufPtr, AccessorRORect_1_1 B2_pos_accessor, Acc
     return;
   }
 
-  int64_t pointID2 = io * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
+  int64_t pointID2 = pointID1 * (((B1_dimension + (pieces - 1)) / pieces + 255) / 256) + block;
   double tthreada_val = 0.0;
   int64_t ii = block * 256 + thread;
   int64_t i = io * ((B1_dimension + (pieces - 1)) / pieces) + ii;
@@ -256,12 +256,13 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
   auto B3_crd_accessor = createAccessor<AccessorROint32_t1>(B3_crd, B3_indices_field_id_2_1);
   auto C3_crd_accessor = createAccessor<AccessorROint32_t1>(C3_crd, C3_indices_field_id_2_1);
 
+  int64_t pointID1 = io + TACO_PARTITION_COLOR_OFFSET;
   double init = 0;
   Legion::DeferredBuffer<double, 1> buf = Legion::DeferredBuffer<double, 1>(Legion::Memory::Kind::GPU_FB_MEM, DomainT<1>(Rect<1>(0, 0)), &(init));
   double* bufPtr = buf.ptr(0);
 
   if ((((B1_dimension + (pieces - 1)) / pieces + 255) / 256) > 0) {
-    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), 256>>>(bufPtr, B2_pos_accessor, C2_pos_accessor, B2_crd_accessor, C2_crd_accessor, B3_pos_accessor, C3_pos_accessor, B3_crd_accessor, C3_crd_accessor, B_vals_ro_accessor, C_vals_ro_accessor, B1_dimension, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B3_indices_field_id_2_0, B3_indices_field_id_2_1, B_vals_field_id, C2_indices_field_id_1_0, C2_indices_field_id_1_1, C3_indices_field_id_2_0, C3_indices_field_id_2_1, C_vals_field_id, a_val, pieces, io);
+    task_1DeviceKernel0<<<(((B1_dimension + (pieces - 1)) / pieces + 255) / 256), 256>>>(bufPtr, io, pointID1, B2_pos_accessor, C2_pos_accessor, B2_crd_accessor, C2_crd_accessor, B3_pos_accessor, C3_pos_accessor, B3_crd_accessor, C3_crd_accessor, B_vals_ro_accessor, C_vals_ro_accessor, B1_dimension, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B3_indices_field_id_2_0, B3_indices_field_id_2_1, B_vals_field_id, C2_indices_field_id_1_0, C2_indices_field_id_1_1, C3_indices_field_id_2_0, C3_indices_field_id_2_1, C_vals_field_id, a_val, pieces);
   }
 
   cudaMemcpy(&(a_val), bufPtr, sizeof(a_val), cudaMemcpyHostToDevice);
@@ -269,7 +270,7 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
 }
 
 double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B3_pos_parent = B->indicesParents[2][0];
@@ -331,8 +332,8 @@ double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor
 }
 
 partitionPackForcomputeLegionDDS partitionForcomputeLegionDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, LegionTensor* C, int32_t pieces, int32_t pieces2) {
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
   RegionWrapper B3_pos = B->indices[2][0];
   RegionWrapper B3_crd = B->indices[2][1];
   auto B3_pos_parent = B->indicesParents[2][0];
@@ -346,6 +347,7 @@ partitionPackForcomputeLegionDDS partitionForcomputeLegionDDS(Legion::Context ct
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
   auto C3_indices_field_id_2_0 = C->indicesFieldIDs[2][0];
 
+  auto computePartitions = partitionPackForcomputeLegionDDS();
 
 
   Point<2> lowerBound = Point<2>(0, 0);
@@ -396,7 +398,6 @@ partitionPackForcomputeLegionDDS partitionForcomputeLegionDDS(Legion::Context ct
     C3_indices_field_id_2_0
   ));
   auto C_vals_partition = copyPartition(ctx, runtime, crdPartC3, get_logical_region(C_vals));
-  auto computePartitions = partitionPackForcomputeLegionDDS();
   computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
   computePartitions.BPartition.indicesPartitions[2].push_back(posPartB3);
@@ -496,7 +497,8 @@ double task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
 
   int64_t io = getIndexPoint(task, 0);
   int64_t jo = getIndexPoint(task, 1);
-  int64_t pointID2 = io * pieces2 + jo;
+  int64_t pointID1 = io + TACO_PARTITION_COLOR_OFFSET;
+  int64_t pointID2 = pointID1 * pieces2 + jo;
   double init = 0;
   Legion::DeferredBuffer<double, 1> buf = Legion::DeferredBuffer<double, 1>(Legion::Memory::Kind::GPU_FB_MEM, DomainT<1>(Rect<1>(0, 0)), &(init));
   double* bufPtr = buf.ptr(0);
@@ -510,8 +512,8 @@ double task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
 }
 
 double computeLegionDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegionDDS* partitionPack, int32_t pieces, int32_t pieces2) {
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
   auto B3_pos_parent = B->indicesParents[2][0];
   auto B3_crd_parent = B->indicesParents[2][1];
   auto B_vals_parent = B->valsParent;

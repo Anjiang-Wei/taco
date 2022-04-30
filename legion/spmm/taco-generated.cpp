@@ -26,14 +26,16 @@ struct task_1Args {
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, int32_t gx) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   auto B2_pos_parent = B->indicesParents[1][0];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
+
+  auto computePartitions = partitionPackForcomputeLegion();
 
 
   Point<1> lowerBound = Point<1>(0);
@@ -68,7 +70,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   Legion::LogicalPartition posPartB2 = copyPartition(ctx, runtime, B_dense_run_0_Partition, B2_pos);
   Legion::LogicalPartition crdPartB2 = runtime->get_logical_partition(ctx, B2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, B2_crd.get_index_space(), posPartB2, B2_pos_parent, B2_indices_field_id_1_0));
   auto B_vals_partition = copyPartition(ctx, runtime, crdPartB2, get_logical_region(B_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.valsPartition = A_vals_partition;
@@ -133,14 +134,14 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, partitionPackForcomputeLegion* partitionPack, int32_t gx) {
   auto A_vals_parent = A->valsParent;
   auto A_vals_field_id = A->valsFieldID;
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B_vals_parent = B->valsParent;
   auto B_vals_field_id = B->valsFieldID;
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B2_indices_field_id_1_1 = B->indicesFieldIDs[1][1];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
   auto C_vals_field_id = C->valsFieldID;

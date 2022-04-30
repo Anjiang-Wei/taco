@@ -53,7 +53,7 @@ partitionPackForcomputeLegionDSS partitionForcomputeLegionDSS(Legion::Context ct
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
   auto A2_indices_field_id_1_0 = A->indicesFieldIDs[1][0];
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   RegionWrapper B2_pos = B->indices[1][0];
   RegionWrapper B2_crd = B->indices[1][1];
   RegionWrapper B3_pos = B->indices[2][0];
@@ -64,6 +64,8 @@ partitionPackForcomputeLegionDSS partitionForcomputeLegionDSS(Legion::Context ct
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B3_indices_field_id_2_0 = B->indicesFieldIDs[2][0];
+
+  auto computePartitions = partitionPackForcomputeLegionDSS();
 
 
   Point<1> lowerBound = Point<1>(0);
@@ -102,7 +104,6 @@ partitionPackForcomputeLegionDSS partitionForcomputeLegionDSS(Legion::Context ct
   Legion::LogicalPartition posPartA2 = copyPartition(ctx, runtime, A_dense_run_0_Partition, A2_pos);
   Legion::LogicalPartition crdPartA2 = runtime->get_logical_partition(ctx, A2_crd, RectCompressedPosPartitionDownwards::apply(ctx, runtime, A2_crd.get_index_space(), posPartA2, A2_pos_parent, A2_indices_field_id_1_0));
   auto A_vals_partition = copyPartition(ctx, runtime, crdPartA2, get_logical_region(A_vals));
-  auto computePartitions = partitionPackForcomputeLegionDSS();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.indicesPartitions[1].push_back(posPartA2);
@@ -184,7 +185,7 @@ void computeLegionDSS(Legion::Context ctx, Legion::Runtime* runtime, LegionTenso
   auto A_vals_field_id = A->valsFieldID;
   auto A2_indices_field_id_1_0 = A->indicesFieldIDs[1][0];
   auto A2_indices_field_id_1_1 = A->indicesFieldIDs[1][1];
-  int B1_dimension = B->dims[0];
+  size_t B1_dimension = B->dims[0];
   auto B2_pos_parent = B->indicesParents[1][0];
   auto B2_crd_parent = B->indicesParents[1][1];
   auto B3_pos_parent = B->indicesParents[2][0];
@@ -245,6 +246,8 @@ partitionPackForcomputeLegionDSSPosSplit partitionForcomputeLegionDSSPosSplit(Le
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B3_indices_field_id_2_0 = B->indicesFieldIDs[2][0];
 
+  auto computePartitions = partitionPackForcomputeLegionDSSPosSplit();
+
   int64_t B3Size = runtime->get_index_space_domain(ctx, get_index_space(B3_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
@@ -265,12 +268,28 @@ partitionPackForcomputeLegionDSSPosSplit partitionForcomputeLegionDSSPosSplit(Le
   }
   IndexPartition B3_crd_index_part = runtime->create_index_partition(ctx, B3_crd.get_index_space(), domain, B3_crd_coloring, LEGION_COMPUTE_KIND);
   Legion::LogicalPartition B3_crd_part = runtime->get_logical_partition(ctx, B3_crd, B3_crd_index_part);
-  IndexPartition posSparsePartB3 = runtime->create_partition_by_preimage_range(ctx, B3_crd_index_part, B3_pos, B3_pos_parent, B3_indices_field_id_2_0, runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part));
+  IndexPartition posSparsePartB3 = runtime->create_partition_by_preimage_range(
+    ctx,
+    B3_crd_index_part,
+    B3_pos,
+    B3_pos_parent,
+    B3_indices_field_id_2_0,
+    runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part),
+    LEGION_ALIASED_INCOMPLETE_KIND
+  );
   IndexPartition posIndexPartB3 = densifyPartition(ctx, runtime, get_index_space(B3_pos), posSparsePartB3);
   Legion::LogicalPartition posPartB3 = runtime->get_logical_partition(ctx, B3_pos, posIndexPartB3);
   Legion::LogicalPartition BValsLogicalPart = copyPartition(ctx, runtime, B3_crd_part, B_vals);
   Legion::LogicalPartition crdPartB2 = copyPartition(ctx, runtime, posPartB3, B2_crd);
-  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(ctx, crdPartB2.get_index_partition(), B2_pos, B2_pos_parent, B2_indices_field_id_1_0, runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition()));
+  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(
+    ctx,
+    crdPartB2.get_index_partition(),
+    B2_pos,
+    B2_pos_parent,
+    B2_indices_field_id_1_0,
+    runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition()),
+    LEGION_ALIASED_INCOMPLETE_KIND
+  );
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   Legion::LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
@@ -278,7 +297,6 @@ partitionPackForcomputeLegionDSSPosSplit partitionForcomputeLegionDSSPosSplit(Le
   Legion::LogicalPartition posPartA2 = copyPartition(ctx, runtime, posPartB2, A2_pos_parent);
   Legion::LogicalPartition crdPartA2 = copyPartition(ctx, runtime, crdPartB2, A2_crd_parent);
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
-  auto computePartitions = partitionPackForcomputeLegionDSSPosSplit();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.indicesPartitions[1].push_back(posPartA2);
@@ -447,6 +465,8 @@ partitionPackForcomputeLegionDSSPartialPosSplit partitionForcomputeLegionDSSPart
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B3_indices_field_id_2_0 = B->indicesFieldIDs[2][0];
 
+  auto computePartitions = partitionPackForcomputeLegionDSSPartialPosSplit();
+
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
@@ -467,7 +487,15 @@ partitionPackForcomputeLegionDSSPartialPosSplit partitionForcomputeLegionDSSPart
   }
   IndexPartition B2_crd_index_part = runtime->create_index_partition(ctx, B2_crd.get_index_space(), domain, B2_crd_coloring, LEGION_COMPUTE_KIND);
   Legion::LogicalPartition B2_crd_part = runtime->get_logical_partition(ctx, B2_crd, B2_crd_index_part);
-  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(ctx, B2_crd_index_part, B2_pos, B2_pos_parent, B2_indices_field_id_1_0, runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part));
+  IndexPartition posSparsePartB2 = runtime->create_partition_by_preimage_range(
+    ctx,
+    B2_crd_index_part,
+    B2_pos,
+    B2_pos_parent,
+    B2_indices_field_id_1_0,
+    runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part),
+    LEGION_ALIASED_INCOMPLETE_KIND
+  );
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   Legion::LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
   Legion::LogicalPartition posPartB3 = copyPartition(ctx, runtime, B2_crd_part, B3_pos);
@@ -478,7 +506,6 @@ partitionPackForcomputeLegionDSSPartialPosSplit partitionForcomputeLegionDSSPart
   Legion::LogicalPartition posPartA2 = copyPartition(ctx, runtime, posPartB2, A2_pos_parent);
   Legion::LogicalPartition crdPartA2 = copyPartition(ctx, runtime, B2_crd_part, A2_crd_parent);
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
-  auto computePartitions = partitionPackForcomputeLegionDSSPartialPosSplit();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.indicesPartitions[1].push_back(posPartA2);

@@ -49,8 +49,8 @@ struct task_5Args {
 
 
 Legion::LogicalPartition partitionLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, int32_t gridX) {
-  int A1_dimension = A->dims[0];
-  int A2_dimension = A->dims[1];
+  size_t A1_dimension = A->dims[0];
+  size_t A2_dimension = A->dims[1];
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
 
@@ -76,9 +76,9 @@ Legion::LogicalPartition partitionLegionA(Legion::Context ctx, Legion::Runtime* 
 }
 
 Legion::LogicalPartition partitionLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, int32_t gridX, int32_t gridY, int32_t gridZ) {
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
-  int B3_dimension = B->dims[2];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
+  size_t B3_dimension = B->dims[2];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
 
@@ -106,8 +106,8 @@ Legion::LogicalPartition partitionLegionB(Legion::Context ctx, Legion::Runtime* 
 }
 
 Legion::LogicalPartition partitionLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* C, int32_t gridY) {
-  int C1_dimension = C->dims[0];
-  int C2_dimension = C->dims[1];
+  size_t C1_dimension = C->dims[0];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
 
@@ -133,8 +133,8 @@ Legion::LogicalPartition partitionLegionC(Legion::Context ctx, Legion::Runtime* 
 }
 
 Legion::LogicalPartition partitionLegionD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* D, int32_t gridZ) {
-  int D1_dimension = D->dims[0];
-  int D2_dimension = D->dims[1];
+  size_t D1_dimension = D->dims[0];
+  size_t D2_dimension = D->dims[1];
   RegionWrapper D_vals = D->vals;
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
 
@@ -160,10 +160,12 @@ Legion::LogicalPartition partitionLegionD(Legion::Context ctx, Legion::Runtime* 
 }
 
 partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, int32_t gridX) {
-  int A1_dimension = A->dims[0];
-  int A2_dimension = A->dims[1];
+  size_t A1_dimension = A->dims[0];
+  size_t A2_dimension = A->dims[1];
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
+
+  auto computePartitions = partitionPackForplaceLegionA();
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), 0, 0);
@@ -183,7 +185,6 @@ partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legio
   }
   auto A_dense_run_0_Partition = runtime->create_index_partition(ctx, A_dense_run_0, domain, AColoring, LEGION_COMPUTE_KIND);
   auto A_vals_partition = copyPartition(ctx, runtime, A_dense_run_0_Partition, get_logical_region(A_vals));
-  auto computePartitions = partitionPackForplaceLegionA();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.valsPartition = A_vals_partition;
@@ -233,11 +234,13 @@ void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A
 }
 
 partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B, int32_t gridX, int32_t gridY, int32_t gridZ) {
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
-  int B3_dimension = B->dims[2];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
+  size_t B3_dimension = B->dims[2];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
+
+  auto computePartitions = partitionPackForplaceLegionB();
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), (gridY - 1), (gridZ - 1));
@@ -259,7 +262,6 @@ partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legio
   }
   auto B_dense_run_0_Partition = runtime->create_index_partition(ctx, B_dense_run_0, domain, BColoring, LEGION_COMPUTE_KIND);
   auto B_vals_partition = copyPartition(ctx, runtime, B_dense_run_0_Partition, get_logical_region(B_vals));
-  auto computePartitions = partitionPackForplaceLegionB();
   computePartitions.BPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
   computePartitions.BPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
   computePartitions.BPartition.valsPartition = B_vals_partition;
@@ -302,10 +304,12 @@ void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* B
 }
 
 partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* C, int32_t gridY) {
-  int C1_dimension = C->dims[0];
-  int C2_dimension = C->dims[1];
+  size_t C1_dimension = C->dims[0];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
+
+  auto computePartitions = partitionPackForplaceLegionC();
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>(0, (gridY - 1), 0);
@@ -325,7 +329,6 @@ partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legio
   }
   auto C_dense_run_0_Partition = runtime->create_index_partition(ctx, C_dense_run_0, domain, CColoring, LEGION_COMPUTE_KIND);
   auto C_vals_partition = copyPartition(ctx, runtime, C_dense_run_0_Partition, get_logical_region(C_vals));
-  auto computePartitions = partitionPackForplaceLegionC();
   computePartitions.CPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.CPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.CPartition.valsPartition = C_vals_partition;
@@ -375,10 +378,12 @@ void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* C
 }
 
 partitionPackForplaceLegionD partitionForplaceLegionD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* D, int32_t gridZ) {
-  int D1_dimension = D->dims[0];
-  int D2_dimension = D->dims[1];
+  size_t D1_dimension = D->dims[0];
+  size_t D2_dimension = D->dims[1];
   RegionWrapper D_vals = D->vals;
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
+
+  auto computePartitions = partitionPackForplaceLegionD();
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>(0, 0, (gridZ - 1));
@@ -398,7 +403,6 @@ partitionPackForplaceLegionD partitionForplaceLegionD(Legion::Context ctx, Legio
   }
   auto D_dense_run_0_Partition = runtime->create_index_partition(ctx, D_dense_run_0, domain, DColoring, LEGION_COMPUTE_KIND);
   auto D_vals_partition = copyPartition(ctx, runtime, D_dense_run_0_Partition, get_logical_region(D_vals));
-  auto computePartitions = partitionPackForplaceLegionD();
   computePartitions.DPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.DPartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.DPartition.valsPartition = D_vals_partition;
@@ -450,16 +454,18 @@ void placeLegionD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* D
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* A, LegionTensor* B, LegionTensor* C, LegionTensor* D, int32_t gridX, int32_t gridY, int32_t gridZ) {
   RegionWrapper A_vals = A->vals;
   IndexSpace A_dense_run_0 = A->denseLevelRuns[0];
-  int B1_dimension = B->dims[0];
-  int B2_dimension = B->dims[1];
-  int B3_dimension = B->dims[2];
+  size_t B1_dimension = B->dims[0];
+  size_t B2_dimension = B->dims[1];
+  size_t B3_dimension = B->dims[2];
   RegionWrapper B_vals = B->vals;
   IndexSpace B_dense_run_0 = B->denseLevelRuns[0];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
   RegionWrapper D_vals = D->vals;
   IndexSpace D_dense_run_0 = D->denseLevelRuns[0];
+
+  auto computePartitions = partitionPackForcomputeLegion();
 
   Point<3> lowerBound = Point<3>(0, 0, 0);
   Point<3> upperBound = Point<3>((gridX - 1), (gridY - 1), (gridZ - 1));
@@ -514,7 +520,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto C_vals_partition = copyPartition(ctx, runtime, C_dense_run_0_Partition, get_logical_region(C_vals));
   auto D_dense_run_0_Partition = runtime->create_index_partition(ctx, D_dense_run_0, domain, DColoring, LEGION_COMPUTE_KIND);
   auto D_vals_partition = copyPartition(ctx, runtime, D_dense_run_0_Partition, get_logical_region(D_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.valsPartition = A_vals_partition;

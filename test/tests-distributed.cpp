@@ -1789,11 +1789,13 @@ TEST(distributed, legionSpMM) {
   IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"), iii("iii");
   A(i, j) = B(i, k) * C(k, j);
   auto stmt = A.getAssignment().concretize();
+  // TODO (rohany): Add the memory conserving SpMM schedule.
   auto cpuStmt = stmt.reorder({i, k, j})
-                  .distribute({i}, {io}, {ii}, Grid(gx))
-                  .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
-                  .communicate({A(i, j), B(i, k), C(k, j)}, io)
-                  ;
+                      .distribute({i}, {io}, {ii}, Grid(gx))
+                      .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+                      .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                      ;
+
   IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
            warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
            dense_ub("dense_ub"), dense_b("dense_b");
