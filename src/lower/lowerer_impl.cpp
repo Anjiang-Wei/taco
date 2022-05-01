@@ -655,8 +655,11 @@ LowererImpl::lower(IndexStmt stmt, string name,
         // been fused will extend its full iteration bounds (which is true!). This
         // encapsulates us from future splitting and dividing that may happen to
         // the fused variable, for which it is hard to say what the bounds on
-        // the variables have been fused together are.
-        if (this->pg.isFused(var)) {
+        // the variables have been fused together are. We also need to do the same thing
+        // for when a variable has been converted to iterate over the position space.
+        // In this case, a variable could take a value anywhere in its domain, so we
+        // can't bound it at all.
+        if (this->pg.isFused(var) || this->pg.hasPosDescendant(var)) {
           this->derivedBounds[node->tensorVar].push_back(this->pg.deriveIterBounds(var, this->definedIndexVars, this->underivedBounds, this->indexVarToExprMap, this->iterators));
           continue;
         }
@@ -1940,8 +1943,8 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     Expr rhs;
     if (i == 0) {
       // In the first level of the iteration, the iteration space identifier is
-      // the variable itself.
-      rhs = this->indexVarToExprMap[this->definedIndexVarsExpanded[i]];
+      // the variable itself, offset by an initial value..
+      rhs = ir::Add::make(this->indexVarToExprMap[this->definedIndexVarsExpanded[i]], ir::Symbol::make("TACO_PARTITION_COLOR_OFFSET"));
     } else {
       // Otherwise, we construct the variable from the prior level iteration space point.
       auto var = this->indexVarToExprMap[this->definedIndexVarsExpanded[i]];
@@ -2650,7 +2653,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
       // First, instantiate an instance of the struct in a pointer.
       auto structPack = ir::Var::make("computePartitions", Auto);
-      returnPartitionStatements.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
+      this->header.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
 
       for (auto& t : this->tensorVarOrdering) {
         auto tensor = this->tensorVars[t];
@@ -5727,11 +5730,11 @@ Expr LowererImpl::projectCanonicalSpaceToWindowedPosition(Iterator iterator, ir:
 }
 
 bool LowererImpl::anyParentInSet(IndexVar var, std::set<IndexVar>& s) {
+  if (util::contains(s, var)) {
+    return true;
+  }
   auto children = this->provGraph.getChildren(var);
   for (auto c : children) {
-    if (util::contains(s, c)) {
-      return true;
-    }
     if (anyParentInSet(c, s)) {
       return true;
     }
@@ -5927,6 +5930,13 @@ std::vector<ir::Stmt> LowererImpl::createDomainPointColorings(
       if (this->anyParentInSet(ivar, this->varsInScope[this->curDistVar])) {
         hasPartitioningVar = true;
       }
+      // We also should generate partitions for the tensor if it is partitioned
+      // by any variables that have been defined. We can't look at varsInScope here
+      // because it's possible that some variables have been defined before we hit
+      // the first distributed variable.
+      if (this->anyParentInSet(ivar, this->definedIndexVars)) {
+        hasPartitioningVar = true;
+      }
     }
     if (!hasPartitioningVar && !(this->isPlacementCode || this->isPartitionCode)) {
       fullyReplicatedTensors.insert(t.getAccess().getTensorVar());
@@ -6051,6 +6061,16 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     size_t partitionedVars = t.getAccess().getIndexVars().size() - aliasingVarsCount;
     if (partitionedVars < distIvars.size()) {
       partKind = computePart;
+    }
+
+    // If we're partitioned by variables outside of the current distributed loop,
+    // then our partition is likely not complete.
+    auto definedVars = this->definedIndexVars;
+    definedVars.erase(this->curDistVar);
+    for (auto ivar : t.getAccess().getIndexVars()) {
+      if (this->anyParentInSet(ivar, definedVars)) {
+        partKind = computePart;
+      }
     }
 
     // If none of the variables in the access are changing in this loop, then we're

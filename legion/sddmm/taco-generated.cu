@@ -42,6 +42,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   RegionWrapper C_vals = C->vals;
   IndexSpace C_dense_run_0 = C->denseLevelRuns[0];
 
+  auto computePartitions = partitionPackForcomputeLegion();
+
   int64_t B2Size = runtime->get_index_space_domain(ctx, get_index_space(B2_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
@@ -68,7 +70,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     B2_pos,
     B2_pos_parent,
     B2_indices_field_id_1_0,
-    runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part)
+    runtime->get_index_partition_color_space_name(ctx, B2_crd_index_part),
+    LEGION_ALIASED_INCOMPLETE_KIND
   );
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   Legion::LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
@@ -80,7 +83,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   IndexPartition ADenseRun0Partition = copyPartition(ctx, runtime, posPartA2, A_dense_run_0);
   IndexPartition CDenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, C_dense_run_0);
   auto C_vals_partition = copyPartition(ctx, runtime, CDenseRun0Partition, get_logical_region(C_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.indicesPartitions[1].push_back(posPartA2);
@@ -102,7 +104,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 }
 
 __global__
-void task_1DeviceKernel0(int64_t B2Size, int64_t* i_blockStarts, int32_t pieces, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorRWdouble1 A_vals_rw_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, AccessorROdouble2 D_vals_ro_accessor, Legion::FieldID A_vals_field_id, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B_vals_field_id, int64_t C2_dimension, Legion::FieldID C_vals_field_id, Legion::FieldID D_vals_field_id, int64_t fposo) {
+void task_1DeviceKernel0(int64_t B2Size, int64_t fposo, int64_t* i_blockStarts, int32_t pieces, int64_t pointID1, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorRWdouble1 A_vals_rw_accessor, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, AccessorROdouble2 D_vals_ro_accessor, Legion::FieldID A_vals_field_id, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B_vals_field_id, int64_t C2_dimension, Legion::FieldID C_vals_field_id, Legion::FieldID D_vals_field_id) {
 
   int64_t block = blockIdx.x;
   int64_t thread = (threadIdx.x % (32));
@@ -111,7 +113,7 @@ void task_1DeviceKernel0(int64_t B2Size, int64_t* i_blockStarts, int32_t pieces,
     return;
   }
 
-  int64_t pointID2 = fposo * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + block;
+  int64_t pointID2 = pointID1 * (((B2Size + (pieces - 1)) / pieces + 2047) / 2048) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
   int64_t pB2_begin = i_blockStarts[block];
   int64_t pB2_end = i_blockStarts[(block + 1)];
@@ -200,8 +202,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     (((B2Size + (pieces - 1)) / pieces + 2047) / 2048),
     B2CrdDomain.bounds.lo
   );
-  if (((((B2Size + (pieces - 1)) / pieces + 2047) / 2048)) > 0) {
-    task_1DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, i_blockStarts, pieces, B2_pos_accessor, B2_crd_accessor, A_vals_rw_accessor, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, A_vals_field_id, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B_vals_field_id, C2_dimension, C_vals_field_id, D_vals_field_id, fposo);
+  int64_t pointID1 = fposo + TACO_PARTITION_COLOR_OFFSET;
+  if ((((B2Size + (pieces - 1)) / pieces + 2047) / 2048) > 0) {
+    task_1DeviceKernel0<<<(((B2Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B2Size, fposo, i_blockStarts, pieces, pointID1, B2_pos_accessor, B2_crd_accessor, A_vals_rw_accessor, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, A_vals_field_id, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B_vals_field_id, C2_dimension, C_vals_field_id, D_vals_field_id);
   }
 }
 
@@ -219,7 +222,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B_vals_field_id = B->valsFieldID;
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B2_indices_field_id_1_1 = B->indicesFieldIDs[1][1];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   auto C_vals_parent = C->valsParent;
   auto C_vals_field_id = C->valsFieldID;
   RegionWrapper D_vals = D->vals;

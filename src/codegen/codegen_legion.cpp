@@ -16,8 +16,7 @@ std::string CodegenLegion::unpackTensorProperty(std::string varname, const GetPr
 //    tp = "int";
 //    ret << tp << " " << varname << " = runtime->get_index_space_domain(get_index_space(" << tensor->name <<
 //        ")).hi()[" << op->mode << "] + 1;\n";
-    // TODO (rohany): Does this need to be an int64?
-    ret << "int " << varname << " = " << tensor->name << "->dims[" << op->mode << "];\n";
+    ret << "size_t " << varname << " = " << tensor->name << "->dims[" << op->mode << "];\n";
   } else if (op->property == TensorProperty::IndexSpace) {
     tp = "auto";
     ret << tp << " " << varname << " = get_index_space(" << tensor->name << ");\n";

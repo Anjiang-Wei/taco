@@ -54,29 +54,26 @@ bool Datatype::isComplex() const {
 Datatype max_type(Datatype a, Datatype b) {
   if (a == b) {
     return a;
-  }
-  else if (a.isComplex() || b.isComplex()) {
+  } else if (a.getKind() == Datatype::CppType || b.getKind() == Datatype::CppType) {
+    return Datatype::CppType;
+  } else if (a.isComplex() || b.isComplex()) {
     if (a == Complex128 || b == Complex128 || a == Float64 || b == Float64) {
       return Complex128;
     }
     else {
       return Complex64;
     }
-  }
-  else if(a.isFloat() || b.isFloat()) {
+  } else if (a.isFloat() || b.isFloat()) {
     if (a == Float64 || b == Float64) {
       return Float64;
-    }
-    else {
+    } else {
       return Float32;
     }
-  }
-  else {
-    if(a.isInt() || b.isInt()) {
+  } else {
+    if (a.isInt() || b.isInt()) {
       return Int((a.getNumBits() > b.getNumBits())
                  ? a.getNumBits() : b.getNumBits());
-    }
-    else {
+    } else {
       return UInt((a.getNumBits() > b.getNumBits())
                   ? a.getNumBits() : b.getNumBits());
     }

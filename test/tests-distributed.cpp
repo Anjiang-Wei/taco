@@ -1786,15 +1786,35 @@ TEST(distributed, legionSpMM) {
   Tensor<double> B("B", {dim, dim}, LgFormat({Dense, LgSparse}));
   Tensor<double> C("C", {dim, dim}, Format{Dense, Dense});
 
-  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"), ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"), iii("iii");
+  IndexVar i("i"), j("j"), io("io"), ii("ii"), k("k"), jo("jo"),
+           ji("ji"), f("f"), ko("ko"), ki("ki"), kpos("kpos"), iio("iio"),
+           iii("iii"), fpos("fpos"), fposo("fposo"), fposi("fposi");
   A(i, j) = B(i, k) * C(k, j);
   auto stmt = A.getAssignment().concretize();
+  // TODO (rohany): Add the memory conserving SpMM schedule.
   auto cpuStmt = stmt.reorder({i, k, j})
-                  .distribute({i}, {io}, {ii}, Grid(gx))
-                  .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
-                  .communicate({A(i, j), B(i, k), C(k, j)}, io)
-                  ;
-  IndexVar fpos("fpos"), fposo("fposo"), fposi("fposi"), block("block"),
+                      .distribute({i}, {io}, {ii}, Grid(gx))
+                      .parallelize(ii, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+                      .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                      ;
+  auto cpuMemConsStmt = stmt.reorder({i, j, k})
+                            .distribute({i, j}, {io, jo}, {ii, ji}, Grid(gx, gy))
+                            .reorder({ii, k, ji})
+                            .communicate({A(i, j), B(i, k), C(k, j)}, jo)
+                            ;
+  auto cpuBatchedStmt = stmt.divide(j, jo, ji, gy)
+                            .reorder({jo, i, k, ji})
+                            .distribute({i}, {io}, {ii}, Grid(gx))
+                            .communicate({A(i, j), B(i, k), C(k, j)}, io)
+                            // TODO (rohany): https://github.com/rohany/taco/issues/114 needs to be solved
+                            //  before we can do the schedule with a position space distribution.
+                            // .fuse(i, k, f)
+                            // .pos(f, fpos, B(i, k))
+                            // .distribute({fpos}, {fposo}, {fposi}, Grid(gx))
+                            // .communicate({A(i, j), B(i, k), C(k, j)}, fposo)
+                            ;
+
+  IndexVar block("block"),
            warp("warp"), thread("thread"), fposi1("fposi1"), nnz("nnz"),
            dense_ub("dense_ub"), dense_b("dense_b");
   const int NNZ_PER_WARP = 64;
@@ -1822,8 +1842,10 @@ TEST(distributed, legionSpMM) {
                      .communicate({A(i, j), B(i, k), C(k, j)}, fposo)
                      ;
   auto loweredCPU = lowerLegionSeparatePartitionCompute(cpuStmt, "computeLegion", false /* waitOnFutureMap */);
+  auto loweredMemConsCPU = lowerLegionSeparatePartitionCompute(cpuMemConsStmt, "computeLegionMemCons", false /* waitOnFutureMap */);
+  auto loweredBatchedCPU = lowerLegionSeparatePartitionCompute(cpuBatchedStmt, "computeLegionBatched", false /* waitOnFutureMap */);
   auto loweredGPU = lowerLegionSeparatePartitionCompute(gpuStmt, "computeLegion", false /* waitOnFutureMap */);
-  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", loweredCPU);
+  ir::CodegenLegionC::compileToDirectory("../legion/spmm/", ir::Block::make(loweredCPU, loweredMemConsCPU, loweredBatchedCPU));
   ir::CodegenLegionCuda::compileToDirectory("../legion/spmm/", loweredGPU);
 }
 

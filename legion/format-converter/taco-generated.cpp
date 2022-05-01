@@ -30,7 +30,7 @@ void packLegionCOOToCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   auto T2_indices_field_id_1_1 = T->indicesFieldIDs[1][1];
   auto T2_pos_accessor = createAccessor<AccessorRWRect_1_1>(T2_pos, T2_indices_field_id_1_0);
   auto T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, T2_indices_field_id_1_1);
-  int TCOO1_dimension = TCOO->dims[0];
+  size_t TCOO1_dimension = TCOO->dims[0];
   RegionWrapper TCOO1_pos = TCOO->indices[0][0];
   RegionWrapper TCOO1_crd = TCOO->indices[0][1];
   RegionWrapper TCOO2_crd = TCOO->indices[1][0];
@@ -520,8 +520,8 @@ void packLegionCOOToDDS(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   auto T3_indices_field_id_2_1 = T->indicesFieldIDs[2][1];
   auto T3_pos_accessor = createAccessor<AccessorRWRect_1_2>(T3_pos, T3_indices_field_id_2_0);
   auto T3_crd_accessor = createAccessor<AccessorRWint32_t1>(T3_crd, T3_indices_field_id_2_1);
-  int TCOO1_dimension = TCOO->dims[0];
-  int TCOO2_dimension = TCOO->dims[1];
+  size_t TCOO1_dimension = TCOO->dims[0];
+  size_t TCOO2_dimension = TCOO->dims[1];
   RegionWrapper TCOO1_pos = TCOO->indices[0][0];
   RegionWrapper TCOO1_crd = TCOO->indices[0][1];
   RegionWrapper TCOO2_crd = TCOO->indices[1][0];
@@ -975,7 +975,7 @@ void packLegionCOOToDCSR(Legion::Context ctx, Legion::Runtime* runtime, LegionTe
 }
 
 void packLegionCOOToSD(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* T, LegionTensor* TCOO) {
-  int T2_dimension = T->dims[1];
+  size_t T2_dimension = T->dims[1];
   RegionWrapper T1_pos = T->indices[0][0];
   RegionWrapper T1_crd = T->indices[0][1];
   auto T1_pos_parent = T->indicesParents[0][0];
@@ -1092,7 +1092,7 @@ void packLegionCOOToCSC(Legion::Context ctx, Legion::Runtime* runtime, LegionTen
   auto T2_indices_field_id_1_1 = T->indicesFieldIDs[1][1];
   auto T2_pos_accessor = createAccessor<AccessorRWRect_1_1>(T2_pos, T2_indices_field_id_1_0);
   auto T2_crd_accessor = createAccessor<AccessorRWint32_t1>(T2_crd, T2_indices_field_id_1_1);
-  int TCOO2_dimension = TCOO->dims[1];
+  size_t TCOO2_dimension = TCOO->dims[1];
   RegionWrapper TCOO1_pos = TCOO->indices[0][0];
   RegionWrapper TCOO1_crd = TCOO->indices[0][1];
   RegionWrapper TCOO2_crd = TCOO->indices[1][0];

@@ -19,14 +19,15 @@ struct task_1Args {
 
 
 partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, LegionTensor* c, int32_t pieces) {
-  int b1_dimension = b->dims[0];
-  int b2_dimension = b->dims[1];
-  int b3_dimension = b->dims[2];
+  size_t b1_dimension = b->dims[0];
+  size_t b2_dimension = b->dims[1];
+  size_t b3_dimension = b->dims[2];
   RegionWrapper b_vals = b->vals;
   IndexSpace b_dense_run_0 = b->denseLevelRuns[0];
   RegionWrapper c_vals = c->vals;
   IndexSpace c_dense_run_0 = c->denseLevelRuns[0];
 
+  auto computePartitions = partitionPackForcomputeLegion();
 
   Point<1> lowerBound = Point<1>(0);
   Point<1> upperBound = Point<1>((pieces - 1));
@@ -57,7 +58,6 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto b_vals_partition = copyPartition(ctx, runtime, b_dense_run_0_Partition, get_logical_region(b_vals));
   auto c_dense_run_0_Partition = runtime->create_index_partition(ctx, c_dense_run_0, domain, cColoring, LEGION_COMPUTE_KIND);
   auto c_vals_partition = copyPartition(ctx, runtime, c_dense_run_0_Partition, get_logical_region(c_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.bPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(3);
   computePartitions.bPartition.denseLevelRunPartitions = std::vector<IndexPartition>(3);
   computePartitions.bPartition.valsPartition = b_vals_partition;
@@ -118,9 +118,9 @@ double task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Cont
 }
 
 double computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t pieces) {
-  int b1_dimension = b->dims[0];
-  int b2_dimension = b->dims[1];
-  int b3_dimension = b->dims[2];
+  size_t b1_dimension = b->dims[0];
+  size_t b2_dimension = b->dims[1];
+  size_t b3_dimension = b->dims[2];
   auto b_vals_parent = b->valsParent;
   auto b_vals_field_id = b->valsFieldID;
   auto c_vals_parent = c->valsParent;

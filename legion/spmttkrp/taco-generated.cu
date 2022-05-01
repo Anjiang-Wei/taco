@@ -44,6 +44,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   auto B2_indices_field_id_1_0 = B->indicesFieldIDs[1][0];
   auto B3_indices_field_id_2_0 = B->indicesFieldIDs[2][0];
 
+  auto computePartitions = partitionPackForcomputeLegion();
+
   int64_t B3Size = runtime->get_index_space_domain(ctx, get_index_space(B3_crd)).hi()[0] + 1;
 
   Point<1> lowerBound = Point<1>(0);
@@ -70,7 +72,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     B3_pos,
     B3_pos_parent,
     B3_indices_field_id_2_0,
-    runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part)
+    runtime->get_index_partition_color_space_name(ctx, B3_crd_index_part),
+    LEGION_ALIASED_INCOMPLETE_KIND
   );
   IndexPartition posIndexPartB3 = densifyPartition(ctx, runtime, get_index_space(B3_pos), posSparsePartB3);
   Legion::LogicalPartition posPartB3 = runtime->get_logical_partition(ctx, B3_pos, posIndexPartB3);
@@ -82,14 +85,14 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     B2_pos,
     B2_pos_parent,
     B2_indices_field_id_1_0,
-    runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition())
+    runtime->get_index_partition_color_space_name(ctx, crdPartB2.get_index_partition()),
+    LEGION_ALIASED_INCOMPLETE_KIND
   );
   IndexPartition posIndexPartB2 = densifyPartition(ctx, runtime, get_index_space(B2_pos), posSparsePartB2);
   Legion::LogicalPartition posPartB2 = runtime->get_logical_partition(ctx, B2_pos, posIndexPartB2);
   IndexPartition BDenseRun0Partition = copyPartition(ctx, runtime, posPartB2, B_dense_run_0);
   IndexPartition ADenseRun0Partition = AffineProjection(0).apply(ctx, runtime, BDenseRun0Partition, A_dense_run_0);
   auto A_vals_partition = copyPartition(ctx, runtime, ADenseRun0Partition, get_logical_region(A_vals));
-  auto computePartitions = partitionPackForcomputeLegion();
   computePartitions.APartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(2);
   computePartitions.APartition.denseLevelRunPartitions = std::vector<IndexPartition>(2);
   computePartitions.APartition.valsPartition = A_vals_partition;
@@ -107,7 +110,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 }
 
 __global__
-void task_1DeviceKernel0(int64_t B3Size, int64_t* i_blockStarts, int64_t* j_blockStarts, int32_t pieces, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, AccessorROdouble2 D_vals_ro_accessor, Legion::FieldID A_vals_field_id, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B3_indices_field_id_2_0, Legion::FieldID B3_indices_field_id_2_1, Legion::FieldID B_vals_field_id, int64_t C2_dimension, Legion::FieldID C_vals_field_id, Legion::FieldID D_vals_field_id, int64_t fposo) {
+void task_1DeviceKernel0(int64_t B3Size, int64_t fposo, int64_t* i_blockStarts, int64_t* j_blockStarts, int32_t pieces, int64_t pointID1, AccessorRORect_1_1 B3_pos_accessor, AccessorRORect_1_1 B2_pos_accessor, AccessorROint32_t1 B2_crd_accessor, AccessorROint32_t1 B3_crd_accessor, AccessorReduceNonExcldouble2 A_vals_red_accessor_non_excl, AccessorROdouble1 B_vals_ro_accessor, AccessorROdouble2 C_vals_ro_accessor, AccessorROdouble2 D_vals_ro_accessor, Legion::FieldID A_vals_field_id, Legion::FieldID B2_indices_field_id_1_0, Legion::FieldID B2_indices_field_id_1_1, Legion::FieldID B3_indices_field_id_2_0, Legion::FieldID B3_indices_field_id_2_1, Legion::FieldID B_vals_field_id, int64_t C2_dimension, Legion::FieldID C_vals_field_id, Legion::FieldID D_vals_field_id) {
 
   int64_t block = blockIdx.x;
   int64_t thread = (threadIdx.x % (32));
@@ -116,7 +119,7 @@ void task_1DeviceKernel0(int64_t B3Size, int64_t* i_blockStarts, int64_t* j_bloc
     return;
   }
 
-  int64_t pointID2 = fposo * (((B3Size + (pieces - 1)) / pieces + 2047) / 2048) + block;
+  int64_t pointID2 = pointID1 * (((B3Size + (pieces - 1)) / pieces + 2047) / 2048) + block;
   int64_t pointID3 = pointID2 * 8 + warp;
   int64_t pointID4 = pointID3 * 32 + thread;
   int64_t pB3_begin = j_blockStarts[block];
@@ -227,8 +230,9 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
     256,
     (((B3Size + (pieces - 1)) / pieces + 2047) / 2048)
   );
-  if (((((B3Size + (pieces - 1)) / pieces + 2047) / 2048)) > 0) {
-    task_1DeviceKernel0<<<(((B3Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B3Size, i_blockStarts, j_blockStarts, pieces, B3_pos_accessor, B2_pos_accessor, B2_crd_accessor, B3_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, A_vals_field_id, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B3_indices_field_id_2_0, B3_indices_field_id_2_1, B_vals_field_id, C2_dimension, C_vals_field_id, D_vals_field_id, fposo);
+  int64_t pointID1 = fposo + TACO_PARTITION_COLOR_OFFSET;
+  if ((((B3Size + (pieces - 1)) / pieces + 2047) / 2048) > 0) {
+    task_1DeviceKernel0<<<(((B3Size + (pieces - 1)) / pieces + 2047) / 2048), (32 * 8)>>>(B3Size, fposo, i_blockStarts, j_blockStarts, pieces, pointID1, B3_pos_accessor, B2_pos_accessor, B2_crd_accessor, B3_crd_accessor, A_vals_red_accessor_non_excl, B_vals_ro_accessor, C_vals_ro_accessor, D_vals_ro_accessor, A_vals_field_id, B2_indices_field_id_1_0, B2_indices_field_id_1_1, B3_indices_field_id_2_0, B3_indices_field_id_2_1, B_vals_field_id, C2_dimension, C_vals_field_id, D_vals_field_id);
   }
 }
 
@@ -246,7 +250,7 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   auto B2_indices_field_id_1_1 = B->indicesFieldIDs[1][1];
   auto B3_indices_field_id_2_0 = B->indicesFieldIDs[2][0];
   auto B3_indices_field_id_2_1 = B->indicesFieldIDs[2][1];
-  int C2_dimension = C->dims[1];
+  size_t C2_dimension = C->dims[1];
   RegionWrapper C_vals = C->vals;
   auto C_vals_parent = C->valsParent;
   auto C_vals_field_id = C->valsFieldID;
