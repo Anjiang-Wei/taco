@@ -362,6 +362,11 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
         }
         if (v->type.getKind() != Datatype::CppType && !v->is_tensor) {
           this->usedVars.back().insert(v);
+        } else if (v->type.getKind() == Datatype::CppType) {
+          // Certain CppType variables are OK.
+          if (v->type.getName().find("IndexPartition") != std::string::npos) {
+            this->usedVars.back().insert(v);
+          }
         }
       }
 
@@ -396,6 +401,11 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
             this->usedVars.push_back({});
           }
           this->usedVars.back().insert(ir::GetProperty::make(g->tensor, TensorProperty::ValuesFieldID));
+        } else if (g->property == TensorProperty::ValuesFieldID || g->property == TensorProperty::IndicesFieldID) {
+          if (this->usedVars.size() == 0) {
+            this->usedVars.push_back({});
+          }
+          this->usedVars.back().insert(g);
         }
       }
 

@@ -2083,6 +2083,11 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
   // involved in the computation, and omits the actual computation using this partitions. It
   // is used when legionLoweringKind == PARTITION_ONLY.
   std::vector<ir::Stmt> partitionOnlyStmts;
+  // tensorLogicalPartitions holds partitions of each level of a tensor. It is stored
+  // outside of the isTask block so that later stages can know if a tensor was indeed
+  // partitioned at this level or not.
+  std::map<TensorVar, std::map<int, std::vector<ir::Expr>>> tensorLogicalPartitions;
+  std::map<TensorVar, std::map<int, ir::Expr>> tensorDenseRunPartitions;
   if (isTask) {
     taskID = this->taskCounter;
     this->taskCounter++;
@@ -2127,8 +2132,6 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     // which tensors are partitioned so that the appropriate subregions are selected in the
     // generated code.
     std::vector<ir::Stmt> partitioningStmts;
-    std::map<TensorVar, std::map<int, std::vector<ir::Expr>>> tensorLogicalPartitions;
-    std::map<TensorVar, std::map<int, ir::Expr>> tensorDenseRunPartitions;
     // Extract the region domains for each region in the transfer.
     std::map<TensorVar, ir::Expr> domains;
     if (inPosIter) {
@@ -2758,8 +2761,70 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
     returnReduction = ir::Return::make(this->scalarReductionResult);
   }
 
+  // The runtime automatically projects partitions down into the accessed regions
+  // for individual tasks. However, we need to do the same thing for the index
+  // spaces that are part of the DenseFormatRuns of each tensor, since we can't
+  // pass IndexSpaces like RegionRequirements to tasks. What we'll do is just pass
+  // the name of the partition down to each task, and then select the corresponding
+  // index subspace for the task..
+  Stmt castIndexSpaces;
+  if (isTask) {
+    // First, collect all DenseRun GetProperty objects that are referenced by
+    // the body of the task we are launching.
+    struct DenseRunFinder : public IRVisitor {
+      void visit(const GetProperty* op) {
+        if (op->property == TensorProperty::DenseLevelRun) {
+          if (!util::contains(this->seenProps, op->toHashable())) {
+            this->seenProps.insert(op->toHashable());
+            this->props.push_back(op);
+          }
+        }
+      }
+      std::set<GetProperty::Hashable> seenProps;
+      std::vector<ir::Expr> props;
+    } finder;
+    body.accept(&finder);
+
+    // For each one, emit an assignment to the casted index space.
+    std::vector<ir::Stmt> casts;
+    for (auto expr : finder.props) {
+      auto gp = to<ir::GetProperty>(expr);
+      auto tvar = this->exprToTensorVar.at(gp->tensor);
+      // If this tensor was partitioned, then emit a cast. Otherwise, the index space
+      // was unchanged in this launch.
+      if (util::contains(tensorLogicalPartitions, tvar)) {
+        // Get the partition of the dense run that we are considering.
+        auto runPart = tensorDenseRunPartitions[tvar][gp->index];
+        // If this an index space task, then the corresponding partition is the
+        // tasks's index point (we are using the identity ProjectionFunctor).
+        // Otherwise, take the loop variable as the point of the task.
+        ir::Expr arg;
+        if (forall.isDistributed()) {
+          arg = ir::Symbol::make("task->index_point");
+        } else {
+          arg = this->indexVarToExprMap[forall.getIndexVar()];
+        }
+        casts.push_back(ir::Assign::make(
+          gp,
+          ir::Call::make("runtime->get_index_subspace", {ctx, runPart, arg}, Auto)
+        ));
+      }
+    }
+    castIndexSpaces = ir::Block::make(casts);
+  }
+
   // Add some preambles and postambles to the loop body we're emitting.
-  body = Block::make(taskHeaderStmt, unpackTensorData, serializeOnPriorHeader, recoveryStmt, ir::Block::make(pointIdentifierDecls), declarePartitionBounds, body, returnReduction);
+  body = Block::make(
+      taskHeaderStmt,
+      unpackTensorData,
+      serializeOnPriorHeader,
+      recoveryStmt,
+      ir::Block::make(pointIdentifierDecls),
+      declarePartitionBounds,
+      castIndexSpaces,
+      body,
+      returnReduction
+  );
 
   Stmt posAppend = generateAppendPositions(appenders);
 
@@ -6042,7 +6107,10 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
     //  sure it really matters how well we guess disjoint vs aliased.
 
     auto coloring = colorings[idx];
-    auto part = ir::Var::make(tv.getName() + "_dense_run_0_Partition", Auto);
+    // The name of this variable is manually deduplicated to get around some complicated
+    // name aliasing that occurs between the interaction of unpacking task arguments
+    // and the different namespaces we get from packing tasks into functions.
+    auto part = ir::Var::make(tv.getName() + "_dense_run_0_Partition_" + util::toString(this->definedIndexVarsExpanded.size()), IndexPartition);
     // TODO (rohany): Make this LEGION_COMPUTE_KIND since it is happening
     //  off of the critical path.
     auto partKind = disjointPart;
@@ -6127,7 +6195,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       auto vals = ir::GetProperty::make(this->getTensorVar(tv), TensorProperty::Values);
       auto ispace = ir::MethodCall::make(vals, "get_index_space", {}, false /* deref */, Auto);
       auto ipart = ir::Var::make(tv.getName() + "_index_partition", IndexPartition);
-      auto makeIpart = ir::Call::make("runtime->create_index_partition", {ctx, ispace, domain, coloring, partKind}, Auto);
+      auto makeIpart = ir::Call::make("runtime->create_index_partition", {ctx, ispace, domain, coloring, partKind}, IndexPartition);
       result.push_back(ir::VarDecl::make(ipart, makeIpart));
       auto lpart = ir::Var::make(tv.getName() + "_logical_partition", LogicalPartition);
       auto makeLpart = ir::Call::make("runtime->get_logical_partition", {ctx, vals, ipart}, Auto);
@@ -6180,7 +6248,7 @@ std::vector<ir::Stmt> LowererImpl::createIndexPartitions(
       tensorDenseRunPartitions[tv][0] = part;
       // We don't need to mark the index partitions of the denseRuns with colors, since
       // we aren't going to actually look up the denseLevelRun partitions directly.
-      auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, Auto);
+      auto partcall = ir::Call::make("runtime->create_index_partition", {ctx, denseRunIndexSpace, domain, coloring, partKind}, IndexPartition);
       result.push_back(ir::VarDecl::make(part, partcall));
       currentLevelPartition = part;
       initialLevel = 0;

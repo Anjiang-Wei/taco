@@ -1417,9 +1417,14 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
     tvars.push_back(tensorVars[var]);
   }
 
-  auto aIndexSpace = ir::GetProperty::make(tvars[0], ir::TensorProperty::IndexSpace);
-  auto bIndexSpace = ir::GetProperty::make(tvars[1], ir::TensorProperty::IndexSpace);
-  auto cIndexSpace = ir::GetProperty::make(tvars[2], ir::TensorProperty::IndexSpace);
+  auto getIndexSpace = [&](ir::Expr reg) {
+    auto vals = ir::GetProperty::make(reg, ir::TensorProperty::Values);
+    auto logreg = ir::MethodCall::make(vals, "get_logical_region", {}, false /* deref */, Auto);
+    return ir::MethodCall::make(logreg, "get_index_space", {}, false /* deref */, Auto);
+  };
+  auto aIndexSpace = getIndexSpace(tvars[0]);
+  auto bIndexSpace = getIndexSpace(tvars[1]);
+  auto cIndexSpace = getIndexSpace(tvars[2]);
 
   // Unpack the domains for each variable.
   auto aDomain = ir::Var::make("aDomain", Auto);

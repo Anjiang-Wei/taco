@@ -834,13 +834,16 @@ TEST(distributed, cannonMM) {
       .communicate(a(i, j), in)
       .communicate(b(i, k), kos)
       .communicate(c(k, j), kos)
+      .swapLeafKernel(il, gemm)
       // Hierarchically parallelize the computation for each NUMA region.
+      // TODO (rohany): For ease of testing, (and for Andreas's machine), we
+      //  can forgo the heirarchical distribution.
       // TODO (rohany): Make the number of OpenMP processors configurable.
-      .distribute({il}, {iln}, {ill}, Grid(2))
-      .communicate(a(i, j), iln)
-      .communicate(b(i, k), iln)
-      .communicate(c(k, j), iln)
-      .swapLeafKernel(ill, gemm)
+      // .distribute({il}, {iln}, {ill}, Grid(2))
+      // .communicate(a(i, j), iln)
+      // .communicate(b(i, k), iln)
+      // .communicate(c(k, j), iln)
+      // .swapLeafKernel(ill, gemm)
       ;
 
   // Generate top-level partitioning and compute code.
@@ -848,15 +851,7 @@ TEST(distributed, cannonMM) {
 
   // Code-generate all of the placement and compute code.
   auto all = ir::Block::make({placeALowered, placeBLowered, placeCLowered, lowered});
-  auto codegen = std::make_shared<ir::CodegenLegionC>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(all);
-  // Also write it into a file.
-  {
-    ofstream f("../legion/cannonMM/taco-generated.cpp");
-    auto codegen = std::make_shared<ir::CodegenLegionC>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(all);
-    f.close();
-  }
+  ir::CodegenLegionC::compileToDirectory("../legion/cannonMM/", all);
 }
 
 TEST(distributed, cuda_cannonMM) {

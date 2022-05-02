@@ -77,8 +77,8 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
     }
     cColoring[(*itr)] = cRect;
   }
-  auto a_dense_run_0_Partition = runtime->create_index_partition(ctx, a_dense_run_0, domain, aColoring, LEGION_DISJOINT_COMPLETE_KIND);
-  auto a_vals_partition = copyPartition(ctx, runtime, a_dense_run_0_Partition, get_logical_region(a_vals));
+  IndexPartition a_dense_run_0_Partition_0 = runtime->create_index_partition(ctx, a_dense_run_0, domain, aColoring, LEGION_DISJOINT_COMPLETE_KIND);
+  auto a_vals_partition = copyPartition(ctx, runtime, a_dense_run_0_Partition_0, get_logical_region(a_vals));
   Legion::LogicalPartition b1_crd_part = RectCompressedCoordinatePartition::apply(
     ctx,
     runtime,
@@ -124,7 +124,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   computePartitions.aPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(1);
   computePartitions.aPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
   computePartitions.aPartition.valsPartition = a_vals_partition;
-  computePartitions.aPartition.denseLevelRunPartitions[0] = a_dense_run_0_Partition;
+  computePartitions.aPartition.denseLevelRunPartitions[0] = a_dense_run_0_Partition_0;
   computePartitions.bPartition.indicesPartitions = std::vector<std::vector<Legion::LogicalPartition>>(1);
   computePartitions.bPartition.denseLevelRunPartitions = std::vector<IndexPartition>(1);
   computePartitions.bPartition.indicesPartitions[0].push_back(posPartb1);

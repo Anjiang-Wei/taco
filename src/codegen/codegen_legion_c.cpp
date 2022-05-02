@@ -230,7 +230,7 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
 
   // Simplify function bodies first, as this hides some bugs
   // of incorrect variables generated during lowering.
-   stmt = this->simplifyFunctionBodies(stmt);
+  stmt = this->simplifyFunctionBodies(stmt);
   this->stmt = stmt;
   // Collect all of the individual functions that we need to generate code for.
   this->collectAllFunctions(stmt);
