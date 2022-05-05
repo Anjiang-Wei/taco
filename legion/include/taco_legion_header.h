@@ -228,12 +228,13 @@ public:
 
   // Register all tasks used by the operation.
   static void registerTasks();
-private:
-  using Accessor = Legion::FieldAccessor<READ_ONLY, Legion::Rect<1>, 1, Legion::coord_t, Realm::AffineAccessor<Legion::Rect<1>, 1, Legion::coord_t>>;
+public:
   static Legion::Domain task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #ifdef TACO_USE_CUDA
   static Legion::Domain gputask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #endif
+private:
+  using Accessor = Legion::FieldAccessor<READ_ONLY, Legion::Rect<1>, 1, Legion::coord_t, Realm::AffineAccessor<Legion::Rect<1>, 1, Legion::coord_t>>;
   static const int taskID;
 };
 
@@ -249,10 +250,11 @@ public:
         Legion::FieldID fid, Legion::DomainPointColoring buckets, Legion::IndexSpace colorSpace,
         Legion::Color color = LEGION_AUTO_GENERATE_ID);
   static void registerTasks();
+public:
+  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 private:
   template<typename T, Legion::PrivilegeMode MODE>
   using Accessor = Legion::FieldAccessor<MODE, T, 1, Legion::coord_t, Realm::AffineAccessor<T, 1, Legion::coord_t>>;
-  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
   static const int taskID;
 };
 
@@ -274,6 +276,11 @@ public:
 
   // Register the tasks used by the projection.
   static void registerTasks();
+
+public:
+  // The intermediate task that performs the projection.
+  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+
 private:
   // Stores the target dimension for the projection.
   int mapTo;
@@ -287,8 +294,6 @@ private:
   // target index space.
   template<int DIM>
   static void taskBody(Legion::Context ctx, Legion::Runtime* runtime, taskArgs args, Legion::PhysicalRegion input, Legion::PhysicalRegion output);
-  // The intermediate task that performs the projection.
-  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
   static const int taskID;
 };
 
@@ -348,6 +353,11 @@ class RectCompressedFinalizeYieldPositions : public Legion::IndexLauncher {
 public:
   static void compute(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion region, Legion::LogicalPartition partition, Legion::FieldID fid);
   static void registerTasks();
+public:
+  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#ifdef TACO_USE_CUDA
+  static void gputask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
 private:
   // Local typedef for Accessors.
   template<int DIM, Legion::PrivilegeMode MODE>
@@ -356,10 +366,6 @@ private:
   static void body(Legion::Context ctx, Legion::Runtime *runtime,
                    Legion::Rect<DIM> fullBounds, Legion::Rect<DIM> iterBounds,
                    Accessor<DIM, READ_WRITE> output, Accessor<DIM, READ_ONLY> ghost);
-  static void task(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
-#ifdef TACO_USE_CUDA
-  static void gputask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
-#endif
   static const int taskID;
 };
 
@@ -375,6 +381,19 @@ public:
                                  Legion::LogicalRegion nnz, Legion::FieldID nnzFid);
 
   static void registerTasks();
+
+public:
+  static int64_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#ifdef TACO_USE_CUDA
+  template<int DIM>
+  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+  static int64_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
+  static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#ifdef TACO_USE_CUDA
+  static void applyPartialResultsTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
+#endif
+
 private:
   // Local typedef for Accessors.
   template<typename T, int DIM, Legion::PrivilegeMode MODE>
@@ -390,23 +409,13 @@ private:
   // scan{Body,Task} are the implementations of the first step.
   template<int DIM>
   static int64_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
-  static int64_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
   static std::pair<Legion::FieldID, Legion::FieldID> unpackScanTaskArgs(const Legion::Task* task);
-#ifdef TACO_USE_CUDA
-  template<int DIM>
-  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
-  static int64_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
-#endif
   static const int scanTaskID;
 
   // applyPartialResults{Body,Task} are the implementations of the second step.
   template<int DIM>
   static void applyPartialResultsBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, READ_WRITE> output, int64_t value);
-  static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
   static std::pair<Legion::FieldID, int64_t> unpackApplyPartialResultsTaskArgs(const Legion::Task* task);
-#ifdef TACO_USE_CUDA
-  static void applyPartialResultsTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
-#endif
   static const int applyPartialResultsTaskID;
 };
 
