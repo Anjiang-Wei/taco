@@ -20,7 +20,12 @@ void BLAS_GEMM(size_t m,
 
 // TODO (rohany): Gaurd this behind a set of defines so that we can swap the BLAS vendor that we are using. Ideally,
 //   all that will change is that we just define including a different header set.
+
+#ifdef DISTAL_USE_OPENBLAS
 #include "cblas.h"
+#elif DISTAL_USE_MKL
+#include "mkl.h"
+#endif
 
 template<>
 void BLAS_GEMM<double>(size_t m,
