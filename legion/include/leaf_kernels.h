@@ -7,9 +7,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
-#include "cblas.h"
 #include "legion.h"
 #include "realm_defines.h"
+#include "distal_blas.h"
 
 // An argument pack for MTTKRP.
 struct MTTKRPPack {
@@ -60,10 +60,7 @@ void mttkrp(MTTKRPPack pack, T* A_vals, const T* B_vals, const T* C_vals, const 
 
   // Perform T(i, j, l) = B(i, j, k) * D(k, l) as a series of GEMM calls.
   for (size_t i = 0; i < B1_dimension; i++) {
-    cblas_dgemm(
-      CblasRowMajor,
-      CblasNoTrans,
-      CblasNoTrans,
+    BLAS_GEMM<T>(
       C1_dimension,
       D2_dimension,
       D1_dimension,

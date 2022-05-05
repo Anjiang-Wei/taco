@@ -1409,8 +1409,6 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
 
   std::vector<ir::Stmt> results;
   auto ctx = ir::Symbol::make("ctx");
-  auto rowMajor = ir::Symbol::make("CblasRowMajor");
-  auto noTrans = ir::Symbol::make("CblasNoTrans");
 
   std::vector<ir::Expr> tvars;
   for (auto var : this->content->tensorVars) {
@@ -1466,9 +1464,6 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
   );
 
   std::vector<ir::Expr> args = {
-      rowMajor,
-      noTrans,
-      noTrans,
       ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(bDomain, "hi"), 0), ir::Load::make(getBounds(bDomain, "lo"), 0))),
       ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(cDomain, "hi"), 1), ir::Load::make(getBounds(cDomain, "lo"), 1))),
       ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(cDomain, "hi"), 0), ir::Load::make(getBounds(cDomain, "lo"), 0))),
@@ -1482,8 +1477,8 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
       ldA,
   };
 
-  // TODO (rohany): Pick the right call between double and float here.
-  results.push_back(ir::SideEffect::make(ir::Call::make("cblas_dgemm", args, Auto)));
+  auto funcName = "BLAS_GEMM<" + util::toString(type.getDataType()) + ">";
+  results.push_back(ir::SideEffect::make(ir::Call::make(funcName, args, Auto)));
   return ir::Block::make(results);
 }
 
@@ -1864,9 +1859,6 @@ ir::Stmt TTMC::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<Ten
   };
 
   std::vector<ir::Expr> args {
-    rowMajor,
-    noTrans,
-    noTrans,
     ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(bDomain, "hi"), 1), ir::Load::make(getBounds(bDomain, "lo"), 1))),
     ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(cDomain, "hi"), 1), ir::Load::make(getBounds(cDomain, "lo"), 1))),
     ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(cDomain, "hi"), 0), ir::Load::make(getBounds(cDomain, "lo"), 0))),
@@ -1879,7 +1871,8 @@ ir::Stmt TTMC::replaceValidStmt(IndexStmt stmt, ProvenanceGraph pg, std::map<Ten
     getBasePtr(aAccess, aDomain),
     getLD(aAccess, 1),
   };
-  loopStmts.push_back(ir::SideEffect::make(ir::Call::make("cblas_dgemm", args, Auto)));
+  auto funcName = "BLAS_GEMM<" + util::toString(type.getDataType()) + ">";
+  loopStmts.push_back(ir::SideEffect::make(ir::Call::make(funcName, args, Auto)));
 
   // The loop bounds are from 0 to aBounds.hi()[0] - aBounds.lo()[0].
   auto bounds = ir::Add::make(1, ir::Sub::make(ir::Load::make(getBounds(aDomain, "hi"), 0), ir::Load::make(getBounds(aDomain, "lo"), 0)));

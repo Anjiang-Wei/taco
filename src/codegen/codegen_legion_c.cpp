@@ -281,7 +281,7 @@ void CodegenLegionC::emitHeaders(std::ostream &o) {
 
   struct BLASFinder : public IRVisitor {
     void visit(const Call* node) {
-      if (node->func.find("blas") != std::string::npos) {
+      if (node->func.find("BLAS") != std::string::npos) {
         this->usesBLAS = true;
       }
       if (node->func.find("mttkrp") != std::string::npos || node->func.find("ttv") != std::string::npos) {
@@ -294,7 +294,7 @@ void CodegenLegionC::emitHeaders(std::ostream &o) {
   BLASFinder bs;
   this->stmt.accept(&bs);
   if (bs.usesBLAS) {
-    o << "#include \"cblas.h\"\n";
+    o << "#include \"distal_blas.h\"\n";
   }
   if (bs.usesLeafKernels) {
     o << "#include \"leaf_kernels.h\"\n";

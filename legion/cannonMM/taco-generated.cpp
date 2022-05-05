@@ -5,7 +5,7 @@
 using namespace Legion;
 
 #include "taco-generated.h"
-#include "cblas.h"
+#include "distal_blas.h"
 typedef FieldAccessor<READ_ONLY,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorROdouble2;
 typedef FieldAccessor<READ_WRITE,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorRWdouble2;
 
@@ -433,10 +433,7 @@ void task_6(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   if (bDomain.get_volume() == 0 || cDomain.get_volume() == 0)
     return ;
 
-  cblas_dgemm(
-    CblasRowMajor,
-    CblasNoTrans,
-    CblasNoTrans,
+  BLAS_GEMM<double>(
     (1 + (bDomain.hi()[0] - bDomain.lo()[0])),
     (1 + (cDomain.hi()[1] - cDomain.lo()[1])),
     (1 + (cDomain.hi()[0] - cDomain.lo()[0])),
