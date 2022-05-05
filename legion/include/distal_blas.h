@@ -57,4 +57,4 @@ void BLAS_GEMM<double>(size_t m,
   );
 }
 
-#endif DISTAL_BLAS_H
+#endif // DISTAL_BLAS_H
