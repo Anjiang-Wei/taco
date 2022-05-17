@@ -707,52 +707,19 @@ void RectCompressedFinalizeYieldPositions::compute(Context ctx, Runtime *runtime
   runtime->destroy_logical_region(ctx, tempReg);
 }
 
-template<>
-void RectCompressedFinalizeYieldPositions::body<1>(Context ctx, Runtime* runtime,
-                                                   Rect<1> fullBounds, Rect<1> iterBounds,
-                                                   Accessor<1, READ_WRITE> output, Accessor<1, READ_ONLY> ghost) {
+template<int DIM>
+void RectCompressedFinalizeYieldPositions::body(Context ctx, Runtime* runtime,
+                                                Rect<DIM> fullBounds, Rect<DIM> iterBounds,
+                                                Accessor<DIM, READ_WRITE> output, Accessor<DIM, READ_ONLY> ghost) {
+  Pitches<DIM - 1> pitches;
+  auto volume = pitches.flatten(iterBounds);
   #pragma omp parallel for schedule(static)
-  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
-    if (i == 0) {
-      output[0].lo = 0;
+  for (size_t i = 0; i < volume; i++) {
+    auto point = pitches.unflatten(i, iterBounds.lo);
+    if (point == Point<DIM>::ZEROES()) {
+      output[point].lo = 0;
     } else {
-      output[i].lo = ghost[i - 1].lo;
-    }
-  }
-}
-
-template<>
-void RectCompressedFinalizeYieldPositions::body<2>(Context ctx, Runtime* runtime,
-                                                   Rect<2> fullBounds, Rect<2> iterBounds,
-                                                   Accessor<2, READ_WRITE> output, Accessor<2, READ_ONLY> ghost) {
-  #pragma omp parallel for schedule(static) collapse(2)
-  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
-    for (coord_t j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
-      Point<2> point(i, j);
-      if (point == Point<2>::ZEROES()) {
-        output[point].lo = 0;
-      } else {
-        output[point].lo = ghost[getPreviousPoint(point, fullBounds)].lo;
-      }
-    }
-  }
-}
-
-template<>
-void RectCompressedFinalizeYieldPositions::body<3>(Context ctx, Runtime* runtime,
-                                                   Rect<3> fullBounds, Rect<3> iterBounds,
-                                                   Accessor<3, READ_WRITE> output, Accessor<3, READ_ONLY> ghost) {
-  #pragma omp parallel for schedule(static) collapse(3)
-  for (coord_t i = iterBounds.lo.x; i <= iterBounds.hi.x; i++) {
-    for (coord_t j = iterBounds.lo.y; j <= iterBounds.hi.y; j++) {
-      for (coord_t k = iterBounds.lo.z; k <= iterBounds.hi.z; k++) {
-        Point<3> point(i, j, k);
-        if (point == Point<3>::ZEROES()) {
-          output[point].lo = 0;
-        } else {
-          output[point].lo = ghost[getPreviousPoint(point, fullBounds)].lo;
-        }
-      }
+      output[point].lo = ghost[getPreviousPoint(point, fullBounds)].lo;
     }
   }
 }
