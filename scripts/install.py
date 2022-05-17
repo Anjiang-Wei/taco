@@ -17,6 +17,7 @@ def run(*command, check=True, env=None):
     if env is None:
         env = {}
     env = {**os.environ, **env}
+    print("Executing command: {}".format(" ".join(command)))
     subprocess.run(command, check=check, env=env)
 
 def wget(url):
@@ -44,16 +45,12 @@ parser.add_argument("--sockets", default=None, type=int, help="Number of sockets
 parser.add_argument("--cuda", default=False, action="store_true", help="Enable use of NVIDIA GPUs.")
 parser.add_argument("--multi-node", default=False, action="store_true", help="Enable distributed computations.")
 parser.add_argument("--conduit", default="ibv", type=str, help="Network conduit (default ibv).")
-
 args = parser.parse_args()
 
+# TODO (rohany): Make sure that this script is running from the root of the DISTAL repository.
 distalRoot = os.getcwd()
 
-# TODO (rohany): Make sure that this script is running from the root of the DISTAL repository.
-
 # TODO (rohany): Update the script to be resilient to when parts of the installation have succeeded or not.
-
-# TODO (rohany): Perform all of the argument validation.
 
 if args.openmp and args.sockets is None:
     print("--sockets must be provided if --openmp is set.")
@@ -61,9 +58,8 @@ if args.openmp and args.sockets is None:
 
 # First, install dependencies.
 os.mkdir(args.deps_install_dir)
-makeInstallPath = os.path.join(args.deps_install_dir, "make-install")
-cmakeInstallPath = os.path.join(args.deps_install_dir, "cmake-install")
-
+makeInstallPath = os.path.abspath(os.path.join(args.deps_install_dir, "make-install"))
+cmakeInstallPath = os.path.abspath(os.path.join(args.deps_install_dir, "cmake-install"))
 with pushd(args.deps_install_dir):
     # Set up installation an installation path for all of the dependencies to install into.
     os.mkdir(makeInstallPath)
@@ -71,9 +67,9 @@ with pushd(args.deps_install_dir):
 
     # HDF5.
     wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
-    run("tar", "-xvf", "hdf5-1.10.1.tar.gz")
+    run("tar", "-xf", "hdf5-1.10.1.tar.gz")
     with pushd("hdf5-1.10.1"):
-        run("configure", makeInstallPath, "--enable-thread-safe", "--disable-hl")
+        run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
         run("make", "-j")
         run("make", "-j", "install")
 
@@ -98,7 +94,7 @@ with pushd(args.deps_install_dir):
             "Legion_USE_HDF5": True,
         }
         if args.openmp:
-            cmakeDefs["Legion_USE_OPENMP"] = True
+            cmakeDefs["Legion_USE_OpenMP"] = True
         if args.cuda:
             cmakeDefs["Legion_USE_CUDA"] = True
         if args.multi_node:
@@ -115,8 +111,9 @@ with pushd(args.deps_install_dir):
 os.mkdir(args.distal_build_dir)
 with pushd(args.distal_build_dir):
     cmakeDefs = {
-        "CMAKE_PREFIX_PATH": cmakeInstallPath,
-        "CMAKE_BUILD_TYPE": "RELEASE",
+        "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
+        "CMAKE_BUILD_TYPE": "Release",
+        "BLA_VENDOR": "OpenBLAS",
     }
     if args.openmp:
         cmakeDefs["OPENMP"] = True
@@ -124,3 +121,5 @@ with pushd(args.distal_build_dir):
         "HDF5_ROOT": makeInstallPath,
     })
     run("make", "-j", "taco-test")
+    run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
+    run("make", "-j", "cannonMM")

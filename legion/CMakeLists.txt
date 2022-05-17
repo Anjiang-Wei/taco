@@ -6,10 +6,10 @@ endif(OPENMP)
 # We need to have HDF5_ROOT set here to do this if we're using
 # a non-system provided HDF5 installation.
 find_package(HDF5 REQUIRED)
+find_package(BLAS REQUIRED)
 
 # Include the headers and supporting source files.
-include_directories(include/ OpenBLAS/install/include "${CMAKE_BINARY_DIR}/include" cub/)
-link_directories(OpenBLAS/install/lib)
+include_directories(include/ "${CMAKE_BINARY_DIR}/include" cub/)
 file(GLOB LG_SOURCES src/*.cpp)
 file(GLOB LG_CU_SOURCES src/*.cu)
 if (Legion_USE_CUDA)
@@ -62,7 +62,8 @@ endif()
 function(add_app_folder folder)
     add_executable("${folder}" "${folder}/main.cpp" "${folder}/taco-generated.cpp")
     target_include_directories("${folder}" PRIVATE "${folder}")
-    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion openblas)
+    # Unfortunately, older versions of CMake do not export BLAS::BLAS.
+    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES})
     if (OPENMP)
       target_compile_options("${folder}" PRIVATE ${OpenMP_CXX_FLAGS})
     endif(OPENMP)
