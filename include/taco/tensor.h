@@ -79,6 +79,13 @@ public:
   TensorBase(std::string name, Datatype ctype, std::vector<int> dimensions,
              Format format, std::vector<TensorDistribution> distribution);
 
+  // A variant of the TensorBase constructor that accepts the
+  // TensorDistributionNotation distribution specifications.
+  TensorBase(std::string name, Datatype ctype, std::vector<int> dimensions,
+             Format format, TensorDistributionNotation distribution);
+  TensorBase(std::string name, Datatype ctype, std::vector<int> dimensions,
+             Format format, std::vector<TensorDistributionNotation> distribution);
+
   /* --- Metadata Methods    --- */
 
   /// Set the name of the tensor.
@@ -160,6 +167,9 @@ public:
   IndexStmt place(Grid g, GridPlacement gp, ParallelUnit parUnit = ParallelUnit::DistributedNode);
   IndexStmt placeHierarchy(std::vector<std::tuple<Grid, Grid, GridPlacement, ParallelUnit>> dists);
   IndexStmt getPlacementStatement();
+  // translateDistribution generates IR that implements the TensorDistributionNotation statement
+  // defined by the tensor's format.
+  IndexStmt translateDistribution();
 
   /* --- Read Methods        --- */
 
@@ -593,6 +603,10 @@ public:
   Tensor(std::string name, std::vector<int> dimensions, Format format,
          std::vector<TensorDistribution> distribution);
 
+  /// Create a tensor with the given name, dimensions, format, and distribution.
+  Tensor(std::string name, std::vector<int> dimensions, Format format, TensorDistributionNotation distribution);
+  Tensor(std::string name, std::vector<int> dimensions, Format format, std::vector<TensorDistributionNotation> distribution);
+
   /// Create a tensor from a TensorBase instance. The Tensor and TensorBase
   /// objects will reference the same underlying tensor so it is a shallow copy.
   Tensor(const TensorBase& tensor);
@@ -913,8 +927,12 @@ struct TensorBase::Content {
   std::vector<std::weak_ptr<TensorBase::Content>> dependentTensors;
   unsigned int       uniqueId;
 
+  // TODO (rohany): These should be phased out and removed.
   Grid partition;
   std::vector<TensorDistribution> distribution;
+
+  // The distribution of the tensor expressed in Tensor Distribution Notation.
+  std::vector<TensorDistributionNotation> tensorDistributionNotation;
 
   Content(std::string name, Datatype dataType, const std::vector<int>& dimensions,
           Format format)
@@ -1108,6 +1126,16 @@ Tensor<CType>::Tensor(std::string name, std::vector<int> dimensions, Format form
 template <typename CType>
 Tensor<CType>::Tensor(std::string name, std::vector<int> dimensions, Format format,
        std::vector<TensorDistribution> distribution)
+       : TensorBase(name, type<CType>(), dimensions, format, distribution) {}
+
+template <typename CType>
+Tensor<CType>::Tensor(std::string name, std::vector<int> dimensions, Format format,
+       TensorDistributionNotation distribution)
+       : TensorBase(name, type<CType>(), dimensions, format, distribution) {}
+
+template <typename CType>
+Tensor<CType>::Tensor(std::string name, std::vector<int> dimensions, Format format,
+                      std::vector<TensorDistributionNotation> distribution)
        : TensorBase(name, type<CType>(), dimensions, format, distribution) {}
 
 template <typename CType>

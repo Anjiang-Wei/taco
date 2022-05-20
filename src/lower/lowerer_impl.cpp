@@ -798,6 +798,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
   match(stmt, function<void(const PlaceNode*)>([&](const PlaceNode* node) {
     this->isPlacementCode = true;
     this->placements = node->placements;
+    this->tensorDistributionNotation = node->distribution;
   }), function<void(const PartitionNode*)>([&](const PartitionNode* node) {
     this->isPartitionCode = true;
   }));
@@ -808,8 +809,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
     struct IndexVarFaceCollector : public IndexNotationVisitor {
       IndexVarFaceCollector(std::map<IndexVar, int>& indexVarFaces,
                             std::vector<std::pair<Grid, GridPlacement>>& placements,
+                            std::vector<TensorDistributionNotation>& tensorDistributionNotation,
                             ProvenanceGraph& pg)
-        : indexVarFaces(indexVarFaces), placements(placements), pg(pg) {}
+        : indexVarFaces(indexVarFaces), placements(placements), tensorDistributionNotation(tensorDistributionNotation), pg(pg) {}
 
       void visit (const ForallNode* node) {
         if (distributedParallelUnit(node->parallel_unit)) {
@@ -817,29 +819,44 @@ LowererImpl::lower(IndexStmt stmt, string name,
           if (fused.size() == 0) {
             fused = std::vector<IndexVar>({node->indexVar});
           }
-          taco_iassert(fused.size()  > 0);
-          auto placement = this->placements[distIndex].second;
-          taco_iassert(fused.size() == placement.axes.size());
-          // For all positions that are restricted to a Face of the processor grid,
-          // override the iteration bounds of that variable to just that face of the
-          // grid.
-          for (size_t i = 0; i < placement.axes.size(); i++) {
-            auto axis = placement.axes[i];
-            if (axis.kind == GridPlacement::AxisMatch::Face) {
-              this->indexVarFaces[fused[i]] = axis.face;
+          taco_iassert(fused.size() > 0);
+          if (!this->placements.empty()) {
+            auto placement = this->placements[distIndex].second;
+            taco_iassert(fused.size() == placement.axes.size());
+            // For all positions that are restricted to a Face of the processor grid,
+            // override the iteration bounds of that variable to just that face of the
+            // grid.
+            for (size_t i = 0; i < placement.axes.size(); i++) {
+              auto axis = placement.axes[i];
+              if (axis.kind == GridPlacement::AxisMatch::Face) {
+                this->indexVarFaces[fused[i]] = axis.face;
+              }
+            }
+          } else {
+            taco_iassert(!this->tensorDistributionNotation.empty());
+            auto distribution = this->tensorDistributionNotation[this->distIndex];
+            taco_iassert(fused.size() == size_t(distribution.getMachine().getDim()));
+            for (size_t i = 0; i < distribution.getRHS().size(); i++) {
+              auto name = distribution.getRHS()[i];
+              if (name.getKind() == MachineDimensionName::Restriction) {
+                this->indexVarFaces[fused[i]] = name.getRestriction();
+              }
             }
           }
-          distIndex++;
+          if (size_t(this->distIndex) < std::max(this->placements.size(), this->tensorDistributionNotation.size())) {
+            distIndex++;
+          }
+          node->stmt.accept(this);
         }
-        node->stmt.accept(this);
       }
 
       int distIndex = 0;
       std::map<IndexVar, int>& indexVarFaces;
       std::vector<std::pair<Grid, GridPlacement>>& placements;
+      std::vector<TensorDistributionNotation>& tensorDistributionNotation;
       ProvenanceGraph& pg;
     };
-    IndexVarFaceCollector fc(this->indexVarFaces, this->placements, this->provGraph);
+    IndexVarFaceCollector fc(this->indexVarFaces, this->placements, this->tensorDistributionNotation, this->provGraph);
     stmt.accept(&fc);
   }
 
@@ -2040,7 +2057,8 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
   // We just care about emitting the actual distributed loop to do the data placement, not waste
   // time iterating over the data within it. Placement can be nested though, so only exclude the
   // inner body for the deepest placement level.
-  if (forall.isDistributed() && this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size()) {
+  if (forall.isDistributed() && this->isPlacementCode && size_t(this->distLoopDepth + 1) ==
+                                                             this->getDataDistributionNestingDepth()) {
     body = ir::Block::make({});
   }
   // We do the same thing for partitioning code.
@@ -4614,6 +4632,14 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
     Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
     bool clearValuesAllocation = false;
 
+    bool fullyDenseOutput = true;
+    for (const auto& it : iterators) {
+      if (it.hasAppend()) {
+        fullyDenseOutput = false;
+        break;
+      }
+    }
+
     Expr parentSize = 1;
     if (generateAssembleCode()) {
       for (const auto& iterator : iterators) {
@@ -4655,9 +4681,17 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
         if (this->legion) {
           // TODO (rohany): This allocation should be scaled so that it doesn't allocate too much
           //  memory for a multi-dimensional allocation.
-          // Allocate a new values array, and update the accessor.
+          // Allocate a new values array, and update the accessor. If the output is fully dense,
+          // then we'll just allocate it directly instead of the heuristic initial size.
           auto valsFid = ir::GetProperty::make(tensor, TensorProperty::ValuesFieldID);
-          initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, valsFid, readWrite));
+          if (fullyDenseOutput) {
+            initArrays.push_back(ir::Assign::make(
+               valuesArr,
+               ir::Call::make("legionMalloc", {ctx, runtime, valuesArr, valuesParent, valsFid, readWrite}, Auto)
+            ));
+          } else {
+            initArrays.push_back(makeLegionMalloc(valuesArr, capacityVar, valuesParent, valsFid, readWrite));
+          }
           auto valsAcc = this->getValuesArray(write.getTensorVar());
           auto newValsAcc = ir::Call::make("createAccessor<" + ir::accessorTypeString(valsAcc) + ">", {valuesArr, valsFid}, Auto);
           initArrays.push_back(ir::Assign::make(valsAcc, newValsAcc));
@@ -4694,7 +4728,10 @@ Stmt LowererImpl::initResultArrays(vector<Access> writes,
     if (generateComputeCode() && iterators.back().hasInsert() &&
         !isValue(parentSize, 0) &&
         (hasSparseInserts(iterators, readIterators) ||
-         util::contains(reducedAccesses, write))) {
+         util::contains(reducedAccesses, write)) &&
+         // We don't need to manually initialize fully dense outputs in Legion since
+         // the runtime will already give us filled instances.
+        !(this->legion && fullyDenseOutput)) {
       // Zero-initialize values array if size statically known and might not
       // assign to every element in values array during compute
       // TODO: Right now for scheduled code we check if any iterator is not full and then emit
@@ -4761,11 +4798,12 @@ ir::Stmt LowererImpl::finalizeResultArrays(std::vector<Access> writes) {
     Expr valuesArr = GetProperty::make(tensor, TensorProperty::Values);
     Expr valuesParent = GetProperty::make(tensor, TensorProperty::ValuesParent);
     Expr valsFID = GetProperty::make(tensor, TensorProperty::ValuesFieldID);
-    if (this->legion) {
+    if (this->legion && lastSparseLevel.defined()) {
       auto field = ir::FieldAccess::make(this->tensorVars[write.getTensorVar()], "vals", true /* isDeref*/, Auto);
       // If the vals region is multi-dimensional, then the deepest sparse level will
       // index into the first dimension of it, so we always want to use that instead
-      // of the multiplication-based parentSize.
+      // of the multiplication-based parentSize. If the output tensor is fully dense
+      // then it will already be allocated to the right size.
       auto subreg = ir::Call::make("getSubRegion", {ir::ctx, ir::runtime, valuesParent,
                                                     ir::makeConstructor(Rect(1), {0, ir::Sub::make(lastSparseLevel.getPosVar(), 1)})}, Auto);
       result.push_back(ir::Assign::make(field, subreg));
@@ -6412,7 +6450,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         // map a region that the leaf placement tasks use.
         taco_iassert(regions[i].region.as<GetProperty>() != nullptr);
         ir::Expr tag;
-        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) ==
+                                                                                                                                  this->getDataDistributionNestingDepth())) {
           tag = virtualMap;
           taskReadsAnyVars |= true;
         }
@@ -6477,7 +6516,8 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
     auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
     auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
     ir::Expr tag;
-    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) ==
+                                                                                                                    this->getDataDistributionNestingDepth())) {
       tag = virtualMap;
       taskReadsAnyVars |= true;
     }
@@ -6574,17 +6614,24 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
   // is done at the top level.
   auto useCtrlRep = this->distLoopDepth == 0;
   if (this->isPlacementCode) {
-    auto placementGrid = this->placements[this->distLoopDepth].first;
-    auto placement = this->placements[this->distLoopDepth].second;
-
-    // Count the number of Face() axes placements.
-    int count = 0;
-    for (auto axis : placement.axes) {
-      if (axis.kind == GridPlacement::AxisMatch::Face) {
-        count++;
+    bool containsRestriction = false;
+    Grid machine;
+    if (!this->placements.empty()) {
+      machine = this->placements[this->distLoopDepth].first;
+      auto placement = this->placements[this->distLoopDepth].second;
+      for (auto axis : placement.axes) {
+        containsRestriction |= axis.kind == GridPlacement::AxisMatch::Face;
+      }
+    } else {
+      taco_iassert(!this->tensorDistributionNotation.empty());
+      auto distribution = this->tensorDistributionNotation[this->distLoopDepth];
+      machine = distribution.getMachine();
+      for (const auto& name : distribution.getRHS()) {
+        containsRestriction |= name.getKind() == MachineDimensionName::Restriction;
       }
     }
-    if (count > 0) {
+
+    if (containsRestriction > 0) {
       std::vector<Expr> prefixVars, prefixExprs;
       if (useCtrlRep) {
         // If we are using control replication, we'll need to do some extra
@@ -6600,9 +6647,9 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         auto vecty = Datatype("std::vector<int>");
         auto dimVec = ir::Var::make("dims", vecty);
         itlStmts.push_back(ir::VarDecl::make(dimVec, ir::makeConstructor(vecty, {})));
-        for (int i = 0; i < placementGrid.getDim(); i++) {
+        for (int i = 0; i < machine.getDim(); i++) {
           itlStmts.push_back(ir::SideEffect::make(
-              ir::MethodCall::make(dimVec, "push_back", {placementGrid.getDimSize(i)}, false /* deref */, Auto)));
+              ir::MethodCall::make(dimVec, "push_back", {machine.getDimSize(i)}, false /* deref */, Auto)));
         }
         itlStmts.push_back(
             ir::SideEffect::make(
@@ -6617,11 +6664,11 @@ std::vector<ir::Stmt> LowererImpl::lowerIndexLaunch(
         // If we are directed to place a tensor onto a Face of the placement
         // grid, then we need to package up the full dimensions of the placement
         // grid into the task's arguments so that the mapper can extract it.
-        for (int i = 0; i < placementGrid.getDim(); i++) {
+        for (int i = 0; i < machine.getDim(); i++) {
           std::stringstream varname;
           varname << "dim" << i;
           auto var = ir::Var::make(varname.str(), Int32);
-          prefixVars.push_back(var); prefixExprs.push_back(placementGrid.getDimSize(i));
+          prefixVars.push_back(var); prefixExprs.push_back(machine.getDimSize(i));
         }
       }
       itlStmts.push_back(ir::PackTaskArgs::make(args, taskID, prefixVars, prefixExprs));
@@ -6777,7 +6824,8 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
         // map a region that the leaf placement tasks use.
         taco_iassert(regions[i].region.as<GetProperty>() != nullptr);
         ir::Expr tag;
-        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+        if (!util::contains(regionsAccessed, regions[i].region.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) ==
+                                                                                                                                  this->getDataDistributionNestingDepth())) {
           tag = virtualMap;
           taskReadsAnyVars |= true;
         }
@@ -6839,7 +6887,8 @@ std::vector<ir::Stmt> LowererImpl::lowerSerialTaskLoop(
     auto valsReg = ir::GetProperty::make(tvIR, TensorProperty::Values);
     auto valsParent = ir::GetProperty::make(tvIR, TensorProperty::ValuesParent);
     auto tag = ir::Expr(0);
-    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) == this->placements.size())) {
+    if (!util::contains(regionsAccessed, valsReg.as<GetProperty>()->toHashable()) && !(this->isPlacementCode && size_t(this->distLoopDepth + 1) ==
+                                                                                                                    this->getDataDistributionNestingDepth())) {
       tag = ir::BitOr::make(tag, virtualMap);
       taskReadsAnyVars |= true;
     }

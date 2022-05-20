@@ -386,13 +386,17 @@ struct AssembleNode : public IndexStmtNode {
 
 struct PlaceNode : public IndexStmtNode {
   PlaceNode(IndexExpr e, std::vector<std::pair<Grid, GridPlacement>> placements) : expr(e), placements(placements) {}
+  PlaceNode(IndexExpr e, std::vector<TensorDistributionNotation> distribution) : expr(e), distribution(distribution) {}
 
   void accept(IndexStmtVisitorStrict* v) const {
     v->visit(this);
   }
 
   IndexExpr expr;
+  // Only one of placements and distribution should be set, and
+  // placements is deprecated.
   std::vector<std::pair<Grid, GridPlacement>> placements;
+  std::vector<TensorDistributionNotation> distribution;
 };
 
 struct PartitionNode : public IndexStmtNode {

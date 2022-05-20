@@ -670,7 +670,19 @@ private:
   std::vector<TensorVar> tensorVarOrdering;
 
   bool isPlacementCode = false;
+  // Manages transferring information between the distribution syntax and
+  // the lowerer. This is set by the old distribution syntax.
   std::vector<std::pair<Grid, GridPlacement>> placements;
+  // Information about the Tensor Distribution Notation statement being lowered.
+  std::vector<TensorDistributionNotation> tensorDistributionNotation;
+  // getDataDistributionNestingDepth is a layer of indirection between the old
+  // and new notations for data distribution, allowing for the lowerer to understand
+  // which level of nested data distribution is being considered.
+  size_t getDataDistributionNestingDepth() {
+    taco_iassert(this->isPlacementCode);
+    taco_iassert(!this->placements.empty() || !this->tensorDistributionNotation.empty());
+    return std::max(this->placements.size(), this->tensorDistributionNotation.size());
+  }
 
   bool isPartitionCode = false;
 
