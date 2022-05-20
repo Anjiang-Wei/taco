@@ -212,7 +212,7 @@ ir::Stmt CodegenLegionC::simplifyFunctionBodies(ir::Stmt stmt) {
     // loop a few times of simplification before calling it.
     void visit(const Function* func) {
       ir::Stmt body = func->body;
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 10; i++) {
         body = ir::simplify(body);
       }
       stmt = Function::make(func->name, func->outputs, func->inputs, body, func->returnType);

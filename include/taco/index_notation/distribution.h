@@ -25,7 +25,7 @@ public:
     this->dimensions = dims;
   }
 
-  int getDim() {
+  int getDim() const {
     return this->dimensions.size();
   }
 
@@ -206,6 +206,69 @@ struct TensorDistribution {
 
   TensorDistribution(TensorDistributionV2 v2) :
     partitionGrid(v2.pg.getPartitionGrid()), placementGrid(v2.pg.grid), placement(v2.pg.placement), parUnit(v2.parUnit) {}
+};
+
+
+// Another iteration at writing tensor distribution notation, except this time
+// the syntax is driven by the notation developed in https://arxiv.org/pdf/2203.08069.pdf.
+
+// DistVar is a variable used to name tensor and machine dimensions.
+class DistVar : public util::Comparable<DistVar> {
+public:
+  DistVar();
+  DistVar(const std::string& name);
+  const std::string& getName() const;
+  friend bool operator==(const DistVar&, const DistVar&);
+  friend bool operator<(const DistVar&, const DistVar&);
+private:
+  struct Content;
+  std::shared_ptr<Content> content;
+};
+
+// MachineDimensionName represents the different ways to name a machine dimension.
+// In particular, it can be either a DistVar, Broadcast, or a Restriction.
+class MachineDimensionName {
+public:
+  // Constructors for MachineDimensionNames.
+  MachineDimensionName(DistVar v);
+  MachineDimensionName(int n);
+  static MachineDimensionName broadcast();
+  // There is an entry in Kind for each constructor of MachineDimensionName.
+  enum Kind {
+    Var,
+    Restriction,
+    Broadcast,
+  };
+  Kind getKind() const;
+  // Can be used only when Kind == Var.
+  const DistVar getDistVar() const;
+  // Can be used only when Kind == Restriction.
+  int getRestriction() const;
+private:
+  // Only we are allowed to default create MachineDimensionNames.
+  MachineDimensionName();
+  struct Content;
+  std::shared_ptr<Content> content;
+};
+
+// TensorDistributionNotation represents a statement in Tensor Distribution Notation
+// that maps a tensor to a machine by describing how the dimensions of the tensor
+// are partitioned by different machine dimensions.
+class TensorDistributionNotation {
+public:
+  TensorDistributionNotation();
+  // TensorDistributionNotation constructs a `Distribution` that represents a mathematical
+  // Tensor Distribution Notation statement of the form T_{lhs} -> {rhs}_M.
+  TensorDistributionNotation(std::vector<DistVar> lhs, Grid machine, std::vector<MachineDimensionName> rhs, ParallelUnit pu = ParallelUnit::DistributedNode);
+
+  bool isValid() const;
+  const std::vector<DistVar>& getLHS() const;
+  const std::vector<MachineDimensionName>& getRHS() const;
+  const Grid& getMachine() const;
+  ParallelUnit getParallelUnit() const;
+private:
+  struct Content;
+  std::shared_ptr<Content> content;
 };
 
 // Transfer represents requesting a portion of data.

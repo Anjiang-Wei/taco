@@ -383,17 +383,18 @@ TEST(distributed, mttkrp) {
   auto gy = ir::Var::make("gridY", Int32, false, false, true);
   auto gz = ir::Var::make("gridZ", Int32, false, false, true);
   auto grid3 = Grid(gx, gy, gz);
+  DistVar x, y, z, w;
 
   // Partition and place the 3-tensor onto a 3-d grid.
-  TensorDistribution BDist(grid3);
+  TensorDistributionNotation BDist({x, y, z}, grid3, {x, y, z});
   // Partition the matrices in a single dimension, and place them along different
   // edges of the processor grid.
   // We want A along the edge that the `i` dimension of B is partitioned along.
-  TensorDistributionV2 ADist(PlacementGrid(gx, gy | Face(0), gz | Face(0)));
+  TensorDistributionNotation ADist({x, w}, grid3, {x, 0, 0}),
   // We want C along the edge that the `j` dimension of B is partitioned along.
-  TensorDistributionV2 CDist(PlacementGrid(gx | Face(0), gy, gz | Face(0)));
+                             CDist({y, w}, grid3, {0, y, 0}),
   // We want D along the edge that the `k` dimension of B is partitioned along.
-  TensorDistributionV2 DDist(PlacementGrid(gx | Face(0), gy | Face(0), gz));
+                             DDist({z, w}, grid3, {0, 0, z});
 
   Tensor<double> A("A", {dim, dim}, {Dense, Dense}, ADist);
   Tensor<double> B("B", {dim, dim, dim}, {Dense, Dense, Dense}, BDist);
@@ -423,10 +424,10 @@ TEST(distributed, mttkrp) {
   auto partitionD = lower(D.partitionStmt(Grid(gz)), "partitionLegionD", false, true);
 
   // Placement statements for each tensor.
-  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA");
-  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB");
-  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC");
-  auto placeDLowered = lowerLegionSeparatePartitionCompute(D.getPlacementStatement(), "placeLegionD");
+  auto placeALowered = lowerLegionSeparatePartitionCompute(A.translateDistribution(), "placeLegionA");
+  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.translateDistribution(), "placeLegionB");
+  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.translateDistribution(), "placeLegionC");
+  auto placeDLowered = lowerLegionSeparatePartitionCompute(D.translateDistribution(), "placeLegionD");
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   auto all = ir::Block::make({
     partitionA, partitionB, partitionC, partitionD,
@@ -809,15 +810,16 @@ TEST(distributed, cannonMM) {
   auto gx = ir::Var::make("gridX", Int32, false, false, true);
   auto gy = ir::Var::make("gridY", Int32, false, false, true);
   auto grid = Grid(gx, gy);
-
-  TensorDistribution distribution(grid);
+  DistVar x, y;
+  TensorDistributionNotation distribution({x, y}, grid, {x, y});
+  taco_iassert(distribution.isValid());
   Tensor<double> a("a", {dim, dim}, Format{Dense, Dense}, distribution);
   Tensor<double> b("b", {dim, dim}, Format{Dense, Dense}, distribution);
   Tensor<double> c("c", {dim, dim}, Format{Dense, Dense}, distribution);
 
-  auto placeALowered = lowerLegionSeparatePartitionCompute(a.getPlacementStatement(), "placeLegionA");
-  auto placeBLowered = lowerLegionSeparatePartitionCompute(b.getPlacementStatement(), "placeLegionB");
-  auto placeCLowered = lowerLegionSeparatePartitionCompute(c.getPlacementStatement(), "placeLegionC");
+  auto placeALowered = lowerLegionSeparatePartitionCompute(a.translateDistribution(), "placeLegionA");
+  auto placeBLowered = lowerLegionSeparatePartitionCompute(b.translateDistribution(), "placeLegionB");
+  auto placeCLowered = lowerLegionSeparatePartitionCompute(c.translateDistribution(), "placeLegionC");
 
   IndexVar i("i"), j("j"), in("in"), jn("jn"), il("il"), jl("jl"), k("k"), ki("ki"), ko("ko"), kos("kos");
   IndexVar iln("iln"), ill("ill");

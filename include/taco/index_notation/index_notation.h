@@ -34,6 +34,7 @@ class Schedule;
 class Grid;
 class GridPlacement;
 class Transfer;
+class TensorDistributionNotation;
 
 class IndexVar;
 class WindowedIndexVar;
@@ -897,6 +898,7 @@ class Place : public IndexStmt {
 public:
   Place() = default;
   Place(IndexExpr e, std::vector<std::pair<Grid, GridPlacement>> placements);
+  Place(IndexExpr e, std::vector<TensorDistributionNotation> distribution);
   Place(const PlaceNode*);
 
   typedef PlaceNode Node;

@@ -2225,6 +2225,8 @@ template <> Assemble to<Assemble>(IndexStmt s) {
 
 Place::Place(IndexExpr e, std::vector<std::pair<Grid, GridPlacement>> placements) : Place(new PlaceNode(e, placements)) {}
 
+Place::Place(IndexExpr e, std::vector<TensorDistributionNotation> distribution) : Place(new PlaceNode(e, distribution)) {}
+
 Place::Place(const PlaceNode * n) : IndexStmt(n) {}
 
 Partition::Partition(Access a) : Partition(new PartitionNode(a)) {}
