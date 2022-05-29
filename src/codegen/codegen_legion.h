@@ -50,6 +50,9 @@ public:
   void emitRegisterTasks(OutputKind outputKind, std::ostream& out);
   virtual std::string procForTask(Stmt target, Stmt func);
 
+  // Generate a shim calling method for forwarding to the generated code easy.
+  void generateShim(const ir::Stmt& func, std::ostream& out, OutputKind outputKind);
+
   static std::string getVarName(Expr e) {
     if (isa<Var>(e)) {
       return e.as<Var>()->name;

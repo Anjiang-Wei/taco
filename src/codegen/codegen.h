@@ -12,8 +12,10 @@ namespace ir {
 
 class CodeGen : public IRPrinter {
 public:
-  /// Kind of output: header or implementation
-  enum OutputKind { HeaderGen, ImplementationGen };
+  /// Kind of output: header, implementation, or standalone implementation with no header. Since there
+  /// is some logical overlap between ImplementationGen and ImplementationNoHeaderGen, use the method
+  /// isImplementationGen to check if an implementation is required from a CodeGen object.
+  enum OutputKind { HeaderGen, ImplementationGen, ImplementationNoHeaderGen };
   enum CodeGenType { C, CUDA };
 
   CodeGen(std::ostream& stream, CodeGenType type) : IRPrinter(stream), codeGenType(type) {};
@@ -66,6 +68,7 @@ protected:
                                            bool is_output_prop);
   std::string printTensorProperty(std::string varname, const GetProperty* op, bool is_ptr);
 
+  bool isImplementationGen(OutputKind kind);
 private:
   virtual std::string restrictKeyword() const { return ""; }
 

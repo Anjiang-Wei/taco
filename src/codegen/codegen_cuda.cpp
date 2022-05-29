@@ -644,7 +644,7 @@ void CodeGen_CUDA::compile(Stmt stmt, bool isFirst) {
   if (isFirst) {
     // output the headers
     out << cHeaders;
-    if (outputKind == ImplementationGen) {
+    if (this->isImplementationGen(this->outputKind)) {
       out << endl << gpuAssertMacro;
     }
   }

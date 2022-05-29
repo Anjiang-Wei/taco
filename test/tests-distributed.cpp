@@ -1545,8 +1545,6 @@ TEST(distributed, chemTest) {
       .communicate({B(a, c, i, k), C(c, b, k, j)}, cos)
       ;
 
-  std::cerr << stmt << std::endl;
-
   auto cpuOmpStmt = stmt
       .parallelize(al, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
       ;

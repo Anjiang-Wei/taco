@@ -44,4 +44,5 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
 
 void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t gridX, int32_t gridY);
 void registerTacoTasks();
+void dynamicallyRegisterDISTALTasks(Legion::Context ctx, Legion::Runtime* runtime);
 #endif // TACO_GENERATED_H

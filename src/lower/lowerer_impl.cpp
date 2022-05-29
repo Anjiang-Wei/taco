@@ -189,19 +189,16 @@ bool hasSparseInserts(const std::vector<Iterator>& resultIterators,
 }
 
 Stmt
-LowererImpl::lower(IndexStmt stmt, string name,
-                   bool assemble, bool compute,
-                   bool pack, bool unpack,
-                   bool partition, bool waitOnFutureMap, bool setPlacementPrivilege)
-{
+LowererImpl::lower(IndexStmt stmt, string name, LowerOptions options) {
   this->funcName = name;
-  this->assemble = assemble;
-  this->compute = compute;
-  this->legion = name.find("Legion") != std::string::npos;
-  this->waitOnFutureMap = waitOnFutureMap;
+  this->assemble = options.assemble;
+  this->compute = options.compute;
+  this->legion = options.legion;
+  this->waitOnFutureMap = options.waitOnFuture;
+  this->partitionPackAsPointer = options.partitionPackAsPointer;
 
   // Set up control over the privilege for placement operations.
-  this->setPlacementPrivilege = setPlacementPrivilege;
+  this->setPlacementPrivilege = options.setPlacementPrivilege;
   if (this->setPlacementPrivilege) {
     this->placementPrivilegeVar = ir::Var::make("priv", Datatype("Legion::PrivilegeMode"), false, false, true /* parameter */);
   }
@@ -212,11 +209,11 @@ LowererImpl::lower(IndexStmt stmt, string name,
   iterationSpacePointIdentifiers = {};
 
   // Figure out what sort of code we're supposed to be emitting.
-  if (compute && partition) {
+  if (compute && options.partition) {
     this->legionLoweringKind = PARTITION_AND_COMPUTE;
-  } else if (compute && !partition) {
+  } else if (compute && !options.partition) {
     this->legionLoweringKind = COMPUTE_ONLY;
-  } else if (!compute && partition) {
+  } else if (!compute && options.partition) {
     this->legionLoweringKind = PARTITION_ONLY;
   } else {
     taco_uassert(false) << " invalid combination of compute/partition parameters";
@@ -256,9 +253,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
 
   // Convert tensor results and arguments IR variables
   map<TensorVar, Expr> resultVars;
-  vector<Expr> resultsIR = createVars(results, &resultVars, unpack);
+  vector<Expr> resultsIR = createVars(results, &resultVars, options.unpack);
   tensorVars.insert(resultVars.begin(), resultVars.end());
-  vector<Expr> argumentsIR = createVars(arguments, &tensorVars, pack);
+  vector<Expr> argumentsIR = createVars(arguments, &tensorVars, options.pack);
 
   // Create variables for index sets on result tensors.
   vector<Expr> indexSetArgs;
@@ -269,7 +266,7 @@ LowererImpl::lower(IndexStmt stmt, string name,
         if (access.isModeIndexSet(i)) {
           auto t = access.getModeIndexSetTensor(i);
           if (tensorVars.count(t) == 0) {
-            ir::Expr irVar = ir::Var::make(t.getName(), t.getType().getDataType(), true, true, pack);
+            ir::Expr irVar = ir::Var::make(t.getName(), t.getType().getDataType(), true, true, options.pack);
             tensorVars.insert({t, irVar});
             indexSetArgs.push_back(irVar);
           }
@@ -988,6 +985,9 @@ LowererImpl::lower(IndexStmt stmt, string name,
   if (this->legionLoweringKind == PARTITION_ONLY) {
     taco_iassert(returnType.getKind() == Datatype::Undefined);
     returnType = this->getTopLevelTensorPartitionPackType();
+    if (this->partitionPackAsPointer) {
+      returnType = Pointer(returnType);
+    }
   } else if ((this->isPartitionCode || this->isPlacementCode) && this->legionLoweringKind != COMPUTE_ONLY) {
     // The result for partition and placement codes is a LogicalPartition.
     taco_iassert(returnType.getKind() == Datatype::Undefined);
@@ -2674,7 +2674,11 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
 
       // First, instantiate an instance of the struct in a pointer.
       auto structPack = ir::Var::make("computePartitions", Auto);
-      this->header.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
+      if (this->partitionPackAsPointer) {
+        this->header.push_back(ir::VarDecl::make(structPack, ir::Call::make("new", {ir::Symbol::make(structName)}, Auto)));
+      } else {
+        this->header.push_back(ir::VarDecl::make(structPack, ir::makeConstructor(structTy, {})));
+      }
 
       for (auto& t : this->tensorVarOrdering) {
         auto tensor = this->tensorVars[t];
@@ -2685,7 +2689,7 @@ Stmt LowererImpl::lowerForallDimension(Forall forall,
           auto fieldName = t.getName() + "Partition";
           fieldNames.push_back(fieldName);
           fieldTypes.push_back(LegionTensorPartition);
-          auto fieldAccess = ir::FieldAccess::make(structPack, fieldName, false /* isDeref */, Auto);
+          auto fieldAccess = ir::FieldAccess::make(structPack, fieldName, this->partitionPackAsPointer, Auto);
 
           // Initialize all fields of this LegionTensorPartition.
           auto indicesPartitions = ir::FieldAccess::make(fieldAccess, "indicesPartitions", false /* isDeref */, Auto);

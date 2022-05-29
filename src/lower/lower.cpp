@@ -49,7 +49,14 @@ ir::Stmt lower(IndexStmt stmt, std::string name,
   string reason;
   taco_iassert(isLowerable(stmt, &reason))
       << "Not lowerable, because " << reason << ": " << stmt;
-  ir::Stmt lowered = lowerer.getLowererImpl()->lower(stmt, name, assemble, compute, pack, unpack, true, true, false);
+
+  LowerOptions options;
+  options.assemble = assemble;
+  options.compute = compute;
+  options.pack = pack;
+  options.unpack = unpack;
+  options.legion = false;
+  ir::Stmt lowered = lowerer.getLowererImpl()->lower(stmt, name, options);
 
   // TODO: re-enable this
   // std::string messages;
@@ -58,6 +65,14 @@ ir::Stmt lower(IndexStmt stmt, std::string name,
   //   std::cerr << "Verifier messages:\n" << messages << "\n";
   // }
   
+  return lowered;
+}
+
+ir::Stmt lower(IndexStmt stmt, std::string functionName, LowerOptions options, Lowerer lowerer) {
+  string reason;
+  taco_iassert(isLowerable(stmt, &reason))
+      << "Not lowerable, because " << reason << ": " << stmt;
+  ir::Stmt lowered = lowerer.getLowererImpl()->lower(stmt, functionName, options);
   return lowered;
 }
 
@@ -72,17 +87,16 @@ ir::Stmt lowerLegion(IndexStmt stmt, std::string name,
   string reason;
   taco_iassert(isLowerable(stmt, &reason))
       << "Not lowerable, because " << reason << ": " << stmt;
-  return lowerer.getLowererImpl()->lower(
-      stmt,
-      name,
-      assemble /* assemble */,
-      compute /* compute */,
-      false /* pack */,
-      false /* unpack */,
-      partition /* partition */,
-      waitOnFuture /* waitOnFutureMap */,
-      setPlacementPrivilege /* setPlacementPrivilege */
-  );
+  LowerOptions options;
+  options.assemble = assemble;
+  options.compute = compute;
+  options.pack = false;
+  options.unpack = false;
+  options.legion = true;
+  options.partition = partition;
+  options.waitOnFuture = waitOnFuture;
+  options.setPlacementPrivilege = setPlacementPrivilege;
+  return lowerer.getLowererImpl()->lower(stmt, name, options);
 }
 
 ir::Stmt lowerLegionAssemble(IndexStmt stmt, std::string name,
@@ -91,17 +105,7 @@ ir::Stmt lowerLegionAssemble(IndexStmt stmt, std::string name,
   string reason;
   taco_iassert(isLowerable(stmt, &reason))
       << "Not lowerable, because " << reason << ": " << stmt;
-  return lowerer.getLowererImpl()->lower(
-      stmt,
-      name,
-      true /* assemble */,
-      compute /* compute */,
-      false /* pack */,
-      false /* unpack */,
-      partition /* partition */,
-      waitOnFuture /* waitOnFutureMap */,
-      setPlacementPrivilege /* setPlacementPrivilege */
-  );
+  return lowerLegion(stmt, name, partition, compute, waitOnFuture, setPlacementPrivilege, true, lowerer);
 }
 
 ir::Stmt lowerLegionSeparatePartitionCompute(IndexStmt stmt, std::string name, bool waitOnFuture, bool assemble, bool setPlacementPrivilege) {

@@ -14,6 +14,7 @@
 #include "taco/type.h"
 #include "taco/format.h"
 
+#include "taco/index_notation/distribution.h"
 #include "taco/index_notation/intrinsic.h"
 #include "taco/index_notation/schedule.h"
 #include "taco/index_notation/transformations.h"
@@ -2396,6 +2397,7 @@ struct TensorVar::Content {
   Type type;
   Format format;
   Schedule schedule;
+  std::vector<TensorDistributionNotation> distribution;
 };
 
 TensorVar::TensorVar() : content(nullptr) {
@@ -2405,28 +2407,29 @@ static Format createDenseFormat(const Type& type) {
   return Format(vector<ModeFormatPack>(type.getOrder(), ModeFormat(Dense)));
 }
 
-TensorVar::TensorVar(const Type& type)
-: TensorVar(type, createDenseFormat(type)) {
+TensorVar::TensorVar(const Type& type, std::vector<TensorDistributionNotation> distribution)
+: TensorVar(type, createDenseFormat(type), distribution) {
 }
 
-TensorVar::TensorVar(const std::string& name, const Type& type)
-: TensorVar(-1, name, type, createDenseFormat(type)) {
+TensorVar::TensorVar(const std::string& name, const Type& type, std::vector<TensorDistributionNotation> distribution)
+: TensorVar(-1, name, type, createDenseFormat(type), distribution) {
 }
 
-TensorVar::TensorVar(const Type& type, const Format& format)
-    : TensorVar(-1, util::uniqueName('A'), type, format) {
+TensorVar::TensorVar(const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution)
+    : TensorVar(-1, util::uniqueName('A'), type, format, distribution) {
 }
 
-TensorVar::TensorVar(const string& name, const Type& type, const Format& format)
-    : TensorVar(-1, name, type, format) {
+TensorVar::TensorVar(const string& name, const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution)
+    : TensorVar(-1, name, type, format, distribution) {
 }
 
-TensorVar::TensorVar(const int& id, const string& name, const Type& type, const Format& format)
+TensorVar::TensorVar(const int& id, const string& name, const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution)
     : content(new Content) {
   content->id = id;
   content->name = name;
   content->type = type;
   content->format = format;
+  content->distribution = distribution;
 }
 
 int TensorVar::getId() const {
@@ -2472,6 +2475,158 @@ void TensorVar::setName(std::string name) {
 
 bool TensorVar::defined() const {
   return content != nullptr;
+}
+
+const std::vector<TensorDistributionNotation>& TensorVar::getDistribution() const {
+  return this->content->distribution;
+}
+
+IndexStmt TensorVar::translateDistribution() const {
+  // A vector of aesthetic index variable names for the generated code.
+  std::vector<std::string> ivarNames {"i", "j", "k", "l", "m", "n", "o", "p", "q"};
+  size_t idx = 0;
+  auto freshName = [&]() {
+    taco_iassert(idx < ivarNames.size());
+    auto res = ivarNames[idx];
+    idx++;
+    return res;
+  };
+  assert(size_t(this->getOrder()) <= ivarNames.size());
+  std::vector<TensorDistributionNotation> distributions = this->getDistribution();
+
+  // All of the LHS name vectors should index all tensor dimensions.
+  for (auto dist : distributions) {
+    taco_uassert(dist.isValid());
+    taco_uassert(dist.getLHS().size() == size_t(this->getOrder()));
+    taco_uassert(dist.getRHS().size() == size_t(dist.getMachine().getDim()));
+  }
+
+  // We need variables for each variable in the tensor.
+  int numVars = this->getOrder();
+  assert(size_t(numVars) <= ivarNames.size());
+  std::vector<IndexVar> currentVars;
+  for (int i = 0; i < numVars; i++) {
+    currentVars.push_back(IndexVar(freshName()));
+  }
+  // For each distribution, we need fresh variables for unconstrained
+  // dimensions of each placement. These variables allow for replication
+  // across an axis of the processor grid and are importantly not contained
+  // within the access.
+  std::vector<std::vector<IndexVar>> unconstrainedVars(distributions.size());
+  for (size_t i = 0; i < distributions.size(); i++) {
+    auto d = distributions[i];
+    for (const auto& name : d.getRHS()) {
+      // Here we have to check that the axis is either replicated,
+      // restricted, or if the name doesn't appear in the RHS.
+      if (name.getKind() == MachineDimensionName::Broadcast ||
+          name.getKind() == MachineDimensionName::Restriction ||
+          (name.getKind() == MachineDimensionName::Var
+           && !util::contains(d.getLHS(), name.getDistVar()))) {
+        auto var = IndexVar(freshName());
+        unconstrainedVars[i].push_back(var);
+        currentVars.push_back(var);
+      }
+    }
+  }
+
+  // We choose the first getOrder() variables to be used in the access.
+  std::vector<IndexVar> accessVars;
+  for (int i = 0; i < this->getOrder(); i++) {
+    accessVars.push_back(currentVars[i]);
+  }
+
+  // Build the base statement that we will manipulate with scheduling
+  // commands to construct the specified distribution.
+  auto base = Access(*this, accessVars);
+  IndexStmt stmt = Place(base, distributions);
+  for (const auto& var : currentVars) {
+    stmt = forall(var, stmt);
+  }
+
+  // Now apply all of the scheduling transformations required by
+  // the Tensor Distribution Notation statement.
+  for (size_t i = 0; i < distributions.size(); i++) {
+    auto dist = distributions[i];
+
+    // Construct a mapping between the access variables and the DistVars
+    // for each level.
+    std::map<DistVar, IndexVar> accessVarMapping;
+    for (size_t j = 0; j < dist.getLHS().size(); j++) {
+      accessVarMapping[dist.getLHS()[j]] = accessVars[j];
+    }
+
+    // First, we'll select the variables that need to be distributed
+    // and order them to the front of the statement.
+    std::vector<IndexVar> ordering;
+    std::set<IndexVar> reordered;
+    int numUnconstrainedVars = 0;
+    for (size_t j = 0; j < dist.getRHS().size(); j++) {
+      auto name = dist.getRHS()[j];
+      if (name.getKind() == MachineDimensionName::Var) {
+        // If this variable partitions a tensor dimension, then
+        // it is distributed.
+        if (util::contains(dist.getLHS(), name.getDistVar())) {
+          auto ivar = accessVarMapping[name.getDistVar()];
+          ordering.push_back(ivar);
+          reordered.insert(ivar);
+        }
+      } else if (name.getKind() == MachineDimensionName::Restriction ||
+                 name.getKind() == MachineDimensionName::Broadcast) {
+        // Otherwise, use a fresh variable that isn't in the access, since this
+        // dimension is unconstrained.
+        auto ivar = unconstrainedVars[i][numUnconstrainedVars];
+        numUnconstrainedVars++;
+        ordering.push_back(ivar);
+        reordered.insert(ivar);
+      } else {
+        taco_iassert(false);
+      }
+    }
+    // Finally insert all remaining variables to the ordering.
+    for (auto v : currentVars) {
+      if (!util::contains(reordered, v)) {
+        ordering.push_back(v);
+      }
+    }
+    // Reorder the variables so that the variables we are distributing
+    // are all at the front.
+    stmt = stmt.reorder(ordering);
+
+    // Utility function to find the index of a variable in a vector. Returns
+    // -1 if the variable is not found.
+    auto idxOf = [&](IndexVar var, std::vector<IndexVar> vars) {
+      for (size_t j = 0; j < vars.size(); j++) {
+        if (vars[j] == var) {
+          return int(j);
+        }
+      }
+      return -1;
+    };
+
+    // Finally, distribute all of the variables we are supposed to
+    // and update the "current" set of variables for the recursion.
+    std::vector<IndexVar> original, distributed, local;
+    for (int j = 0; j < dist.getMachine().getDim(); j++) {
+      auto ivar = ordering[j];
+      original.push_back(ivar);
+      distributed.push_back(IndexVar(ivar.getName() + "n"));
+      local.push_back(IndexVar(ivar.getName() + "l"));
+
+      // Replace the variables in currentVars and accessVars.
+      int curIdx = idxOf(ivar, currentVars);
+      taco_iassert(curIdx != -1);
+      currentVars[curIdx] = local[j];
+      // Not all variables being distributed will be part of accessVars.
+      int accessIdx = idxOf(ivar, accessVars);
+      if (accessIdx != -1) {
+        accessVars[accessIdx] = local[j];
+      }
+    }
+    stmt = stmt.distribute(original, distributed, local, dist.getMachine(), dist.getParallelUnit());
+    stmt = stmt.communicate(base, distributed.back());
+  }
+
+  return stmt;
 }
 
 const Access TensorVar::operator()(const std::vector<IndexVar>& indices) const {
