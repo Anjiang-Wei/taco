@@ -1,12 +1,15 @@
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(Legion REQUIRED)
 if(OPENMP)
   find_package(OpenMP REQUIRED)
 endif(OPENMP)
 
-# We need to have HDF5_ROOT set here to do this if we're using
-# a non-system provided HDF5 installation.
+# For non-system provided installations, specify HDF5_ROOT or TBLIS_ROOT
+# environment variables as appropriate.
 find_package(HDF5 REQUIRED)
 find_package(BLAS REQUIRED)
+find_package(TBLIS REQUIRED)
 
 # Include the headers and supporting source files.
 include_directories(include/ "${CMAKE_BINARY_DIR}/include" cub/)

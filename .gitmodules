@@ -16,3 +16,6 @@
 [submodule "legion/cub"]
 	path = legion/cub
 	url = https://github.com/NVIDIA/cub.git
+[submodule "legion/tblis"]
+	path = legion/tblis
+	url = https://github.com/devinamatthews/tblis.git

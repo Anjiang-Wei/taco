@@ -5,6 +5,10 @@ endif()
 if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif()
+if(POLICY CMP0074) # allow <PACKAGE>_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif()
+
 project(taco
   VERSION 0.1
   LANGUAGES C CXX

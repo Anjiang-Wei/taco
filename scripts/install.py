@@ -43,6 +43,7 @@ parser.add_argument("--distal-build-dir", default="build", help="Path to build D
 parser.add_argument("--openmp", default=False, action="store_true", help="Enable use of OpenMP threads.")
 parser.add_argument("--sockets", default=None, type=int, help="Number of sockets on the CPU. Must be set if OpenMP is enabled.")
 parser.add_argument("--cuda", default=False, action="store_true", help="Enable use of NVIDIA GPUs.")
+parser.add_argument("--dim", default=None, type=int, help="Maximum tensor dimension supported by Legion.")
 parser.add_argument("--multi-node", default=False, action="store_true", help="Enable distributed computations.")
 parser.add_argument("--conduit", default="ibv", type=str, help="Network conduit (default ibv).")
 args = parser.parse_args()
@@ -84,6 +85,20 @@ with pushd(args.deps_install_dir):
             "PREFIX": makeInstallPath
         })
 
+    # TBLIS.
+    with pushd(os.path.join(distalRoot, "legion", "tblis")):
+        # BLAS is only used for the benchmark program, and hence disabled.
+        cmd = ["./configure",
+               "--prefix", makeInstallPath,
+               "--enable-config=auto",
+               "--without-blas"]
+        if args.openmp:
+            cmd.append("--enable-thread-model=openmp")
+            # TODO: set to "none" if args.openmp is False
+        run(*cmd)
+        run("make", "-j")
+        run("make", "-j", "install")
+
     # Legion.
     os.mkdir("legion-build")
     with pushd("legion-build"):
@@ -97,6 +112,8 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_USE_OpenMP"] = True
         if args.cuda:
             cmakeDefs["Legion_USE_CUDA"] = True
+        if args.dim is not None:
+            cmakeDefs["Legion_MAX_DIM"] = args.dim
         if args.multi_node:
             cmakeDefs["Legion_NETWORKS"] = "gasnetex"
             cmakeDefs["Legion_EMBED_GASNet"] = True
@@ -119,6 +136,7 @@ with pushd(args.distal_build_dir):
         cmakeDefs["OPENMP"] = True
     cmake(distalRoot, cmakeDefs, env={
         "HDF5_ROOT": makeInstallPath,
+        "TBLIS_ROOT": makeInstallPath,
     })
     run("make", "-j", "taco-test")
     run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
