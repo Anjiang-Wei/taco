@@ -2,14 +2,20 @@
 #define TACO_LG_LEAF_KERNELS_H
 
 #include <algorithm>
-#include <stdint.h>
-#include <stddef.h>
-#include <iostream>
-#include <cstdlib>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+
 #include "cblas.h"
 #include "legion.h"
 #include "realm_defines.h"
+#include "tblis/tblis.h"
+
+#ifdef REALM_USE_OPENMP
+#include <omp.h>
+#endif
 
 // An argument pack for MTTKRP.
 struct MTTKRPPack {
@@ -133,6 +139,15 @@ void ttv(TTVPack pack, T* A_vals, const T* B_vals, const T* C_vals) {
       }
     }
   }
+}
+
+// Specify number of threads TBLIS should try to use, in case we are using
+// OpenMP. TBLIS generally tries to use all physical processors, even if the
+// available OpenMP threads are fewer.
+inline void TblisSetThreads() {
+#ifdef REALM_USE_OPENMP
+  tblis_set_num_threads(omp_get_max_threads());
+#endif
 }
 
 #endif // TACO_LG_LEAF_KERNELS_H

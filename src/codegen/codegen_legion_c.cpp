@@ -284,17 +284,26 @@ void CodegenLegionC::emitHeaders(std::ostream &o) {
       if (node->func.find("blas") != std::string::npos) {
         this->usesBLAS = true;
       }
-      if (node->func.find("mttkrp") != std::string::npos || node->func.find("ttv") != std::string::npos) {
+      if (node->func.find("tblis::") != std::string::npos) {
+        this->usesTBLIS = true;
+      }
+      if (node->func.find("mttkrp") != std::string::npos ||
+          node->func.find("ttv") != std::string::npos ||
+          node->func.find("TblisSetThreads") != std::string::npos) {
         this->usesLeafKernels = true;
       }
     }
     bool usesBLAS = false;
+    bool usesTBLIS = false;
     bool usesLeafKernels = false;
   };
   BLASFinder bs;
   this->stmt.accept(&bs);
   if (bs.usesBLAS) {
     o << "#include \"cblas.h\"\n";
+  }
+  if (bs.usesTBLIS) {
+    o << "#include \"tblis/tblis.h\"\n";
   }
   if (bs.usesLeafKernels) {
     o << "#include \"leaf_kernels.h\"\n";

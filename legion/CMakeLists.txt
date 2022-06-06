@@ -66,7 +66,7 @@ function(add_app_folder folder)
     add_executable("${folder}" "${folder}/main.cpp" "${folder}/taco-generated.cpp")
     target_include_directories("${folder}" PRIVATE "${folder}")
     # Unfortunately, older versions of CMake do not export BLAS::BLAS.
-    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES})
+    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES} TBLIS::TBLIS)
     if (OPENMP)
       target_compile_options("${folder}" PRIVATE ${OpenMP_CXX_FLAGS})
     endif(OPENMP)
