@@ -1488,6 +1488,85 @@ TEST(distributed, nesting) {
   std::cout << lowered << std::endl;
 }
 
+TEST(distributed, chemTest) {
+  int dim = 10;
+  // Place each tensor onto a processor grid.
+  auto gx = ir::Var::make("gridX", Int32, false, false, true);
+  auto gy = ir::Var::make("gridY", Int32, false, false, true);
+  auto grid = Grid(gx, gy);
+
+  TensorDistribution dist(grid);
+  Tensor<double> A("A", {dim, dim, dim, dim}, Format{Dense, Dense, Dense, Dense}, dist);
+  Tensor<double> B("B", {dim, dim, dim, dim}, Format{Dense, Dense, Dense, Dense}, dist);
+  Tensor<double> C("C", {dim, dim, dim, dim}, Format{Dense, Dense, Dense, Dense}, dist);
+
+  IndexVar a("a"), b("b"), c("c"), i("i"), j("j"), k("k");
+  // an, bn = network
+  // al, bl = local
+  IndexVar an("an"), al("al"), bn("bn"), bl("bl"), co("co"), cos("cos"), ci("ci");
+  A(a, b, i, j) = B(a, c, i, k) * C(c, b, k, j);
+
+  std::shared_ptr<LeafCallInterface> tblis = std::make_shared<TBLIS>();
+  auto stmt = A.getAssignment().concretize();
+
+  // distributed for (an, bn):
+  //   fetch A
+  //   for cos:
+  //     co = staggered based on an, bn, cos
+  //     fetch B[:,co,:], C[co,:]
+  //     for al:                   ┐
+  //       for bl:                 │
+  //         for ci:               │
+  //           for i:              ├   TBLIS
+  //             for j:            │
+  //               for k:          │
+  //                 compute       ┘
+  //
+  // suchthat(
+  //   forall(distFused,
+  //     forall(cos,
+  //       forall(al,
+  //         forall(bl,
+  //           forall(ci,
+  //             forall(i,
+  //               forall(j,
+  //                 forall(k,
+  //                   A(a,b,i,j) += B(a,c,i,k) * C(c,b,k,j))))))),
+  //       transfers: transfer(B(a,c,i,k)), transfer(C(c,b,k,j))),
+  //     Distributed, NoRaces, transfers: transfer(A(a,b,i,j)), transfer(B(a,c,i,k)), transfer(C(c,b,k,j))),
+  //   divide(a, an, al, gridX) and divide(b, bn, bl, gridY) and multiFuse({an, bn}, reorder(an, bn)) and divide(c, co, ci, gridX) and stagger(co, by: an, bn, cos))
+
+  stmt = stmt
+      .distribute({a, b}, {an, bn}, {al, bl}, grid)
+      .divide(c, co, ci, gx)
+      .reorder({co, al, bl, ci, i, j, k})
+      .stagger(co, {an, bn}, cos)
+      .communicate(A(a,b,i,j), bn)
+      .communicate({B(a, c, i, k), C(c, b, k, j)}, cos)
+      ;
+
+  std::cerr << stmt << std::endl;
+
+  auto cpuOmpStmt = stmt
+      .parallelize(al, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces)
+      ;
+
+  auto tblisStmt = stmt
+      .swapLeafKernel(al, tblis)
+      ;
+
+  auto placeALowered = lowerLegionSeparatePartitionCompute(A.getPlacementStatement(), "placeLegionA");
+  auto placeBLowered = lowerLegionSeparatePartitionCompute(B.getPlacementStatement(), "placeLegionB");
+  auto placeCLowered = lowerLegionSeparatePartitionCompute(C.getPlacementStatement(), "placeLegionC");
+
+  auto loweredCpuOmp = lowerLegionSeparatePartitionCompute(cpuOmpStmt, "computeLegionNestedOMP");
+  auto loweredTblis = lowerLegionSeparatePartitionCompute(tblisStmt, "computeLegionTblis");
+
+  // Code-generate all of the placement and compute code.
+  auto all = ir::Block::make({placeALowered, placeBLowered, placeCLowered, loweredCpuOmp, loweredTblis});
+  ir::CodegenLegionC::compileToDirectory("../legion/chemTest/", all);
+}
+
 TEST(distributed, legionSpMV) {
   int dim = 100;
 
