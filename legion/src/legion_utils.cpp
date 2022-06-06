@@ -27,7 +27,7 @@ void benchmark(Legion::Context ctx, Legion::Runtime* runtime, std::function<void
   f();
   auto end = std::chrono::high_resolution_clock::now();
   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %lld ms.\n", ms);
+  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %lld ms.\n", static_cast<long long>(ms));
 }
 
 void benchmark(Legion::Context ctx, Legion::Runtime* runtime, std::vector<size_t>& times, std::function<void(void)> f) {
@@ -35,7 +35,7 @@ void benchmark(Legion::Context ctx, Legion::Runtime* runtime, std::vector<size_t
   f();
   auto end = std::chrono::high_resolution_clock::now();
   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %lld ms.\n", ms);
+  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %lld ms.\n", static_cast<long long>(ms));
   times.push_back(ms);
 }
 
@@ -44,8 +44,8 @@ void benchmarkAsyncCall(Legion::Context ctx, Legion::Runtime* runtime, std::vect
   f();
   runtime->issue_execution_fence(ctx);
   auto end = runtime->get_current_time(ctx);
-  auto ms = size_t((end.get<double>() - start.get<double>()) * 1e3);
-  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %ld ms.\n", ms);
+  auto ms = static_cast<long long>((end.get<double>() - start.get<double>()) * 1e3);
+  LEGION_PRINT_ONCE(runtime, ctx, stdout, "Execution time: %lld ms.\n", ms);
   times.push_back(ms);
 }
 
