@@ -130,7 +130,7 @@ add_subdirectory(apps)
 add_subdirectory(legion)
 string(REPLACE " -Wmissing-declarations" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-find_package(Git QUIET)
+# find_package(Git QUIET)
 # if(GIT_FOUND AND EXISTS "${TACO_PROJECT_DIR}/.git")
 #   # Update submodules as needed
 #   option(GIT_SUBMODULE "Check submodules during build" ON)
