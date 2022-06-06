@@ -1,12 +1,15 @@
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(Legion REQUIRED)
 if(OPENMP)
   find_package(OpenMP REQUIRED)
 endif(OPENMP)
 
-# We need to have HDF5_ROOT set here to do this if we're using
-# a non-system provided HDF5 installation.
+# For non-system provided installations, specify HDF5_ROOT or TBLIS_ROOT
+# environment variables as appropriate.
 find_package(HDF5 REQUIRED)
 find_package(BLAS REQUIRED)
+find_package(TBLIS REQUIRED)
 
 # Include the headers and supporting source files.
 include_directories(include/ "${CMAKE_BINARY_DIR}/include" cub/)
@@ -63,7 +66,7 @@ function(add_app_folder folder)
     add_executable("${folder}" "${folder}/main.cpp" "${folder}/taco-generated.cpp")
     target_include_directories("${folder}" PRIVATE "${folder}")
     # Unfortunately, older versions of CMake do not export BLAS::BLAS.
-    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES})
+    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES} TBLIS::TBLIS)
     if (OPENMP)
       target_compile_options("${folder}" PRIVATE ${OpenMP_CXX_FLAGS})
     endif(OPENMP)
@@ -107,6 +110,7 @@ endmacro()
 add_app_folder(pummaMM)
 add_app_folder(summaMM)
 add_app_folder(cannonMM)
+add_app_folder(chemTest)
 add_app_folder(placement-test)
 add_app_folder(johnsonMM)
 add_app_folder(solomonikMM)

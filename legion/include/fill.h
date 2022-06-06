@@ -71,7 +71,7 @@ void tacoFillOMPTask(const Legion::Task* task, const std::vector<Legion::Physica
 template<typename T>
 void tacoFill(Legion::Context ctx, Legion::Runtime* runtime, Legion::LogicalRegion r, T val) {
   size_t pieces = 0;
-  // Favor TOC proc > OMP proc > CPU proc. The default mapper performs this same heuristic
+  // Favor GPU proc > OMP proc > CPU proc. The default mapper performs this same heuristic
   // as well, so there's nothing more we need to do.
   auto numGPU = runtime->select_tunable_value(ctx, Legion::Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_GPUS).get<size_t>();
   auto numOMP = runtime->select_tunable_value(ctx, Legion::Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_OMPS).get<size_t>();

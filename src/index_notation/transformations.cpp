@@ -14,6 +14,9 @@
 #include <iostream>
 #include <algorithm>
 #include <limits>
+#include <optional>
+#include <string_view>
+#include <tuple>
 
 using namespace std;
 
@@ -1297,7 +1300,9 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-static bool compare(std::vector<IndexVar> vars1, std::vector<IndexVar> vars2) {
+namespace {
+
+bool compare(std::vector<IndexVar> vars1, std::vector<IndexVar> vars2) {
   return vars1 == vars2;
 }
 
@@ -1312,6 +1317,8 @@ IndexVar getRootParent(ProvenanceGraph pg, IndexVar var) {
     return IndexVar();
   }
 }
+
+}  // namespace
 
 struct GEMM::Content {
   std::vector<TensorVar> tensorVars;
@@ -1484,6 +1491,366 @@ ir::Stmt GEMM::replaceValidStmt(IndexStmt stmt,
 
   // TODO (rohany): Pick the right call between double and float here.
   results.push_back(ir::SideEffect::make(ir::Call::make("cblas_dgemm", args, Auto)));
+  return ir::Block::make(results);
+}
+
+struct TBLIS::Content {
+  std::vector<TensorVar> tensorVars;
+  std::vector<IndexVar> ivars;
+  std::map<IndexVar, char> ivarToChar;
+  IndexVar rootIvar;
+  std::string aModes;
+  std::string bModes;
+  std::string cModes;
+  double alpha;
+};
+
+namespace {
+std::string_view indexVariableDictionary =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Scan for expression of type alpha * Access * Access, where alpha is an
+// optional literal.
+std::optional<std::tuple<double, Access, Access>> ScanForDoubleAccessAccess(
+    IndexExpr expr, double defaultVal) {
+  if (!isa<Mul>(expr)) {
+    return std::nullopt;
+  }
+
+  auto ret =
+      [](Literal lit, Access acc1,
+         Access acc2) -> std::optional<std::tuple<double, Access, Access>> {
+    double coeff;
+    if (lit.getDataType().getKind() == Datatype::Float32) {
+      coeff = lit.getVal<float>();
+    } else if (lit.getDataType().getKind() == Datatype::Float64) {
+      coeff = lit.getVal<double>();
+    } else {
+      return std::nullopt;
+    }
+    return {{coeff, acc1, acc2}};
+  };
+
+  Mul mul = to<Mul>(expr);
+  if (isa<Access>(mul.getA()) && isa<Access>(mul.getB())) {
+    auto acc1 = to<Access>(mul.getA());
+    auto acc2 = to<Access>(mul.getB());
+    return {{defaultVal, acc1, acc2}};
+  } else if (isa<Access>(mul.getA()) && isa<Mul>(mul.getB())) {
+    auto acc1 = to<Access>(mul.getA());
+    auto imul = to<Mul>(mul.getB());
+    if (isa<Literal>(imul.getA()) && isa<Access>(imul.getB())) {
+      auto lit = to<Literal>(imul.getA());
+      auto acc2 = to<Access>(imul.getB());
+      return ret(lit, acc1, acc2);
+    } else if (isa<Access>(imul.getA()) && isa<Literal>(imul.getB())) {
+      auto acc2 = to<Access>(imul.getA());
+      auto lit = to<Literal>(imul.getB());
+      return ret(lit, acc1, acc2);
+    }
+  } else if (isa<Mul>(mul.getA()) && isa<Access>(mul.getB())) {
+    auto imul = to<Mul>(mul.getA());
+    auto acc2 = to<Access>(mul.getB());
+    if (isa<Literal>(imul.getA()) && isa<Access>(imul.getB())) {
+      auto lit = to<Literal>(imul.getA());
+      auto acc1 = to<Access>(imul.getB());
+      return ret(lit, acc1, acc2);
+    } else if (isa<Access>(imul.getA()) && isa<Literal>(imul.getB())) {
+      auto acc1 = to<Access>(imul.getA());
+      auto lit = to<Literal>(imul.getB());
+      return ret(lit, acc1, acc2);
+    }
+  }
+  return std::nullopt;
+}
+
+}  // namespace
+
+TBLIS::TBLIS() : content(std::make_shared<Content>()) {}
+
+void TBLIS::print(std::ostream& os) const {
+  os << "TBLIS(" << this->content->tensorVars[0].getName() << "("
+     << this->content->aModes << ") <- ";
+  if (this->content->alpha != 1) {
+    os << this->content->alpha << "*";
+  }
+  os << this->content->tensorVars[1].getName() << "(" << this->content->bModes
+     << ")*" << this->content->tensorVars[2].getName() << "("
+     << this->content->cModes << "))";
+}
+
+IndexVar TBLIS::getRootIvar() const { return this->content->rootIvar; }
+
+void TBLIS::canApply(IndexStmt stmt, ProvenanceGraph pg, IndexVar root,
+                     std::string* reason) const {
+  INIT_REASON(reason);
+
+  // Find the target set of loops we want to replace with a TBLIS call.
+  struct Finder : IndexNotationVisitor {
+    void visit(const ForallNode* node) {
+      if (node->indexVar == this->target) {
+        this->root = node;
+      }
+      node->stmt.accept(this);
+    }
+
+    IndexStmt root = nullptr;
+    IndexVar target;
+  };
+  Finder f;
+  f.target = root;
+  stmt.accept(&f);
+
+  auto rootStmt = f.root;
+  taco_iassert(rootStmt != nullptr);
+
+  struct IVarCollector : IndexNotationVisitor {
+    void visit(const ForallNode* node) {
+      this->vars.push_back(node->indexVar);
+      node->stmt.accept(this);
+    }
+    std::vector<IndexVar> vars;
+  };
+  IVarCollector c;
+  rootStmt.accept(&c);
+
+  std::vector<IndexVar> indexVars = std::move(c.vars);
+  taco_iassert(indexVars.size() <= indexVariableDictionary.size());
+
+  int i = 0;
+  for (const auto& var : indexVars) {
+    IndexVar rootVar = getRootParent(pg, var);
+    this->content->ivarToChar[rootVar] = indexVariableDictionary[i];
+    ++i;
+  }
+
+  // Get out the assignment.
+  IndexStmt curStmt = rootStmt;
+  while (!isa<Assignment>(curStmt)) {
+    taco_iassert(isa<Forall>(curStmt));
+    curStmt = to<Forall>(curStmt).getStmt();
+  }
+  auto assign = to<Assignment>(curStmt);
+
+  // Extract out the tensors from expression of form
+  //   A(I) = alpha * B(J) * C(K)
+  Access A = assign.getLhs();
+  auto out = ScanForDoubleAccessAccess(assign.getRhs(), 1);
+  taco_iassert(out.has_value());
+  auto [alpha, B, C] = *out;
+
+  // Check types.
+  taco_iassert(A.getTensorVar().getType().getDataType().isFloat());
+  taco_iassert(A.getTensorVar().getType().getDataType() ==
+               B.getTensorVar().getType().getDataType());
+  taco_iassert(B.getTensorVar().getType().getDataType() ==
+               C.getTensorVar().getType().getDataType());
+
+  // At this point, we've found a tensor contraction that we can use.
+  this->content->ivars = indexVars;
+  this->content->tensorVars = {A.getTensorVar(), B.getTensorVar(),
+                               C.getTensorVar()};
+  this->content->rootIvar = root;
+  this->content->alpha = alpha;
+
+  // Construct the einsum notation for the contraction.
+  // Use at() to ensure that the index variables are actually being ranged over.
+  std::ostringstream aModesStream;
+  for (const IndexVar& var : A.getIndexVars()) {
+    aModesStream << this->content->ivarToChar.at(var);
+  }
+  this->content->aModes = std::move(aModesStream).str();
+
+  std::ostringstream bModesStream;
+  for (const IndexVar& var : B.getIndexVars()) {
+    bModesStream << this->content->ivarToChar.at(var);
+  }
+  this->content->bModes = std::move(bModesStream).str();
+
+  std::ostringstream cModesStream;
+  for (const IndexVar& var : C.getIndexVars()) {
+    cModesStream << this->content->ivarToChar.at(var);
+  }
+  this->content->cModes = std::move(cModesStream).str();
+}
+
+ir::Stmt TBLIS::replaceValidStmt(
+    IndexStmt stmt, ProvenanceGraph pg,
+    std::map<TensorVar, ir::Expr> tensorVars, bool inReduction,
+    std::vector<IndexVar> definedVarOrder,
+    std::map<IndexVar, std::vector<ir::Expr>> underivedBounds,
+    std::map<taco::IndexVar, taco::ir::Expr> variableNames,
+    Iterators iterators) const {
+  // TODO (rohany): We could walk the statement again here and make sure that
+  // it's the same as the one we verified etc.
+
+  std::vector<ir::Stmt> results;
+  auto ctx = ir::Symbol::make("ctx");
+
+  std::vector<ir::Expr> tvars;
+  for (auto var : this->content->tensorVars) {
+    tvars.push_back(tensorVars[var]);
+  }
+
+  auto getIndexSpace = [&](ir::Expr reg) {
+    auto vals = ir::GetProperty::make(reg, ir::TensorProperty::Values);
+    auto logreg = ir::Call::make("get_logical_region", {vals}, Auto);
+    return ir::MethodCall::make(logreg, "get_index_space", {},
+                                false /* deref */, Auto);
+  };
+  auto aIndexSpace = getIndexSpace(tvars[0]);
+  auto bIndexSpace = getIndexSpace(tvars[1]);
+  auto cIndexSpace = getIndexSpace(tvars[2]);
+
+  // Unpack the domains for each variable.
+  auto aDomain = ir::Var::make("aDomain", Auto);
+  auto bDomain = ir::Var::make("bDomain", Auto);
+  auto cDomain = ir::Var::make("cDomain", Auto);
+  results.push_back(ir::VarDecl::make(
+      aDomain, ir::Call::make("runtime->get_index_space_domain",
+                              {ctx, aIndexSpace}, Auto)));
+  results.push_back(ir::VarDecl::make(
+      bDomain, ir::Call::make("runtime->get_index_space_domain",
+                              {ctx, bIndexSpace}, Auto)));
+  results.push_back(ir::VarDecl::make(
+      cDomain, ir::Call::make("runtime->get_index_space_domain",
+                              {ctx, cIndexSpace}, Auto)));
+
+  // Break out if either domain is empty.
+  auto bVolZero = ir::Eq::make(
+      ir::MethodCall::make(bDomain, "get_volume", {}, false, Auto), 0);
+  auto cVolZero = ir::Eq::make(
+      ir::MethodCall::make(cDomain, "get_volume", {}, false, Auto), 0);
+  auto guard = ir::Or::make(bVolZero, cVolZero);
+  results.push_back(ir::IfThenElse::make(guard, ir::Return::make(ir::Expr())));
+
+  const TensorVar& aTensorVar = this->content->tensorVars[0];
+  const TensorVar& bTensorVar = this->content->tensorVars[1];
+  const TensorVar& cTensorVar = this->content->tensorVars[2];
+
+  auto aAccess = ir::GetProperty::make(
+      tvars[0], ir::TensorProperty::ValuesWriteAccessor, aTensorVar.getOrder());
+  if (inReduction) {
+    aAccess = ir::GetProperty::make(tvars[0],
+                                    ir::TensorProperty::ValuesReductionAccessor,
+                                    aTensorVar.getOrder());
+  }
+  auto bAccess = ir::GetProperty::make(
+      tvars[1], ir::TensorProperty::ValuesReadAccessor, bTensorVar.getOrder());
+  auto cAccess = ir::GetProperty::make(
+      tvars[2], ir::TensorProperty::ValuesReadAccessor, cTensorVar.getOrder());
+
+  auto getBounds = [](ir::Expr domain, const std::string& func) {
+    return ir::MethodCall::make(domain, func, {}, false, Int());
+  };
+  auto getLen = [&](ir::Expr domain, ir::Expr dim) {
+    return ir::Add::make(
+        1, ir::Sub::make(ir::Load::make(getBounds(domain, "hi"), dim),
+                         ir::Load::make(getBounds(domain, "lo"), dim)));
+  };
+  auto getPtr = [&](ir::Expr access, ir::Expr domain) {
+    return ir::MethodCall::make(access, "ptr", {getBounds(domain, "lo")},
+                                false /* deref */, Auto);
+  };
+  auto type = aTensorVar.getType().getDataType();
+  auto getStride = [&](ir::Expr access, ir::Expr dim) {
+    return ir::Div::make(
+        ir::Load::make(
+            ir::FieldAccess::make(
+                ir::FieldAccess::make(access, "accessor", false, Auto),
+                "strides", false, Int()),
+            dim),
+        ir::Sizeof::make(Type(type)));
+  };
+
+  // Specify number of threads.
+  results.push_back(
+      ir::SideEffect::make(ir::Call::make("TblisSetThreads", {}, Auto)));
+
+  // Construct shapes for TBLIS.
+  auto aShape = ir::Var::make(
+      "aShape", Datatype("std::array<tblis::len_type, " +
+                         util::toString(aTensorVar.getOrder()) + ">"));
+  auto bShape = ir::Var::make(
+      "bShape", Datatype("std::array<tblis::len_type, " +
+                         util::toString(bTensorVar.getOrder()) + ">"));
+  auto cShape = ir::Var::make(
+      "cShape", Datatype("std::array<tblis::len_type, " +
+                         util::toString(cTensorVar.getOrder()) + ">"));
+
+  results.push_back(ir::VarDecl::make(aShape, ir::Symbol::make("{}")));
+  for (int i = 0; i < aTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(aShape, i, getLen(aDomain, i)));
+  }
+
+  results.push_back(ir::VarDecl::make(bShape, ir::Symbol::make("{}")));
+  for (int i = 0; i < bTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(bShape, i, getLen(bDomain, i)));
+  }
+
+  results.push_back(ir::VarDecl::make(cShape, ir::Symbol::make("{}")));
+  for (int i = 0; i < cTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(cShape, i, getLen(cDomain, i)));
+  }
+
+  // Construct strides for TBLIS.
+  auto aStrides = ir::Var::make(
+      "aStrides", Datatype("std::array<tblis::stride_type, " +
+                           util::toString(aTensorVar.getOrder()) + ">"));
+  auto bStrides = ir::Var::make(
+      "bStrides", Datatype("std::array<tblis::stride_type, " +
+                           util::toString(bTensorVar.getOrder()) + ">"));
+  auto cStrides = ir::Var::make(
+      "cStrides", Datatype("std::array<tblis::stride_type, " +
+                           util::toString(cTensorVar.getOrder()) + ">"));
+
+  results.push_back(ir::VarDecl::make(aStrides, ir::Symbol::make("{}")));
+  for (int i = 0; i < aTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(aStrides, i, getStride(aAccess, i)));
+  }
+
+  results.push_back(ir::VarDecl::make(bStrides, ir::Symbol::make("{}")));
+  for (int i = 0; i < bTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(bStrides, i, getStride(bAccess, i)));
+  }
+
+  results.push_back(ir::VarDecl::make(cStrides, ir::Symbol::make("{}")));
+  for (int i = 0; i < cTensorVar.getOrder(); ++i) {
+    results.push_back(ir::Store::make(cStrides, i, getStride(cAccess, i)));
+  }
+
+  // Create TBLIS tensors.
+  auto aTensor = ir::Var::make("aTensor", Auto);
+  auto bTensor = ir::Var::make("bTensor", Auto);
+  auto cTensor = ir::Var::make("cTensor", Auto);
+
+  results.push_back(ir::VarDecl::make(
+      aTensor,
+      ir::Call::make("tblis::varray_view<" + util::toString(type) + ">",
+                     {aShape, getPtr(aAccess, aDomain), aStrides}, Auto)));
+
+  results.push_back(ir::VarDecl::make(
+      bTensor,
+      ir::Call::make("tblis::varray_view<const " + util::toString(type) + ">",
+                     {bShape, getPtr(bAccess, bDomain), bStrides}, Auto)));
+
+  results.push_back(ir::VarDecl::make(
+      cTensor,
+      ir::Call::make("tblis::varray_view<const " + util::toString(type) + ">",
+                     {cShape, getPtr(cAccess, cDomain), cStrides}, Auto)));
+
+  std::vector<ir::Expr> args = {
+      this->content->alpha,
+      bTensor,
+      ir::Symbol::make("\"" + this->content->bModes + "\""),
+      cTensor,
+      ir::Symbol::make("\"" + this->content->cModes + "\""),
+      0.f,  // beta
+      aTensor,
+      ir::Symbol::make("\"" + this->content->aModes + "\"")};
+
+  results.push_back(
+      ir::SideEffect::make(ir::Call::make("tblis::mult", args, Auto)));
   return ir::Block::make(results);
 }
 

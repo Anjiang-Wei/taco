@@ -5,6 +5,10 @@ endif()
 if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif()
+if(POLICY CMP0074) # allow <PACKAGE>_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif()
+
 project(taco
   VERSION 0.1
   LANGUAGES C CXX
@@ -130,7 +134,7 @@ add_subdirectory(apps)
 add_subdirectory(legion)
 string(REPLACE " -Wmissing-declarations" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-find_package(Git QUIET)
+# find_package(Git QUIET)
 # if(GIT_FOUND AND EXISTS "${TACO_PROJECT_DIR}/.git")
 #   # Update submodules as needed
 #   option(GIT_SUBMODULE "Check submodules during build" ON)
