@@ -46,6 +46,7 @@ parser.add_argument("--cuda", default=False, action="store_true", help="Enable u
 parser.add_argument("--dim", default=None, type=int, help="Maximum tensor dimension supported by Legion.")
 parser.add_argument("--multi-node", default=False, action="store_true", help="Enable distributed computations.")
 parser.add_argument("--conduit", default="ibv", type=str, help="Network conduit (default ibv).")
+parser.add_argument("--threads", default=1, type=int, help="Number of threads to use to build.")
 args = parser.parse_args()
 
 # TODO (rohany): Make sure that this script is running from the root of the DISTAL repository.
@@ -71,8 +72,8 @@ with pushd(args.deps_install_dir):
     run("tar", "-xf", "hdf5-1.10.1.tar.gz")
     with pushd("hdf5-1.10.1"):
         run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
-        run("make", "-j")
-        run("make", "-j", "install")
+        run("make", "-j{}".format(args.threads))
+        run("make", "-j{}".format(args.threads), "install")
 
     # OpenBLAS.
     with pushd(os.path.join(distalRoot, "legion", "OpenBLAS")):
@@ -80,8 +81,8 @@ with pushd(args.deps_install_dir):
         if args.openmp:
             env["USE_OPENMP"] = "1"
             env["NUM_PARALLEL"] = str(args.sockets)
-        run("make", "-j", env=env)
-        run("make", "-j", "install", env={
+        run("make", "-j{}".format(args.threads), env=env)
+        run("make", "-j{}".format(args.threads), "install", env={
             "PREFIX": makeInstallPath
         })
 
@@ -94,10 +95,11 @@ with pushd(args.deps_install_dir):
                "--without-blas"]
         if args.openmp:
             cmd.append("--enable-thread-model=openmp")
-            # TODO: set to "none" if args.openmp is False
+        else:
+            cmd.append("--enable-thread-model=none")
         run(*cmd)
-        run("make", "-j")
-        run("make", "-j", "install")
+        run("make", "-j{}".format(args.threads))
+        run("make", "-j{}".format(args.threads), "install")
 
     # Legion.
     os.mkdir("legion-build")
@@ -122,7 +124,7 @@ with pushd(args.deps_install_dir):
         cmake(os.path.join(distalRoot, "legion", "legion"), cmakeDefs, env={
             "HDF5_ROOT": makeInstallPath,
         })
-        run("make", "-j", "install")
+        run("make", "-j{}".format(args.threads), "install")
 
 # Finally build DISTAL.
 os.mkdir(args.distal_build_dir)
@@ -138,6 +140,6 @@ with pushd(args.distal_build_dir):
         "HDF5_ROOT": makeInstallPath,
         "TBLIS_ROOT": makeInstallPath,
     })
-    run("make", "-j", "taco-test")
+    run("make", "-j{}".format(args.threads), "taco-test")
     run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
-    run("make", "-j", "cannonMM")
+    run("make", "-j{}".format(args.threads), "cannonMM")

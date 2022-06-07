@@ -13,16 +13,17 @@ void top_level_task(const Task* task,
                     Runtime* runtime) {
   // Create the regions.
   auto args = runtime->get_input_args();
-  int n = -1, gx = -1, gy = -1;
+  int no = -1, nv = -1, gx = -1, gy = -1;
   bool use_tblis = false;
   Realm::CommandLineParser parser;
-  parser.add_option_int("-n", n);
+  parser.add_option_int("-nv", nv);
+  parser.add_option_int("-no", no);
   parser.add_option_int("-gx", gx);
   parser.add_option_int("-gy", gy);
   parser.add_option_bool("-tblis", use_tblis);
   parser.parse_command_line(args.argc, args.argv);
-  if (n == -1) {
-    std::cout << "Please provide an input matrix size with -n." << std::endl;
+  if (no == -1 || nv == -1) {
+    std::cout << "Please provide input sizes with -no, -nv." << std::endl;
     return;
   }
   if (gx == -1) {
@@ -38,9 +39,9 @@ void top_level_task(const Task* task,
 
   auto fspace = runtime->create_field_space(ctx);
   allocate_tensor_fields<valType>(ctx, runtime, fspace);
-  auto A = createDenseTensor<4, valType>(ctx, runtime, {n, n, n, n}, FID_VAL);
-  auto B = createDenseTensor<4, valType>(ctx, runtime, {n, n, n, n}, FID_VAL);
-  auto C = createDenseTensor<4, valType>(ctx, runtime, {n, n, n, n}, FID_VAL);
+  auto A = createDenseTensor<4, valType>(ctx, runtime, {nv, nv, no, no}, FID_VAL);
+  auto B = createDenseTensor<4, valType>(ctx, runtime, {nv, nv, no, no}, FID_VAL);
+  auto C = createDenseTensor<4, valType>(ctx, runtime, {nv, nv, no, no}, FID_VAL);
 
   // These partitions are disjoint, so we can fill over them.
   auto aPart = partitionForplaceLegionA(ctx, runtime, &A, gx, gy);
@@ -80,7 +81,7 @@ void top_level_task(const Task* task,
 
   // Get the GFLOPS per node.
   auto avgTime = average(times);
-  auto flopCount = getGEMMFLOPCount(n * n, n * n, n * n);
+  auto flopCount = size_t(no) * size_t(nv) * size_t(no) * size_t(nv) * (2 * size_t(no) * size_t(nv) - 1);
   auto gflops = getGFLOPS(flopCount, avgTime);
   auto nodes = runtime
                    ->select_tunable_value(
@@ -90,8 +91,9 @@ void top_level_task(const Task* task,
                     "On %zu nodes achieved GFLOPS per node: %f.\n", nodes,
                     gflops / double(nodes));
 
-  tacoValidate<valType>(ctx, runtime, A.vals, aPart.APartition.valsPartition,
-                        valType(n * n));
+  // TODO (rohany): I'm not sure what the resulting entries should validate to.
+  // tacoValidate<valType>(ctx, runtime, A.vals, aPart.APartition.valsPartition,
+  //                       valType(n * n));
 }
 
 TACO_MAIN(valType)

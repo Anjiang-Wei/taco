@@ -8,8 +8,13 @@ endif(OPENMP)
 # For non-system provided installations, specify HDF5_ROOT or TBLIS_ROOT
 # environment variables as appropriate.
 find_package(HDF5 REQUIRED)
-find_package(BLAS REQUIRED)
 find_package(TBLIS REQUIRED)
+
+# Find the BLAS library to use. We have to manually add the include path
+# to the BLAS library because CMake doesn't set this for us.
+find_package(BLAS REQUIRED)
+find_path(BLAS_INCLUDE_DIR cblas.h ${CMAKE_PREFIX_PATH})
+include_directories("${BLAS_INCLUDE_DIR}/include")
 
 # Include the headers and supporting source files.
 include_directories(include/ "${CMAKE_BINARY_DIR}/include" cub/)
