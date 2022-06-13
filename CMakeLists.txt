@@ -130,8 +130,8 @@ install(DIRECTORY ${TACO_INCLUDE_DIR}/ DESTINATION include FILES_MATCHING PATTER
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(tools)
-add_subdirectory(legion)
 add_subdirectory(DISTAL)
+add_subdirectory(legion)
 
 add_subdirectory(apps)
 string(REPLACE " -Wmissing-declarations" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

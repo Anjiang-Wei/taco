@@ -131,9 +131,10 @@ with pushd(args.deps_install_dir):
 os.mkdir(args.distal_build_dir)
 with pushd(args.distal_build_dir):
     cmakeDefs = {
-        "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
-        "CMAKE_BUILD_TYPE": "Release",
         "BLA_VENDOR": "OpenBLAS",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_MODULE_PATH": distalRoot,
+        "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
     }
     if args.openmp:
         cmakeDefs["OPENMP"] = True
