@@ -90,12 +90,16 @@ TensorBase::TensorBase(std::string name, Datatype ctype, std::vector<int> dimens
                        TensorDistributionNotation distribution) :
                        TensorBase(name, ctype, dimensions, format) {
   this->content->tensorDistributionNotation = {distribution};
+  auto oldtv = this->getTensorVar();
+  this->content->tensorVar = TensorVar(oldtv.getId(), oldtv.getName(), oldtv.getType(), oldtv.getFormat(), {distribution});
 }
 
 TensorBase::TensorBase(std::string name, Datatype ctype, std::vector<int> dimensions, Format format,
                        std::vector<TensorDistributionNotation> distribution) :
     TensorBase(name, ctype, dimensions, format) {
   this->content->tensorDistributionNotation = distribution;
+  auto oldtv = this->getTensorVar();
+  this->content->tensorVar = TensorVar(oldtv.getId(), oldtv.getName(), oldtv.getType(), oldtv.getFormat(), distribution);
 }
 
   static Format initFormat(Format format) {
