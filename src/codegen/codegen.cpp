@@ -696,5 +696,9 @@ void CodeGen::printYield(const Yield* op, vector<Expr> localVars,
   stream << labelPrefix << funcName << (labelCount++) << ":;" << endl;
 }
 
+bool CodeGen::isImplementationGen(OutputKind kind) {
+  return kind == ImplementationGen || kind == ImplementationNoHeaderGen;
+}
+
 
 }}

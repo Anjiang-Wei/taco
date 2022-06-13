@@ -87,6 +87,8 @@ std::string CodegenLegion::printFuncName(const Function *func,
 
   bool isTask = func->name.find("task") != std::string::npos;
 
+  ret << "extern \"C\" ";
+
   // TODO (rohany): This is a hack.
   // When the parent function has a type, we give that type to all children functions
   // to handle reductions into scalars, as those tasks return values to accumulate
@@ -512,7 +514,7 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
 
       // We only need to generate these structs for the implementation,
       // as they are not user facing.
-      if (outputKind == ImplementationGen) {
+      if (this->isImplementationGen(outputKind)) {
         out << "struct " << this->taskArgsName(func->name) << " {\n";
         this->indent++;
         for (auto& var : pf.packVars) {
@@ -533,8 +535,9 @@ void CodegenLegion::analyzeAndCreateTasks(OutputKind outputKind, std::ostream& o
     }
 
     // We also need to generate any structs declared by this function before we generate
-    // code for the function. We only need to define these structs in the header file.
-    if (outputKind == HeaderGen) {
+    // code for the function. We only need to define these structs in the header file. However,
+    // we also need to define these structs if we are generating a standalone implementation.
+    if (outputKind == HeaderGen || outputKind == ImplementationNoHeaderGen) {
       struct DeclareStructFinder : public IRVisitor {
         void visit(const DeclareStruct* ds) {
           this->declares.push_back(ds);
@@ -569,12 +572,14 @@ std::string CodegenLegion::procForTask(Stmt, Stmt) {
 void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) {
   // If we're emitting a header, just generate the stub.
   if (outputKind == HeaderGen) {
-    out << "void registerTacoTasks();\n";
+    out << "extern \"C\" void registerTacoTasks();\n";
+    // TODO (rohany): Make this a constant name.
+    out << "extern \"C\" void dynamicallyRegisterDISTALTasks(void** args);\n";
     return;
   }
 
   // Output a function performing all of the task registrations.
-  out << "void registerTacoTasks() {\n";
+  out << "extern \"C\" void registerTacoTasks() {\n";
   indent++;
 
   for (auto ffunc : this->allFunctions) {
@@ -641,6 +646,153 @@ void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) 
     }
   }
 
+  out << "}\n";
+
+  indent--;
+
+  // TODO (rohany): Deduplicate this code.
+
+  // Output a function performing all of the task registrations.
+  out << "extern \"C\" void dynamicallyRegisterDISTALTasks(void** args) {\n";
+  indent++;
+
+  // Unpack the context and runtime arguments.
+  doIndent();
+  out << "Legion::Context ctx = (Legion::Context)args[0];\n";
+  doIndent();
+  out << "Legion::Runtime* runtime = (Legion::Runtime*)args[1];\n";
+
+  for (auto ffunc : this->allFunctions) {
+    for (auto& f : this->functions[ffunc]) {
+      auto func = f.as<Function>();
+      auto forL = this->funcToFor.at(func).as<For>();
+
+      // Tasks that launch no tasks are leaf tasks, so let Legion know about that.
+      struct LeafTaskFinder : public IRVisitor {
+        void visit(const For* node) {
+          if (node->isTask) {
+            this->isLeaf = false;
+          }
+          node->contents.accept(this);
+        }
+        void visit(const Call* node) {
+          // Tasks that create partitions aren't leaf tasks either.
+          if (node->func.find("create_index_partition") != std::string::npos) {
+            this->isLeaf = false;
+          }
+        }
+        bool isLeaf = true;
+      };
+      LeafTaskFinder finder;
+      forL->contents.accept(&finder);
+
+      doIndent();
+      out << "{\n";
+      indent++;
+
+      doIndent();
+      out << "TaskVariantRegistrar registrar(taskID(" << forL->taskID << "), \"" << func->name << "\");\n";
+
+      // TODO (rohany): Make this delegation a virtual function that needs to be overridden.
+      doIndent();
+      std::string proc = this->procForTask(ffunc, func);
+      out << "registrar.add_constraint(ProcessorConstraint(" << proc << "));\n";
+
+      doIndent();
+      if (finder.isLeaf) {
+        out << "registrar.set_leaf();\n";
+      } else {
+        out << "registrar.set_inner();\n";
+      }
+
+      doIndent();
+      // TODO (rohany): This is a hack.
+      // When the parent function has a type, we give that type to all children functions
+      // to handle reductions into scalars, as those tasks return values to accumulate
+      // as the result of the scalar. However, since we also support upfront partitioning,
+      // the PARTITION_ONLY functions also have a non-void return type, which confuses the
+      // logic here. To be safe, we only let the tasks have a explicit return type if the
+      // return type is a primitive type.
+      if (func->returnType.getKind() != Datatype::Undefined && func->returnType.getKind() != Datatype::CppType) {
+        out << "runtime->register_task_variant<" << func->returnType << "," << func->name << ">(registrar);\n";
+      } else {
+        out << "runtime->register_task_variant<" << func->name << ">(registrar);\n";
+      }
+      doIndent();
+      out << "runtime->attach_name(taskID(" << forL->taskID << "), \"" << func->name << "\");\n";
+
+      indent--;
+
+      doIndent();
+      out << "}\n";
+    }
+  }
+
+  out << "}\n";
+}
+
+void CodegenLegion::generateShim(const ir::Stmt &func, std::ostream &out, OutputKind outputKind) {
+  auto funcPtr = func.as<ir::Function>();
+
+  // TODO (rohany): I don't know the best way to satisfy the calling convention for generating shims
+  //  when runtime arguments that aren't tensors etc are getting passed into the generated kernels.
+  //  This is fine for AOT compilation but raises a bit of a problem for JIT compilation. To side-step
+  //  this issue now, I'm just not going to generate shims for functions that have non-tensor and
+  //  non-pointer arguments.
+  for (auto it : funcPtr->inputs) {
+    auto var = it.as<ir::Var>();
+    taco_iassert(var) << "Unable to convert input " << it << " to ir::Var";
+    if (!var->is_tensor && var->type.getKind() != Datatype::CppType) {
+      return;
+    }
+  }
+
+  out << "extern \"C\" ";
+
+  if (funcPtr->returnType.getKind() == Datatype::Undefined) {
+    out << "void ";
+  } else {
+    // TODO (rohany): Do we know if it is a pointer?
+    out << printType(funcPtr->returnType, false /* is_ptr */) << " ";
+  }
+
+  out << "_shim_" << funcPtr->name << "(void** parameterPack)";
+
+  // If we're supposed to output headers only, then just emit the declaration.
+  if (outputKind == HeaderGen) {
+    out << ";\n";
+    return;
+  }
+  out << "{\n  return " << funcPtr->name << "(";
+
+
+  // Add the runtime and context arguments.
+  out << "(Legion::Context)parameterPack[0], ";
+  out << "(Legion::Runtime*)parameterPack[1], ";
+
+  int i = 2;
+  std::string delimiter = "";
+
+  for (auto it : funcPtr->outputs) {
+    auto var = it.as<ir::Var>();
+    taco_iassert(var) << "Unable to convert output " << it << " to ir::Var";
+    taco_iassert(var->is_tensor);
+    // TODO (rohany): Does this need a namespace eventually?
+    out << delimiter << "(LegionTensor*)parameterPack[" << i++ << "]";
+    delimiter = ", ";
+  }
+  for (auto it : funcPtr->inputs) {
+    auto var = it.as<ir::Var>();
+    taco_iassert(var) << "Unable to convert input " << it << " to ir::Var";
+    if (var->is_tensor) {
+      out << delimiter << "(LegionTensor*)parameterPack[" << i++ << "]";
+    } else {
+      out << delimiter << "(" << printType(var->type, var->is_ptr) << ")parameterPack[" << i++ << "]";
+    }
+    delimiter = ", ";
+  }
+
+  out << ");\n";
   out << "}\n";
 }
 

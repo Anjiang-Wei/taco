@@ -105,6 +105,7 @@ with pushd(args.deps_install_dir):
     os.mkdir("legion-build")
     with pushd("legion-build"):
         cmakeDefs = {
+            "BUILD_SHARED_LIBS": True,
             "CMAKE_CXX_FLAGS": "--std=c++11",
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,

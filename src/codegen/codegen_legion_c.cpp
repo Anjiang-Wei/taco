@@ -242,7 +242,7 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
   // Emit field accessors. We don't need to emit accessors if we are
   // generating a header file, as these declarations are local to the
   // generated code.
-  if (this->outputKind == ImplementationGen) {
+  if (this->isImplementationGen(this->outputKind)) {
     this->collectAndEmitAccessors(stmt, out);
   }
   this->analyzeAndCreateTasks(this->outputKind, out);
@@ -252,6 +252,7 @@ void CodegenLegionC::compile(Stmt stmt, bool isFirst) {
       CodeGen_C::compile(func, isFirst);
     }
     CodeGen_C::compile(f, isFirst);
+    CodegenLegion::generateShim(f, out, this->outputKind);
   }
 
   this->emitRegisterTasks(this->outputKind, out);
@@ -275,9 +276,11 @@ void CodegenLegionC::emitHeaders(std::ostream &o) {
     return;
   }
 
-  // TODO (rohany): This is pretty hacky, but I don't want to plumb an
-  //  interface down here about the name of the generated files right now.
-  o << "#include \"taco-generated.h\"\n";
+  if (this->outputKind != ImplementationNoHeaderGen) {
+    // TODO (rohany): This is pretty hacky, but I don't want to plumb an
+    //  interface down here about the name of the generated files right now.
+    o << "#include \"taco-generated.h\"\n";
+  }
 
   struct BLASFinder : public IRVisitor {
     void visit(const Call* node) {

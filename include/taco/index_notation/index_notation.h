@@ -73,6 +73,7 @@ class IndexExprVisitorStrict;
 class IndexStmtVisitorStrict;
 
 class LeafCallInterface;
+class TensorDistributionNotation;
 
 /// A tensor index expression describes a tensor computation as a scalar
 /// expression where tensors are indexed by index variables (`IndexVar`).  The
@@ -1084,11 +1085,11 @@ SuchThat suchthat(IndexStmt stmt, std::vector<IndexVarRel> predicate, std::map<I
 class TensorVar : public util::Comparable<TensorVar> {
 public:
   TensorVar();
-  TensorVar(const Type& type);
-  TensorVar(const std::string& name, const Type& type);
-  TensorVar(const Type& type, const Format& format);
-  TensorVar(const std::string& name, const Type& type, const Format& format);
-  TensorVar(const int &id, const std::string& name, const Type& type, const Format& format);
+  TensorVar(const Type& type, std::vector<TensorDistributionNotation> distribution = {});
+  TensorVar(const std::string& name, const Type& type, std::vector<TensorDistributionNotation> distribution = {});
+  TensorVar(const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution = {});
+  TensorVar(const std::string& name, const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution = {});
+  TensorVar(const int &id, const std::string& name, const Type& type, const Format& format, std::vector<TensorDistributionNotation> distribution = {});
 
   /// Returns the ID of the tensor variable.
   int getId() const;
@@ -1114,6 +1115,13 @@ public:
 
   /// Check whether the tensor variable is defined.
   bool defined() const;
+
+  /// Return the distribution specification for this TensorVar.
+  const std::vector<TensorDistributionNotation>& getDistribution() const;
+
+  /// translateDistribution translates the distribution specification for
+  /// this TensorVar into the corresponding IndexStmt.
+  IndexStmt translateDistribution() const;
 
   /// Create an index expression that accesses (reads) this tensor.
   const Access operator()(const std::vector<IndexVar>& indices) const;

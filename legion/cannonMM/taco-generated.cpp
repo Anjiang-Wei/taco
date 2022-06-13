@@ -561,3 +561,47 @@ void registerTacoTasks() {
     Runtime::preregister_task_variant<task_7>(registrar, "task_7");
   }
 }
+void dynamicallyRegisterDISTALTasks(Legion::Context ctx, Legion::Runtime* runtime) {
+  {
+    TaskVariantRegistrar registrar(taskID(1), "task_1");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    runtime->register_task_variant<task_1>(registrar);
+    runtime->attach_name(taskID(1), "task_1");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(2), "task_2");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    runtime->register_task_variant<task_2>(registrar);
+    runtime->attach_name(taskID(2), "task_2");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(3), "task_3");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    runtime->register_task_variant<task_3>(registrar);
+    runtime->attach_name(taskID(3), "task_3");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(5), "task_5");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_inner();
+    runtime->register_task_variant<task_5>(registrar);
+    runtime->attach_name(taskID(5), "task_5");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(6), "task_6");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf();
+    runtime->register_task_variant<task_6>(registrar);
+    runtime->attach_name(taskID(6), "task_6");
+  }
+  {
+    TaskVariantRegistrar registrar(taskID(7), "task_7");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_inner();
+    runtime->register_task_variant<task_7>(registrar);
+    runtime->attach_name(taskID(7), "task_7");
+  }
+}

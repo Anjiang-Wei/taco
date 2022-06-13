@@ -38,6 +38,27 @@ private:
   std::shared_ptr<LowererImpl> impl;
 };
 
+// LowerOptions is a struct containing a set of options for lowering.
+struct LowerOptions {
+  // Arguments for standard lowering.
+  bool assemble = true;
+  bool compute = true;
+  bool pack = false;
+  bool unpack = false;
+  // Arguments for Legion/DISTAL specific lowering.
+  bool legion = false;
+  bool partition = true;
+  bool waitOnFuture = true;
+  bool setPlacementPrivilege = false;
+  // Denotes whether the lowerer should generate code that stores the
+  // computed pack of partitions as a pointer or a direct struct. In cases
+  // where DISTAL is used as an AOT compiler, then a struct is needed to
+  // make the interface public. In cases where DISTAL is used as a JIT
+  // compiler then a pointer is needed to pass partition packs opaquely
+  // through the runtime interface.
+  bool partitionPackAsPointer = false;
+};
+
 
 /// Lower a concrete index notation statement to a function in the low-level
 /// imperative IR.  You may specify whether the lowered function should
@@ -47,6 +68,9 @@ private:
 ir::Stmt lower(IndexStmt stmt, std::string functionName,
                bool assemble=true, bool compute=true, bool pack=false, bool unpack=false,
                Lowerer lowerer=Lowerer());
+
+/// An overload of lower that takes a LowerOptions struct.
+ir::Stmt lower(IndexStmt stmt, std::string functionName, LowerOptions options, Lowerer lowerer=Lowerer());
 
 // lowerNoWait is a lower version specific to the Legion backend that will not emit
 // a stall on the resulting FutureMap from execute_index_space.

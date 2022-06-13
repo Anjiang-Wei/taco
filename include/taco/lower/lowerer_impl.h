@@ -8,6 +8,7 @@
 #include <memory>
 #include <taco/index_notation/index_notation.h>
 
+#include "taco/lower/lower.h"
 #include "taco/lower/iterator.h"
 #include "taco/util/scopedset.h"
 #include "taco/util/uncopyable.h"
@@ -55,11 +56,7 @@ public:
   virtual ~LowererImpl() = default;
 
   /// Lower an index statement to an IR function.
-  ir::Stmt lower(IndexStmt stmt, std::string name, 
-                 bool assemble, bool compute,
-                 bool pack, bool unpack,
-                 bool partition, bool waitOnFutureMap,
-                 bool setPlacementPrivilege);
+  ir::Stmt lower(IndexStmt stmt, std::string name, LowerOptions options);
 
 protected:
 
@@ -690,6 +687,7 @@ private:
   std::map<IndexVar, std::shared_ptr<LeafCallInterface>> calls;
 
   bool waitOnFutureMap;
+  bool partitionPackAsPointer;
 
   // rcmfCrdDomains contains variables that hold the domains of RectCompressedModeFormat's
   // that are needed to sometimes override the position bounds computed by modes.

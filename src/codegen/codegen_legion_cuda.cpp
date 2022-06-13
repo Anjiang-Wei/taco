@@ -342,7 +342,7 @@ void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
   // Emit field accessors. We don't need to emit accessors if we are
   // generating a header file, as these declarations are local to the
   // generated code.
-  if (this->outputKind == ImplementationGen) {
+  if (this->isImplementationGen(this->outputKind)) {
     this->collectAndEmitAccessors(stmt, out);
   }
   this->analyzeAndCreateTasks(this->outputKind, out);
