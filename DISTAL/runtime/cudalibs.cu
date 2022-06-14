@@ -110,6 +110,7 @@ void initCuBLASTask(const Task* task, const std::vector<PhysicalRegion>& regions
 void initCuBLAS(Context ctx, Runtime* runtime) {
   // Launch a point task for each GPU in the system to initialize.
   auto gpus = runtime->select_tunable_value(ctx, Legion::Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_GPUS).get<size_t>();
+  if (gpus == 0) return;
   auto space = runtime->create_index_space(ctx, Rect<1>(0, gpus - 1));
   auto launcher = IndexLauncher(TID_INIT_CUBLAS, space, TaskArgument(), ArgumentMap());
   runtime->execute_index_space(ctx, launcher).wait_all_results();
@@ -135,6 +136,7 @@ void initCuSparseTask(const Task* task, const std::vector<PhysicalRegion>& regio
 void initCuSparse(Context ctx, Runtime* runtime) {
   // Launch a point task for each GPU in the system to initialize.
   auto gpus = runtime->select_tunable_value(ctx, Legion::Mapping::DefaultMapper::DEFAULT_TUNABLE_GLOBAL_GPUS).get<size_t>();
+  if (gpus == 0) return;
   auto space = runtime->create_index_space(ctx, Rect<1>(0, gpus - 1));
   auto launcher = IndexLauncher(TID_INIT_CUSPARSE, space, TaskArgument(), ArgumentMap());
   runtime->execute_index_space(ctx, launcher).wait_all_results();

@@ -8,6 +8,15 @@ if(OPENMP)
 endif(OPENMP)
 find_package(TBLIS REQUIRED)
 
+# On some machines, like Sapling, CMake has difficulty finding
+# CUDA libraries. This flag helps the build system locate the
+# necessary libraries.
+if (Legion_USE_CUDA)
+  if (DEFINED TACO_CUDA_LIBS)
+    link_directories(${TACO_CUDA_LIBS})
+  endif()
+endif()
+
 # We're targeting GPUs with at least -sm_60 capability. We need this so that
 # we can use the atomicAdd() function in leaf kernels.
 # On Lassen, we need to target -sm_70.
@@ -28,11 +37,13 @@ endif()
 # DISTAL-Runtime is the runtime library to interact with DISTAL generated code,
 # as well as support that DISTAL generated kernels need.
 if (Legion_USE_CUDA)
-    file(GLOB DISTAL_RUNTIME_SOURCE runtime/*.cpp)
-else(
-    file(GLOB DISTAL_RUNTIME_SOURCE runtime/*.cpp runtime/*.cu)
+    file(GLOB DISTAL_RUNTIME_SOURCE runtime/distal-runtime.h runtime/*.cpp runtime/distal-runtime.h runtime/*.cu)
+    cuda_add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
+else()
+    file(GLOB DISTAL_RUNTIME_SOURCE runtime/distal-runtime.h runtime/*.cpp)
+    add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
 endif()
-add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
+
 target_include_directories(distal-runtime PRIVATE include/ include/runtime/ "${CMAKE_BINARY_DIR}/include")
 target_link_libraries(distal-runtime Legion::Legion ${HDF5_LIBRARIES} ${BLAS_LIBRARIES} TBLIS::TBLIS)
 if (OPENMP)
