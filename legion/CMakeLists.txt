@@ -9,15 +9,8 @@ endif(OPENMP)
 # environment variables as appropriate.
 find_package(HDF5 REQUIRED)
 find_package(TBLIS REQUIRED)
+include_directories(${DISTAL_RUNTIME_INCLUDE_DIRS})
 
-# Find the BLAS library to use. We have to manually add the include path
-# to the BLAS library because CMake doesn't set this for us.
-find_package(BLAS REQUIRED)
-find_path(BLAS_INCLUDE_DIR cblas.h ${CMAKE_PREFIX_PATH})
-include_directories("${BLAS_INCLUDE_DIR}/include")
-
-# Include the headers and supporting source files.
-include_directories(include/ "${CMAKE_BINARY_DIR}/include" cub/)
 file(GLOB LG_SOURCES src/*.cpp)
 file(GLOB LG_CU_SOURCES src/*.cu)
 if (Legion_USE_CUDA)
@@ -27,17 +20,8 @@ if (Legion_USE_CUDA)
   link_directories(${TACO_CUDA_LIBS})
 endif()
 
-# Collect sources that can be also used by tools outside of TACO codes.
-set(LG_EXTRA_SOURCES src/hdf5_utils.cpp src/string_utils.cpp src/error.cpp src/dummy_read.cpp)
-
 # Optimize these codes.
 SET(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")
-
-option(TACO_USE_LOGGING_MAPPER OFF)
-if (TACO_USE_LOGGING_MAPPER)
-    add_definitions(-DTACO_USE_LOGGING_MAPPER)
-endif()
-
 
 # We're targeting GPUs with at least -sm_60 capability. We need this so that
 # we can use the atomicAdd() function in leaf kernels.
@@ -48,30 +32,11 @@ else()
   set(CUDA_NVCC_FLAGS -gencode arch=compute_60,code=sm_60)
 endif()
 
-# Create two separate versions of the DISTAL runtime library, for whether
-# or not we use CUDA.
-add_library(distal-runtime-lib ${LG_SOURCES})
-target_include_directories(distal-runtime-lib PRIVATE include)
-target_link_libraries(distal-runtime-lib Legion::Legion ${HDF5_LIBRARIES})
-if (OPENMP)
-    target_compile_options(distal-runtime-lib PRIVATE ${OpenMP_CXX_FLAGS})
-endif(OPENMP)
-
-if (Legion_USE_CUDA)
-  cuda_add_library(distal-runtime-lib-cuda ${LG_SOURCES} ${LG_CU_SOURCES})
-  target_compile_definitions(distal-runtime-lib-cuda PUBLIC TACO_USE_CUDA)
-  target_include_directories(distal-runtime-lib-cuda PRIVATE include)
-  target_link_libraries(distal-runtime-lib-cuda Legion::Legion ${HDF5_LIBRARIES} cublas cusparse)
-  if (OPENMP)
-      target_compile_options(distal-runtime-lib-cuda PRIVATE ${OpenMP_CXX_FLAGS})
-  endif(OPENMP)
-endif()
-
 function(add_app_folder folder)
     add_executable("${folder}" "${folder}/main.cpp" "${folder}/taco-generated.cpp")
-    target_include_directories("${folder}" PRIVATE "${folder}")
+    target_include_directories("${folder}" PRIVATE "${folder}" "${DISTAL_RUNTIME_INCLUDE_DIRS}")
     # Unfortunately, older versions of CMake do not export BLAS::BLAS.
-    target_link_libraries("${folder}" distal-runtime-lib Legion::Legion ${BLAS_LIBRARIES} TBLIS::TBLIS)
+    target_link_libraries("${folder}" distal-runtime Legion::Legion ${BLAS_LIBRARIES} TBLIS::TBLIS)
     if (OPENMP)
       target_compile_options("${folder}" PRIVATE ${OpenMP_CXX_FLAGS})
     endif(OPENMP)
@@ -79,7 +44,7 @@ function(add_app_folder folder)
     if (Legion_USE_CUDA)
         if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${folder}/taco-generated.cu")
             cuda_add_executable("${folder}-cuda" "${folder}/main.cpp" "${folder}/taco-generated.cu")
-            target_link_libraries("${folder}-cuda" distal-runtime-lib-cuda Legion::Legion cublas cusparse -fopenmp)
+            target_link_libraries("${folder}-cuda" distal-runtime Legion::Legion cublas cusparse -fopenmp)
             if (OPENMP)
                 target_compile_options("${folder}-cuda" PRIVATE ${OpenMP_CXX_FLAGS})
             endif(OPENMP)
@@ -172,28 +137,14 @@ target_link_libraries(memspeed Legion::Legion)
 add_executable(hier-test hier-part-testing/main.cpp)
 target_link_libraries(hier-test Legion::Legion)
 
-# Add some hand written codes here.
-if(Legion_USE_CUDA)
-    cuda_add_executable(handwritten-spmv handwritten-spmv/handwritten.cpp handwritten-spmv/handwritten.cu ${LG_EXTRA_SOURCES})
-    include_directories(handwritten-spmv PRIVATE ${HDF5_INCLUDE_DIRS})
-    target_link_libraries(handwritten-spmv Legion::Legion ${HDF5_LIBRARIES})
-    target_compile_options(handwritten-spmv PRIVATE ${OpenMP_CXX_FLAGS})
-    target_compile_definitions(handwritten-spmv PUBLIC TACO_USE_CUDA)
-else()
-    add_executable(handwritten-spmv handwritten-spmv/handwritten.cpp ${LG_EXTRA_SOURCES})
-    include_directories(handwritten-spmv PRIVATE ${HDF5_INCLUDE_DIRS})
-    target_link_libraries(handwritten-spmv Legion::Legion ${HDF5_LIBRARIES})
-    target_compile_options(handwritten-spmv PRIVATE ${OpenMP_CXX_FLAGS})
-endif()
-
 # Utility to preload tns files into hdf5 files for easier ingestion.
 add_executable(tensor_to_hdf5 fileio/tensor_to_hdf5.cpp)
-target_link_libraries(tensor_to_hdf5 distal-runtime-lib Legion::Legion ${HDF5_LIBRARIES})
+target_link_libraries(tensor_to_hdf5 distal-runtime Legion::Legion ${HDF5_LIBRARIES})
 include_directories(tensor_to_hdf5 PRIVATE ${HDF5_INCLUDE_DIRS})
 
 # Utility to convert COO tensors into desired formats.
 add_executable(format-converter format-converter/main.cpp format-converter/taco-generated.cpp format-converter/taco-generated.h)
-target_link_libraries(format-converter distal-runtime-lib Legion::Legion ${HDF5_LIBRARIES})
+target_link_libraries(format-converter distal-runtime Legion::Legion ${HDF5_LIBRARIES})
 include_directories(format-converter PRIVATE ${HDF5_INCLUDE_DIRS})
 
 # Sparse tests.
@@ -284,10 +235,10 @@ file(GLOB DISTAL_TEST_SOURCES test/*.cpp)
 if (Legion_USE_CUDA)
     cuda_add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS})
     target_compile_definitions(distal-runtime-test PUBLIC TACO_USE_CUDA)
-    target_link_libraries(distal-runtime-test distal-runtime-lib-cuda)
+    target_link_libraries(distal-runtime-test distal-runtime)
 else()
     add_executable(distal-runtime-test ${DISTAL_TEST_SOURCES} ${DISTAL_TEST_HEADERS})
-    target_link_libraries(distal-runtime-test distal-runtime-lib)
+    target_link_libraries(distal-runtime-test distal-runtime)
 endif()
 # Compile the runtime tests with low optimization and debug symbols.
 target_compile_options(distal-runtime-test PRIVATE "-g3" "-O0" "-ggdb")

@@ -4,10 +4,8 @@
 #include "taco.h"
 #include "taco/lower/lower.h"
 
-#include "legion_tensor.h"
-#include "legion_utils.h"
-
 #include "distal-compiler-jit.h"
+#include "distal-runtime.h"
 
 using namespace Legion;
 enum TaskIDs {

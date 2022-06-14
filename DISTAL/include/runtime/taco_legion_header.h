@@ -385,8 +385,6 @@ public:
 public:
   static int64_t scanTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #ifdef TACO_USE_CUDA
-  template<int DIM>
-  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
   static int64_t scanTaskGPU(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
 #endif
   static void applyPartialResultsTask(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions, Legion::Context ctx, Legion::Runtime* runtime);
@@ -411,6 +409,10 @@ private:
   static int64_t scanBody(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
   static std::pair<Legion::FieldID, Legion::FieldID> unpackScanTaskArgs(const Legion::Task* task);
   static const int scanTaskID;
+#ifdef TACO_USE_CUDA
+  template<int DIM>
+  static int64_t scanBodyGPU(Legion::Context ctx, Legion::Runtime *runtime, Legion::Rect<DIM> iterBounds, Accessor<Legion::Rect<1>, DIM, WRITE_ONLY> output, Accessor<int64_t, DIM, READ_ONLY> input, Legion::Memory::Kind tmpMemKind);
+#endif
 
   // applyPartialResults{Body,Task} are the implementations of the second step.
   template<int DIM>
