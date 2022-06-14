@@ -32,8 +32,9 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
   taco::IndexStmt stmt;
   std::shared_ptr<taco::LeafCallInterface> gemm = std::make_shared<taco::GEMM>();
   {
+    int omps = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_LOCAL_OMPS).get<size_t>();
     int cpus = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_LOCAL_CPUS).get<size_t>();
-    taco::Grid m(cpus);
+    taco::Grid m(omps > 0 ? omps : cpus);
     taco::DistVar x, y;
     taco::TensorDistributionNotation dist({x, y}, m, {x});
     taco::TensorVar a("a", {taco::Float64, {n, n}}, {dist});
@@ -74,10 +75,21 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
 
 int main(int argc, char** argv) {
   Runtime::set_top_level_task_id(TOP_LEVEL_TASK_ID);
-  TaskVariantRegistrar registrar(TOP_LEVEL_TASK_ID,
-                                 "top_level_variant");
-  registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
-  Runtime::preregister_task_variant<top_level_task>(registrar,"top_level_task");
+  {
+    TaskVariantRegistrar registrar(TOP_LEVEL_TASK_ID,
+                                   "top_level_variant");
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_replicable();
+    Runtime::preregister_task_variant<top_level_task>(registrar,"top_level_task");
+  }
+  {
+    TaskVariantRegistrar registrar(TOP_LEVEL_TASK_ID,
+                                   "top_level_variant");
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
+    registrar.set_replicable();
+    Runtime::preregister_task_variant<top_level_task>(registrar,"top_level_task");
+  }
   Runtime::add_registration_callback(register_taco_mapper);
+  Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor());
   return Runtime::start(argc, argv);
 }
