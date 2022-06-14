@@ -905,10 +905,7 @@ TEST(distributed, cuda_cannonMM) {
   // Generate top-level partitioning and compute code.
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion");
   auto all = ir::Block::make({placeALowered, placeBLowered, placeCLowered, lowered});
-  ofstream f("../legion/cannonMM/taco-generated.cu");
-  auto codegen = std::make_shared<ir::CodegenLegionCuda>(f, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(all);
-  f.close();
+  ir::CodegenLegionCuda::compileToDirectory("../legion/cannonMM/", all);
 }
 
 TEST(distributed, johnsonMM) {
