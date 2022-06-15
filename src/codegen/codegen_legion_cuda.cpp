@@ -352,6 +352,7 @@ void CodegenLegionCuda::compile(Stmt stmt, bool isFirst) {
       CodeGen_CUDA::compile(func, isFirst);
     }
     CodeGen_CUDA::compile(f, isFirst);
+    CodegenLegion::generateShim(f, out, this->outputKind);
   }
 
   this->emitRegisterTasks(this->outputKind, out);
@@ -817,7 +818,11 @@ void CodegenLegionCuda::emitHeaders(std::ostream &o) {
   if (this->outputKind != HeaderGen) {
     // TODO (rohany): This is pretty hacky, but I don't want to plumb an
     //  interface down here about the name of the generated files right now.
-    o << "#include \"taco-generated.cuh\"\n";
+    if (this->outputKind != ImplementationNoHeaderGen) {
+      // TODO (rohany): This is pretty hacky, but I don't want to plumb an
+      //  interface down here about the name of the generated files right now.
+      o << "#include \"taco-generated.cuh\"\n";
+    }
     o << "#include \"cublas_v2.h\"\n";
     o << "#include \"cusparse.h\"\n";
     o << "#include \"cudalibs.h\"\n";

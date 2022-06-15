@@ -11,6 +11,7 @@
 
 // "Hidden" headers from within the TACO source tree.
 #include "codegen/codegen_legion_c.h"
+#include "codegen/codegen_legion_cuda.h"
 
 #include <dlfcn.h>
 #include <fstream>
@@ -141,10 +142,14 @@ void Module::addFunction(taco::ir::Stmt stmt) {
 }
 
 void Module::compile() {
-  taco_iassert(this->target == Module::CPU);
   // Compile the attached functions into a piece of source code.
-  taco::ir::CodegenLegionC codegen(this->source, taco::ir::CodeGen::ImplementationNoHeaderGen);
-  codegen.compile(taco::ir::Block::make(this->funcs));
+  if (this->target == Module::CPU) {
+    taco::ir::CodegenLegionC codegen(this->source, taco::ir::CodeGen::ImplementationNoHeaderGen);
+    codegen.compile(taco::ir::Block::make(this->funcs));
+  } else {
+    taco::ir::CodegenLegionCuda codegen(this->source, taco::ir::CodeGen::ImplementationNoHeaderGen);
+    codegen.compile(taco::ir::Block::make(this->funcs));
+  }
 
   // Dump the source into a file in our temporary directory.
   std::ofstream sourceFile;
@@ -157,15 +162,28 @@ void Module::compile() {
   // Now, invoke the host compiler to actually compile the generated code
   // into a dynamic library.
   std::string libPath = this->tmpdir + this->libname + ".so";
-  std::string cc = "c++";
-  std::string cflags = taco::util::getFromEnv("DISTAL_CPPFLAGS", "-O3 -ffast-math --std=c++11") + " -shared -fPIC";
+  std::string cc;
+  std::string cflags;
+  if (this->target == Module::CPU) {
+    cc = "c++";
+    cflags = taco::util::getFromEnv("DISTAL_CPPFLAGS", "-O3 -ffast-math --std=c++11") + " -shared -fPIC";
+  } else {
+    cc = "nvcc";
+    cflags = taco::util::getFromEnv("DISTAL_CPPFLAGS", "-O3 --use_fast_math --std=c++11") + " -shared -Xcompiler -fPIC";
+  }
 #ifdef REALM_USE_OPENMP
-  cflags += " -fopenmp";
+  if (this->target == Module::CPU) {
+    cflags += " -fopenmp";
+  }
 #endif
   std::string compileCmd = cc + " " + cflags + " " + sourceFileName + " -o " + libPath +
                            " " + DISTAL_JIT_INCLUDE_PATHS +
-                           " " + DISTAL_JIT_LINK_FLAGS
-                           ;
+			   " " + DISTAL_JIT_LINK_FLAGS
+			   ;
+  bool printCompileOutput = taco::util::getFromEnv("DISTAL_PRINT_HOST_COMPILER_OUTPUT", "OFF") != "OFF";
+  if (!printCompileOutput) {
+    compileCmd += " > /dev/null 2> /dev/null";
+  }
 
   bool printCompileCmd = taco::util::getFromEnv("DISTAL_PRINT_JIT_COMMAND", "OFF") != "OFF";
   if (printCompileCmd) {
