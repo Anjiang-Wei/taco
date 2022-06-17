@@ -4,17 +4,11 @@ find_package(BLAS REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(Legion REQUIRED)
 if(OPENMP)
-    find_package(OpenMP REQUIRED)
+  find_package(OpenMP REQUIRED)
 endif(OPENMP)
 find_package(TBLIS REQUIRED)
-
-# On some machines, like Sapling, CMake has difficulty finding
-# CUDA libraries. This flag helps the build system locate the
-# necessary libraries.
-if (Legion_USE_CUDA)
-  if (DEFINED TACO_CUDA_LIBS)
-    link_directories(${TACO_CUDA_LIBS})
-  endif()
+if(Legion_USE_CUDA)
+  find_package(CUDA REQUIRED)
 endif()
 
 # We're targeting GPUs with at least -sm_60 capability. We need this so that
@@ -29,6 +23,9 @@ endif()
 # Find the BLAS library to use. We have to manually add the include path
 # to the BLAS library because CMake doesn't set this for us.
 find_path(BLAS_INCLUDE_DIR cblas.h ${CMAKE_PREFIX_PATH})
+# On some setups the find_path to get BLAS_INCLUDE_DIR sometimes includes
+# the actual 'include' suffix, so just set both as valid paths.
+set(BLAS_INCLUDE_DIRS ${BLAS_INCLUDE_DIR} "${BLAS_INCLUDE_DIR}/include")
 
 option(DISTAL_USE_LOGGING_MAPPER OFF)
 if (DISTAL_USE_LOGGING_MAPPER)
@@ -53,7 +50,7 @@ if (Legion_USE_CUDA)
     target_compile_definitions(distal-runtime PUBLIC TACO_USE_CUDA)
     # TODO (rohany): Move this to deps.
     target_include_directories(distal-runtime PRIVATE ../legion/cub/)
-    target_link_libraries(distal-runtime cublas cusparse)
+    target_link_libraries(distal-runtime ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusparse_LIBRARY})
 endif()
 # TODO (rohany): Do I want this to be global instead?
 # TODO (rohany): Eventually stop directly including include/runtime.
@@ -61,7 +58,7 @@ set(DISTAL_RUNTIME_INCLUDE_DIRS
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/include/runtime"
         "${CMAKE_BINARY_DIR}/include"
-        "${BLAS_INCLUDE_DIR}/include"
+	${BLAS_INCLUDE_DIRS}
         "${TBLIS_INCLUDE_DIRS}"
 )
 set(DISTAL_RUNTIME_INCLUDE_DIRS ${DISTAL_RUNTIME_INCLUDE_DIRS} PARENT_SCOPE)
@@ -97,12 +94,27 @@ get_target_property(LEGION_INCLUDE_PATHS Legion::LegionRuntime INTERFACE_INCLUDE
 get_target_property(REALM_INCLUDE_PATHS Legion::RealmRuntime INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(LEGION_LIB_LOCATION Legion::LegionRuntime INTERFACE_LOCATION)
 get_target_property(REALM_LIB_LOCATION Legion::RealmRuntime INTERFACE_LOCATION)
+# We have to clean up the physical paths constructed by CMake as if the full
+# shared library path is passed, NVCC gets unhappy and can't figure out what
+# kind of file a shared library is. So, we have to make sure all of the shared
+# libraries that we construct here actually end with .so, and nothing else.
+if (NOT ${LEGION_LIB_LOCATION} MATCHES ".*.so$")
+  get_filename_component(LEGION_LIB_DIR ${LEGION_LIB_LOCATION} DIRECTORY)
+  get_filename_component(LEGION_LIB_NAME ${LEGION_LIB_LOCATION} NAME_WLE)
+  set(LEGION_LIB_LOCATION "${LEGION_LIB_DIR}/${LEGION_LIB_NAME}")
+endif()
+if (NOT ${REALM_LIB_LOCATION} MATCHES ".*.so$")
+  get_filename_component(REALM_LIB_DIR ${REALM_LIB_LOCATION} DIRECTORY)
+  get_filename_component(REALM_LIB_NAME ${REALM_LIB_LOCATION} NAME_WLE)
+  set(REALM_LIB_LOCATION "${REALM_LIB_DIR}/${REALM_LIB_NAME}")
+endif()
+
 # Package up all of the include paths into properly formatted include paths for the
 # call to the host compiler.
 foreach(PATH IN LISTS LEGION_INCLUDE_PATHS REALM_INCLUDE_PATHS)
     list(APPEND DISTAL_JIT_INCLUDE_PATHS ${PATH})
 endforeach()
-list(APPEND DISTAL_JIT_INCLUDE_PATHS ${DISTAL_RUNTIME_LIB_INCLUDE} "${BLAS_INCLUDE_DIR}/include")
+list(APPEND DISTAL_JIT_INCLUDE_PATHS ${DISTAL_RUNTIME_LIB_INCLUDE} ${BLAS_INCLUDE_DIRS})
 list(TRANSFORM DISTAL_JIT_INCLUDE_PATHS PREPEND "-I")
 list(JOIN DISTAL_JIT_INCLUDE_PATHS " " DISTAL_JIT_INCLUDE_PATHS)
 # Package up all of the individual libraries needed by JIT-ed code.
