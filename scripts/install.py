@@ -104,6 +104,11 @@ with pushd(args.deps_install_dir):
     # Legion.
     os.mkdir("legion-build")
     with pushd("legion-build"):
+        # In order to get Legion to be a completely independent install, configuring the RPATH
+        # through CMake is an option. See here for more details: 
+        # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#default-rpath-settings
+        # I gave this an attempt but had to give up due to weird behavior when integrating the
+        # shared library with the configured RPATH into DISTAL.
         cmakeDefs = {
             "BUILD_SHARED_LIBS": True,
             "CMAKE_CXX_FLAGS": "--std=c++11",
