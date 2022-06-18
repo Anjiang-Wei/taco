@@ -662,6 +662,19 @@ void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) 
   doIndent();
   out << "Legion::Runtime* runtime = (Legion::Runtime*)args[1];\n";
 
+  // Take some locks and create a phase barrier to ensure synchronization points
+  // around task registrations.
+  doIndent();
+  out << "Legion::Processor::enable_scheduler_lock();\n";
+  doIndent();
+  out << "auto barrier = runtime->create_phase_barrier(ctx, runtime->get_num_shards(ctx, true));\n";
+  doIndent();
+  out << "barrier.arrive();\n";
+  doIndent();
+  out << "barrier = runtime->advance_phase_barrier(ctx, barrier);\n";
+  doIndent();
+  out << "barrier.wait();\n";
+
   for (auto ffunc : this->allFunctions) {
     for (auto& f : this->functions[ffunc]) {
       auto func = f.as<Function>();
@@ -691,7 +704,7 @@ void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) 
       indent++;
 
       doIndent();
-      out << "TaskVariantRegistrar registrar(taskID(" << forL->taskID << "), \"" << func->name << "\");\n";
+      out << "TaskVariantRegistrar registrar(taskID(" << forL->taskID << "), \"" << func->name << "\", false /* global */);\n";
 
       // TODO (rohany): Make this delegation a virtual function that needs to be overridden.
       doIndent();
@@ -727,6 +740,18 @@ void CodegenLegion::emitRegisterTasks(OutputKind outputKind, std::ostream &out) 
       out << "}\n";
     }
   }
+
+  // Synchronize again after all of the tasks have been registered.
+  doIndent();
+  out << "barrier.arrive();\n";
+  doIndent();
+  out << "barrier = runtime->advance_phase_barrier(ctx, barrier);\n";
+  doIndent();
+  out << "barrier.wait();\n";
+  doIndent();
+  out << "runtime->destroy_phase_barrier(ctx, barrier);\n";
+  doIndent();
+  out << "Legion::Processor::disable_scheduler_lock();\n";
 
   out << "}\n";
 }
