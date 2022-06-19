@@ -1,2 +1,2 @@
 add_subdirectory(tensor_times_vector)
-add_subdirectory(DISTAL-JIT)
+add_subdirectory(gemm)

@@ -15,6 +15,7 @@ namespace JIT {
 
 // Necessary forward declarations.
 struct JITResult;
+class Computation;
 
 // Module is a wrapper around a dynamically linked library used to invoke methods
 // from the dynamically linked library. A module contains pointers and data structures
@@ -80,10 +81,10 @@ private:
 class TensorDistribution {
 public:
   // partition generates all of the partitions needed to perform the distribution.
-  void partition(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* t);
+  void* partition(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* t);
   // apply invokes the compiled kernel to distribute the data.
   // TODO (rohany): can this return a FutureMap to wait on or ignore?
-  void apply(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* t);
+  void apply(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* t, void* partition);
   // TODO (rohany): Add methods to access pieces of the partition created by
   //  the generated code.
 private:
@@ -94,14 +95,6 @@ private:
 
   std::shared_ptr<Module> module;
   std::string funcName;
-  // TODO (rohany): I think it doesn't actually make sense for this class to
-  //  to hold onto partitions because a user might want to compile a kernel
-  //  and then use it on multiple different physical tensor objects.
-  //  I think the way forward is to create wrapper classes over LegionTensor
-  //  objects that attach a distribution to the LegionTensor. Similarly, there
-  //  can be a manager class that packages together several LegionTensor objects
-  //  and a Kernel and handles partitioning and computing over those LegionTensors.
-  void* partitionPack;
 };
 
 // Kernel is a compiled kernel that performs the computation described by
@@ -109,9 +102,9 @@ private:
 class Kernel {
 public:
   // partition generates all of the partitions needed to perform the distribution.
-  void partition(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensor*> tensors);
+  void* partition(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensor*> tensors);
   // compute invokes the compiled kernel.
-  void compute(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensor*> tensors);
+  void compute(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensor*> tensors, void* partition);
 private:
   Kernel(std::shared_ptr<Module> module);
 
@@ -119,7 +112,6 @@ private:
   friend JITResult compile(Legion::Context, Legion::Runtime*, taco::IndexStmt);
 
   std::shared_ptr<Module> module;
-  void* partitions;
 };
 
 // TODO (rohany): This should eventually take some sort of configurations struct that enables
@@ -131,8 +123,29 @@ struct JITResult {
   JITResult(std::vector<TensorDistribution> distributions, Kernel kernel);
   std::vector<TensorDistribution> distributions;
   Kernel kernel;
+  // Construct a computation bound to a particular set of tensors from the JIT-ed kernels.
+  Computation bind(std::vector<LegionTensor> tensors);
 };
 JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt stmt);
+
+// Computation represents a generated set of data distribution and computation operations
+// bound to particular LegionTensor objects. It maintains the internal state to invoke
+// the generated kernels upon the bound operands.
+class Computation {
+public:
+  void distribute(Legion::Context ctx, Legion::Runtime* runtime);
+  LegionTensorPartition getDistributionPartition(Legion::Context ctx, Legion::Runtime* runtime, int idx);
+  void compute(Legion::Context ctx, Legion::Runtime* runtime);
+private:
+  friend JITResult;
+  Computation(std::vector<LegionTensor> tensors, std::vector<TensorDistribution> distributions, Kernel kernel);
+  std::vector<LegionTensor> tensors;
+  std::vector<LegionTensor*> tensorPtrs;
+  std::vector<TensorDistribution> distributions;
+  Kernel kernel;
+  std::vector<void*> distributionPartitions;
+  void* computePartitions;
+};
 
 } // namespace JIT
 } // namespace Compiler

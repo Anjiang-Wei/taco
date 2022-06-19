@@ -23,17 +23,17 @@ namespace JIT {
 
 TensorDistribution::TensorDistribution(std::shared_ptr<Module> module, std::string funcName) : module(module), funcName(funcName) {}
 
-void TensorDistribution::partition(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t) {
-  this->partitionPack = this->module->callLinkedFunction<void*>("partitionFor" + this->funcName, {ctx, runtime, t});
+void* TensorDistribution::partition(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t) {
+  return this->module->callLinkedFunction<void*>("partitionFor" + this->funcName, {ctx, runtime, t});
 }
 
-void TensorDistribution::apply(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t) {
-  this->module->callLinkedFunction<void>(this->funcName, {ctx, runtime, t, this->partitionPack});
+void TensorDistribution::apply(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t, void* partitions) {
+  this->module->callLinkedFunction<void>(this->funcName, {ctx, runtime, t, partitions});
 }
 
 Kernel::Kernel(std::shared_ptr<Module> module) : module(module) {}
 
-void Kernel::partition(Legion::Context ctx, Legion::Runtime *runtime, std::vector<LegionTensor *> tensors) {
+void* Kernel::partition(Legion::Context ctx, Legion::Runtime *runtime, std::vector<LegionTensor *> tensors) {
   std::vector<void*> args;
   args.reserve(tensors.size() + 2);
   args.push_back(ctx);
@@ -41,10 +41,10 @@ void Kernel::partition(Legion::Context ctx, Legion::Runtime *runtime, std::vecto
   for (auto it : tensors) {
     args.push_back(it);
   }
-  this->partitions = this->module->callLinkedFunction<void*>("partitionForcompute", args);
+  return this->module->callLinkedFunction<void*>("partitionForcompute", args);
 }
 
-void Kernel::compute(Legion::Context ctx, Legion::Runtime *runtime, std::vector<LegionTensor *> tensors) {
+void Kernel::compute(Legion::Context ctx, Legion::Runtime *runtime, std::vector<LegionTensor *> tensors, void* partitions) {
   std::vector<void*> args;
   args.reserve(tensors.size() + 2);
   args.push_back(ctx);
@@ -52,12 +52,15 @@ void Kernel::compute(Legion::Context ctx, Legion::Runtime *runtime, std::vector<
   for (auto it : tensors) {
     args.push_back(it);
   }
-  taco_iassert(this->partitions != nullptr);
-  args.push_back(this->partitions);
+  args.push_back(partitions);
   return this->module->callLinkedFunction<void>("compute", args);
 }
 
 JITResult::JITResult(std::vector<TensorDistribution> distributions, Kernel kernel) : distributions(distributions), kernel(kernel) {}
+
+Computation JITResult::bind(std::vector<LegionTensor> tensors) {
+  return Computation(tensors, this->distributions, this->kernel);
+}
 
 JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt stmt) {
   // TODO (rohany): This doesn't handle a case where the data is distributed into
@@ -119,6 +122,40 @@ JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt
   return JITResult(distributions, {module});
 }
 
+Computation::Computation(std::vector<LegionTensor> tensors, std::vector<TensorDistribution> distributions,
+                         Kernel kernel) : tensors(tensors), tensorPtrs(tensors.size()), distributions(distributions), kernel(kernel),
+                                          distributionPartitions(tensors.size()), computePartitions(nullptr) {
+  taco_iassert(this->tensors.size() == this->distributions.size());
+  for (size_t i = 0; i < this->tensors.size(); i++) {
+    this->tensorPtrs[i] = &this->tensors[i];
+  }
+}
+
+void Computation::distribute(Legion::Context ctx, Legion::Runtime *runtime) {
+  for (size_t i = 0; i < this->distributionPartitions.size(); i++) {
+    if (this->distributionPartitions[i] == nullptr) {
+      this->distributionPartitions[i] = this->distributions[i].partition(ctx, runtime, this->tensorPtrs[i]);
+    }
+  }
+  for (size_t i = 0; i < this->distributions.size(); i++) {
+    this->distributions[i].apply(ctx, runtime, this->tensorPtrs[i], this->distributionPartitions[i]);
+  }
+}
+
+LegionTensorPartition Computation::getDistributionPartition(Legion::Context ctx, Legion::Runtime* runtime, int idx) {
+  if (this->distributionPartitions[idx] == nullptr) {
+    this->distributionPartitions[idx] = this->distributions[idx].partition(ctx, runtime, this->tensorPtrs[idx]);
+  }
+  return *(LegionTensorPartition*)this->distributionPartitions[idx];
+}
+
+void Computation::compute(Legion::Context ctx, Legion::Runtime *runtime) {
+  if (this->computePartitions == nullptr) {
+    this->computePartitions = this->kernel.partition(ctx, runtime, this->tensorPtrs);
+  }
+  this->kernel.compute(ctx, runtime, this->tensorPtrs, this->computePartitions);
+}
+
 // Definitions for DISTAL::Compiler::JIT::Module.
 
 std::string Module::chars = "abcdefghijkmnpqrstuvwxyz0123456789";
@@ -166,10 +203,10 @@ void Module::compile() {
   std::string cflags;
   if (this->target == Module::CPU) {
     cc = "c++";
-    cflags = taco::util::getFromEnv("DISTAL_CPPFLAGS", "-O3 -ffast-math --std=c++11") + " -shared -fPIC";
+    cflags = taco::util::getFromEnv("DISTAL_CPP_FLAGS", "-O3 -ffast-math") + " -shared -fPIC --std=c++11";
   } else {
     cc = "nvcc";
-    cflags = taco::util::getFromEnv("DISTAL_CPPFLAGS", "-O3 --use_fast_math --std=c++11") + " -shared -Xcompiler -fPIC";
+    cflags = taco::util::getFromEnv("DISTAL_CPP_FLAGS", "-O3 --use_fast_math") + " --std=c++11 -shared -Xcompiler -fPIC";
   }
 #ifdef REALM_USE_OPENMP
   if (this->target == Module::CPU) {
