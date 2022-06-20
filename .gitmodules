@@ -4,9 +4,6 @@
 [submodule "legion/legion"]
 	path = legion/legion
 	url = https://gitlab.com/StanfordLegion/legion.git
-[submodule "legion/OpenBLAS"]
-	path = legion/OpenBLAS
-	url = https://github.com/xianyi/OpenBLAS.git
 [submodule "petsc/petsc"]
 	path = petsc/petsc
 	url = https://gitlab.com/petsc/petsc.git
@@ -19,3 +16,6 @@
 [submodule "deps/tblis"]
 	path = deps/tblis
 	url = https://github.com/devinamatthews/tblis
+[submodule "deps/OpenBLAS"]
+	path = deps/OpenBLAS
+	url = https://github.com/xianyi/OpenBLAS

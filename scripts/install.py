@@ -78,7 +78,7 @@ with pushd(args.deps_install_dir):
         run("make", "-j{}".format(args.threads), "install")
 
     # OpenBLAS.
-    with pushd(os.path.join(distalRoot, "legion", "OpenBLAS")):
+    with pushd(os.path.join(distalRoot, "deps", "OpenBLAS")):
         env = {}
         if args.openmp:
             env["USE_OPENMP"] = "1"
