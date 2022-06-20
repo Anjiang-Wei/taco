@@ -53,8 +53,7 @@ if (Legion_USE_OpenMP)
 endif()
 if (Legion_USE_CUDA)
     target_compile_definitions(distal-runtime PUBLIC TACO_USE_CUDA)
-    # TODO (rohany): Move this to deps.
-    target_include_directories(distal-runtime PRIVATE ../legion/cub/)
+    target_include_directories(distal-runtime PRIVATE ../deps/cub/)
     target_link_libraries(distal-runtime ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusparse_LIBRARY})
 endif()
 # TODO (rohany): Do I want this to be global instead?

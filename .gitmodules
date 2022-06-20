@@ -7,9 +7,6 @@
 [submodule "trilinos/Trilinos"]
 	path = trilinos/Trilinos
 	url = git@github.com:rohany/Trilinos.git
-[submodule "legion/cub"]
-	path = legion/cub
-	url = https://github.com/NVIDIA/cub.git
 [submodule "deps/tblis"]
 	path = deps/tblis
 	url = https://github.com/devinamatthews/tblis
@@ -19,3 +16,6 @@
 [submodule "deps/legion"]
 	path = deps/legion
 	url = https://gitlab.com/StanfordLegion/legion
+[submodule "deps/cub"]
+	path = deps/cub
+	url = https://github.com/NVIDIA/cub
