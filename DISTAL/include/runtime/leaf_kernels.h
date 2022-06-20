@@ -11,7 +11,10 @@
 #include "cblas.h"
 #include "legion.h"
 #include "realm_defines.h"
+
+#ifdef DISTAL_USE_TBLIS
 #include "tblis/tblis.h"
+#endif
 
 #ifdef REALM_USE_OPENMP
 #include <omp.h>
@@ -145,8 +148,10 @@ void ttv(TTVPack pack, T* A_vals, const T* B_vals, const T* C_vals) {
 // OpenMP. TBLIS generally tries to use all physical processors, even if the
 // available OpenMP threads are fewer.
 inline void TblisSetThreads() {
+#ifdef DISTAL_USE_TBLIS
 #ifdef REALM_USE_OPENMP
   tblis_set_num_threads(omp_get_max_threads());
+#endif
 #endif
 }
 

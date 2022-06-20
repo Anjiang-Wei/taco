@@ -6,7 +6,8 @@ find_package(Legion REQUIRED)
 if(OPENMP)
   find_package(OpenMP REQUIRED)
 endif(OPENMP)
-find_package(TBLIS REQUIRED)
+# Since some architectures don't support TBLIS, we can't expect it to be included.
+find_package(TBLIS)
 if(Legion_USE_CUDA)
   find_package(CUDA REQUIRED)
 endif()
@@ -42,8 +43,12 @@ else()
 endif()
 
 target_include_directories(distal-runtime PRIVATE include/ include/runtime/ "${CMAKE_BINARY_DIR}/include")
-target_link_libraries(distal-runtime Legion::Legion ${HDF5_LIBRARIES} ${BLAS_LIBRARIES} TBLIS::TBLIS)
-if (OPENMP)
+target_link_libraries(distal-runtime Legion::Legion ${HDF5_LIBRARIES} ${BLAS_LIBRARIES})
+if (TBLIS_FOUND)
+    target_link_libraries(distal-runtime TBLIS::TBLIS)
+    target_compile_definitions(distal-runtime PUBLIC DISTAL_USE_TBLIS)
+endif()
+if (Legion_USE_OpenMP)
     target_compile_options(distal-runtime PRIVATE ${OpenMP_CXX_FLAGS})
 endif()
 if (Legion_USE_CUDA)
@@ -59,6 +64,7 @@ set(DISTAL_RUNTIME_INCLUDE_DIRS
         "${CMAKE_CURRENT_SOURCE_DIR}/include/runtime"
         "${CMAKE_BINARY_DIR}/include"
 	${BLAS_INCLUDE_DIRS}
+        # This may not be found, but it will be undefined if not found, so no harm done.
         "${TBLIS_INCLUDE_DIRS}"
 )
 set(DISTAL_RUNTIME_INCLUDE_DIRS ${DISTAL_RUNTIME_INCLUDE_DIRS} PARENT_SCOPE)

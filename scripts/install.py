@@ -47,6 +47,8 @@ parser.add_argument("--dim", default=None, type=int, help="Maximum tensor dimens
 parser.add_argument("--multi-node", default=False, action="store_true", help="Enable distributed computations.")
 parser.add_argument("--conduit", default="ibv", type=str, help="Network conduit (default ibv).")
 parser.add_argument("--threads", default=1, type=int, help="Number of threads to use to build.")
+parser.add_argument("--tblis", default=True, action="store_true", help="Enable TBLIS.")
+parser.add_argument("--no-tblis", default=False, dest="tblis", action="store_false", help="Disable TBLIS.")
 args = parser.parse_args()
 
 # TODO (rohany): Make sure that this script is running from the root of the DISTAL repository.
@@ -87,19 +89,20 @@ with pushd(args.deps_install_dir):
         })
 
     # TBLIS.
-    with pushd(os.path.join(distalRoot, "legion", "tblis")):
-        # BLAS is only used for the benchmark program, and hence disabled.
-        cmd = ["./configure",
-               "--prefix", makeInstallPath,
-               "--enable-config=auto",
-               "--without-blas"]
-        if args.openmp:
-            cmd.append("--enable-thread-model=openmp")
-        else:
-            cmd.append("--enable-thread-model=none")
-        run(*cmd)
-        run("make", "-j{}".format(args.threads))
-        run("make", "-j{}".format(args.threads), "install")
+    if args.tblis:
+        with pushd(os.path.join(distalRoot, "legion", "tblis")):
+            # BLAS is only used for the benchmark program, and hence disabled.
+            cmd = ["./configure",
+                   "--prefix", makeInstallPath,
+                   "--enable-config=auto",
+                   "--without-blas"]
+            if args.openmp:
+                cmd.append("--enable-thread-model=openmp")
+            else:
+                cmd.append("--enable-thread-model=none")
+            run(*cmd)
+            run("make", "-j{}".format(args.threads))
+            run("make", "-j{}".format(args.threads), "install")
 
     # Legion.
     os.mkdir("legion-build")
@@ -138,15 +141,17 @@ with pushd(args.distal_build_dir):
     cmakeDefs = {
         "BLA_VENDOR": "OpenBLAS",
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_MODULE_PATH": distalRoot,
+        "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
         "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
     }
     if args.openmp:
         cmakeDefs["OPENMP"] = True
-    cmake(distalRoot, cmakeDefs, env={
+    env = {
         "HDF5_ROOT": makeInstallPath,
-        "TBLIS_ROOT": makeInstallPath,
-    })
+    }
+    if args.tblis:
+        env["TBLIS_ROOT"] = makeInstallPath
+    cmake(distalRoot, cmakeDefs, env=env)
     run("make", "-j{}".format(args.threads), "taco-test")
     run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
     run("make", "-j{}".format(args.threads), "cannonMM")

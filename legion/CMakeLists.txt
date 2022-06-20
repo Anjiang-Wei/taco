@@ -5,10 +5,8 @@ if(OPENMP)
   find_package(OpenMP REQUIRED)
 endif(OPENMP)
 
-# For non-system provided installations, specify HDF5_ROOT or TBLIS_ROOT
-# environment variables as appropriate.
+# For non-system provided installations, specify HDF5_ROOT environment variables as appropriate.
 find_package(HDF5 REQUIRED)
-find_package(TBLIS REQUIRED)
 include_directories(${DISTAL_RUNTIME_INCLUDE_DIRS})
 
 file(GLOB LG_SOURCES src/*.cpp)
@@ -36,7 +34,7 @@ function(add_app_folder folder)
     add_executable("${folder}" "${folder}/main.cpp" "${folder}/taco-generated.cpp")
     target_include_directories("${folder}" PRIVATE "${folder}" "${DISTAL_RUNTIME_INCLUDE_DIRS}")
     # Unfortunately, older versions of CMake do not export BLAS::BLAS.
-    target_link_libraries("${folder}" distal-runtime Legion::Legion ${BLAS_LIBRARIES} TBLIS::TBLIS)
+    target_link_libraries("${folder}" distal-runtime Legion::Legion ${BLAS_LIBRARIES})
     if (OPENMP)
       target_compile_options("${folder}" PRIVATE ${OpenMP_CXX_FLAGS})
     endif(OPENMP)
