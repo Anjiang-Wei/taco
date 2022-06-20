@@ -1,9 +1,6 @@
 [submodule "python_bindings/pybind11"]
 	path = python_bindings/pybind11
 	url = https://github.com/pybind/pybind11
-[submodule "legion/legion"]
-	path = legion/legion
-	url = https://gitlab.com/StanfordLegion/legion.git
 [submodule "petsc/petsc"]
 	path = petsc/petsc
 	url = https://gitlab.com/petsc/petsc.git
@@ -19,3 +16,6 @@
 [submodule "deps/OpenBLAS"]
 	path = deps/OpenBLAS
 	url = https://github.com/xianyi/OpenBLAS
+[submodule "deps/legion"]
+	path = deps/legion
+	url = https://gitlab.com/StanfordLegion/legion

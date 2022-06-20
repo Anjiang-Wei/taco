@@ -130,7 +130,7 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_EMBED_GASNet"] = True
             cmakeDefs["GASNet_CONDUIT"] = args.conduit
 
-        cmake(os.path.join(distalRoot, "legion", "legion"), cmakeDefs, env={
+        cmake(os.path.join(distalRoot, "deps", "legion"), cmakeDefs, env={
             "HDF5_ROOT": makeInstallPath,
         })
         run("make", "-j{}".format(args.threads), "install")
