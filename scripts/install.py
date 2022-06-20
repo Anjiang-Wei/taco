@@ -90,7 +90,7 @@ with pushd(args.deps_install_dir):
 
     # TBLIS.
     if args.tblis:
-        with pushd(os.path.join(distalRoot, "legion", "tblis")):
+        with pushd(os.path.join(distalRoot, "deps", "tblis")):
             # BLAS is only used for the benchmark program, and hence disabled.
             cmd = ["./configure",
                    "--prefix", makeInstallPath,
