@@ -97,13 +97,15 @@ get_target_property(REALM_LIB_LOCATION Legion::RealmRuntime INTERFACE_LOCATION)
 # We have to clean up the physical paths constructed by CMake as if the full
 # shared library path is passed, NVCC gets unhappy and can't figure out what
 # kind of file a shared library is. So, we have to make sure all of the shared
-# libraries that we construct here actually end with .so, and nothing else.
-if (NOT ${LEGION_LIB_LOCATION} MATCHES ".*.so$")
+# libraries that we construct here actually end with .so, and nothing else. We
+# also have to make sure not to do anything if we end with .dylib for local Mac
+# development.
+if (NOT ${LEGION_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${LEGION_LIB_LOCATION} MATCHES ".*.dylib$")
   get_filename_component(LEGION_LIB_DIR ${LEGION_LIB_LOCATION} DIRECTORY)
   get_filename_component(LEGION_LIB_NAME ${LEGION_LIB_LOCATION} NAME_WLE)
   set(LEGION_LIB_LOCATION "${LEGION_LIB_DIR}/${LEGION_LIB_NAME}")
 endif()
-if (NOT ${REALM_LIB_LOCATION} MATCHES ".*.so$")
+if (NOT ${REALM_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${REALM_LIB_LOCATION} MATCHES ".*.dylib$")
   get_filename_component(REALM_LIB_DIR ${REALM_LIB_LOCATION} DIRECTORY)
   get_filename_component(REALM_LIB_NAME ${REALM_LIB_LOCATION} NAME_WLE)
   set(REALM_LIB_LOCATION "${REALM_LIB_DIR}/${REALM_LIB_NAME}")
