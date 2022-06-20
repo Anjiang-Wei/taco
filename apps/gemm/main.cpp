@@ -112,6 +112,155 @@ public:
   }
 };
 
+// An implementation of the SUMMA algorithm.
+class SUMMAAlgorithm : public GEMMAlgorithm {
+public:
+  taco::IndexStmt schedule(taco::ParallelUnit pu, int procs) override {
+    auto factors = factorSquare(procs);
+    taco::Grid m(factors.first, factors.second);
+
+    // Distribute all tensors in tiles.
+    taco::DistVar x, y;
+    taco::TensorDistributionNotation distribution({x, y}, m, {x, y}, pu);
+    taco::TensorVar A("A", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar B("B", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar C("C", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+
+    taco::IndexVar i("i"), j("j"), k("k");
+    taco::IndexStmt stmt = A(i, j) = B(i, k) * C(k, j);
+
+    taco::IndexVar io("io"), ii("ii"), jo("jo"), ji("ji"), ko("ko"), ki("ki");
+    return stmt.concretize()
+               .distribute({i, j}, {io, jo}, {ii, ji}, m, pu)
+               .divide(k, ko, ki, m.getDimSize(0))
+               .reorder({ko, ii, ji})
+               .communicate(A(i, j), jo)
+               .communicate({B(i, k), C(k, j)}, ko)
+               .swapLeafKernel(ii, this->getGEMM(pu))
+               ;
+  }
+  bool hierarchy() override { return true; }
+  taco::IndexStmt schedule(std::vector<taco::ParallelUnit> levels, std::vector<int> procs) override {
+    taco_iassert(levels.size() == 2 && levels[0] == taco::ParallelUnit::DistributedNode);
+
+    auto factorAllNodes = factorSquare(procs[0]);
+    auto factorNode = factorSquare(procs[1]);
+    std::vector<taco::Grid> machine = {
+        {factorAllNodes.first, factorAllNodes.second},
+        // TODO (rohany): We can do something smarter for the inter-node if that matters.
+        {factorNode.first, factorNode.second},
+    };
+
+    taco::DistVar x, y;
+    std::vector<taco::TensorDistributionNotation> distribution = {
+        {{x, y}, machine[0], {x, y}, levels[0]},
+        {{x, y}, machine[1], {x, y}, levels[1]},
+    };
+    taco::TensorVar A("A", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar B("B", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar C("C", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+
+    taco::IndexVar i("i"), j("j"), k("k");
+    taco::IndexStmt stmt = A(i, j) = B(i, k) * C(k, j);
+
+    // Index variables for the first layer of distribution.
+    taco::IndexVar io("io"), ii("ii"), jo("jo"), ji("ji"), ko("ko"), ki("ki");
+    // Index variables for the second level of distribution.
+    taco::IndexVar iio("iio"), iii("iii"), jio("jio"), jii("jii"), kio("kio"), kii("kii");
+    return stmt.concretize()
+               // Level 1 of distribution -- all nodes.
+               .distribute({i, j}, {io, jo}, {ii, ji}, machine[0], levels[0])
+               .divide(k, ko, ki, machine[0].getDimSize(0))
+               .reorder({ko, ii, ji})
+               .communicate(A(i, j), jo)
+               .communicate({B(i, k), C(k, j)}, ko)
+               // Level 2 of distribution -- all sockets or GPUs on a node.
+               .distribute({ii, ji}, {iio, jio}, {iii, jii}, machine[1], levels[1])
+               .divide(ki, kio, kii, machine[1].getDimSize(0))
+               .reorder({kio, iii, jii})
+               .communicate(A(i, j), jio)
+               .communicate({B(i, k), C(k, j)}, kio)
+               .swapLeafKernel(iii, this->getGEMM(levels[1]))
+               ;
+  }
+};
+
+// An implementation of the PUMMA algorithm.
+class PUMMAAlgorithm : public GEMMAlgorithm {
+public:
+  taco::IndexStmt schedule(taco::ParallelUnit pu, int procs) override {
+    auto factors = factorSquare(procs);
+    taco::Grid m(factors.first, factors.second);
+
+    // Distribute all tensors in tiles.
+    taco::DistVar x, y;
+    taco::TensorDistributionNotation distribution({x, y}, m, {x, y}, pu);
+    taco::TensorVar A("A", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar B("B", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar C("C", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+
+    taco::IndexVar i("i"), j("j"), k("k");
+    taco::IndexStmt stmt = A(i, j) = B(i, k) * C(k, j);
+
+    taco::IndexVar io("io"), ii("ii"), jo("jo"), ji("ji"), ko("ko"), ki("ki"), kos("kos");
+    return stmt.concretize()
+        .distribute({i, j}, {io, jo}, {ii, ji}, m, pu)
+        .divide(k, ko, ki, m.getDimSize(0))
+        .reorder({ko, ii, ji})
+        .stagger(ko, {io}, kos)
+        .communicate(A(i, j), jo)
+        .communicate({B(i, k), C(k, j)}, kos)
+        .swapLeafKernel(ii, this->getGEMM(pu))
+        ;
+  }
+  bool hierarchy() override { return true; }
+  taco::IndexStmt schedule(std::vector<taco::ParallelUnit> levels, std::vector<int> procs) override {
+    taco_iassert(levels.size() == 2 && levels[0] == taco::ParallelUnit::DistributedNode);
+
+    auto factorAllNodes = factorSquare(procs[0]);
+    auto factorNode = factorSquare(procs[1]);
+    std::vector<taco::Grid> machine = {
+        {factorAllNodes.first, factorAllNodes.second},
+        // TODO (rohany): We can do something smarter for the inter-node if that matters.
+        {factorNode.first, factorNode.second},
+    };
+
+    taco::DistVar x, y;
+    std::vector<taco::TensorDistributionNotation> distribution = {
+        {{x, y}, machine[0], {x, y}, levels[0]},
+        {{x, y}, machine[1], {x, y}, levels[1]},
+    };
+    taco::TensorVar A("A", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar B("B", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar C("C", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+
+    taco::IndexVar i("i"), j("j"), k("k");
+    taco::IndexStmt stmt = A(i, j) = B(i, k) * C(k, j);
+
+    // Index variables for the first layer of distribution.
+    taco::IndexVar io("io"), ii("ii"), jo("jo"), ji("ji"), ko("ko"), ki("ki"), kos("kos");
+    // Index variables for the second level of distribution.
+    taco::IndexVar iio("iio"), iii("iii"), jio("jio"), jii("jii"), kio("kio"), kii("kii"), kios("kios");
+    return stmt.concretize()
+               // Level 1 of distribution -- all nodes.
+               .distribute({i, j}, {io, jo}, {ii, ji}, machine[0], levels[0])
+               .divide(k, ko, ki, machine[0].getDimSize(0))
+               .reorder({ko, ii, ji})
+               .stagger(ko, {io}, kos)
+               .communicate(A(i, j), jo)
+               .communicate({B(i, k), C(k, j)}, kos)
+               // Level 2 of distribution -- all sockets or GPUs on a node.
+               .distribute({ii, ji}, {iio, jio}, {iii, jii}, machine[1], levels[1])
+               .divide(ki, kio, kii, machine[1].getDimSize(0))
+               .reorder({kio, iii, jii})
+               .stagger(kio, {iio}, kios)
+               .communicate(A(i, j), jio)
+               .communicate({B(i, k), C(k, j)}, kios)
+               .swapLeafKernel(iii, this->getGEMM(levels[1]))
+               ;
+  }
+};
+
 void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions, Context ctx, Runtime *runtime) {
   int n = -1, m = -1, k = -1;
   std::string algorithmStr;
@@ -145,10 +294,14 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
   std::unique_ptr<GEMMAlgorithm> algorithm;
   if (algorithmStr == "cannon") {
     algorithm = std::make_unique<CannonsAlgorithm>();
+  } else if (algorithmStr == "summa") {
+    algorithm = std::make_unique<SUMMAAlgorithm>();
+  } else if (algorithmStr == "pumma") {
+    algorithm = std::make_unique<PUMMAAlgorithm>();
   }
   if (!algorithm) {
     LEGION_PRINT_ONCE(runtime, ctx, stdout, "Provide a supported algorithm with -alg: %s\n",
-                      taco::util::join(std::vector<std::string>{"cannon"}).c_str());
+                      taco::util::join(std::vector<std::string>{"cannon", "summa", "pumma"}).c_str());
     return;
   }
 

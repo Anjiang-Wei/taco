@@ -46,7 +46,6 @@ void mttkrp(MTTKRPPack pack, T* A_vals, const T* B_vals, const T* C_vals, const 
   int ldC = pack.ldC;
   int ldD = pack.ldD;
   int ldB1 = pack.ldB1;
-  int ldB2 = pack.ldB2;
   int ldB3 = pack.ldB3;
 
   // Allocate an intermediate result T(i, j, l).
@@ -89,13 +88,13 @@ void mttkrp(MTTKRPPack pack, T* A_vals, const T* B_vals, const T* C_vals, const 
 
   // Perform the next reduction A(i, l) = T(i, j, l) * C(j, l).
   #pragma omp parallel for schedule(static)
-  for (int32_t i = 0; i < B1_dimension; i++) {
-    for (int32_t j = 0; j < C1_dimension; j++) {
-      int32_t jB = i * C1_dimension + j;
-      for (int32_t l = 0; l < D2_dimension; l++) {
-        int32_t lA = i * ldA + l;
-        int32_t lB = jB * D2_dimension + l;
-        int32_t lC = j * ldC + l;
+  for (size_t i = 0; i < B1_dimension; i++) {
+    for (size_t j = 0; j < C1_dimension; j++) {
+      size_t jB = i * C1_dimension + j;
+      for (size_t l = 0; l < D2_dimension; l++) {
+        size_t lA = i * ldA + l;
+        size_t lB = jB * D2_dimension + l;
+        size_t lC = j * ldC + l;
         A_vals[lA] = A_vals[lA] + inter[lB] * C_vals[lC];
       }
     }
