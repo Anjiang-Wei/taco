@@ -261,6 +261,48 @@ public:
   }
 };
 
+// An implementation of Solomonik's algorithm. Since Legion does not support virtual
+// reduction instances right now, this algorithm does not support heirarchy.
+class SolomoniksAlgorithm : public GEMMAlgorithm {
+public:
+  SolomoniksAlgorithm(int c, int rpoc, int rpoc3) : c(c), rpoc(rpoc), rpoc3(rpoc3) {}
+  taco::IndexStmt schedule(taco::ParallelUnit pu, int procs) override {
+    // The parameters need to satisfy certain constraints.
+    taco_iassert(rpoc * rpoc / c == procs);
+    taco::Grid m(rpoc, rpoc, c);
+
+    // Distribute all tensors in tiles.
+    taco::DistVar x, y;
+    taco::TensorDistributionNotation distribution({x, y}, m, {x, y, 0}, pu);
+    taco::TensorVar A("A", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar B("B", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+    taco::TensorVar C("C", {taco::Float64, {taco::Dimension(), taco::Dimension()}}, {distribution});
+
+    taco::IndexVar i("i"), j("j"), k("k");
+    taco::IndexStmt stmt = A(i, j) = B(i, k) * C(k, j);
+
+    taco::IndexVar io("io"), ii("ii"), jo("jo"), ji("ji"), ko("ko"), ki("ki"),
+                   kio("kio"), kii("kii"), kios("kios");
+    // To schedule for Solomonik's algorithm, we'll distribute over i, j, k according to the
+    // processor grid. Then, we divide the ki loop into kio and kii so that each partition of C
+    // is operated on in chunks. Finally, we then stagger the kio loop so that along each parallel
+    // slice of k, a Cannon style shifting occurs.
+    return stmt.concretize()
+               .distribute({i, j, k}, {io, jo, ko}, {ii, ji, ki}, m, pu)
+               .divide(ki, kio, kii, rpoc3)
+               .reorder({kio, ii, ji})
+               .stagger(kio, {io, jo}, kios)
+               .communicate(A(i, j), ko)
+               .communicate({B(i, k), C(k, j)}, kios)
+               .swapLeafKernel(ii, this->getGEMM(pu))
+               ;
+  }
+private:
+  int c;
+  int rpoc;
+  int rpoc3;
+};
+
 void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions, Context ctx, Runtime *runtime) {
   int n = -1, m = -1, k = -1;
   std::string algorithmStr;
@@ -270,6 +312,11 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
   parser.add_option_int("-m", m);
   parser.add_option_int("-k", k);
   parser.add_option_string("-alg", algorithmStr);
+  // Algorithms for Solomonik's algorithm.
+  int c = -1, rpoc = -1, rpoc3 = -1;
+  parser.add_option_int("-c", c);
+  parser.add_option_int("-rpoc", rpoc);
+  parser.add_option_int("-rpoc3", rpoc3);
   auto args = runtime->get_input_args();
   auto ok = parser.parse_command_line(args.argc, args.argv);
   if (!ok) {
@@ -298,10 +345,16 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
     algorithm = std::make_unique<SUMMAAlgorithm>();
   } else if (algorithmStr == "pumma") {
     algorithm = std::make_unique<PUMMAAlgorithm>();
+  } else if (algorithmStr == "solomonik") {
+    if (c == -1 || rpoc == -1 || rpoc3 == -1) {
+      LEGION_PRINT_ONCE(runtime, ctx, stdout, "Must provide -c, -rpoc and -rpoc3 for Solomonik's algorithm.\n");
+      return;
+    }
+    algorithm = std::make_unique<SolomoniksAlgorithm>(c, rpoc, rpoc3);
   }
   if (!algorithm) {
     LEGION_PRINT_ONCE(runtime, ctx, stdout, "Provide a supported algorithm with -alg: %s\n",
-                      taco::util::join(std::vector<std::string>{"cannon", "summa", "pumma"}).c_str());
+                      taco::util::join(std::vector<std::string>{"cannon", "summa", "pumma", "solomonik"}).c_str());
     return;
   }
 
@@ -380,6 +433,9 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
 
   std::vector<size_t> times;
   for (int i = 0; i < 11; i++) {
+    // TODO (rohany): For some algorithms (like Solomonik's), we may create some instances that we
+    //  don't need/want by filling over the tiled partition. If this becomes a problem, then we'll
+    //  need to have a switch on the algorithm to tell us to choose which partition to fill over.
     tacoFill<double>(ctx, runtime, A.vals, APart, 0);
     tacoFill<double>(ctx, runtime, B.vals, BPart, 1);
     tacoFill<double>(ctx, runtime, C.vals, CPart, 1);
