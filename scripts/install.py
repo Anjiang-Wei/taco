@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 from contextlib import contextmanager
 import os
@@ -61,17 +63,18 @@ if args.openmp and args.sockets is None:
     sys.exit(1)
 
 # First, install dependencies.
-os.mkdir(args.deps_install_dir)
+os.makedirs(args.deps_install_dir, exist_ok=True)
 makeInstallPath = os.path.abspath(os.path.join(args.deps_install_dir, "make-install"))
 cmakeInstallPath = os.path.abspath(os.path.join(args.deps_install_dir, "cmake-install"))
 with pushd(args.deps_install_dir):
     # Set up installation an installation path for all of the dependencies to install into.
-    os.mkdir(makeInstallPath)
-    os.mkdir(cmakeInstallPath)
+    os.makedirs(makeInstallPath, exist_ok=True)
+    os.makedirs(cmakeInstallPath, exist_ok=True)
 
     # HDF5.
-    wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
-    run("tar", "-xf", "hdf5-1.10.1.tar.gz")
+    if not os.path.exists("hdf5-1.10.1"):
+        wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
+        run("tar", "-xf", "hdf5-1.10.1.tar.gz")
     with pushd("hdf5-1.10.1"):
         run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
         run("make", "-j{}".format(args.threads))
@@ -105,7 +108,7 @@ with pushd(args.deps_install_dir):
             run("make", "-j{}".format(args.threads), "install")
 
     # Legion.
-    os.mkdir("legion-build")
+    os.makedirs("legion-build", exist_ok=True)
     with pushd("legion-build"):
         # In order to get Legion to be a completely independent install, configuring the RPATH
         # through CMake is an option. See here for more details: 
@@ -136,7 +139,7 @@ with pushd(args.deps_install_dir):
         run("make", "-j{}".format(args.threads), "install")
 
 # Finally build DISTAL.
-os.mkdir(args.distal_build_dir)
+os.makedirs(args.distal_build_dir, exist_ok=True)
 with pushd(args.distal_build_dir):
     cmakeDefs = {
         "BLA_VENDOR": "OpenBLAS",
