@@ -106,12 +106,13 @@ public:
   // compute invokes the compiled kernel.
   void compute(Legion::Context ctx, Legion::Runtime* runtime, std::vector<LegionTensor*> tensors, void* partition);
 private:
-  Kernel(std::shared_ptr<Module> module);
+  Kernel(std::shared_ptr<Module> module, bool hasPartitionMethod=true);
 
   // The compiler methods are able to construct Kernel objects.
   friend JITResult compile(Legion::Context, Legion::Runtime*, taco::IndexStmt);
 
   std::shared_ptr<Module> module;
+  bool hasPartitionMethod;
 };
 
 // TODO (rohany): This should eventually take some sort of configurations struct that enables
@@ -124,7 +125,7 @@ struct JITResult {
   std::vector<TensorDistribution> distributions;
   Kernel kernel;
   // Construct a computation bound to a particular set of tensors from the JIT-ed kernels.
-  Computation bind(std::vector<LegionTensor> tensors);
+  Computation bind(std::vector<LegionTensor*> tensors);
 };
 JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt stmt);
 
@@ -138,9 +139,8 @@ public:
   void compute(Legion::Context ctx, Legion::Runtime* runtime);
 private:
   friend JITResult;
-  Computation(std::vector<LegionTensor> tensors, std::vector<TensorDistribution> distributions, Kernel kernel);
-  std::vector<LegionTensor> tensors;
-  std::vector<LegionTensor*> tensorPtrs;
+  Computation(std::vector<LegionTensor*> tensors, std::vector<TensorDistribution> distributions, Kernel kernel);
+  std::vector<LegionTensor*> tensors;
   std::vector<TensorDistribution> distributions;
   Kernel kernel;
   std::vector<void*> distributionPartitions;

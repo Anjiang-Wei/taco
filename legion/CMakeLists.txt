@@ -140,11 +140,6 @@ add_executable(tensor_to_hdf5 fileio/tensor_to_hdf5.cpp)
 target_link_libraries(tensor_to_hdf5 distal-runtime Legion::Legion ${HDF5_LIBRARIES})
 include_directories(tensor_to_hdf5 PRIVATE ${HDF5_INCLUDE_DIRS})
 
-# Utility to convert COO tensors into desired formats.
-add_executable(format-converter format-converter/main.cpp format-converter/taco-generated.cpp format-converter/taco-generated.h)
-target_link_libraries(format-converter distal-runtime Legion::Legion ${HDF5_LIBRARIES})
-include_directories(format-converter PRIVATE ${HDF5_INCLUDE_DIRS})
-
 # Sparse tests.
 set(SPARSE_TEST_BINARIES "")
 macro(add_basic_legion_sparse_test binary tag)

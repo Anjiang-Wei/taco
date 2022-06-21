@@ -7,6 +7,7 @@
 // Public headers exported by TACO.
 #include "taco/index_notation/index_notation_nodes.h"
 #include "taco/lower/lower.h"
+#include "taco/ir/simplify.h"
 #include "taco/util/env.h"
 
 // "Hidden" headers from within the TACO source tree.
@@ -24,16 +25,21 @@ namespace JIT {
 TensorDistribution::TensorDistribution(std::shared_ptr<Module> module, std::string funcName) : module(module), funcName(funcName) {}
 
 void* TensorDistribution::partition(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t) {
+  if (!this->module) { return nullptr; }
   return this->module->callLinkedFunction<void*>("partitionFor" + this->funcName, {ctx, runtime, t});
 }
 
 void TensorDistribution::apply(Legion::Context ctx, Legion::Runtime *runtime, LegionTensor *t, void* partitions) {
+  if (!this->module) { return; }
   this->module->callLinkedFunction<void>(this->funcName, {ctx, runtime, t, partitions});
 }
 
-Kernel::Kernel(std::shared_ptr<Module> module) : module(module) {}
+Kernel::Kernel(std::shared_ptr<Module> module, bool hasPartitionMethod) : module(module), hasPartitionMethod(hasPartitionMethod) {}
 
 void* Kernel::partition(Legion::Context ctx, Legion::Runtime *runtime, std::vector<LegionTensor *> tensors) {
+  if (!hasPartitionMethod) {
+    return nullptr;
+  }
   std::vector<void*> args;
   args.reserve(tensors.size() + 2);
   args.push_back(ctx);
@@ -52,13 +58,15 @@ void Kernel::compute(Legion::Context ctx, Legion::Runtime *runtime, std::vector<
   for (auto it : tensors) {
     args.push_back(it);
   }
-  args.push_back(partitions);
+  if (hasPartitionMethod) {
+    args.push_back(partitions);
+  }
   return this->module->callLinkedFunction<void>("compute", args);
 }
 
 JITResult::JITResult(std::vector<TensorDistribution> distributions, Kernel kernel) : distributions(distributions), kernel(kernel) {}
 
-Computation JITResult::bind(std::vector<LegionTensor> tensors) {
+Computation JITResult::bind(std::vector<LegionTensor*> tensors) {
   return Computation(tensors, this->distributions, this->kernel);
 }
 
@@ -68,10 +76,11 @@ JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt
   // Compile all data distribution statements and the kernel into the same module.
   auto module = std::make_shared<Module>(DISTAL::Compiler::Core::stmtUsesGPU(stmt) ? Module::GPU : Module::CPU);
 
-  auto lower = [&](std::string name, taco::IndexStmt stmt) {
+  auto lowerDistribution = [&](std::string name, taco::IndexStmt stmt) {
+    taco_iassert(DISTAL::Compiler::Core::stmtIsDistributed(stmt));
     taco::LowerOptions options;
     // First, lower the partitioning code.
-    // TODO (rohany): Should assemble be true?
+    // TODO (rohany): We should be able to do separate assemble and compute.
     options.assemble = false;
     options.compute = false;
     options.pack = false;
@@ -94,17 +103,64 @@ JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt
   std::vector<std::string> distributionFuncNames;
   auto tensors = DISTAL::Compiler::Core::getTensors(stmt);
   for (auto t : tensors) {
-    taco_iassert(!t.getDistribution().empty());
-    auto trans = t.translateDistribution();
-    std::string funcName = "distribute" + t.getName();
-    auto lowered = lower(funcName, trans);
-    distributionFuncNames.push_back(funcName);
-    module->addFunction(lowered);
+    // We'll attempt to transparently handle when a distribution is not
+    // set for input TensorVars.
+    if (!t.getDistribution().empty()) {
+      auto trans = t.translateDistribution();
+      std::string funcName = "distribute" + t.getName();
+      auto lowered = lowerDistribution(funcName, trans);
+      distributionFuncNames.push_back(funcName);
+      module->addFunction(lowered);
+    }
   }
 
+  auto lowerCompute = [&](std::string name, taco::IndexStmt stmt) {
+    bool sparseLHS = DISTAL::Compiler::Core::stmtHasSparseLHS(stmt);
+    if (DISTAL::Compiler::Core::stmtIsDistributed(stmt)) {
+      taco::LowerOptions options;
+      // First, lower the partitioning code.
+      // TODO (rohany): We should be able to do separate assemble and compute.
+      options.assemble = sparseLHS;
+      options.compute = false;
+      options.pack = false;
+      options.unpack = false;
+      options.legion = true;
+      options.waitOnFuture = true;
+      options.partition = true;
+      options.setPlacementPrivilege = false;
+      // JIT code needs to use the partition pack as a pointer.
+      options.partitionPackAsPointer = true;
+      auto partition = taco::lower(stmt, "partitionFor" + name, options);
+      // Now lower the compute code.
+      options.compute = true;
+      options.partition = false;
+      auto compute = taco::lower(stmt, name, options);
+      return taco::ir::Block::make(partition, compute);
+    } else {
+      taco::LowerOptions options;
+      // First, lower the partitioning code.
+      // TODO (rohany): We should be able to do separate assemble and compute.
+      options.assemble = sparseLHS;
+      options.compute = true;
+      options.pack = false;
+      options.unpack = false;
+      options.legion = true;
+      options.partition = true;
+      options.waitOnFuture = true;
+      options.setPlacementPrivilege = false;
+      auto lowered = taco::lower(stmt, name, options);
+      if (sparseLHS) {
+        // For some codes that use assemble, we need to explicitly
+        // call simplify otherwise TACO can generate some dead code
+        // that causes errors during host compilation.
+        lowered = taco::ir::simplify(lowered);
+      }
+      return lowered;
+    }
+  };
   // TODO (rohany): Make these names a shared variable, and stop naming things computeLegion.
   // Next, lower the actual compute kernel into IR.
-  auto lowered = lower("compute", stmt);
+  auto lowered = lowerCompute("compute", stmt);
   module->addFunction(lowered);
 
   // Finally compile everything.
@@ -115,45 +171,48 @@ JITResult compile(Legion::Context ctx, Legion::Runtime* runtime, taco::IndexStmt
 
   // Construct TensorDistribution kernels for each of the distribution statements.
   std::vector<TensorDistribution> distributions;
-  for (auto it : distributionFuncNames) {
-    distributions.push_back({module, it});
+  int idx = 0;
+  for (auto t : tensors) {
+    if (t.getDistribution().empty()) {
+      distributions.push_back({nullptr, ""});
+    } else {
+      distributions.push_back({module, distributionFuncNames[idx]});
+      idx++;
+    }
   }
 
-  return JITResult(distributions, {module});
+  return JITResult(distributions, {module, DISTAL::Compiler::Core::stmtIsDistributed(stmt)});
 }
 
-Computation::Computation(std::vector<LegionTensor> tensors, std::vector<TensorDistribution> distributions,
-                         Kernel kernel) : tensors(tensors), tensorPtrs(tensors.size()), distributions(distributions), kernel(kernel),
+Computation::Computation(std::vector<LegionTensor*> tensors, std::vector<TensorDistribution> distributions,
+                         Kernel kernel) : tensors(tensors), distributions(distributions), kernel(kernel),
                                           distributionPartitions(tensors.size()), computePartitions(nullptr) {
   taco_iassert(this->tensors.size() == this->distributions.size());
-  for (size_t i = 0; i < this->tensors.size(); i++) {
-    this->tensorPtrs[i] = &this->tensors[i];
-  }
 }
 
 void Computation::distribute(Legion::Context ctx, Legion::Runtime *runtime) {
   for (size_t i = 0; i < this->distributionPartitions.size(); i++) {
     if (this->distributionPartitions[i] == nullptr) {
-      this->distributionPartitions[i] = this->distributions[i].partition(ctx, runtime, this->tensorPtrs[i]);
+      this->distributionPartitions[i] = this->distributions[i].partition(ctx, runtime, this->tensors[i]);
     }
   }
   for (size_t i = 0; i < this->distributions.size(); i++) {
-    this->distributions[i].apply(ctx, runtime, this->tensorPtrs[i], this->distributionPartitions[i]);
+    this->distributions[i].apply(ctx, runtime, this->tensors[i], this->distributionPartitions[i]);
   }
 }
 
 LegionTensorPartition Computation::getDistributionPartition(Legion::Context ctx, Legion::Runtime* runtime, int idx) {
   if (this->distributionPartitions[idx] == nullptr) {
-    this->distributionPartitions[idx] = this->distributions[idx].partition(ctx, runtime, this->tensorPtrs[idx]);
+    this->distributionPartitions[idx] = this->distributions[idx].partition(ctx, runtime, this->tensors[idx]);
   }
   return *(LegionTensorPartition*)this->distributionPartitions[idx];
 }
 
 void Computation::compute(Legion::Context ctx, Legion::Runtime *runtime) {
   if (this->computePartitions == nullptr) {
-    this->computePartitions = this->kernel.partition(ctx, runtime, this->tensorPtrs);
+    this->computePartitions = this->kernel.partition(ctx, runtime, this->tensors);
   }
-  this->kernel.compute(ctx, runtime, this->tensorPtrs, this->computePartitions);
+  this->kernel.compute(ctx, runtime, this->tensors, this->computePartitions);
 }
 
 // Definitions for DISTAL::Compiler::JIT::Module.

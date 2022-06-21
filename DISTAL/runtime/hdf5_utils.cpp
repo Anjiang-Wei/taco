@@ -233,7 +233,7 @@ void attachCOORegionsTask(const Task* task, const std::vector<PhysicalRegion>& r
     physRegs.push_back(attachHDF5RO(ctx, runtime, copy, fieldMaps[i], filename));
     cl.add_copy_requirements(
       RegionRequirement(copy, READ_ONLY, EXCLUSIVE, copy).add_field(fieldMaps[i].begin()->first),
-      RegionRequirement(rg, READ_WRITE, EXCLUSIVE, rg).add_field(fieldMaps[i].begin()->first)
+      RegionRequirement(rg, WRITE_ONLY, EXCLUSIVE, rg).add_field(fieldMaps[i].begin()->first)
     );
   }
   runtime->issue_copy_operation(ctx, cl);
