@@ -63,29 +63,30 @@ struct ErrorReport {
   void explodeWithException();
 };
 
-// internal asserts
-#ifdef TACO_ASSERTS
-  #define taco_iassert(c)                                                     \
-    taco::ErrorReport(__FILE__, __FUNCTION__, __LINE__, (c), #c,              \
-                      taco::ErrorReport::Internal, false)
-  #define taco_ierror                                                         \
-    taco::ErrorReport(__FILE__, __FUNCTION__, __LINE__, false, NULL,          \
-                      taco::ErrorReport::Internal, false)
-#else
-  struct Dummy {
-    template<typename T>
-    Dummy &operator<<(T x) {
-      return *this;
-    }
-    // Support for manipulators, such as std::endl
-    Dummy &operator<<(std::ostream& (*manip)(std::ostream&)) {
-      return *this;
-    }
-  };
-
-  #define taco_iassert(c) taco::Dummy()
-  #define taco_ierror taco::Dummy()
-#endif
+// For DISTAL, we want to always have asserts running, whether we
+// are in debug mode or not.
+// #ifdef TACO_ASSERTS
+#define taco_iassert(c)                                                     \
+  taco::ErrorReport(__FILE__, __FUNCTION__, __LINE__, (c), #c,              \
+                    taco::ErrorReport::Internal, false)
+#define taco_ierror                                                         \
+  taco::ErrorReport(__FILE__, __FUNCTION__, __LINE__, false, NULL,          \
+                    taco::ErrorReport::Internal, false)
+// #else
+//   struct Dummy {
+//     template<typename T>
+//     Dummy &operator<<(T x) {
+//       return *this;
+//     }
+//     // Support for manipulators, such as std::endl
+//     Dummy &operator<<(std::ostream& (*manip)(std::ostream&)) {
+//       return *this;
+//     }
+//   };
+//
+//   #define taco_iassert(c) taco::Dummy()
+//   #define taco_ierror taco::Dummy()
+// #endif
 
 #define taco_unreachable                                                       \
   taco_ierror << "reached unreachable location"

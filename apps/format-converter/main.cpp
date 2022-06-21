@@ -1,15 +1,13 @@
-#include "legion.h"
-#include "taco_legion_header.h"
-#include "legion_string_utils.h"
-#include "hdf5_utils.h"
-#include "realm/cmdline.h"
-#include "error.h"
-#include "taco-generated.h"
 #include <stdlib.h>
-#include "task_ids.h"
-#include "taco_mapper.h"
 
-#include "mapping_utilities.h"
+#include "legion.h"
+#include "realm/cmdline.h"
+
+#include "taco.h"
+
+#include "distal-compiler-jit.h"
+#include "distal-runtime.h"
+
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -43,7 +41,7 @@ void register_mapper(Machine m, Runtime* runtime, const std::set<Processor>& loc
 }
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
-  bool roundTrip = false, dump = false, h5dump = false;
+  bool roundTrip = false, dump = false, h5dump = false, assemble = false;
   std::string outputFormat, cooFile, outputFile, outputModeOrdering;
   Realm::CommandLineParser parser;
   parser.add_option_string("-coofile", cooFile);
@@ -53,6 +51,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   parser.add_option_bool("-dump", dump);
   parser.add_option_bool("-h5dump", h5dump);
   parser.add_option_string("-mode_ordering", outputModeOrdering);
+  parser.add_option_bool("-assemble", assemble);
   auto args = Runtime::get_input_args();
   taco_uassert(parser.parse_command_line(args.argc, args.argv)) << "Parse failure.";
   taco_uassert(!cooFile.empty()) << "provide a file with -coofile";
@@ -63,6 +62,46 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   // Load the input COO tensor.
   auto coo = loadCOOFromHDF5(ctx, runtime, cooFile, FID_RECT_1, FID_COORD, sizeof(int32_t), FID_VAL, sizeof(double));
   logApp.info() << "Done loading input COO tensor.";
+
+  taco::IndexStmt stmt;
+  {
+    std::vector<taco::Dimension> dims(coo.order, taco::Dimension());
+    taco::TensorVar TCOO("TCOO", {taco::Float64, dims}, taco::LgCOO(coo.order));
+    // Construct the target format for the output tensor.
+    taco::Format targetFormat;
+    std::vector<taco::ModeFormat> modeFormats;
+    for (auto it : outputFormat) {
+      if (it == 's') {
+        modeFormats.push_back(taco::LgSparse);
+      } else if (it == 'd') {
+        modeFormats.push_back(taco::Dense);
+      } else {
+        taco_uassert("Invalid character for output format: ") << it;
+      }
+    }
+    std::vector<int> modeOrdering;
+    for (auto it : outputModeOrdering) {
+      // Convert ascii chars to ints.
+      int mode = it - '0';
+      taco_iassert(mode >= 0 && mode < 10);
+      modeOrdering.push_back(mode);
+    }
+    taco::TensorVar T("T", {taco::Float64, dims}, taco::LgFormat(modeFormats, modeOrdering));
+    std::vector<taco::IndexVar> vars;
+    for (int i = 0; i < coo.order; i++) {
+      vars.push_back(taco::IndexVar(std::string(1, 'i' + i)));
+    }
+    auto lhs = taco::Access(T, vars);
+    auto rhs = taco::Access(TCOO, vars);
+    stmt = taco::Assignment(lhs, rhs).concretize();
+
+    // Figure out whather we should use assemble. We'll leave this up to
+    // the user, but some formats we know that this works.
+    if (taco::util::contains(std::set<std::string>{"ds", "dds"}, outputFormat) || assemble) {
+      stmt = stmt.assemble(T, taco::AssembleStrategy::Insert);
+    }
+  }
+  auto jit = DISTAL::Compiler::JIT::compile(ctx, runtime, stmt);
 
   // Construct the desired output format.
   std::vector<LegionTensorLevelFormat> format;
@@ -83,25 +122,8 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   logApp.info() << "Packing COO to desired format.";
 
-  // TODO (rohany): Is there any way that we could generate this map programmatically? We could
-  //  probably emit it at the top of the taco generated file?
-  typedef void (*ConvFunc)(Context, Runtime*, LegionTensor*, LegionTensor*);
-  std::map<std::string, ConvFunc> converters = {
-      {"s", packLegionCOOToVec},
-      {"ds", packLegionCOOToCSR},
-      {"ds10", packLegionCOOToCSC},
-      {"ss", packLegionCOOToDCSR},
-      {"sd", packLegionCOOToSD},
-      {"sss", packLegionCOOToSSS},
-      {"dss", packLegionCOOToDSS},
-      {"dds", packLegionCOOToDDS},
-      {"sds", packLegionCOOToSDS},
-  };
-  auto it = converters.find(outputFormat + outputModeOrdering);
-  if (it == converters.end()) {
-    taco_uassert(false) << "unsupported output format kind";
-  }
-  it->second(ctx, runtime, &output, &coo);
+  auto kernel = jit.bind({&output, &coo});
+  kernel.compute(ctx, runtime);
 
   logApp.info() << "Done packing COO to desired format.";
 
@@ -139,7 +161,6 @@ int main(int argc, char** argv) {
     Runtime::preregister_task_variant<top_level_task>(registrar, "top_level");
   }
   registerHDF5UtilTasks();
-  registerTacoTasks();
   registerTacoRuntimeLibTasks();
   Runtime::add_registration_callback(register_mapper);
   return Runtime::start(argc, argv);

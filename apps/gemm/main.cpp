@@ -393,7 +393,7 @@ void top_level_task(const Task *task, const std::vector<PhysicalRegion> &regions
   auto A = createDenseTensor<2, double>(ctx, runtime, {n, m}, FID_VAL);
   auto B = createDenseTensor<2, double>(ctx, runtime, {n, k}, FID_VAL);
   auto C = createDenseTensor<2, double>(ctx, runtime, {k, m}, FID_VAL);
-  auto kernel = jit.bind({A, B, C});
+  auto kernel = jit.bind({&A, &B, &C});
   initCuBLAS(ctx, runtime);
 
   // Regardless of how the algorithm partitions its data, we want to have

@@ -64,6 +64,36 @@ bool stmtUsesGPU(const taco::IndexStmt stmt) {
   return finder.usesGPU;
 }
 
+bool stmtIsDistributed(const taco::IndexStmt stmt) {
+  struct DistributionFinder : public taco::IndexNotationVisitor {
+    void visit(const taco::ForallNode* node) {
+      if (taco::Forall(node).isDistributed()) {
+        this->distributed = true;
+      }
+      node->stmt.accept(this);
+    }
+    bool distributed = false;
+  } finder;
+  stmt.accept(&finder);
+  return finder.distributed;
+}
+
+bool stmtHasSparseLHS(const taco::IndexStmt stmt) {
+  struct SparseLHSFinder : public taco::IndexNotationVisitor {
+    void visit(const taco::AssignmentNode* node) {
+      auto lhsFormat = node->lhs.getTensorVar().getFormat();
+      for (auto format : lhsFormat.getModeFormats()) {
+        if (format != taco::ModeFormat::Dense) {
+          this->sparseLHS = true;
+        }
+      }
+    }
+    bool sparseLHS = false;
+  } finder;
+  stmt.accept(&finder);
+  return finder.sparseLHS;
+}
+
 } // namespace Core
 } // namespace Compiler
 } // namespace DISTAL
