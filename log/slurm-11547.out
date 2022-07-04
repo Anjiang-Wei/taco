@@ -1,0 +1,20 @@
+[1 - 7f0b04c0c000]    0.000000 {4}{openmp}: not enough cores in NUMA domain 0 (2 < 18)
+[0 - 7f5760b46000]    0.000000 {4}{openmp}: not enough cores in NUMA domain 0 (2 < 18)
+can't read '/sys/devices/system/node/node-1/distance': No such file or directory
+[0 - 7f5760b46000]    0.000235 {4}{threads}: reservation ('OMP-1 proc 1d00000000000002 (master)') cannot be satisfied
+can't read '/sys/devices/system/node/node-1/distance': No such file or directory
+[1 - 7f0b04c0c000]    0.000247 {4}{threads}: reservation ('CPU proc 1d00010000000001') cannot be satisfied
+cannonMM: /scratch2/anjiang/taco/deps/legion/runtime/mappers/default_mapper.cc:2422: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+[1 - 7f0aec095000]    2.380472 {5}{default_mapper}: Default mapper failed allocation of size 268435456 bytes for region  requirement 0 of task taco_fill (UID 89) in memory 1e00010000000000 (SYSTEM_MEM) for processor 1d00010000000002 (OMP_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+WARNING: ODP shutdown in signal context
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+*** Caught a signal (proc 0): SIGTERM(15)
+--------------------------------------------------------------------------
+mpirun noticed that process rank 1 with PID 461252 on node g0003 exited on signal 6 (Aborted).
+--------------------------------------------------------------------------

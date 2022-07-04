@@ -1,0 +1,17 @@
+[0 - 7f5b7b4ed000]    0.000000 {4}{openmp}: not enough cores in NUMA domain 0 (2 < 18)
+[1 - 7ff4f4cb2000]    0.000000 {4}{openmp}: not enough cores in NUMA domain 0 (2 < 18)
+can't read '/sys/devices/system/node/node-1/distance': No such file or directory
+[0 - 7f5b7b4ed000]    0.000230 {4}{threads}: reservation ('OMP-1 proc 1d00000000000002 (master)') cannot be satisfied
+can't read '/sys/devices/system/node/node-1/distance': No such file or directory
+[1 - 7ff4f4cb2000]    0.000321 {4}{threads}: reservation ('OMP-1 proc 1d00010000000002 (master)') cannot be satisfied
+Execution time: 163 ms.
+Execution time: 392 ms.
+Execution time: 548 ms.
+Execution time: 373 ms.
+Execution time: 570 ms.
+Execution time: 364 ms.
+Execution time: 507 ms.
+Execution time: 144 ms.
+Execution time: 572 ms.
+Execution time: 177 ms.
+On 2 nodes achieved GFLOPS per node: 2.816844.
