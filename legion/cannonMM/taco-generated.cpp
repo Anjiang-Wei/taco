@@ -54,7 +54,7 @@ struct task_7Args {
 };
 
 
-partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, int32_t gridX, int32_t gridY) {
+extern "C" partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, int32_t gridX, int32_t gridY) {
   size_t a1_dimension = a->dims[0];
   size_t a2_dimension = a->dims[1];
   RegionWrapper a_vals = a->vals;
@@ -89,7 +89,7 @@ partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legio
   return computePartitions;
 }
 
-void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
 
@@ -101,7 +101,7 @@ void task_1(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 }
 
-void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, partitionPackForplaceLegionA* partitionPack, int32_t gridX, int32_t gridY) {
+extern "C" void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, partitionPackForplaceLegionA* partitionPack, int32_t gridX, int32_t gridY) {
   auto a_vals_parent = a->valsParent;
   auto a_vals_field_id = a->valsFieldID;
 
@@ -120,7 +120,7 @@ void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a
 
 }
 
-partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, int32_t gridX, int32_t gridY) {
+extern "C" partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, int32_t gridX, int32_t gridY) {
   size_t b1_dimension = b->dims[0];
   size_t b2_dimension = b->dims[1];
   RegionWrapper b_vals = b->vals;
@@ -155,7 +155,7 @@ partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legio
   return computePartitions;
 }
 
-void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion b_vals = regions[0];
   LogicalRegion b_vals_parent = regions[0].get_logical_region();
 
@@ -167,7 +167,7 @@ void task_2(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 }
 
-void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, partitionPackForplaceLegionB* partitionPack, int32_t gridX, int32_t gridY) {
+extern "C" void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, partitionPackForplaceLegionB* partitionPack, int32_t gridX, int32_t gridY) {
   auto b_vals_parent = b->valsParent;
   auto b_vals_field_id = b->valsFieldID;
 
@@ -186,7 +186,7 @@ void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b
 
 }
 
-partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, int32_t gridX, int32_t gridY) {
+extern "C" partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, int32_t gridX, int32_t gridY) {
   size_t c1_dimension = c->dims[0];
   size_t c2_dimension = c->dims[1];
   RegionWrapper c_vals = c->vals;
@@ -221,7 +221,7 @@ partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legio
   return computePartitions;
 }
 
-void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion c_vals = regions[0];
   LogicalRegion c_vals_parent = regions[0].get_logical_region();
 
@@ -233,7 +233,7 @@ void task_3(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 }
 
-void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, partitionPackForplaceLegionC* partitionPack, int32_t gridX, int32_t gridY) {
+extern "C" void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, partitionPackForplaceLegionC* partitionPack, int32_t gridX, int32_t gridY) {
   auto c_vals_parent = c->valsParent;
   auto c_vals_field_id = c->valsFieldID;
 
@@ -252,7 +252,7 @@ void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c
 
 }
 
-void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion b_vals = regions[1];
@@ -311,7 +311,7 @@ void task_5(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   auto c_vals_partition = copyPartition(ctx, runtime, c_dense_run_0_Partition_2, get_logical_region(c_vals), pointID2);
 }
 
-partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, int32_t gridX, int32_t gridY) {
+extern "C" partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, int32_t gridX, int32_t gridY) {
   RegionWrapper a_vals = a->vals;
   auto a_vals_parent = a->valsParent;
   auto a_vals_field_id = a->valsFieldID;
@@ -408,7 +408,7 @@ partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Context ctx, Leg
   return computePartitions;
 }
 
-void task_6(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_6(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion b_vals = regions[1];
@@ -451,7 +451,7 @@ void task_6(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
   );
 }
 
-void task_7(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
+extern "C" void task_7(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion a_vals = regions[0];
   LogicalRegion a_vals_parent = regions[0].get_logical_region();
   PhysicalRegion b_vals = regions[1];
@@ -495,7 +495,7 @@ void task_7(const Task* task, const std::vector<PhysicalRegion>& regions, Contex
 
 }
 
-void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t gridX, int32_t gridY) {
+extern "C" void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t gridX, int32_t gridY) {
   auto a_vals_parent = a->valsParent;
   auto a_vals_field_id = a->valsFieldID;
   auto b_vals_parent = b->valsParent;
@@ -523,85 +523,97 @@ void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* 
   fm.wait_all_results();
 
 }
-void registerTacoTasks() {
+extern "C" void registerTacoTasks() {
   {
     TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_1>(registrar, "task_1");
   }
   {
     TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_2>(registrar, "task_2");
   }
   {
     TaskVariantRegistrar registrar(taskID(3), "task_3");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_3>(registrar, "task_3");
   }
   {
     TaskVariantRegistrar registrar(taskID(5), "task_5");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_inner();
     Runtime::preregister_task_variant<task_5>(registrar, "task_5");
   }
   {
     TaskVariantRegistrar registrar(taskID(6), "task_6");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     Runtime::preregister_task_variant<task_6>(registrar, "task_6");
   }
   {
     TaskVariantRegistrar registrar(taskID(7), "task_7");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_inner();
     Runtime::preregister_task_variant<task_7>(registrar, "task_7");
   }
 }
-void dynamicallyRegisterDISTALTasks(Legion::Context ctx, Legion::Runtime* runtime) {
+extern "C" void dynamicallyRegisterDISTALTasks(void** args) {
+  Legion::Context ctx = (Legion::Context)args[0];
+  Legion::Runtime* runtime = (Legion::Runtime*)args[1];
+  Legion::Processor::enable_scheduler_lock();
+  auto barrier = runtime->create_phase_barrier(ctx, runtime->get_num_shards(ctx, true));
+  barrier.arrive();
+  barrier = runtime->advance_phase_barrier(ctx, barrier);
+  barrier.wait();
   {
-    TaskVariantRegistrar registrar(taskID(1), "task_1");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(1), "task_1", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     runtime->register_task_variant<task_1>(registrar);
     runtime->attach_name(taskID(1), "task_1");
   }
   {
-    TaskVariantRegistrar registrar(taskID(2), "task_2");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(2), "task_2", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     runtime->register_task_variant<task_2>(registrar);
     runtime->attach_name(taskID(2), "task_2");
   }
   {
-    TaskVariantRegistrar registrar(taskID(3), "task_3");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(3), "task_3", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     runtime->register_task_variant<task_3>(registrar);
     runtime->attach_name(taskID(3), "task_3");
   }
   {
-    TaskVariantRegistrar registrar(taskID(5), "task_5");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(5), "task_5", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_inner();
     runtime->register_task_variant<task_5>(registrar);
     runtime->attach_name(taskID(5), "task_5");
   }
   {
-    TaskVariantRegistrar registrar(taskID(6), "task_6");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(6), "task_6", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_leaf();
     runtime->register_task_variant<task_6>(registrar);
     runtime->attach_name(taskID(6), "task_6");
   }
   {
-    TaskVariantRegistrar registrar(taskID(7), "task_7");
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    TaskVariantRegistrar registrar(taskID(7), "task_7", false /* global */);
+    registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC));
     registrar.set_inner();
     runtime->register_task_variant<task_7>(registrar);
     runtime->attach_name(taskID(7), "task_7");
   }
+  barrier.arrive();
+  barrier = runtime->advance_phase_barrier(ctx, barrier);
+  barrier.wait();
+  runtime->destroy_phase_barrier(ctx, barrier);
+  Legion::Processor::disable_scheduler_lock();
 }
