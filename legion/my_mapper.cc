@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define alignTo128Bytes false
+#define SPARSE_INSTANCE false
 
 #include "my_mapper.h"
 
@@ -105,6 +107,11 @@ public:
   virtual void select_task_options(const MapperContext    ctx,
                                   const Task&            task,
                                         TaskOptions&     output);
+  // copied from DISTAL/runtime/taco_mapper.cpp
+  virtual void default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
+                                                   Legion::LayoutConstraintSet &constraints,
+                                                   Legion::Memory target_memory,
+                                                   const Legion::RegionRequirement &req);
 protected:
   void custom_slice_task(const Task &task,
                           const std::vector<Processor> &local_procs,
@@ -929,6 +936,59 @@ namespace Legion {
       log_mapper.debug("shard: should never reach");
       assert(false);
       return 0;
+    }
+  }
+}
+
+
+// copied from DISTAL/runtime/taco_mapper.cpp
+// add #define for undeclared fields
+
+void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
+                                                   Legion::LayoutConstraintSet &constraints,
+                                                   Legion::Memory target_memory,
+                                                   const Legion::RegionRequirement &req) {
+  // Ensure that regions are mapped in row-major order.
+  Legion::IndexSpace is = req.region.get_index_space();
+  Legion::Domain domain = runtime->get_index_space_domain(ctx, is);
+  int dim = domain.get_dim();
+  std::vector<Legion::DimensionKind> dimension_ordering(dim + 1);
+  for (int i = 0; i < dim; ++i) {
+    dimension_ordering[dim - i - 1] =
+        static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+  }
+  dimension_ordering[dim] = LEGION_DIM_F;
+  constraints.add_constraint(Legion::OrderingConstraint(dimension_ordering, false/*contiguous*/));
+  // If we were requested to have an alignment, add the constraint.
+  if (/*this->*/alignTo128Bytes) {
+    for (auto it : req.privilege_fields) {
+      constraints.add_constraint(Legion::AlignmentConstraint(it, LEGION_EQ_EK, 128));
+    }
+  }
+  // If the instance is supposed to be sparse, tell Legion we want it that way.
+  // Unfortunately because we are adjusting the SpecializedConstraint, we have to
+  // fully override the default mapper because there appears to be some undefined
+  // behavior when two specialized constraints are added.
+  if ((req.tag & SPARSE_INSTANCE) != 0) {
+    taco_iassert(req.privilege != LEGION_REDUCE);
+    constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
+  } else if (req.privilege == LEGION_REDUCE) {
+    // Make reduction fold instances.
+    constraints.add_constraint(SpecializedConstraint(
+                        LEGION_AFFINE_REDUCTION_SPECIALIZE, req.redop))
+      .add_constraint(MemoryConstraint(target_memory.kind()));
+  } else {
+    // Our base default mapper will try to make instances of containing
+    // all fields (in any order) laid out in SOA format to encourage
+    // maximum re-use by any tasks which use subsets of the fields
+    constraints.add_constraint(SpecializedConstraint())
+               .add_constraint(MemoryConstraint(target_memory.kind()));
+    if (constraints.field_constraint.field_set.size() == 0)
+    {
+      // Normal instance creation
+      std::vector<FieldID> fields;
+      default_policy_select_constraint_fields(ctx, req, fields);
+      constraints.add_constraint(FieldConstraint(fields,false/*contiguous*/,false/*inorder*/));
     }
   }
 }

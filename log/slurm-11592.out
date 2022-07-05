@@ -1,0 +1,498 @@
+[0 - 7fb05c033000]    0.039968 {1}{nsmapper}: Inside create_mappers local_procs.size() = 3
+[0 - 7fb05c033000]    0.040052 {1}{nsmapper}: Policy file: mappings
+[0 - 7fb05c033000]    0.041205 {1}{nsmapper}: Policy file: mappings
+[0 - 7fb05c033000]    0.041328 {1}{nsmapper}: Policy file: mappings
+[0 - 7fb05c054000]    0.041709 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.041758 {1}{nsmapper}: No processor policy is given for task top_level, falling back to the default policy
+[0 - 7fb05c054000]    0.042019 {1}{nsmapper}: No memory policy is given for task top_level, falling back to the default policy
+[0 - 7fb05c054000]    0.044736 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.044754 {1}{nsmapper}: No processor policy is given for task task_5, falling back to the default policy
+[0 - 7fb05c054000]    0.045183 {1}{nsmapper}: Use default slice_task for task_5
+[0 - 7fb05c054000]    0.045588 {1}{nsmapper}: No memory policy is given for task task_5, falling back to the default policy
+[0 - 7fb05c054000]    0.045854 {1}{nsmapper}: No memory policy is given for task task_5, falling back to the default policy
+[0 - 7fb05c054000]    0.046964 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.046980 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.047109 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.047121 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.047179 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.047189 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.047277 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.047291 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    0.047370 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    0.047411 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    0.047581 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.048313 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.048599 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.048832 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.049010 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    0.049127 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.049377 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    0.114749 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]    0.114923 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    0.115080 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    0.235317 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.235355 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    0.235460 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]    0.235580 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    0.235726 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    0.235912 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.235927 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    0.235977 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]    0.236036 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    0.236119 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    0.236312 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.236326 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    0.236459 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]    0.236581 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    0.236758 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    0.236805 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.236816 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.236942 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.236953 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.237233 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.237366 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.237379 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.237519 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    0.237530 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.237701 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.238462 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    0.239073 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3521 ms.
+[0 - 7fb05c054000]    3.757766 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.757865 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.758046 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.758058 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.758127 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.758138 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.758179 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.758220 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    3.758316 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    3.758394 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    3.758429 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    3.758558 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.758756 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.758902 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.759027 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.759149 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.759258 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    3.807303 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]    3.807486 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    3.807607 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    3.889002 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.889049 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    3.889135 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]    3.889257 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    3.889376 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    3.889547 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.889560 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    3.889605 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]    3.889660 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    3.889730 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    3.889912 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.889925 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    3.890051 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]    3.890143 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    3.890273 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    3.890309 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.890319 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.890377 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.890387 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.890553 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.890650 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.890662 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.890706 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    3.890715 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.890831 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.891271 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    3.891788 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 2992 ms.
+[0 - 7fb05c054000]    6.882281 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    6.882333 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.882492 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    6.882504 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.882567 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    6.882577 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.882621 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    6.882636 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    6.882728 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    6.882827 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    6.882863 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]    6.882979 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.883163 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.883286 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.883403 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.883518 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.883629 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]    6.925862 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]    6.926033 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    6.926152 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]    7.001604 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.001643 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    7.001726 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]    7.002374 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    7.002502 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]    7.002711 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.002724 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    7.002768 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]    7.002825 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    7.002898 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]    7.003080 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.003092 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    7.003217 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]    7.003310 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    7.003443 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]    7.003482 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.003492 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.003609 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.003620 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.003684 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.003694 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.003749 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]    7.003759 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.003865 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.004004 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.004610 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]    7.005041 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3365 ms.
+[0 - 7fb05c054000]   10.369039 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.369084 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.369220 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.369231 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.369274 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.369285 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.369321 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.369332 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   10.369422 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   10.369491 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   10.369522 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   10.369616 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.369790 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.369899 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.370003 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.370109 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.370208 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   10.416062 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   10.416236 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   10.416353 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   10.491600 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.491638 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   10.491722 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   10.491840 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   10.491960 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   10.492145 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.492158 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   10.492202 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   10.492260 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   10.492329 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   10.492494 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.492508 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   10.492630 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   10.492718 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   10.492862 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   10.492901 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.492912 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.492968 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.492978 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.493144 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.493234 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.493246 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.493292 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   10.493302 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.493416 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.493790 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   10.494311 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3748 ms.
+[0 - 7fb05c054000]   14.241228 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.241276 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.241426 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.241438 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.241488 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.241499 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.241543 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.241556 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   14.241649 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   14.241727 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   14.241764 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   14.241872 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.242058 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.242176 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.242289 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.242397 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.242506 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   14.284764 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   14.284935 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   14.285054 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   14.360256 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.360294 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   14.360376 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   14.360496 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   14.360616 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   14.360796 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.360811 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   14.360854 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   14.360912 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   14.360984 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   14.361172 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.361186 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   14.361309 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   14.361403 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   14.361532 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   14.361604 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.361615 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.361679 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.361689 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.361765 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.361776 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.361819 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   14.361829 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.361943 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.362084 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.362713 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   14.363134 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3387 ms.
+[0 - 7fb05c054000]   17.748639 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.748686 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.748836 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.748848 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.748898 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.748909 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.748956 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.748969 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   17.749062 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   17.749138 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   17.749173 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   17.749281 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.749460 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.749586 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.749696 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.749818 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.749927 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   17.798499 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   17.798677 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   17.798801 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   17.880235 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.880275 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   17.880362 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   17.880481 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   17.880614 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   17.880772 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.880785 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   17.880829 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   17.880886 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   17.880958 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   17.881143 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.881157 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   17.881284 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   17.881375 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   17.881508 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   17.881584 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.881596 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.881663 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.881674 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.881752 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.881764 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.881804 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   17.881814 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.881929 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.882075 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.882745 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   17.883144 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3437 ms.
+[0 - 7fb05c054000]   21.318991 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.319031 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319165 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.319177 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319221 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.319231 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319271 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.319281 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   21.319373 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   21.319440 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   21.319472 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   21.319566 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319765 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319877 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.319982 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.320090 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.320194 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   21.362522 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   21.362697 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   21.362815 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   21.438058 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.438096 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   21.438183 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   21.438304 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   21.438427 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   21.438586 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.438599 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   21.438643 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   21.438699 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   21.438770 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   21.438904 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.438917 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   21.439043 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   21.439128 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   21.439252 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   21.439322 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.439333 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.439385 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.439395 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.439452 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.439463 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.439500 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   21.439509 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.439627 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.439758 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.440315 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   21.440719 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3176 ms.
+[0 - 7fb05c054000]   24.615106 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.615157 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.615304 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.615317 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.615365 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.615382 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.615427 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.615440 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   24.615530 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   24.615606 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   24.615642 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   24.615749 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.615948 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.616069 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.616172 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.616281 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.616400 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   24.660794 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   24.660975 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   24.661096 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   24.736287 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.736333 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   24.736421 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   24.736542 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   24.736665 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   24.736825 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.736840 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   24.736885 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   24.736942 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   24.737013 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   24.737160 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.737174 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   24.737301 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   24.737390 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   24.737518 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   24.737587 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.737598 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.737651 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.737661 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.737730 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.737741 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.737780 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   24.737790 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.737898 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.738029 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.738613 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   24.738990 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3007 ms.
+[0 - 7fb05c054000]   27.744246 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.744283 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.744417 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.744429 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.744472 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.744482 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.744522 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.744532 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   27.744624 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   27.744694 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   27.744725 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   27.744817 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.745013 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.745122 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.745228 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.745343 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.745446 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   27.791389 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   27.791562 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   27.791673 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   27.866841 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.866879 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   27.866963 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   27.867087 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   27.867210 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   27.867369 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.867383 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   27.867426 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   27.867483 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   27.867556 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   27.867691 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.867704 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   27.867830 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   27.867916 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   27.868041 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   27.868117 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.868128 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.868178 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.868188 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.868254 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.868266 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.868304 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   27.868314 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.868430 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.868563 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.869125 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   27.869503 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3414 ms.
+[0 - 7fb05c054000]   31.282361 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.282401 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.282530 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.282541 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.282584 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.282594 {1}{nsmapper}: No processor policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.282634 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.282645 {1}{nsmapper}: No processor policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   31.282739 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   31.282808 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   31.282840 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7fb05c054000]   31.282932 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.283129 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.283243 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.283348 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.283454 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.283554 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[0 - 7fb05c054000]   31.330081 {1}{nsmapper}: Use default slice_task for task_1
+[0 - 7fb05c054000]   31.330256 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   31.330369 {1}{nsmapper}: No memory policy is given for task task_1, falling back to the default policy
+[0 - 7fb05c054000]   31.411783 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.411824 {1}{nsmapper}: No processor policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   31.411906 {1}{nsmapper}: Use default slice_task for task_2
+[0 - 7fb05c054000]   31.412027 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   31.412188 {1}{nsmapper}: No memory policy is given for task task_2, falling back to the default policy
+[0 - 7fb05c054000]   31.412348 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.412362 {1}{nsmapper}: No processor policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   31.412407 {1}{nsmapper}: Use default slice_task for task_3
+[0 - 7fb05c054000]   31.412465 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   31.412539 {1}{nsmapper}: No memory policy is given for task task_3, falling back to the default policy
+[0 - 7fb05c054000]   31.412675 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.412688 {1}{nsmapper}: No processor policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   31.412814 {1}{nsmapper}: Use default slice_task for task_7
+[0 - 7fb05c054000]   31.412897 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   31.413023 {1}{nsmapper}: No memory policy is given for task task_7, falling back to the default policy
+[0 - 7fb05c054000]   31.413097 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.413109 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.413161 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.413171 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.413238 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.413249 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.413289 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   31.413298 {1}{nsmapper}: No processor policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.413407 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.413539 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.414079 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+[0 - 7fb05c054000]   31.414443 {1}{nsmapper}: No memory policy is given for task task_6, falling back to the default policy
+Execution time: 3063 ms.
+On 1 nodes achieved GFLOPS per node: 332.058145.
+[0 - 7fb05c054000]   34.476652 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7fb05c054000]   34.476692 {1}{nsmapper}: No processor policy is given for task taco_validate, falling back to the default policy
+[0 - 7fb05c054000]   34.476850 {1}{nsmapper}: Use default slice_task for taco_validate
+[0 - 7fb05c054000]   34.476981 {1}{nsmapper}: No memory policy is given for task taco_validate, falling back to the default policy
+[0 - 7fb05c054000]   34.477430 {1}{nsmapper}: No memory policy is given for task taco_validate, falling back to the default policy
