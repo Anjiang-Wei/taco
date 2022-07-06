@@ -187,6 +187,7 @@ Expr:
 |   Expr '%' Expr           { $$ = new BinaryExprNode($1, MOD, $3); }
 |   Expr '>' Expr           { $$ = new BinaryExprNode($1, BIGGER, $3); }
 |   Expr '<' Expr           { $$ = new BinaryExprNode($1, SMALLER, $3); }
+|   '(' Expr ')'            { $$ = $2; }
 |   Expr T_Ge Expr          { $$ = new BinaryExprNode($1, GE, $3); }
 |   Expr T_Le Expr          { $$ = new BinaryExprNode($1, LE, $3); }
 |   Expr T_Eq Expr          { $$ = new BinaryExprNode($1, EQ, $3); }
@@ -209,7 +210,7 @@ Expr:
 ;
 
 ExprN:
-    Expr                    { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }
+    Expr ',' Expr           { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); t->exprlst.push_back($3); $$ = t; }
 |   ExprN ',' Expr          { $1->exprlst.push_back($3); $$ = $1; }
 ;
 

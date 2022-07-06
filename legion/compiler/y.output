@@ -55,63 +55,64 @@ Grammar
    35     | Expr '%' Expr
    36     | Expr '>' Expr
    37     | Expr '<' Expr
-   38     | Expr T_Ge Expr
-   39     | Expr T_Le Expr
-   40     | Expr T_Eq Expr
-   41     | Expr T_Ne Expr
-   42     | Expr T_Or Expr
-   43     | Expr T_And Expr
-   44     | Expr '(' ExprN ')'
-   45     | Expr '[' Expr ']'
-   46     | '-' Expr
-   47     | T_IntConstant
-   48     | T_True
-   49     | T_False
-   50     | T_Identifier
-   51     | '(' ExprN ')'
-   52     | Proc
-   53     | Mem
-   54     | Expr '.' Prop
-   55     | Expr '?' Expr ':' Expr
-   56     | '*' Expr
+   38     | '(' Expr ')'
+   39     | Expr T_Ge Expr
+   40     | Expr T_Le Expr
+   41     | Expr T_Eq Expr
+   42     | Expr T_Ne Expr
+   43     | Expr T_Or Expr
+   44     | Expr T_And Expr
+   45     | Expr '(' ExprN ')'
+   46     | Expr '[' Expr ']'
+   47     | '-' Expr
+   48     | T_IntConstant
+   49     | T_True
+   50     | T_False
+   51     | T_Identifier
+   52     | '(' ExprN ')'
+   53     | Proc
+   54     | Mem
+   55     | Expr '.' Prop
+   56     | Expr '?' Expr ':' Expr
+   57     | '*' Expr
 
-   57 ExprN: Expr
-   58      | ExprN ',' Expr
+   58 ExprN: Expr ',' Expr
+   59      | ExprN ',' Expr
 
-   59 Prop: T_Size
-   60     | T_Split
-   61     | T_Merge
-   62     | T_Swap
-   63     | T_Slice
-   64     | T_Reverse
-   65     | T_Balance_split
-   66     | T_Volume
-   67     | T_Has
+   60 Prop: T_Size
+   61     | T_Split
+   62     | T_Merge
+   63     | T_Swap
+   64     | T_Slice
+   65     | T_Reverse
+   66     | T_Balance_split
+   67     | T_Volume
+   68     | T_Has
 
-   68 TYPE: T_Int
-   69     | T_Bool
-   70     | T_IPoint
-   71     | T_ISpace
-   72     | T_MSpace
+   69 TYPE: T_Int
+   70     | T_Bool
+   71     | T_IPoint
+   72     | T_ISpace
+   73     | T_MSpace
 
-   73 ProcLst: Proc
-   74        | ProcLst ',' Proc
+   74 ProcLst: Proc
+   75        | ProcLst ',' Proc
 
-   75 MemLst: Mem
-   76       | MemLst ',' Mem
+   76 MemLst: Mem
+   77       | MemLst ',' Mem
 
-   77 Mem: T_SYSMEM
-   78    | T_FBMEM
-   79    | T_RDMEM
-   80    | T_ZCMEM
-   81    | T_SOCKMEM
+   78 Mem: T_SYSMEM
+   79    | T_FBMEM
+   80    | T_RDMEM
+   81    | T_ZCMEM
+   82    | T_SOCKMEM
 
-   82 Proc: T_CPU
-   83     | T_GPU
-   84     | T_IO
-   85     | T_PY
-   86     | T_PROC
-   87     | T_OMP
+   83 Proc: T_CPU
+   84     | T_GPU
+   85     | T_IO
+   86     | T_PY
+   87     | T_PROC
+   88     | T_OMP
 
 
 Terminals, with rules where they appear
@@ -119,69 +120,69 @@ Terminals, with rules where they appear
 $end (0) 0
 '!' (33)
 '%' (37) 35
-'(' (40) 15 24 44 51
-')' (41) 15 24 44 51
-'*' (42) 33 56
+'(' (40) 15 24 38 45 52
+')' (41) 15 24 38 45 52
+'*' (42) 33 57
 '+' (43) 31
-',' (44) 26 30 58 74 76
-'-' (45) 32 46
-'.' (46) 54
+',' (44) 26 30 58 59 75 77
+'-' (45) 32 47
+'.' (46) 55
 '/' (47) 34
-':' (58) 55
+':' (58) 56
 ';' (59) 11 12 13 14 16 17 23 24
 '<' (60) 37
 '=' (61) 17
 '>' (62) 36
-'?' (63) 55
-'[' (91) 45
-']' (93) 45
+'?' (63) 56
+'[' (91) 46
+']' (93) 46
 '{' (123) 15
 '}' (125) 15
 error (256)
-T_Size (258) 59
-T_Split (259) 60
-T_Merge (260) 61
-T_Swap (261) 62
-T_Slice (262) 63
-T_Reverse (263) 64
-T_Balance_split (264) 65
-T_Volume (265) 66
-T_Has (266) 67
-T_CPU (267) 82
-T_GPU (268) 83
-T_IO (269) 84
-T_PY (270) 85
-T_PROC (271) 86
-T_OMP (272) 87
-T_SYSMEM (273) 77
-T_FBMEM (274) 78
-T_RDMEM (275) 79
-T_ZCMEM (276) 80
-T_SOCKMEM (277) 81
-T_Int (278) 68
-T_Bool (279) 69
-T_IPoint (280) 70
-T_ISpace (281) 71
-T_MSpace (282) 72
+T_Size (258) 60
+T_Split (259) 61
+T_Merge (260) 62
+T_Swap (261) 63
+T_Slice (262) 64
+T_Reverse (263) 65
+T_Balance_split (264) 66
+T_Volume (265) 67
+T_Has (266) 68
+T_CPU (267) 83
+T_GPU (268) 84
+T_IO (269) 85
+T_PY (270) 86
+T_PROC (271) 87
+T_OMP (272) 88
+T_SYSMEM (273) 78
+T_FBMEM (274) 79
+T_RDMEM (275) 80
+T_ZCMEM (276) 81
+T_SOCKMEM (277) 82
+T_Int (278) 69
+T_Bool (279) 70
+T_IPoint (280) 71
+T_ISpace (281) 72
+T_MSpace (282) 73
 T_Def (283) 15
 T_Return (284) 23
-T_True (285) 48
-T_False (286) 49
+T_True (285) 49
+T_False (286) 50
 T_Task_Default (287) 11
 T_Region_Default (288) 12
 T_Task (289) 13
 T_Region (290) 14
 T_IndexTaskMap (291) 16
 T_Print (292) 24
-T_Le (293) 39
-T_Ge (294) 38
-T_Eq (295) 40
-T_Ne (296) 41
-T_And (297) 43
-T_Or (298) 42
-T_Identifier (299) 13 14 15 16 17 26 29 30 50
+T_Le (293) 40
+T_Ge (294) 39
+T_Eq (295) 41
+T_Ne (296) 42
+T_And (297) 44
+T_Or (298) 43
+T_Identifier (299) 13 14 15 16 17 26 29 30 51
 T_StringConstant (300) 24
-T_IntConstant (301) 47
+T_IntConstant (301) 48
 
 
 Nonterminals, with rules where they appear
@@ -222,22 +223,22 @@ ArgLst_ (83)
     on left: 29 30, on right: 28 30
 Expr (84)
     on left: 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48
-    49 50 51 52 53 54 55 56, on right: 17 23 31 32 33 34 35 36 37 38
-    39 40 41 42 43 44 45 46 54 55 56 57 58
+    49 50 51 52 53 54 55 56 57, on right: 17 23 31 32 33 34 35 36 37
+    38 39 40 41 42 43 44 45 46 47 55 56 57 58 59
 ExprN (85)
-    on left: 57 58, on right: 44 51 58
+    on left: 58 59, on right: 45 52 59
 Prop (86)
-    on left: 59 60 61 62 63 64 65 66 67, on right: 54
+    on left: 60 61 62 63 64 65 66 67 68, on right: 55
 TYPE (87)
-    on left: 68 69 70 71 72, on right: 29 30
+    on left: 69 70 71 72 73, on right: 29 30
 ProcLst (88)
-    on left: 73 74, on right: 11 74
+    on left: 74 75, on right: 11 75
 MemLst (89)
-    on left: 75 76, on right: 12 76
+    on left: 76 77, on right: 12 77
 Mem (90)
-    on left: 77 78 79 80 81, on right: 14 53 75 76
+    on left: 78 79 80 81 82, on right: 14 54 76 77
 Proc (91)
-    on left: 82 83 84 85 86 87, on right: 12 13 52 73 74
+    on left: 83 84 85 86 87 88, on right: 12 13 53 74 75
 
 
 State 0
@@ -434,50 +435,50 @@ State 19
 
 State 20
 
-   82 Proc: T_CPU .
-
-    $default  reduce using rule 82 (Proc)
-
-
-State 21
-
-   83 Proc: T_GPU .
+   83 Proc: T_CPU .
 
     $default  reduce using rule 83 (Proc)
 
 
-State 22
+State 21
 
-   84 Proc: T_IO .
+   84 Proc: T_GPU .
 
     $default  reduce using rule 84 (Proc)
 
 
-State 23
+State 22
 
-   85 Proc: T_PY .
+   85 Proc: T_IO .
 
     $default  reduce using rule 85 (Proc)
 
 
-State 24
+State 23
 
-   86 Proc: T_PROC .
+   86 Proc: T_PY .
 
     $default  reduce using rule 86 (Proc)
 
 
-State 25
+State 24
 
-   87 Proc: T_OMP .
+   87 Proc: T_PROC .
 
     $default  reduce using rule 87 (Proc)
+
+
+State 25
+
+   88 Proc: T_OMP .
+
+    $default  reduce using rule 88 (Proc)
 
 
 State 26
 
    11 TaskDefault: T_Task_Default ProcLst . ';'
-   74 ProcLst: ProcLst . ',' Proc
+   75 ProcLst: ProcLst . ',' Proc
 
     ','  shift, and go to state 37
     ';'  shift, and go to state 38
@@ -485,9 +486,9 @@ State 26
 
 State 27
 
-   73 ProcLst: Proc .
+   74 ProcLst: Proc .
 
-    $default  reduce using rule 73 (ProcLst)
+    $default  reduce using rule 74 (ProcLst)
 
 
 State 28
@@ -600,7 +601,7 @@ State 36
 
 State 37
 
-   74 ProcLst: ProcLst ',' . Proc
+   75 ProcLst: ProcLst ',' . Proc
 
     T_CPU   shift, and go to state 20
     T_GPU   shift, and go to state 21
@@ -621,43 +622,43 @@ State 38
 
 State 39
 
-   77 Mem: T_SYSMEM .
-
-    $default  reduce using rule 77 (Mem)
-
-
-State 40
-
-   78 Mem: T_FBMEM .
+   78 Mem: T_SYSMEM .
 
     $default  reduce using rule 78 (Mem)
 
 
-State 41
+State 40
 
-   79 Mem: T_RDMEM .
+   79 Mem: T_FBMEM .
 
     $default  reduce using rule 79 (Mem)
 
 
-State 42
+State 41
 
-   80 Mem: T_ZCMEM .
+   80 Mem: T_RDMEM .
 
     $default  reduce using rule 80 (Mem)
 
 
-State 43
+State 42
 
-   81 Mem: T_SOCKMEM .
+   81 Mem: T_ZCMEM .
 
     $default  reduce using rule 81 (Mem)
+
+
+State 43
+
+   82 Mem: T_SOCKMEM .
+
+    $default  reduce using rule 82 (Mem)
 
 
 State 44
 
    12 RegionDefault: T_Region_Default Proc MemLst . ';'
-   76 MemLst: MemLst . ',' Mem
+   77 MemLst: MemLst . ',' Mem
 
     ','  shift, and go to state 69
     ';'  shift, and go to state 70
@@ -665,9 +666,9 @@ State 44
 
 State 45
 
-   75 MemLst: Mem .
+   76 MemLst: Mem .
 
-    $default  reduce using rule 75 (MemLst)
+    $default  reduce using rule 76 (MemLst)
 
 
 State 46
@@ -708,35 +709,35 @@ State 49
 
 State 50
 
-   48 Expr: T_True .
-
-    $default  reduce using rule 48 (Expr)
-
-
-State 51
-
-   49 Expr: T_False .
+   49 Expr: T_True .
 
     $default  reduce using rule 49 (Expr)
 
 
-State 52
+State 51
 
-   50 Expr: T_Identifier .
+   50 Expr: T_False .
 
     $default  reduce using rule 50 (Expr)
 
 
+State 52
+
+   51 Expr: T_Identifier .
+
+    $default  reduce using rule 51 (Expr)
+
+
 State 53
 
-   47 Expr: T_IntConstant .
+   48 Expr: T_IntConstant .
 
-    $default  reduce using rule 47 (Expr)
+    $default  reduce using rule 48 (Expr)
 
 
 State 54
 
-   46 Expr: '-' . Expr
+   47 Expr: '-' . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -764,7 +765,7 @@ State 54
 
 State 55
 
-   56 Expr: '*' . Expr
+   57 Expr: '*' . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -792,7 +793,8 @@ State 55
 
 State 56
 
-   51 Expr: '(' . ExprN ')'
+   38 Expr: '(' . Expr ')'
+   52     | '(' . ExprN ')'
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -829,16 +831,16 @@ State 57
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -862,51 +864,51 @@ State 57
 
 State 58
 
-   53 Expr: Mem .
+   54 Expr: Mem .
 
-    $default  reduce using rule 53 (Expr)
+    $default  reduce using rule 54 (Expr)
 
 
 State 59
 
-   52 Expr: Proc .
+   53 Expr: Proc .
 
-    $default  reduce using rule 52 (Expr)
+    $default  reduce using rule 53 (Expr)
 
 
 State 60
 
-   68 TYPE: T_Int .
-
-    $default  reduce using rule 68 (TYPE)
-
-
-State 61
-
-   69 TYPE: T_Bool .
+   69 TYPE: T_Int .
 
     $default  reduce using rule 69 (TYPE)
 
 
-State 62
+State 61
 
-   70 TYPE: T_IPoint .
+   70 TYPE: T_Bool .
 
     $default  reduce using rule 70 (TYPE)
 
 
-State 63
+State 62
 
-   71 TYPE: T_ISpace .
+   71 TYPE: T_IPoint .
 
     $default  reduce using rule 71 (TYPE)
 
 
-State 64
+State 63
 
-   72 TYPE: T_MSpace .
+   72 TYPE: T_ISpace .
 
     $default  reduce using rule 72 (TYPE)
+
+
+State 64
+
+   73 TYPE: T_MSpace .
+
+    $default  reduce using rule 73 (TYPE)
 
 
 State 65
@@ -935,14 +937,14 @@ State 67
 
 State 68
 
-   74 ProcLst: ProcLst ',' Proc .
+   75 ProcLst: ProcLst ',' Proc .
 
-    $default  reduce using rule 74 (ProcLst)
+    $default  reduce using rule 75 (ProcLst)
 
 
 State 69
 
-   76 MemLst: MemLst ',' . Mem
+   77 MemLst: MemLst ',' . Mem
 
     T_SYSMEM   shift, and go to state 39
     T_FBMEM    shift, and go to state 40
@@ -999,23 +1001,23 @@ State 75
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   46     | '-' Expr .
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   47     | '-' Expr .
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '['  shift, and go to state 93
     '('  shift, and go to state 94
     '.'  shift, and go to state 95
 
-    $default  reduce using rule 46 (Expr)
+    $default  reduce using rule 47 (Expr)
 
 
 State 76
@@ -1027,23 +1029,23 @@ State 76
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-   56     | '*' Expr .
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   57     | '*' Expr .
 
     '['  shift, and go to state 93
     '('  shift, and go to state 94
     '.'  shift, and go to state 95
 
-    $default  reduce using rule 56 (Expr)
+    $default  reduce using rule 57 (Expr)
 
 
 State 77
@@ -1055,17 +1057,18 @@ State 77
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-   57 ExprN: Expr .
+   38     | '(' Expr . ')'
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   58 ExprN: Expr . ',' Expr
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -1073,6 +1076,7 @@ State 77
     T_Ne   shift, and go to state 82
     T_And  shift, and go to state 83
     T_Or   shift, and go to state 84
+    ','    shift, and go to state 105
     '?'    shift, and go to state 85
     '<'    shift, and go to state 86
     '>'    shift, and go to state 87
@@ -1083,79 +1087,22 @@ State 77
     '%'    shift, and go to state 92
     '['    shift, and go to state 93
     '('    shift, and go to state 94
+    ')'    shift, and go to state 106
     '.'    shift, and go to state 95
-
-    $default  reduce using rule 57 (ExprN)
 
 
 State 78
 
-   51 Expr: '(' ExprN . ')'
-   58 ExprN: ExprN . ',' Expr
+   52 Expr: '(' ExprN . ')'
+   59 ExprN: ExprN . ',' Expr
 
-    ','  shift, and go to state 105
-    ')'  shift, and go to state 106
+    ','  shift, and go to state 107
+    ')'  shift, and go to state 108
 
 
 State 79
 
-   39 Expr: Expr T_Le . Expr
-
-    T_CPU          shift, and go to state 20
-    T_GPU          shift, and go to state 21
-    T_IO           shift, and go to state 22
-    T_PY           shift, and go to state 23
-    T_PROC         shift, and go to state 24
-    T_OMP          shift, and go to state 25
-    T_SYSMEM       shift, and go to state 39
-    T_FBMEM        shift, and go to state 40
-    T_RDMEM        shift, and go to state 41
-    T_ZCMEM        shift, and go to state 42
-    T_SOCKMEM      shift, and go to state 43
-    T_True         shift, and go to state 50
-    T_False        shift, and go to state 51
-    T_Identifier   shift, and go to state 52
-    T_IntConstant  shift, and go to state 53
-    '-'            shift, and go to state 54
-    '*'            shift, and go to state 55
-    '('            shift, and go to state 56
-
-    Expr  go to state 107
-    Mem   go to state 58
-    Proc  go to state 59
-
-
-State 80
-
-   38 Expr: Expr T_Ge . Expr
-
-    T_CPU          shift, and go to state 20
-    T_GPU          shift, and go to state 21
-    T_IO           shift, and go to state 22
-    T_PY           shift, and go to state 23
-    T_PROC         shift, and go to state 24
-    T_OMP          shift, and go to state 25
-    T_SYSMEM       shift, and go to state 39
-    T_FBMEM        shift, and go to state 40
-    T_RDMEM        shift, and go to state 41
-    T_ZCMEM        shift, and go to state 42
-    T_SOCKMEM      shift, and go to state 43
-    T_True         shift, and go to state 50
-    T_False        shift, and go to state 51
-    T_Identifier   shift, and go to state 52
-    T_IntConstant  shift, and go to state 53
-    '-'            shift, and go to state 54
-    '*'            shift, and go to state 55
-    '('            shift, and go to state 56
-
-    Expr  go to state 108
-    Mem   go to state 58
-    Proc  go to state 59
-
-
-State 81
-
-   40 Expr: Expr T_Eq . Expr
+   40 Expr: Expr T_Le . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1181,9 +1128,9 @@ State 81
     Proc  go to state 59
 
 
-State 82
+State 80
 
-   41 Expr: Expr T_Ne . Expr
+   39 Expr: Expr T_Ge . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1209,9 +1156,9 @@ State 82
     Proc  go to state 59
 
 
-State 83
+State 81
 
-   43 Expr: Expr T_And . Expr
+   41 Expr: Expr T_Eq . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1237,9 +1184,9 @@ State 83
     Proc  go to state 59
 
 
-State 84
+State 82
 
-   42 Expr: Expr T_Or . Expr
+   42 Expr: Expr T_Ne . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1265,9 +1212,9 @@ State 84
     Proc  go to state 59
 
 
-State 85
+State 83
 
-   55 Expr: Expr '?' . Expr ':' Expr
+   44 Expr: Expr T_And . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1289,6 +1236,62 @@ State 85
     '('            shift, and go to state 56
 
     Expr  go to state 113
+    Mem   go to state 58
+    Proc  go to state 59
+
+
+State 84
+
+   43 Expr: Expr T_Or . Expr
+
+    T_CPU          shift, and go to state 20
+    T_GPU          shift, and go to state 21
+    T_IO           shift, and go to state 22
+    T_PY           shift, and go to state 23
+    T_PROC         shift, and go to state 24
+    T_OMP          shift, and go to state 25
+    T_SYSMEM       shift, and go to state 39
+    T_FBMEM        shift, and go to state 40
+    T_RDMEM        shift, and go to state 41
+    T_ZCMEM        shift, and go to state 42
+    T_SOCKMEM      shift, and go to state 43
+    T_True         shift, and go to state 50
+    T_False        shift, and go to state 51
+    T_Identifier   shift, and go to state 52
+    T_IntConstant  shift, and go to state 53
+    '-'            shift, and go to state 54
+    '*'            shift, and go to state 55
+    '('            shift, and go to state 56
+
+    Expr  go to state 114
+    Mem   go to state 58
+    Proc  go to state 59
+
+
+State 85
+
+   56 Expr: Expr '?' . Expr ':' Expr
+
+    T_CPU          shift, and go to state 20
+    T_GPU          shift, and go to state 21
+    T_IO           shift, and go to state 22
+    T_PY           shift, and go to state 23
+    T_PROC         shift, and go to state 24
+    T_OMP          shift, and go to state 25
+    T_SYSMEM       shift, and go to state 39
+    T_FBMEM        shift, and go to state 40
+    T_RDMEM        shift, and go to state 41
+    T_ZCMEM        shift, and go to state 42
+    T_SOCKMEM      shift, and go to state 43
+    T_True         shift, and go to state 50
+    T_False        shift, and go to state 51
+    T_Identifier   shift, and go to state 52
+    T_IntConstant  shift, and go to state 53
+    '-'            shift, and go to state 54
+    '*'            shift, and go to state 55
+    '('            shift, and go to state 56
+
+    Expr  go to state 115
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1316,7 +1319,7 @@ State 86
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 114
+    Expr  go to state 116
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1344,7 +1347,7 @@ State 87
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 115
+    Expr  go to state 117
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1372,7 +1375,7 @@ State 88
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 116
+    Expr  go to state 118
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1400,7 +1403,7 @@ State 89
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 117
+    Expr  go to state 119
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1428,7 +1431,7 @@ State 90
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 118
+    Expr  go to state 120
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1456,7 +1459,7 @@ State 91
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 119
+    Expr  go to state 121
     Mem   go to state 58
     Proc  go to state 59
 
@@ -1484,14 +1487,14 @@ State 92
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 120
+    Expr  go to state 122
     Mem   go to state 58
     Proc  go to state 59
 
 
 State 93
 
-   45 Expr: Expr '[' . Expr ']'
+   46 Expr: Expr '[' . Expr ']'
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1512,14 +1515,14 @@ State 93
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 121
+    Expr  go to state 123
     Mem   go to state 58
     Proc  go to state 59
 
 
 State 94
 
-   44 Expr: Expr '(' . ExprN ')'
+   45 Expr: Expr '(' . ExprN ')'
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1540,27 +1543,27 @@ State 94
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr   go to state 77
-    ExprN  go to state 122
+    Expr   go to state 124
+    ExprN  go to state 125
     Mem    go to state 58
     Proc   go to state 59
 
 
 State 95
 
-   54 Expr: Expr '.' . Prop
+   55 Expr: Expr '.' . Prop
 
-    T_Size           shift, and go to state 123
-    T_Split          shift, and go to state 124
-    T_Merge          shift, and go to state 125
-    T_Swap           shift, and go to state 126
-    T_Slice          shift, and go to state 127
-    T_Reverse        shift, and go to state 128
-    T_Balance_split  shift, and go to state 129
-    T_Volume         shift, and go to state 130
-    T_Has            shift, and go to state 131
+    T_Size           shift, and go to state 126
+    T_Split          shift, and go to state 127
+    T_Merge          shift, and go to state 128
+    T_Swap           shift, and go to state 129
+    T_Slice          shift, and go to state 130
+    T_Reverse        shift, and go to state 131
+    T_Balance_split  shift, and go to state 132
+    T_Volume         shift, and go to state 133
+    T_Has            shift, and go to state 134
 
-    Prop  go to state 132
+    Prop  go to state 135
 
 
 State 96
@@ -1574,7 +1577,7 @@ State 97
 
    15 FuncDef: T_Def T_Identifier '(' ArgLst ')' . '{' Func_Stmts '}'
 
-    '{'  shift, and go to state 133
+    '{'  shift, and go to state 136
 
 
 State 98
@@ -1587,7 +1590,7 @@ State 98
     T_ISpace  shift, and go to state 63
     T_MSpace  shift, and go to state 64
 
-    TYPE  go to state 134
+    TYPE  go to state 137
 
 
 State 99
@@ -1599,9 +1602,9 @@ State 99
 
 State 100
 
-   76 MemLst: MemLst ',' Mem .
+   77 MemLst: MemLst ',' Mem .
 
-    $default  reduce using rule 76 (MemLst)
+    $default  reduce using rule 77 (MemLst)
 
 
 State 101
@@ -1622,19 +1625,19 @@ State 103
 
    26 Print_Args: Print_Args ',' . T_Identifier
 
-    T_Identifier  shift, and go to state 135
+    T_Identifier  shift, and go to state 138
 
 
 State 104
 
    24 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' . ';'
 
-    ';'  shift, and go to state 136
+    ';'  shift, and go to state 139
 
 
 State 105
 
-   58 ExprN: ExprN ',' . Expr
+   58 ExprN: Expr ',' . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -1655,82 +1658,51 @@ State 105
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 137
+    Expr  go to state 140
     Mem   go to state 58
     Proc  go to state 59
 
 
 State 106
 
-   51 Expr: '(' ExprN ')' .
+   38 Expr: '(' Expr ')' .
 
-    $default  reduce using rule 51 (Expr)
+    $default  reduce using rule 38 (Expr)
 
 
 State 107
 
-   31 Expr: Expr . '+' Expr
-   32     | Expr . '-' Expr
-   33     | Expr . '*' Expr
-   34     | Expr . '/' Expr
-   35     | Expr . '%' Expr
-   36     | Expr . '>' Expr
-   37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   39     | Expr T_Le Expr .
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   59 ExprN: ExprN ',' . Expr
 
-    '+'  shift, and go to state 88
-    '-'  shift, and go to state 89
-    '*'  shift, and go to state 90
-    '/'  shift, and go to state 91
-    '%'  shift, and go to state 92
-    '['  shift, and go to state 93
-    '('  shift, and go to state 94
-    '.'  shift, and go to state 95
+    T_CPU          shift, and go to state 20
+    T_GPU          shift, and go to state 21
+    T_IO           shift, and go to state 22
+    T_PY           shift, and go to state 23
+    T_PROC         shift, and go to state 24
+    T_OMP          shift, and go to state 25
+    T_SYSMEM       shift, and go to state 39
+    T_FBMEM        shift, and go to state 40
+    T_RDMEM        shift, and go to state 41
+    T_ZCMEM        shift, and go to state 42
+    T_SOCKMEM      shift, and go to state 43
+    T_True         shift, and go to state 50
+    T_False        shift, and go to state 51
+    T_Identifier   shift, and go to state 52
+    T_IntConstant  shift, and go to state 53
+    '-'            shift, and go to state 54
+    '*'            shift, and go to state 55
+    '('            shift, and go to state 56
 
-    $default  reduce using rule 39 (Expr)
+    Expr  go to state 141
+    Mem   go to state 58
+    Proc  go to state 59
 
 
 State 108
 
-   31 Expr: Expr . '+' Expr
-   32     | Expr . '-' Expr
-   33     | Expr . '*' Expr
-   34     | Expr . '/' Expr
-   35     | Expr . '%' Expr
-   36     | Expr . '>' Expr
-   37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   38     | Expr T_Ge Expr .
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   52 Expr: '(' ExprN ')' .
 
-    '+'  shift, and go to state 88
-    '-'  shift, and go to state 89
-    '*'  shift, and go to state 90
-    '/'  shift, and go to state 91
-    '%'  shift, and go to state 92
-    '['  shift, and go to state 93
-    '('  shift, and go to state 94
-    '.'  shift, and go to state 95
-
-    $default  reduce using rule 38 (Expr)
+    $default  reduce using rule 52 (Expr)
 
 
 State 109
@@ -1742,30 +1714,26 @@ State 109
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   40     | Expr T_Eq Expr .
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   40     | Expr T_Le Expr .
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
-    T_Le  shift, and go to state 79
-    T_Ge  shift, and go to state 80
-    '<'   shift, and go to state 86
-    '>'   shift, and go to state 87
-    '+'   shift, and go to state 88
-    '-'   shift, and go to state 89
-    '*'   shift, and go to state 90
-    '/'   shift, and go to state 91
-    '%'   shift, and go to state 92
-    '['   shift, and go to state 93
-    '('   shift, and go to state 94
-    '.'   shift, and go to state 95
+    '+'  shift, and go to state 88
+    '-'  shift, and go to state 89
+    '*'  shift, and go to state 90
+    '/'  shift, and go to state 91
+    '%'  shift, and go to state 92
+    '['  shift, and go to state 93
+    '('  shift, and go to state 94
+    '.'  shift, and go to state 95
 
     $default  reduce using rule 40 (Expr)
 
@@ -1779,17 +1747,50 @@ State 110
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   41     | Expr T_Ne Expr .
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   39     | Expr T_Ge Expr .
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+
+    '+'  shift, and go to state 88
+    '-'  shift, and go to state 89
+    '*'  shift, and go to state 90
+    '/'  shift, and go to state 91
+    '%'  shift, and go to state 92
+    '['  shift, and go to state 93
+    '('  shift, and go to state 94
+    '.'  shift, and go to state 95
+
+    $default  reduce using rule 39 (Expr)
+
+
+State 111
+
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   41     | Expr T_Eq Expr .
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     T_Le  shift, and go to state 79
     T_Ge  shift, and go to state 80
@@ -1807,7 +1808,7 @@ State 110
     $default  reduce using rule 41 (Expr)
 
 
-State 111
+State 112
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -1816,17 +1817,54 @@ State 111
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   43     | Expr T_And Expr .
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   42     | Expr T_Ne Expr .
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+
+    T_Le  shift, and go to state 79
+    T_Ge  shift, and go to state 80
+    '<'   shift, and go to state 86
+    '>'   shift, and go to state 87
+    '+'   shift, and go to state 88
+    '-'   shift, and go to state 89
+    '*'   shift, and go to state 90
+    '/'   shift, and go to state 91
+    '%'   shift, and go to state 92
+    '['   shift, and go to state 93
+    '('   shift, and go to state 94
+    '.'   shift, and go to state 95
+
+    $default  reduce using rule 42 (Expr)
+
+
+State 113
+
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   44     | Expr T_And Expr .
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     T_Le  shift, and go to state 79
     T_Ge  shift, and go to state 80
@@ -1843,88 +1881,7 @@ State 111
     '('   shift, and go to state 94
     '.'   shift, and go to state 95
 
-    $default  reduce using rule 43 (Expr)
-
-
-State 112
-
-   31 Expr: Expr . '+' Expr
-   32     | Expr . '-' Expr
-   33     | Expr . '*' Expr
-   34     | Expr . '/' Expr
-   35     | Expr . '%' Expr
-   36     | Expr . '>' Expr
-   37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   42     | Expr T_Or Expr .
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-
-    T_Le   shift, and go to state 79
-    T_Ge   shift, and go to state 80
-    T_Eq   shift, and go to state 81
-    T_Ne   shift, and go to state 82
-    T_And  shift, and go to state 83
-    '<'    shift, and go to state 86
-    '>'    shift, and go to state 87
-    '+'    shift, and go to state 88
-    '-'    shift, and go to state 89
-    '*'    shift, and go to state 90
-    '/'    shift, and go to state 91
-    '%'    shift, and go to state 92
-    '['    shift, and go to state 93
-    '('    shift, and go to state 94
-    '.'    shift, and go to state 95
-
-    $default  reduce using rule 42 (Expr)
-
-
-State 113
-
-   31 Expr: Expr . '+' Expr
-   32     | Expr . '-' Expr
-   33     | Expr . '*' Expr
-   34     | Expr . '/' Expr
-   35     | Expr . '%' Expr
-   36     | Expr . '>' Expr
-   37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-   55     | Expr '?' Expr . ':' Expr
-
-    T_Le   shift, and go to state 79
-    T_Ge   shift, and go to state 80
-    T_Eq   shift, and go to state 81
-    T_Ne   shift, and go to state 82
-    T_And  shift, and go to state 83
-    T_Or   shift, and go to state 84
-    '?'    shift, and go to state 85
-    ':'    shift, and go to state 138
-    '<'    shift, and go to state 86
-    '>'    shift, and go to state 87
-    '+'    shift, and go to state 88
-    '-'    shift, and go to state 89
-    '*'    shift, and go to state 90
-    '/'    shift, and go to state 91
-    '%'    shift, and go to state 92
-    '['    shift, and go to state 93
-    '('    shift, and go to state 94
-    '.'    shift, and go to state 95
+    $default  reduce using rule 44 (Expr)
 
 
 State 114
@@ -1936,17 +1893,98 @@ State 114
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   43     | Expr T_Or Expr .
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+
+    T_Le   shift, and go to state 79
+    T_Ge   shift, and go to state 80
+    T_Eq   shift, and go to state 81
+    T_Ne   shift, and go to state 82
+    T_And  shift, and go to state 83
+    '<'    shift, and go to state 86
+    '>'    shift, and go to state 87
+    '+'    shift, and go to state 88
+    '-'    shift, and go to state 89
+    '*'    shift, and go to state 90
+    '/'    shift, and go to state 91
+    '%'    shift, and go to state 92
+    '['    shift, and go to state 93
+    '('    shift, and go to state 94
+    '.'    shift, and go to state 95
+
+    $default  reduce using rule 43 (Expr)
+
+
+State 115
+
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   56     | Expr '?' Expr . ':' Expr
+
+    T_Le   shift, and go to state 79
+    T_Ge   shift, and go to state 80
+    T_Eq   shift, and go to state 81
+    T_Ne   shift, and go to state 82
+    T_And  shift, and go to state 83
+    T_Or   shift, and go to state 84
+    '?'    shift, and go to state 85
+    ':'    shift, and go to state 142
+    '<'    shift, and go to state 86
+    '>'    shift, and go to state 87
+    '+'    shift, and go to state 88
+    '-'    shift, and go to state 89
+    '*'    shift, and go to state 90
+    '/'    shift, and go to state 91
+    '%'    shift, and go to state 92
+    '['    shift, and go to state 93
+    '('    shift, and go to state 94
+    '.'    shift, and go to state 95
+
+
+State 116
+
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
    37     | Expr '<' Expr .
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '+'  shift, and go to state 88
     '-'  shift, and go to state 89
@@ -1960,7 +1998,7 @@ State 114
     $default  reduce using rule 37 (Expr)
 
 
-State 115
+State 117
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -1970,16 +2008,16 @@ State 115
    36     | Expr . '>' Expr
    36     | Expr '>' Expr .
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '+'  shift, and go to state 88
     '-'  shift, and go to state 89
@@ -1993,7 +2031,7 @@ State 115
     $default  reduce using rule 36 (Expr)
 
 
-State 116
+State 118
 
    31 Expr: Expr . '+' Expr
    31     | Expr '+' Expr .
@@ -2003,16 +2041,16 @@ State 116
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '*'  shift, and go to state 90
     '/'  shift, and go to state 91
@@ -2024,7 +2062,7 @@ State 116
     $default  reduce using rule 31 (Expr)
 
 
-State 117
+State 119
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2034,16 +2072,16 @@ State 117
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '*'  shift, and go to state 90
     '/'  shift, and go to state 91
@@ -2055,7 +2093,7 @@ State 117
     $default  reduce using rule 32 (Expr)
 
 
-State 118
+State 120
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2065,16 +2103,16 @@ State 118
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '['  shift, and go to state 93
     '('  shift, and go to state 94
@@ -2083,7 +2121,7 @@ State 118
     $default  reduce using rule 33 (Expr)
 
 
-State 119
+State 121
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2093,16 +2131,16 @@ State 119
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '['  shift, and go to state 93
     '('  shift, and go to state 94
@@ -2111,7 +2149,7 @@ State 119
     $default  reduce using rule 34 (Expr)
 
 
-State 120
+State 122
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2121,16 +2159,16 @@ State 120
    35     | Expr '%' Expr .
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     '['  shift, and go to state 93
     '('  shift, and go to state 94
@@ -2139,7 +2177,7 @@ State 120
     $default  reduce using rule 35 (Expr)
 
 
-State 121
+State 123
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2148,17 +2186,17 @@ State 121
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   45     | Expr '[' Expr . ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   46     | Expr '[' Expr . ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -2175,127 +2213,12 @@ State 121
     '/'    shift, and go to state 91
     '%'    shift, and go to state 92
     '['    shift, and go to state 93
-    ']'    shift, and go to state 139
+    ']'    shift, and go to state 143
     '('    shift, and go to state 94
     '.'    shift, and go to state 95
 
 
-State 122
-
-   44 Expr: Expr '(' ExprN . ')'
-   58 ExprN: ExprN . ',' Expr
-
-    ','  shift, and go to state 105
-    ')'  shift, and go to state 140
-
-
-State 123
-
-   59 Prop: T_Size .
-
-    $default  reduce using rule 59 (Prop)
-
-
 State 124
-
-   60 Prop: T_Split .
-
-    $default  reduce using rule 60 (Prop)
-
-
-State 125
-
-   61 Prop: T_Merge .
-
-    $default  reduce using rule 61 (Prop)
-
-
-State 126
-
-   62 Prop: T_Swap .
-
-    $default  reduce using rule 62 (Prop)
-
-
-State 127
-
-   63 Prop: T_Slice .
-
-    $default  reduce using rule 63 (Prop)
-
-
-State 128
-
-   64 Prop: T_Reverse .
-
-    $default  reduce using rule 64 (Prop)
-
-
-State 129
-
-   65 Prop: T_Balance_split .
-
-    $default  reduce using rule 65 (Prop)
-
-
-State 130
-
-   66 Prop: T_Volume .
-
-    $default  reduce using rule 66 (Prop)
-
-
-State 131
-
-   67 Prop: T_Has .
-
-    $default  reduce using rule 67 (Prop)
-
-
-State 132
-
-   54 Expr: Expr '.' Prop .
-
-    $default  reduce using rule 54 (Expr)
-
-
-State 133
-
-   15 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' . Func_Stmts '}'
-
-    T_Return      shift, and go to state 141
-    T_Print       shift, and go to state 7
-    T_Identifier  shift, and go to state 8
-
-    Assign_Stmt  go to state 142
-    Func_Stmts   go to state 143
-    Func_Stmt    go to state 144
-    Return_Stmt  go to state 145
-    Print_Stmt   go to state 146
-
-
-State 134
-
-   30 ArgLst_: ArgLst_ ',' TYPE . T_Identifier
-
-    T_Identifier  shift, and go to state 147
-
-
-State 135
-
-   26 Print_Args: Print_Args ',' T_Identifier .
-
-    $default  reduce using rule 26 (Print_Args)
-
-
-State 136
-
-   24 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' ';' .
-
-    $default  reduce using rule 24 (Print_Stmt)
-
-
-State 137
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2304,17 +2227,173 @@ State 137
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-   58 ExprN: ExprN ',' Expr .
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   58 ExprN: Expr . ',' Expr
+
+    T_Le   shift, and go to state 79
+    T_Ge   shift, and go to state 80
+    T_Eq   shift, and go to state 81
+    T_Ne   shift, and go to state 82
+    T_And  shift, and go to state 83
+    T_Or   shift, and go to state 84
+    ','    shift, and go to state 105
+    '?'    shift, and go to state 85
+    '<'    shift, and go to state 86
+    '>'    shift, and go to state 87
+    '+'    shift, and go to state 88
+    '-'    shift, and go to state 89
+    '*'    shift, and go to state 90
+    '/'    shift, and go to state 91
+    '%'    shift, and go to state 92
+    '['    shift, and go to state 93
+    '('    shift, and go to state 94
+    '.'    shift, and go to state 95
+
+
+State 125
+
+   45 Expr: Expr '(' ExprN . ')'
+   59 ExprN: ExprN . ',' Expr
+
+    ','  shift, and go to state 107
+    ')'  shift, and go to state 144
+
+
+State 126
+
+   60 Prop: T_Size .
+
+    $default  reduce using rule 60 (Prop)
+
+
+State 127
+
+   61 Prop: T_Split .
+
+    $default  reduce using rule 61 (Prop)
+
+
+State 128
+
+   62 Prop: T_Merge .
+
+    $default  reduce using rule 62 (Prop)
+
+
+State 129
+
+   63 Prop: T_Swap .
+
+    $default  reduce using rule 63 (Prop)
+
+
+State 130
+
+   64 Prop: T_Slice .
+
+    $default  reduce using rule 64 (Prop)
+
+
+State 131
+
+   65 Prop: T_Reverse .
+
+    $default  reduce using rule 65 (Prop)
+
+
+State 132
+
+   66 Prop: T_Balance_split .
+
+    $default  reduce using rule 66 (Prop)
+
+
+State 133
+
+   67 Prop: T_Volume .
+
+    $default  reduce using rule 67 (Prop)
+
+
+State 134
+
+   68 Prop: T_Has .
+
+    $default  reduce using rule 68 (Prop)
+
+
+State 135
+
+   55 Expr: Expr '.' Prop .
+
+    $default  reduce using rule 55 (Expr)
+
+
+State 136
+
+   15 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' . Func_Stmts '}'
+
+    T_Return      shift, and go to state 145
+    T_Print       shift, and go to state 7
+    T_Identifier  shift, and go to state 8
+
+    Assign_Stmt  go to state 146
+    Func_Stmts   go to state 147
+    Func_Stmt    go to state 148
+    Return_Stmt  go to state 149
+    Print_Stmt   go to state 150
+
+
+State 137
+
+   30 ArgLst_: ArgLst_ ',' TYPE . T_Identifier
+
+    T_Identifier  shift, and go to state 151
+
+
+State 138
+
+   26 Print_Args: Print_Args ',' T_Identifier .
+
+    $default  reduce using rule 26 (Print_Args)
+
+
+State 139
+
+   24 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' ';' .
+
+    $default  reduce using rule 24 (Print_Stmt)
+
+
+State 140
+
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   58 ExprN: Expr ',' Expr .
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -2337,9 +2416,51 @@ State 137
     $default  reduce using rule 58 (ExprN)
 
 
-State 138
+State 141
 
-   55 Expr: Expr '?' Expr ':' . Expr
+   31 Expr: Expr . '+' Expr
+   32     | Expr . '-' Expr
+   33     | Expr . '*' Expr
+   34     | Expr . '/' Expr
+   35     | Expr . '%' Expr
+   36     | Expr . '>' Expr
+   37     | Expr . '<' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   59 ExprN: ExprN ',' Expr .
+
+    T_Le   shift, and go to state 79
+    T_Ge   shift, and go to state 80
+    T_Eq   shift, and go to state 81
+    T_Ne   shift, and go to state 82
+    T_And  shift, and go to state 83
+    T_Or   shift, and go to state 84
+    '?'    shift, and go to state 85
+    '<'    shift, and go to state 86
+    '>'    shift, and go to state 87
+    '+'    shift, and go to state 88
+    '-'    shift, and go to state 89
+    '*'    shift, and go to state 90
+    '/'    shift, and go to state 91
+    '%'    shift, and go to state 92
+    '['    shift, and go to state 93
+    '('    shift, and go to state 94
+    '.'    shift, and go to state 95
+
+    $default  reduce using rule 59 (ExprN)
+
+
+State 142
+
+   56 Expr: Expr '?' Expr ':' . Expr
 
     T_CPU          shift, and go to state 20
     T_GPU          shift, and go to state 21
@@ -2360,26 +2481,26 @@ State 138
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 148
+    Expr  go to state 152
     Mem   go to state 58
     Proc  go to state 59
 
 
-State 139
+State 143
 
-   45 Expr: Expr '[' Expr ']' .
+   46 Expr: Expr '[' Expr ']' .
+
+    $default  reduce using rule 46 (Expr)
+
+
+State 144
+
+   45 Expr: Expr '(' ExprN ')' .
 
     $default  reduce using rule 45 (Expr)
 
 
-State 140
-
-   44 Expr: Expr '(' ExprN ')' .
-
-    $default  reduce using rule 44 (Expr)
-
-
-State 141
+State 145
 
    23 Return_Stmt: T_Return . Expr ';'
 
@@ -2402,63 +2523,63 @@ State 141
     '*'            shift, and go to state 55
     '('            shift, and go to state 56
 
-    Expr  go to state 149
+    Expr  go to state 153
     Mem   go to state 58
     Proc  go to state 59
 
 
-State 142
+State 146
 
    20 Func_Stmt: Assign_Stmt .
 
     $default  reduce using rule 20 (Func_Stmt)
 
 
-State 143
+State 147
 
    15 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts . '}'
    19 Func_Stmts: Func_Stmts . Func_Stmt
 
-    T_Return      shift, and go to state 141
+    T_Return      shift, and go to state 145
     T_Print       shift, and go to state 7
     T_Identifier  shift, and go to state 8
-    '}'           shift, and go to state 150
+    '}'           shift, and go to state 154
 
-    Assign_Stmt  go to state 142
-    Func_Stmt    go to state 151
-    Return_Stmt  go to state 145
-    Print_Stmt   go to state 146
+    Assign_Stmt  go to state 146
+    Func_Stmt    go to state 155
+    Return_Stmt  go to state 149
+    Print_Stmt   go to state 150
 
 
-State 144
+State 148
 
    18 Func_Stmts: Func_Stmt .
 
     $default  reduce using rule 18 (Func_Stmts)
 
 
-State 145
+State 149
 
    21 Func_Stmt: Return_Stmt .
 
     $default  reduce using rule 21 (Func_Stmt)
 
 
-State 146
+State 150
 
    22 Func_Stmt: Print_Stmt .
 
     $default  reduce using rule 22 (Func_Stmt)
 
 
-State 147
+State 151
 
    30 ArgLst_: ArgLst_ ',' TYPE T_Identifier .
 
     $default  reduce using rule 30 (ArgLst_)
 
 
-State 148
+State 152
 
    31 Expr: Expr . '+' Expr
    32     | Expr . '-' Expr
@@ -2467,17 +2588,17 @@ State 148
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
-   55     | Expr '?' Expr ':' Expr .
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
+   56     | Expr '?' Expr ':' Expr .
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -2496,10 +2617,10 @@ State 148
     '('    shift, and go to state 94
     '.'    shift, and go to state 95
 
-    $default  reduce using rule 55 (Expr)
+    $default  reduce using rule 56 (Expr)
 
 
-State 149
+State 153
 
    23 Return_Stmt: T_Return Expr . ';'
    31 Expr: Expr . '+' Expr
@@ -2509,16 +2630,16 @@ State 149
    35     | Expr . '%' Expr
    36     | Expr . '>' Expr
    37     | Expr . '<' Expr
-   38     | Expr . T_Ge Expr
-   39     | Expr . T_Le Expr
-   40     | Expr . T_Eq Expr
-   41     | Expr . T_Ne Expr
-   42     | Expr . T_Or Expr
-   43     | Expr . T_And Expr
-   44     | Expr . '(' ExprN ')'
-   45     | Expr . '[' Expr ']'
-   54     | Expr . '.' Prop
-   55     | Expr . '?' Expr ':' Expr
+   39     | Expr . T_Ge Expr
+   40     | Expr . T_Le Expr
+   41     | Expr . T_Eq Expr
+   42     | Expr . T_Ne Expr
+   43     | Expr . T_Or Expr
+   44     | Expr . T_And Expr
+   45     | Expr . '(' ExprN ')'
+   46     | Expr . '[' Expr ']'
+   55     | Expr . '.' Prop
+   56     | Expr . '?' Expr ':' Expr
 
     T_Le   shift, and go to state 79
     T_Ge   shift, and go to state 80
@@ -2537,24 +2658,24 @@ State 149
     '['    shift, and go to state 93
     '('    shift, and go to state 94
     '.'    shift, and go to state 95
-    ';'    shift, and go to state 152
+    ';'    shift, and go to state 156
 
 
-State 150
+State 154
 
    15 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts '}' .
 
     $default  reduce using rule 15 (FuncDef)
 
 
-State 151
+State 155
 
    19 Func_Stmts: Func_Stmts Func_Stmt .
 
     $default  reduce using rule 19 (Func_Stmts)
 
 
-State 152
+State 156
 
    23 Return_Stmt: T_Return Expr ';' .
 
