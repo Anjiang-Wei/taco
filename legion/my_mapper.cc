@@ -445,7 +445,7 @@ void NSMapper::map_task(const MapperContext      ctx,
   if (chosen.is_inner)
   {
     log_mapper.debug(
-      "Unsupported variant is chosen for task %s, falling back to the default policy",
+      "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
       task.get_task_name());
     DefaultMapper::map_task(ctx, task, input, output);
     return;

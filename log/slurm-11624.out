@@ -1,0 +1,412 @@
+[0 - 7f153c07a000]    0.039213 {1}{nsmapper}: Inside create_mappers local_procs.size() = 3
+[0 - 7f153c07a000]    0.039303 {1}{nsmapper}: Policy file: mappings
+[1 - 7f4f93c3d000]    0.039156 {1}{nsmapper}: Inside create_mappers local_procs.size() = 3
+[1 - 7f4f93c3d000]    0.039244 {1}{nsmapper}: Policy file: mappings
+[0 - 7f153c07a000]    0.040792 {1}{nsmapper}: task_7 inserted
+[0 - 7f153c07a000]    0.040817 {1}{nsmapper}: task_5 inserted
+[0 - 7f153c07a000]    0.040833 {1}{nsmapper}: task_3 inserted
+[0 - 7f153c07a000]    0.040844 {1}{nsmapper}: task_2 inserted
+[0 - 7f153c07a000]    0.040851 {1}{nsmapper}: task_1 inserted
+[1 - 7f4f93c3d000]    0.040747 {1}{nsmapper}: task_7 inserted
+[1 - 7f4f93c3d000]    0.040773 {1}{nsmapper}: task_5 inserted
+[1 - 7f4f93c3d000]    0.040783 {1}{nsmapper}: task_3 inserted
+[0 - 7f153c07a000]    0.040928 {1}{nsmapper}: Policy file: mappings
+[1 - 7f4f93c3d000]    0.040793 {1}{nsmapper}: task_2 inserted
+[1 - 7f4f93c3d000]    0.040802 {1}{nsmapper}: task_1 inserted
+[1 - 7f4f93c3d000]    0.040876 {1}{nsmapper}: Policy file: mappings
+[1 - 7f4f93c3d000]    0.041487 {1}{nsmapper}: Policy file: mappings
+[0 - 7f153c07a000]    0.041716 {1}{nsmapper}: Policy file: mappings
+[0 - 7f153c09b000]    0.042277 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7f153c09b000]    0.042337 {4}{nsmapper}: Unsatisfiable policy: task top_level requested GPU, which does not exist
+[0 - 7f153c09b000]    0.092028 {1}{nsmapper}: select_sharding_functor for task task_5: 2
+[0 - 7f153c09b000]    0.092068 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7f153c09b000]    0.092083 {4}{nsmapper}: Unsatisfiable policy: task task_5 requested GPU, which does not exist
+[0 - 7f153c09b000]    0.092103 {1}{nsmapper}: Default processor 0 does not work for task task_5, trying next
+[0 - 7f153c09b000]    0.092111 {1}{nsmapper}: Task task_5 is initially mapped to OMP
+[1 - 7f4fa002b000]    0.092087 {1}{nsmapper}: select_sharding_functor for task task_5: 2
+[1 - 7f4fa002b000]    0.092149 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[1 - 7f4fa002b000]    0.092159 {4}{nsmapper}: Unsatisfiable policy: task task_5 requested GPU, which does not exist
+[1 - 7f4fa002b000]    0.092183 {1}{nsmapper}: Default processor 0 does not work for task task_5, trying next
+[1 - 7f4fa002b000]    0.092192 {1}{nsmapper}: Task task_5 is initially mapped to OMP
+[0 - 7f153c09b000]    0.093194 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[0 - 7f153c09b000]    0.093209 {1}{nsmapper}: shard point: 
+[0 - 7f153c09b000]    0.093214 {1}{nsmapper}: 0, 
+[0 - 7f153c09b000]    0.093219 {1}{nsmapper}: 0, 
+[0 - 7f153c09b000]    0.093239 {1}{nsmapper}:  --> node 0
+
+[0 - 7f153c09b000]    0.093254 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[0 - 7f153c09b000]    0.093273 {1}{nsmapper}: shard point: 
+[0 - 7f153c09b000]    0.093279 {1}{nsmapper}: 1, 
+[0 - 7f153c09b000]    0.093302 {1}{nsmapper}: 0, 
+[0 - 7f153c09b000]    0.093324 {1}{nsmapper}:  --> node 1
+
+[0 - 7f153c09b000]    0.093376 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[0 - 7f153c09b000]    0.093384 {1}{nsmapper}: shard point: 
+[0 - 7f153c09b000]    0.093390 {1}{nsmapper}: 0, 
+[0 - 7f153c09b000]    0.093396 {1}{nsmapper}: 0, 
+[0 - 7f153c09b000]    0.093407 {1}{nsmapper}:  --> node 0
+
+[1 - 7f4fa002b000]    0.093177 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[1 - 7f4fa002b000]    0.093193 {1}{nsmapper}: shard point: 
+[1 - 7f4fa002b000]    0.093215 {1}{nsmapper}: 0, 
+[1 - 7f4fa002b000]    0.093236 {1}{nsmapper}: 0, 
+[1 - 7f4fa002b000]    0.093272 {1}{nsmapper}:  --> node 0
+
+[1 - 7f4fa002b000]    0.093285 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[1 - 7f4fa002b000]    0.093297 {1}{nsmapper}: shard point: 
+[1 - 7f4fa002b000]    0.093316 {1}{nsmapper}: 1, 
+[1 - 7f4fa002b000]    0.093322 {1}{nsmapper}: 0, 
+[1 - 7f4fa002b000]    0.093333 {1}{nsmapper}:  --> node 1
+
+[0 - 7f153c09b000]    0.093483 {1}{nsmapper}: Customize slice_task for task_5
+[0 - 7f153c09b000]    0.093494 {1}{nsmapper}: 7,7:7
+[0 - 7f153c09b000]    0.093500 {1}{nsmapper}: 7: OMP here
+[0 - 7f153c09b000]    0.093508 {1}{nsmapper}: how many nodes? 2
+[0 - 7f153c09b000]    0.093515 {1}{nsmapper}: how many processors? local=2, remote=2
+[0 - 7f153c09b000]    0.093521 {1}{nsmapper}: node_id = 0
+[1 - 7f4fa002b000]    0.093378 {1}{nsmapper}: shard dim: 2, total_shards: 2
+[1 - 7f4fa002b000]    0.093386 {1}{nsmapper}: shard point: 
+[1 - 7f4fa002b000]    0.093392 {1}{nsmapper}: 1, 
+[1 - 7f4fa002b000]    0.093398 {1}{nsmapper}: 0, 
+[1 - 7f4fa002b000]    0.093411 {1}{nsmapper}:  --> node 1
+
+[0 - 7f153c09b000]    0.093533 {1}{nsmapper}: Inside custom_slice_task for task_5, procs=2, dim=2
+[0 - 7f153c09b000]    0.093544 {1}{nsmapper}: custom_decompose_points, dim=2 point_space.volume()=1 point_space=[0,0]
+[0 - 7f153c09b000]    0.093551 {1}{nsmapper}: slice point: 
+[0 - 7f153c09b000]    0.093557 {1}{nsmapper}: 0 ,
+[0 - 7f153c09b000]    0.093564 {1}{nsmapper}: 0 ,
+[0 - 7f153c09b000]    0.093575 {1}{nsmapper}: --> 0
+[1 - 7f4fa002b000]    0.093541 {1}{nsmapper}: Customize slice_task for task_5
+[1 - 7f4fa002b000]    0.093552 {1}{nsmapper}: 7,7:7
+[1 - 7f4fa002b000]    0.093559 {1}{nsmapper}: 7: OMP here
+[1 - 7f4fa002b000]    0.093567 {1}{nsmapper}: how many nodes? 2
+[1 - 7f4fa002b000]    0.093575 {1}{nsmapper}: how many processors? local=2, remote=2
+[1 - 7f4fa002b000]    0.093581 {1}{nsmapper}: node_id = 1
+[1 - 7f4fa002b000]    0.093594 {1}{nsmapper}: Inside custom_slice_task for task_5, procs=2, dim=2
+[1 - 7f4fa002b000]    0.093606 {1}{nsmapper}: custom_decompose_points, dim=2 point_space.volume()=1 point_space=[1,1]
+[1 - 7f4fa002b000]    0.093614 {1}{nsmapper}: slice point: 
+[1 - 7f4fa002b000]    0.093621 {1}{nsmapper}: 1 ,
+[1 - 7f4fa002b000]    0.093627 {1}{nsmapper}: 0 ,
+[1 - 7f4fa002b000]    0.093640 {1}{nsmapper}: --> 0
+[0 - 7f153c09b000]    0.094093 {1}{nsmapper}: No memory policy is given for task task_5, falling back to the default policy
+[1 - 7f4fa002b000]    0.094713 {1}{nsmapper}: No memory policy is given for task task_5, falling back to the default policy
+[0 - 7f153c09b000]    0.095977 {1}{nsmapper}: No sharding functor found in select_sharding_functor taco_fill, fall back to default
+[0 - 7f153c09b000]    0.095999 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7f153c09b000]    0.096009 {4}{nsmapper}: Unsatisfiable policy: task taco_fill requested GPU, which does not exist
+[1 - 7f4fa002b000]    0.095831 {1}{nsmapper}: No sharding functor found in select_sharding_functor taco_fill, fall back to default
+[1 - 7f4fa002b000]    0.095856 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[1 - 7f4fa002b000]    0.095866 {4}{nsmapper}: Unsatisfiable policy: task taco_fill requested GPU, which does not exist
+[1 - 7f4fa002b000]    0.095993 {1}{nsmapper}: No sharding functor found in select_sharding_functor taco_fill, fall back to default
+[1 - 7f4fa002b000]    0.096009 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[1 - 7f4fa002b000]    0.096017 {1}{nsmapper}: Task taco_fill is initially mapped to CPU
+[1 - 7f4fa002b000]    0.096073 {1}{nsmapper}: No sharding functor found in select_sharding_functor taco_fill, fall back to default
+[1 - 7f4fa002b000]    0.096087 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[1 - 7f4fa002b000]    0.096094 {1}{nsmapper}: Task taco_fill is initially mapped to CPU
+[1 - 7f4fa002b000]    0.096280 {1}{nsmapper}: select_sharding_functor for task task_1: 5
+[1 - 7f4fa002b000]    0.096299 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[1 - 7f4fa002b000]    0.096308 {4}{nsmapper}: Unsatisfiable policy: task task_1 requested GPU, which does not exist
+[1 - 7f4fa002b000]    0.096318 {1}{nsmapper}: Default processor 0 does not work for task task_1, trying next
+[1 - 7f4fa002b000]    0.096326 {1}{nsmapper}: Task task_1 is initially mapped to OMP
+[0 - 7f153c09b000]    0.096419 {1}{nsmapper}: No sharding functor found in select_sharding_functor taco_fill, fall back to default
+[0 - 7f153c09b000]    0.096432 {1}{nsmapper}: NSMapper select_task_options in ns_mapper
+[0 - 7f153c09b000]    0.096437 {1}{nsmapper}: Task taco_fill is initially mapped to CPU
+[1 - 7f4fa002b000]    0.096428 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7f153c09b000]    0.096540 {1}{nsmapper}: Use default slice_task for taco_fill
+[0 - 7f153c09b000]    0.096630 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[1 - 7f4fa002b000]    0.096562 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[1 - 7f4fa002b000]    0.097236 {1}{nsmapper}: Use default slice_task for taco_fill
+[1 - 7f4fa002b000]    0.097354 {1}{nsmapper}: No memory policy is given for task taco_fill, falling back to the default policy
+[1 - 7f4fa002b000]    0.097485 {5}{default_mapper}: Default mapper failed allocation of size 268435456 bytes for region  requirement 0 of task taco_fill (UID 95) in memory 1e00010000000000 (SYSTEM_MEM) for processor 1d00010000000001 (LOC_PROC). This means the working set of your application is too big for the allotted capacity of the given memory under the default mapper's mapping scheme. You have three choices: ask Realm to allocate more memory, write a custom mapper to better manage working sets, or find a bigger machine.
+cannonMM: /scratch2/anjiang/taco/deps/legion/runtime/mappers/default_mapper.cc:2422: void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const: Assertion `false' failed.
+*** Caught a fatal signal (proc 1): SIGABRT(6)
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+[1] Invoking GDB for backtrace...
+[1] /usr/bin/gdb -nx -batch -x /tmp/gasnet_XemYql '/scratch2/anjiang/taco/build/./bin/cannonMM' 477326
+[1] [New LWP 477327]
+[1] [New LWP 477328]
+[1] [New LWP 477334]
+[1] [New LWP 477335]
+[1] [New LWP 477336]
+[1] [New LWP 477337]
+[1] [New LWP 477338]
+[1] [New LWP 477339]
+[1] [New LWP 477340]
+[1] [New LWP 477341]
+[1] [New LWP 477342]
+[1] [New LWP 477343]
+[1] [New LWP 477344]
+[1] [New LWP 477345]
+[1] [New LWP 477346]
+[1] [New LWP 477347]
+[1] [New LWP 477348]
+[1] [New LWP 477349]
+[1] [New LWP 477350]
+[1] [New LWP 477351]
+[1] [New LWP 477352]
+[1] [New LWP 477353]
+[1] [New LWP 477354]
+[1] [New LWP 477355]
+[1] [New LWP 477356]
+[1] [Thread debugging using libthread_db enabled]
+[1] Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[1] syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1]   Id   Target Id                                     Frame 
+[1] * 1    Thread 0x7f4fb978c000 (LWP 477326) "cannonMM" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1]   2    Thread 0x7f4fa9740000 (LWP 477327) "cannonMM" 0x00007f4fe0249aff in __GI___poll (fds=fds@entry=0x7f4fa4000b60, nfds=nfds@entry=2, timeout=timeout@entry=3599850) at ../sysdeps/unix/sysv/linux/poll.c:29
+[1]   3    Thread 0x7f4fa8d56000 (LWP 477328) "cannonMM" 0x00007f4fe02565ce in epoll_wait (epfd=10, events=events@entry=0x563345dafdc0, maxevents=32, timeout=timeout@entry=119934) at ../sysdeps/unix/sysv/linux/epoll_wait.c:30
+[1]   4    Thread 0x7f4fa082c000 (LWP 477334) "cannonMM" 0x00007f4fe0257c90 in accept4 (fd=38, addr=..., addr_len=0x7f4fa08154b4, flags=524288) at ../sysdeps/unix/sysv/linux/accept4.c:32
+[1]   5    Thread 0x7f4f95fff000 (LWP 477335) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   6    Thread 0x7f4f95de6000 (LWP 477336) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   7    Thread 0x7f4f95bcd000 (LWP 477337) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   8    Thread 0x7f4f959b4000 (LWP 477338) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   9    Thread 0x7f4f9579b000 (LWP 477339) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   10   Thread 0x7f4f95582000 (LWP 477340) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   11   Thread 0x7f4f95369000 (LWP 477341) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   12   Thread 0x7f4f95150000 (LWP 477342) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   13   Thread 0x7f4f94f37000 (LWP 477343) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   14   Thread 0x7f4f94d1e000 (LWP 477344) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   15   Thread 0x7f4f94b05000 (LWP 477345) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   16   Thread 0x7f4f948ec000 (LWP 477346) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   17   Thread 0x7f4f946d3000 (LWP 477347) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   18   Thread 0x7f4f944ba000 (LWP 477348) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   19   Thread 0x7f4f942a1000 (LWP 477349) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   20   Thread 0x7f4f94088000 (LWP 477350) "cannonMM" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1]   21   Thread 0x7f4f93f6f000 (LWP 477351) "cannonMM" pthread_spin_lock () at ../sysdeps/x86_64/nptl/pthread_spin_lock.S:24
+[1]   22   Thread 0x7f4f93e56000 (LWP 477352) "cannonMM" 0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1]   23   Thread 0x7f4fa002b000 (LWP 477353) "cannonMM" 0x00007f4fe0219dff in __GI___wait4 (pid=477357, stat_loc=stat_loc@entry=0x7f4dd03ff158, options=options@entry=0, usage=usage@entry=0x0) at ../sysdeps/unix/sysv/linux/wait4.c:27
+[1]   24   Thread 0x7f4f93c3d000 (LWP 477354) "cannonMM" 0x0000563343ff6281 in void tacoFillCPU<2, double>(Legion::Task const*, Legion::PhysicalRegion, Realm::Rect<2, long long>) ()
+[1]   25   Thread 0x7f4f93c1c000 (LWP 477355) "cannonMM" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1]   26   Thread 0x7f4f93bfb000 (LWP 477356) "cannonMM" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1] 
+[1] Thread 26 (Thread 0x7f4f93bfb000 (LWP 477356)):
+[1] #0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1] #1  0x00007f4fe189730a in Realm::Doorbell::wait_slow() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17f3618 in Realm::ThreadedTaskScheduler::wait_for_work(unsigned long) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe17f8ec7 in Realm::ThreadedTaskScheduler::scheduler_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe18008d7 in Realm::UserThread::uthread_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe0192660 in ?? () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91 from /lib/x86_64-linux-gnu/libc.so.6
+[1] #6  0x0000000000000000 in ?? ()
+[1] 
+[1] Thread 25 (Thread 0x7f4f93c1c000 (LWP 477355)):
+[1] #0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1] #1  0x00007f4fe189730a in Realm::Doorbell::wait_slow() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17f3618 in Realm::ThreadedTaskScheduler::wait_for_work(unsigned long) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe17f8ec7 in Realm::ThreadedTaskScheduler::scheduler_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe18008d7 in Realm::UserThread::uthread_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe0192660 in ?? () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91 from /lib/x86_64-linux-gnu/libc.so.6
+[1] #6  0x0000000000000000 in ?? ()
+[1] 
+[1] Thread 24 (Thread 0x7f4f93c3d000 (LWP 477354)):
+[1] #0  0x0000563343ff6281 in void tacoFillCPU<2, double>(Legion::Task const*, Legion::PhysicalRegion, Realm::Rect<2, long long>) ()
+[1] #1  0x0000563343ff8bb8 in void tacoFillCPUTask<double>(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*) ()
+[1] #2  0x0000563343ff8d14 in void Legion::LegionTaskWrapper::legion_task_wrapper<&(void tacoFillCPUTask<double>(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*))>(void const*, unsigned long, void const*, unsigned long, Realm::Processor) ()
+[1] #3  0x00007f4fe17ae29a in Realm::LocalTaskProcessor::execute_task(unsigned int, Realm::ByteArrayRef const&) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe17f60f3 in Realm::Task::execute_on_processor(Realm::Processor) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe17f61aa in Realm::UserThreadTaskScheduler::execute_task(Realm::Task*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #6  0x00007f4fe17f8b9c in Realm::ThreadedTaskScheduler::scheduler_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #7  0x00007f4fe18008d7 in Realm::UserThread::uthread_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #8  0x00007f4fe0192660 in ?? () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91 from /lib/x86_64-linux-gnu/libc.so.6
+[1] #9  0x0000000000000000 in ?? ()
+[1] 
+[1] Thread 23 (Thread 0x7f4fa002b000 (LWP 477353)):
+[1] #0  0x00007f4fe0219dff in __GI___wait4 (pid=477357, stat_loc=stat_loc@entry=0x7f4dd03ff158, options=options@entry=0, usage=usage@entry=0x0) at ../sysdeps/unix/sysv/linux/wait4.c:27
+[1] #1  0x00007f4fe0219d7b in __GI___waitpid (pid=<optimized out>, stat_loc=stat_loc@entry=0x7f4dd03ff158, options=options@entry=0) at waitpid.c:38
+[1] #2  0x00007f4fe01890e7 in do_system (line=<optimized out>) at ../sysdeps/posix/system.c:172
+[1] #3  0x00007f4fe2190b63 in gasneti_bt_gdb () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe219495e in gasneti_print_backtrace () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe1439752 in gasneti_defaultSignalHandler () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #6  <signal handler called>
+[1] #7  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+[1] #8  0x00007f4fe0159859 in __GI_abort () at abort.c:79
+[1] #9  0x00007f4fe0159729 in __assert_fail_base (fmt=0x7f4fe02ef588 "%s%s%s:%u: %s%sAssertion `%s' failed.\n%n", assertion=0x7f4fe35538e6 "false", file=0x7f4fe3550238 "/scratch2/anjiang/taco/deps/legion/runtime/mappers/default_mapper.cc", line=2422, function=<optimized out>) at assert.c:92
+[1] #10 0x00007f4fe016af36 in __GI___assert_fail (assertion=0x7f4fe35538e6 "false", file=0x7f4fe3550238 "/scratch2/anjiang/taco/deps/legion/runtime/mappers/default_mapper.cc", line=2422, function=0x7f4fe35516c8 "void Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(const Legion::Task&, unsigned int, Legion::Processor, Legion::Memory, size_t) const") at assert.c:101
+[1] #11 0x00007f4fe2ad796f in Legion::Mapping::DefaultMapper::default_report_failed_instance_creation(Legion::Task const&, unsigned int, Realm::Processor, Realm::Memory, unsigned long) const () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #12 0x00007f4fe2ae443a in Legion::Mapping::DefaultMapper::map_task(Legion::Internal::MappingCallInfo*, Legion::Task const&, Legion::Mapping::Mapper::MapTaskInput const&, Legion::Mapping::Mapper::MapTaskOutput&) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #13 0x0000563343fdb1f3 in NSMapper::map_task(Legion::Internal::MappingCallInfo*, Legion::Task const&, Legion::Mapping::Mapper::MapTaskInput const&, Legion::Mapping::Mapper::MapTaskOutput&) ()
+[1] #14 0x00007f4fe2eb85ed in Legion::Internal::MapperManager::invoke_map_task(Legion::Internal::TaskOp*, Legion::Mapping::Mapper::MapTaskInput*, Legion::Mapping::Mapper::MapTaskOutput*, Legion::Internal::MappingCallInfo*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #15 0x00007f4fe2e3ef37 in Legion::Internal::SingleTask::invoke_mapper(Legion::Internal::MustEpochOp*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #16 0x00007f4fe2e47a3c in Legion::Internal::SingleTask::map_all_regions(Legion::Internal::MustEpochOp*, Legion::Internal::TaskOp::DeferMappingArgs const*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #17 0x00007f4fe2e48652 in Legion::Internal::PointTask::perform_mapping(Legion::Internal::MustEpochOp*, Legion::Internal::TaskOp::DeferMappingArgs const*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #18 0x00007f4fe2fd5995 in Legion::Internal::Runtime::legion_runtime_task(void const*, unsigned long, void const*, unsigned long, Realm::Processor) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #19 0x00007f4fe17ae29a in Realm::LocalTaskProcessor::execute_task(unsigned int, Realm::ByteArrayRef const&) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #20 0x00007f4fe17f60f3 in Realm::Task::execute_on_processor(Realm::Processor) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #21 0x00007f4fe17f61aa in Realm::UserThreadTaskScheduler::execute_task(Realm::Task*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #22 0x00007f4fe17f8b9c in Realm::ThreadedTaskScheduler::scheduler_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #23 0x00007f4fe18008d7 in Realm::UserThread::uthread_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #24 0x00007f4fe0192660 in ?? () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91 from /lib/x86_64-linux-gnu/libc.so.6
+[1] #25 0x0000000000000000 in ?? ()
+[1] 
+[1] Thread 22 (Thread 0x7f4f93e56000 (LWP 477352)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 21 (Thread 0x7f4f93f6f000 (LWP 477351)):
+[1] #0  pthread_spin_lock () at ../sysdeps/x86_64/nptl/pthread_spin_lock.S:24
+[1] #1  0x00007f4fa3bb844c in ?? () from /usr/lib/x86_64-linux-gnu/libibverbs/libmlx5-rdmav25.so
+[1] #2  0x00007f4fe2184f83 in gasnetc_snd_reap () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe216e827 in gasnetc_AMPoll () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe186fffa in Realm::GASNetEXPoller::do_work(Realm::TimeLimit) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe17144f3 in Realm::BackgroundWorkManager::Worker::do_work(long long, Realm::atomic<bool>*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #6  0x00007f4fe1714d46 in Realm::BackgroundWorkThread::main_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #7  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #8  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #9  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 20 (Thread 0x7f4f94088000 (LWP 477350)):
+[1] #0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1] #1  0x00007f4fe189730a in Realm::Doorbell::wait_slow() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe171573d in Realm::BackgroundWorkThread::main_loop() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #5  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 19 (Thread 0x7f4f942a1000 (LWP 477349)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 18 (Thread 0x7f4f944ba000 (LWP 477348)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 17 (Thread 0x7f4f946d3000 (LWP 477347)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 16 (Thread 0x7f4f948ec000 (LWP 477346)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 15 (Thread 0x7f4f94b05000 (LWP 477345)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 14 (Thread 0x7f4f94d1e000 (LWP 477344)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 13 (Thread 0x7f4f94f37000 (LWP 477343)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 12 (Thread 0x7f4f95150000 (LWP 477342)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 11 (Thread 0x7f4f95369000 (LWP 477341)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 10 (Thread 0x7f4f95582000 (LWP 477340)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 9 (Thread 0x7f4f9579b000 (LWP 477339)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 8 (Thread 0x7f4f959b4000 (LWP 477338)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 7 (Thread 0x7f4f95bcd000 (LWP 477337)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 6 (Thread 0x7f4f95de6000 (LWP 477336)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 5 (Thread 0x7f4f95fff000 (LWP 477335)):
+[1] #0  0x00007f4fe023989b in sched_yield () at ../sysdeps/unix/syscall-template.S:78
+[1] #1  0x00007f4fe1851d4f in Realm::ThreadPool::worker_entry() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe17fb6b6 in Realm::KernelThread::pthread_entry(void*) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 4 (Thread 0x7f4fa082c000 (LWP 477334)):
+[1] #0  0x00007f4fe0257c90 in accept4 (fd=38, addr=..., addr_len=0x7f4fa08154b4, flags=524288) at ../sysdeps/unix/sysv/linux/accept4.c:32
+[1] #1  0x00007f4fc81ed4a3 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+[1] #2  0x00007f4fc828f606 in ?? () from /lib/x86_64-linux-gnu/libcuda.so.1
+[1] #3  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #4  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 3 (Thread 0x7f4fa8d56000 (LWP 477328)):
+[1] #0  0x00007f4fe02565ce in epoll_wait (epfd=10, events=events@entry=0x563345dafdc0, maxevents=32, timeout=timeout@entry=119934) at ../sysdeps/unix/sysv/linux/epoll_wait.c:30
+[1] #1  0x00007f4fb98630b1 in epoll_dispatch (base=0x563345dafb10, tv=<optimized out>) at epoll.c:407
+[1] #2  0x00007f4fb986649d in opal_libevent2022_event_base_loop (base=0x563345dafb10, flags=1) at event.c:1630
+[1] #3  0x00007f4fa8ec0386 in progress_engine () from /usr/local/openmpi-4.1.0/lib/openmpi/mca_pmix_pmix3x.so
+[1] #4  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #5  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 2 (Thread 0x7f4fa9740000 (LWP 477327)):
+[1] #0  0x00007f4fe0249aff in __GI___poll (fds=fds@entry=0x7f4fa4000b60, nfds=nfds@entry=2, timeout=timeout@entry=3599850) at ../sysdeps/unix/sysv/linux/poll.c:29
+[1] #1  0x00007f4fb986eae1 in poll (__timeout=<optimized out>, __nfds=2, __fds=0x7f4fa4000b60) at /usr/include/x86_64-linux-gnu/bits/poll2.h:46
+[1] #2  poll_dispatch (base=0x563345d8b720, tv=<optimized out>) at poll.c:165
+[1] #3  0x00007f4fb986649d in opal_libevent2022_event_base_loop (base=0x563345d8b720, flags=1) at event.c:1630
+[1] #4  0x00007f4fb981efe6 in progress_engine () from /usr/local/openmpi-4.1.0/lib/libopen-pal.so.40
+[1] #5  0x00007f4fe052d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+[1] #6  0x00007f4fe0256293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+[1] 
+[1] Thread 1 (Thread 0x7f4fb978c000 (LWP 477326)):
+[1] #0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+[1] #1  0x00007f4fe189730a in Realm::Doorbell::wait_slow() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #2  0x00007f4fe1897e58 in Realm::UnfairCondVar::wait() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #3  0x00007f4fe17cb198 in Realm::RuntimeImpl::wait_for_shutdown() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #4  0x00007f4fe17cc943 in Realm::Runtime::wait_for_shutdown() () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/librealm.so.1
+[1] #5  0x00007f4fe2fc9c28 in Legion::Internal::Runtime::start(int, char**, bool, bool) () from /scratch2/anjiang/taco/deps-install/cmake-install/lib/liblegion.so.1
+[1] #6  0x0000563343fc9d77 in main ()
+[1] [Inferior 1 (process 477326) detached]
+WARNING: ODP shutdown in signal context
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+*** Caught a signal (proc 0): SIGTERM(15)
+--------------------------------------------------------------------------
+mpirun noticed that process rank 1 with PID 477326 on node g0003 exited on signal 6 (Aborted).
+--------------------------------------------------------------------------

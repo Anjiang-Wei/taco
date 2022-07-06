@@ -18,6 +18,8 @@
 #include <cctype>
 #include <locale>
 
+// #define DEBUG_MSPACE true
+
 std::string vec2str(std::vector<int> my_vector)
 {
     std::stringstream result;
@@ -111,15 +113,16 @@ public:
             {
                 result.push_back(old_point[dim1] / dim2_volume);
             }
-            else if ((int) i == dim2)
-            {
-                result.push_back(old_point[dim1] % dim2_volume);
-                result.push_back(old_point[dim2]);
-            }
             else
             {
                 result.push_back(old_point[i]);
             }
+        }
+        result.insert(result.begin() + dim2, old_point[dim1] % dim2_volume);
+        if (result.size() != old_point.size() + 1)
+        {
+            std::cout << "MergeMSpace trans fails" << std::endl;
+            assert(false);
         }
         return result;
     }
@@ -510,14 +513,20 @@ public:
     {
         MSpace* mspace = this;
         std::vector<int> current_point = machine_point;
-        // std::cout << "start get_node_proc: " << vec2str(current_point) << std::endl;
+        #ifdef DEBUG_MSPACE
+            std::cout << "start get_node_proc: " << vec2str(current_point) << std::endl;
+        #endif
         while(mspace->prev_machine != NULL)
         {
             current_point = mspace->trans_op->trans(current_point);
-            // std::cout << vec2str(current_point) << ", ";
+            #ifdef DEBUG_MSPACE
+                std::cout << vec2str(current_point) << ", ";
+            #endif
             mspace = mspace->prev_machine;
         }
-        // std::cout << "end get_node_proc" << std::endl;
+        #ifdef DEBUG_MSPACE
+            std::cout << "end get_node_proc" << std::endl;
+        #endif
         assert(mspace->each_dim.size() == 2);
         assert(current_point.size() == 2);
         if (current_point[0] >= mspace->each_dim[0])

@@ -2,6 +2,8 @@
 #include "MSpace.cpp"
 #include <iostream>
 
+// #define DEBUG_TREE true
+
 using namespace Legion;
 using namespace Legion::Mapping;
 
@@ -148,6 +150,9 @@ Node* RegionCustomNode::run()
 
 std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
 {
+  #ifdef DEBUG_TREE
+      std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
+  #endif
   MSpace* mspace_node = task2mspace.at(task);
   FuncDefNode* func_node = task2func.at(task);
 
@@ -165,7 +170,7 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
 
   delete ipoint_input;
 
-  assert(res->type == TupleIntType || res->type == TupleExprType);
+  assert(res->type == TupleIntType || res->type == TupleExprType || res->type == IntValType);
   // printf("Index Launch Computation Finished\n");
   if (res->type == TupleIntType)
   {
@@ -177,7 +182,7 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
     }
     return mspace_node->get_node_proc(res2->tupleint);
   }
-  else
+  else if (res->type == TupleExprType)
   {
     TupleExprNode* res2 = (TupleExprNode*) res;
     std::vector<int> res3;
@@ -192,6 +197,11 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
       assert(false);
     }
     return mspace_node->get_node_proc(res3);
+  }
+  else
+  {
+    IntValNode* res2 = (IntValNode*) res;
+     return mspace_node->get_node_proc(std::vector<int>{res2->intval});
   }
   assert(false);
   return x;
