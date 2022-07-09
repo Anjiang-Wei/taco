@@ -73,6 +73,7 @@ void yyerror(const char*);
 %type <args> ArgLst
 %type <args> ArgLst_
 %type <exprn> ExprN
+%type <exprn> ExprN_1
 %type <prop> Prop
 %type <printargs> Print_Args
 %type <printstmt> Print_Stmt
@@ -194,7 +195,7 @@ Expr:
 |   Expr T_Ne Expr          { $$ = new BinaryExprNode($1, NEQ, $3); }
 |   Expr T_Or Expr          { $$ = new BinaryExprNode($1, OR, $3); }
 |   Expr T_And Expr         { $$ = new BinaryExprNode($1, AND, $3); }
-|   Expr '(' ExprN ')'      { $$ = new FuncInvokeNode($1, $3); }
+|   Expr '(' ExprN_1 ')'      { $$ = new FuncInvokeNode($1, $3); }
 |   Expr '[' Expr ']'       { $$ = new IndexExprNode($1, $3); }
 |   '-' Expr %prec '!'      { $$ = new NegativeExprNode($2); }
 |   T_IntConstant           { $$ = new IntValNode($1); }
@@ -208,6 +209,10 @@ Expr:
 |   Expr '?' Expr ':' Expr %prec '?' { $$ = new TenaryExprNode($1, $3, $5); }
 |   '*' Expr                { $$ = new UnpackExprNode($2); }
 ;
+
+ExprN_1:
+    Expr                     { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }
+|   ExprN_1 ',' Expr         { $1->exprlst.push_back($3); $$ = $1; }
 
 ExprN:
     Expr ',' Expr           { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); t->exprlst.push_back($3); $$ = t; }
