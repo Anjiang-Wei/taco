@@ -12,6 +12,32 @@ const char* TACOMapperName = "TACOMapper";
 
 Realm::Logger logTacoMapper("tacoMapper");
 
+const char* get_proc_kind_name(Processor::Kind kind)
+{
+  switch (kind)
+  {
+    case NO_KIND:
+      return "NO_KIND";
+    case TOC_PROC:
+      return "TOC_PROC";
+    case LOC_PROC:
+      return "LOC_PROC";
+    case UTIL_PROC:
+      return "UTIL_PROC";
+    case IO_PROC:
+      return "IO_PROC";
+    case PROC_GROUP:
+      return "PROC_GROUP";
+    case PROC_SET:
+      return "PROC_SET";
+    case OMP_PROC:
+      return "OMP_PROC";
+    default:
+      std::cout << "Unknown Processor Kind" << std::endl;
+      assert(0);
+  }
+  return NULL;
+}
 void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs) {
   // If we're supposed to backpressure task executions, then we need to only
   // have a single mapper per node. Otherwise, we can use a mapper per processor.
@@ -504,6 +530,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
       kind = Processor::LOC_PROC;
     }
   }
+  std::cout << task.get_task_name() << " is mapped to " << get_proc_kind_name(kind) << std::endl;
 
   // If we're running with multiple shards per node, then we already have a decomposition of tasks
   // onto each shard. So, just return the assigned processor. Note that we only do this for tasks
