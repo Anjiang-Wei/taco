@@ -154,7 +154,7 @@ void NSMapper::set_task_policies(std::string x, Processor::Kind y)
 {
   if (task_policies.count(x) > 0)
   {
-    std::cout << "Duplicate " << x  << "'s processor mapping" << std::endl;
+    log_mapper.error() << "Duplicate " << x  << "'s processor mapping";
     assert(false);
   }
   task_policies.insert({x, y});
@@ -287,14 +287,18 @@ Processor NSMapper::select_initial_processor_by_kind(const Task &task, Processor
 
   auto kind_str = processor_kind_to_string(kind);
   if (result.kind() != kind)
+  {
     log_mapper.warning(
       "Unsatisfiable policy: task %s requested %s, which does not exist",
       task.get_task_name(), kind_str.c_str());
+  }
   else
+  {
     log_mapper.debug(
       "Task %s is initially mapped to %s",
       task.get_task_name(), kind_str.c_str()
     );
+  }
   return result;
 }
 
@@ -328,6 +332,7 @@ Processor NSMapper::default_policy_select_initial_processor(MapperContext ctx, c
     {
       auto result = select_initial_processor_by_kind(task, finder->second);
       validate_processor_mapping(ctx, task, result);
+      log_mapper.debug() << task.get_task_name() << " mapped by cache: " << processor_kind_to_string(result.kind()).c_str();
       return result;
     }
   }
@@ -336,6 +341,7 @@ Processor NSMapper::default_policy_select_initial_processor(MapperContext ctx, c
     if (finder != task_policies.end())
     {
       auto result = select_initial_processor_by_kind(task, finder->second);
+      log_mapper.debug() << task.get_task_name() << " mapped by task_policies: " << processor_kind_to_string(result.kind()).c_str();
       validate_processor_mapping(ctx, task, result);
       cached_task_policies[task.task_id] = result.kind();
       return result;
@@ -345,18 +351,24 @@ Processor NSMapper::default_policy_select_initial_processor(MapperContext ctx, c
       for (size_t i = 0; i < default_task_policy.size(); i++)
       {
         auto result = select_initial_processor_by_kind(task, default_task_policy[i]);
+        if (result.kind() != default_task_policy[i])
+        {
+          log_mapper.debug("default_task_policy to map %s onto %s cannot satisfy, try next",
+            task.get_task_name(), processor_kind_to_string(default_task_policy[i]).c_str());
+          continue;
+        }
         // default policy validation should not be strict, allowing fallback
         bool success = validate_processor_mapping(ctx, task, result, false);
         if (success)
         {
+          log_mapper.debug() << task.get_task_name() << "  mapped by default_task_policy: " << processor_kind_to_string(result.kind()).c_str();
           cached_task_policies[task.task_id] = result.kind();
           return result;
         }
         else
         {
-          log_mapper.debug(
-            "Default processor %ld does not work for task %s, trying next",
-            i, task.get_task_name());
+          log_mapper.debug("default_task_policy to map %s onto %s cannot satisfy, try next",
+            task.get_task_name(), processor_kind_to_string(default_task_policy[i]).c_str());
         }
       }
     }
