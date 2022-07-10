@@ -453,6 +453,8 @@ void NSMapper::map_task(const MapperContext      ctx,
   output.task_priority = default_policy_select_task_priority(ctx, task);
   output.postmap_task = false;
   default_policy_select_target_processors(ctx, task, output.target_procs);
+  log_mapper.debug("map_task for selecting memory will use %s as processor", 
+    processor_kind_to_string(output.target_procs[0].kind()).c_str());
 
   if (chosen.is_inner)
   {
@@ -548,8 +550,8 @@ void NSMapper::map_task(const MapperContext      ctx,
     else
     {
       log_mapper.debug(
-        "Unsatisfiable policy: region %u of task %s, falling back to the default policy",
-        idx, task.get_task_name());
+        "Unsatisfiable policy for memory: region %u of task %s cannot be mapped to %s, falling back to the default policy",
+        idx, task.get_task_name(), memory_kind_to_string(target_kind).c_str());
       auto mem_constraint =
         find_memory_constraint(ctx, task, output.chosen_variant, idx);
       target_memory =
