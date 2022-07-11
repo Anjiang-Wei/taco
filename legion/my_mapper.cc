@@ -465,13 +465,20 @@ void NSMapper::map_task(const MapperContext      ctx,
     return;
   }
 
+  log_mapper.debug("Before TaskLayoutConstraintSet");
+
   const TaskLayoutConstraintSet &layout_constraints =
     runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
+
+  log_mapper.debug("After TaskLayoutConstraintSet");
 
   for (uint32_t idx = 0; idx < task.regions.size(); ++idx)
   {
     auto &req = task.regions[idx];
+    log_mapper.debug("after task.regions[%d]", idx);
     if (req.privilege == LEGION_NO_ACCESS || req.privilege_fields.empty()) continue;
+
+    log_mapper.debug("after LEGION_NO_ACCESS");
 
     bool found_policy = false;
     Memory::Kind target_kind = Memory::SYSTEM_MEM;
@@ -485,18 +492,21 @@ void NSMapper::map_task(const MapperContext      ctx,
       found_policy = true;
       target_kind = finder->second;
       region_name = cached_region_names.find(cache_key)->second;
+      log_mapper.debug() << "cached_region_policies: " << memory_kind_to_string(target_kind);
     }
 
     if (!found_policy)
     {
       std::vector<std::string> path;
       get_handle_names(ctx, req, path);
+      log_mapper.debug() << "found_policy = false; path.size() = " << path.size();  
       for (auto &name : path)
       {
         auto finder = region_policies.find(std::make_pair(task.get_task_name(), name));
         if (finder != region_policies.end())
         {
           target_kind = finder->second;
+          log_mapper.debug() << "region_policies: " << memory_kind_to_string(target_kind);
           found_policy = true;
         }
         else if (default_region_policy.find(target_proc_kind) != default_region_policy.end())
@@ -504,6 +514,7 @@ void NSMapper::map_task(const MapperContext      ctx,
           for (size_t regidx = 0; regidx < default_region_policy[target_proc_kind].size(); regidx++)
           {
             auto target_kind_cand = default_region_policy[target_proc_kind][regidx];
+            log_mapper.debug() << "default_region_policy " << regidx << " " << memory_kind_to_string(target_kind_cand);
             Machine::MemoryQuery visible_memories(machine);
             visible_memories.has_affinity_to(task.target_proc);
             visible_memories.only_kind(target_kind_cand);
