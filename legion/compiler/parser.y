@@ -17,7 +17,7 @@ void yyerror(const char*);
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
 %token T_Int T_Bool T_IPoint T_ISpace T_MSpace T_Def T_Return T_True T_False
-%token T_Task_Default T_Region_Default T_Task T_Region T_IndexTaskMap T_Print
+%token T_Task_Default T_Region_Default T_Task T_Region T_IndexTaskMap T_IndexTaskMap_Default T_Print
 %token T_Le T_Ge T_Eq T_Ne
 %token T_And T_Or
 
@@ -69,6 +69,7 @@ void yyerror(const char*);
 %type <assign> Assign_Stmt
 %type <expr> Expr
 %type <indextaskmap> IndexTaskMap
+%type <indextaskmap> IndexTaskMapDefault
 %type <funcdef> FuncDef
 %type <args> ArgLst
 %type <args> ArgLst_
@@ -107,6 +108,7 @@ Stmt:
 |   RegionCustom      { $$ = $1; }
 |   FuncDef           { $$ = $1; }
 |   IndexTaskMap      { $$ = $1; }
+|   IndexTaskMapDefault { $$ = $1; }
 |   Assign_Stmt       { $$ = $1; }
 |   Print_Stmt        { $$ = $1; }
 ;
@@ -134,6 +136,9 @@ FuncDef:
 IndexTaskMap:
     T_IndexTaskMap T_Identifier T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3, $4); }
 ;
+
+IndexTaskMapDefault:
+    T_IndexTaskMap_Default T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode("IndexTaskMapDefault", $2, $3); }
 
 Assign_Stmt:
     T_Identifier '=' Expr ';'   { $$ = new AssignNode($1, $3); }

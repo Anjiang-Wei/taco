@@ -44,3 +44,5 @@ IndexTaskMap task_2 m1 taco;
 IndexTaskMap task_3 m1 taco;
 IndexTaskMap task_5 m1 taco;
 IndexTaskMap task_7 m1 taco;
+
+IndexTaskMap_Default m1 taco;

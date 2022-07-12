@@ -832,14 +832,27 @@ public:
 	// ~Tree2Legion() { if (launch_space != NULL) delete launch_space; } // this will result in SEGV!
 	static std::vector<Processor::Kind> default_task_policy;
 	static std::unordered_map<std::string, Processor::Kind> task_policies;
-	static std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> default_region_policy;
 
+	static std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> default_region_policy;
 	using HashFn1 = PairHash<std::string, std::string>;
   	static std::unordered_map<std::pair<std::string, std::string>, Memory::Kind, HashFn1> region_policies;
 	
 	static std::unordered_map<std::string, MSpace*> task2mspace;
 	static std::unordered_map<std::string, FuncDefNode*> task2func;
 
+	bool should_fall_back(std::string task_name)
+	{
+		if (task2mspace.count(task_name) > 0)
+		{
+			return false;
+		}
+		if (task2mspace.count("IndexTaskMapDefault") > 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	// TupleIntNode* machine_space;
 	TupleIntNode* launch_space;
 	  

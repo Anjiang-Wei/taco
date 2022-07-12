@@ -33,6 +33,7 @@ STRING              (\042[^\042\n]*\042)
 "task"              { return T_Task; }
 "region"            { return T_Region; }
 "IndexTaskMap"      { return T_IndexTaskMap; }
+"IndexTaskMap_Default" { return T_IndexTaskMap_Default; }
 
 "size"              { return T_Size; }
 "split"             { return T_Split; }

@@ -618,15 +618,23 @@ void NSMapper::select_sharding_functor(
                                 const SelectShardingFunctorInput&  input,
                                       SelectShardingFunctorOutput& output)
 {
-  auto finder = task2sid.find(task.get_task_name());
-  if (finder != task2sid.end())
+  auto finder1 = task2sid.find(task.get_task_name());
+  auto finder2 = task2sid.find("IndexTaskMapDefault");
+  if (finder1 != task2sid.end())
   {
-    output.chosen_functor = finder->second;
-    log_mapper.debug("select_sharding_functor for task %s: %d",
+    output.chosen_functor = finder1->second;
+    log_mapper.debug("select_sharding_functor user-defined for task %s: %d",
+      task.get_task_name(), output.chosen_functor);
+  }
+  else if (finder2 != task2sid.end())
+  {
+    output.chosen_functor = finder2->second;
+    log_mapper.debug("select_sharding_functor default user-defined for task %s: %d",
       task.get_task_name(), output.chosen_functor);
   }
   else
   {
+    assert(tree_result.should_fall_back(task.get_task_name()) == true);
     log_mapper.debug("No sharding functor found in select_sharding_functor %s, fall back to default", task.get_task_name());
     output.chosen_functor = 0; // default functor
   }
@@ -759,7 +767,7 @@ void NSMapper::slice_task(const MapperContext      ctx,
                           const SliceTaskInput&    input,
                           SliceTaskOutput&   output)
 {
-  if (tree_result.task2func.count(std::string(task.get_task_name())) == 0)
+  if (tree_result.should_fall_back(std::string(task.get_task_name())))
   {
     log_mapper.debug("Use default slice_task for %s", task.get_task_name());
     DefaultMapper::slice_task(ctx, task, input, output);

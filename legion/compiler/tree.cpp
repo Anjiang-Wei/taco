@@ -153,8 +153,23 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif
-  MSpace* mspace_node = task2mspace.at(task);
-  FuncDefNode* func_node = task2func.at(task);
+  MSpace* mspace_node;
+  FuncDefNode* func_node;
+  if (task2mspace.count(task) > 0)
+  {
+    mspace_node = task2mspace.at(task);
+    func_node = task2func.at(task);
+  }
+  else if (task2mspace.count("IndexTaskMapDefault") > 0)
+  {
+    mspace_node = task2mspace.at("IndexTaskMapDefault");
+    func_node = task2func.at("IndexTaskMapDefault");
+  }
+  else 
+  {
+    std::cout << "Fail in Tree2Legion::run when searching task names" << std::endl;
+    assert(false);
+  }
 
   std::unordered_map<std::string, Node*> func_symbols;
   
