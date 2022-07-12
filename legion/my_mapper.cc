@@ -499,7 +499,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     {
       std::vector<std::string> path;
       get_handle_names(ctx, req, path);
-      log_mapper.debug() << "found_policy = false; path.size() = " << path.size();  
+      log_mapper.debug() << "found_policy = false; path.size() = " << path.size(); // use index for regent
       for (auto &name : path)
       {
         auto finder = region_policies.find(std::make_pair(task.get_task_name(), name));
@@ -981,8 +981,8 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
   for (int i = 0; i < dim; ++i) {
     dimension_ordering[dim - i - 1] =
         static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
-  }
-  dimension_ordering[dim] = LEGION_DIM_F;
+  } // row-major; reverse is column major, starting from i=1.
+  dimension_ordering[dim] = LEGION_DIM_F; // AOS; if SOA, then 0
   constraints.add_constraint(Legion::OrderingConstraint(dimension_ordering, false/*contiguous*/));
   // If we were requested to have an alignment, add the constraint.
   if (/*this->*/alignTo128Bytes) {
