@@ -79,16 +79,17 @@ extern int yydebug;
     T_Task = 289,
     T_Region = 290,
     T_IndexTaskMap = 291,
-    T_Print = 292,
-    T_Le = 293,
-    T_Ge = 294,
-    T_Eq = 295,
-    T_Ne = 296,
-    T_And = 297,
-    T_Or = 298,
-    T_Identifier = 299,
-    T_StringConstant = 300,
-    T_IntConstant = 301
+    T_IndexTaskMap_Default = 292,
+    T_Print = 293,
+    T_Le = 294,
+    T_Ge = 295,
+    T_Eq = 296,
+    T_Ne = 297,
+    T_And = 298,
+    T_Or = 299,
+    T_Identifier = 300,
+    T_StringConstant = 301,
+    T_IntConstant = 302
   };
 #endif
 /* Tokens.  */
@@ -126,16 +127,17 @@ extern int yydebug;
 #define T_Task 289
 #define T_Region 290
 #define T_IndexTaskMap 291
-#define T_Print 292
-#define T_Le 293
-#define T_Ge 294
-#define T_Eq 295
-#define T_Ne 296
-#define T_And 297
-#define T_Or 298
-#define T_Identifier 299
-#define T_StringConstant 300
-#define T_IntConstant 301
+#define T_IndexTaskMap_Default 292
+#define T_Print 293
+#define T_Le 294
+#define T_Ge 295
+#define T_Eq 296
+#define T_Ne 297
+#define T_And 298
+#define T_Or 299
+#define T_Identifier 300
+#define T_StringConstant 301
+#define T_IntConstant 302
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -171,7 +173,7 @@ union YYSTYPE
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
 
-#line 175 "y.tab.h" /* yacc.c:1909  */
+#line 177 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
