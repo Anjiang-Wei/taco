@@ -1,6 +1,7 @@
 #include "tree.hpp"
 #include "MSpace.cpp"
 #include <iostream>
+#include <algorithm>
 
 // #define DEBUG_TREE true
 
@@ -48,16 +49,6 @@ void MemLstNode::print()
   printf("\n");
 }
 
-void TaskDefaultNode::print()
-{
-  printf("TaskDefaultNode: %ld\n", proc_type_lst.size());
-  for (size_t i = 0; i < proc_type_lst.size(); i++)
-  {
-    printf("%s ", ProcessorEnumName[proc_type_lst[i]]);
-  }
-  printf("\n");
-}
-
 Processor::Kind MyProc2LegionProc(ProcessorEnum myproc)
 {
   switch (myproc)
@@ -82,6 +73,14 @@ Processor::Kind MyProc2LegionProc(ProcessorEnum myproc)
   return Processor::LOC_PROC;
 }
 
+std::vector<Processor::Kind> MyProc2LegionProcList(std::vector<ProcessorEnum> myprocs)
+{
+  std::vector<Processor::Kind> res;
+  res.resize(myprocs.size());
+  std::transform(myprocs.begin(), myprocs.end(), res.begin(), MyProc2LegionProc);
+  return res;
+}
+
 Memory::Kind MyMem2LegionMem(MemoryEnum mymem)
 {
   switch(mymem)
@@ -104,39 +103,17 @@ Memory::Kind MyMem2LegionMem(MemoryEnum mymem)
   return Memory::Z_COPY_MEM;
 }
 
-Node* TaskDefaultNode::run()
+std::vector<Memory::Kind> MyMem2LegionMemList(std::vector<MemoryEnum> myprocs)
 {
-  for (size_t i = 0; i < proc_type_lst.size(); i++)
-  {
-    Tree2Legion::default_task_policy.push_back(MyProc2LegionProc(proc_type_lst[i]));
-  }
-  return NULL;
-}
-
-void RegionDefaultNode::print()
-{
-  printf("RegionDefaultNode for %s: %ld\n", ProcessorEnumName[proc_type], mem_type_lst.size());
-  for (size_t i = 0; i < mem_type_lst.size(); i++)
-  {
-    printf("%s ", MemoryEnumName[mem_type_lst[i]]);
-  }
-  printf("\n");
-}
-
-Node* RegionDefaultNode::run()
-{
-  std::vector<Memory::Kind> legion_mem;
-  for (size_t i = 0; i < mem_type_lst.size(); i++)
-  {
-    legion_mem.push_back(MyMem2LegionMem(mem_type_lst[i]));
-  }
-  Tree2Legion::default_region_policy.insert({MyProc2LegionProc(proc_type), legion_mem});
-  return NULL;
+  std::vector<Memory::Kind> res;
+  res.resize(myprocs.size());
+  std::transform(myprocs.begin(), myprocs.end(), res.begin(), MyMem2LegionMem);
+  return res;
 }
 
 Node* ProcCustomNode::run()
 {
-  Processor::Kind res = MyProc2LegionProc(proc_type);
+  std::vector<Processor::Kind> res = MyProc2LegionProcList(this->proc_types);
   Tree2Legion::task_policies.insert({taskname, res});
   return NULL;
 }
@@ -144,7 +121,7 @@ Node* ProcCustomNode::run()
 Node* RegionCustomNode::run()
 {
   Tree2Legion::region_policies.insert(
-    {std::make_pair(taskname, region_name), MyMem2LegionMem(mem_type)});
+    {std::make_pair(taskname, region_name), MyMem2LegionMemList(this->mem_types)});
   return NULL;
 }
 

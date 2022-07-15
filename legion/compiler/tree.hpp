@@ -143,10 +143,8 @@ enum NodeType
 {
 	ProgramType,
 	StmtType,
-	TaskDefaultType,
 	ProcLstType,
 	ProcType,
-	RegionDefaultType,
 	MemLstType,
 	MemType,
 	ProcCustomType,
@@ -181,10 +179,8 @@ const char* NodeTypeName[] =
 {
   "ProgramType",
   "StmtType",
-  "TaskDefaultType",
   "ProcLstType",
   "ProcType",
-  "RegionDefaultType",
   "MemLstType",
   "MemType",
   "ProcCustomType",
@@ -330,16 +326,6 @@ public:
 	void print();
 };
 
-class TaskDefaultNode : public StmtNode
-{
-public:
-	std::vector<ProcessorEnum> proc_type_lst;
-
-	TaskDefaultNode(const ProcLstNode* x) { type = TaskDefaultType; proc_type_lst = x->proc_type_lst; }
-	void print();
-	Node* run();
-};
-
 class MemLstNode : public Node
 {
 public:
@@ -349,35 +335,19 @@ public:
 	void print();
 };
 
-class RegionDefaultNode : public StmtNode
-{
-public:
-	ProcessorEnum proc_type;
-	std::vector<MemoryEnum> mem_type_lst;
-
-	RegionDefaultNode(const ProcNode* x, const MemLstNode* y)
-	{
-		type = RegionDefaultType;
-		proc_type = x->proc_type;
-		mem_type_lst = y->mem_type_lst;
-	}
-	void print();
-	Node* run();
-};
-
 class ProcCustomNode : public StmtNode
 {
 public:
 	std::string taskname;
-	ProcessorEnum proc_type;
+	std::vector<ProcessorEnum> proc_types;
 
-	ProcCustomNode(const char* x, const ProcNode* y)
+	ProcCustomNode(const char* x, const ProcLstNode* y)
 	{
 		type = ProcCustomType;
 		taskname = std::string(x);
-		proc_type = y->proc_type;
+		proc_types = y->proc_type_lst;
 	}
-	void print() { printf("ProcCustomNode %s %s\n", taskname.c_str(), ProcessorEnumName[proc_type]); }
+	void print() { printf("ProcCustomNode %s %s\n", taskname.c_str(), ProcessorEnumName[proc_types[0]]); }
 	Node* run();
 };
 
@@ -386,16 +356,18 @@ class RegionCustomNode : public StmtNode
 public:
 	std::string taskname;
 	std::string region_name;
-	MemoryEnum mem_type;
+	std::string processor_name;
+	std::vector<MemoryEnum> mem_types;
 
-	RegionCustomNode(const char* x, const char* y, const MemNode* z)
+	RegionCustomNode(const char* x, const char* y, const char* z, const MemLstNode* a)
 	{
 		type = RegionCustomType;
 		taskname = std::string(x);
 		region_name = std::string(y);
-		mem_type = z->mem_type;
+		processor_name = std::string(z);
+		mem_types = a->mem_type_lst;
 	}
-	void print() { printf("RegionCustomNode %s %s %s\n", taskname.c_str(), region_name.c_str(), MemoryEnumName[mem_type]); }
+	void print() { printf("RegionCustomNode %s %s %s\n", taskname.c_str(), region_name.c_str(), MemoryEnumName[mem_types[0]]); }
 	Node* run();
 };
 
@@ -822,6 +794,72 @@ public:
 	}
 };
 
+
+class ConstraintsNode : public Node
+{
+public:
+	bool row_major;
+	bool aos;
+	bool compact;
+	bool align;
+	BinOpEnum align_op;
+	int align_int;
+	ConstraintsNode() { row_major = false; aos = true; compact=false; align=false; }
+	void update(const char* x)
+	{
+		if (!strcmp(x, "row"))
+		{
+			row_major = true;
+		}
+		else if (!strcmp(x, "column"))
+		{
+			row_major = false;
+		}
+		else if (!strcmp(x, "aos"))
+		{
+			aos = true;
+		}
+		else if (!strcmp(x, "soa"))
+		{
+			aos = false;
+		}
+		else if (!strcmp(x, "compact"))
+		{
+			compact = true;
+		}
+		else
+		{
+			std::cout << "unsupported update in ConstraintsNode" << std::endl;
+			assert(false);
+		}
+	}
+	void print() { std::cout << "ConstraintsNode" << std::endl; }
+	void update(BinOpEnum x, int y)
+	{
+		align = true;
+		align_op = x;
+		align_int = y;
+	}
+	Node* run();
+};
+
+class LayoutCustomNode : public StmtNode
+{
+	//Layout *taskname *region_name *memory_type
+public:
+	std::string task_name;
+	std::string region_name;
+	std::string memory_type;
+	ConstraintsNode* constraint;
+	LayoutCustomNode(const char* x0, const char* x1, const char* x2, ConstraintsNode* x3)
+	{
+		task_name = std::string(x0);
+		region_name = std::string(x1);
+		memory_type = std::string(x2);
+		constraint = x3;
+	}
+};
+
 class MSpace;
 
 class Tree2Legion
@@ -830,12 +868,10 @@ public:
 	Tree2Legion() { launch_space = NULL; }
 	Tree2Legion(std::string filename);
 	// ~Tree2Legion() { if (launch_space != NULL) delete launch_space; } // this will result in SEGV!
-	static std::vector<Processor::Kind> default_task_policy;
-	static std::unordered_map<std::string, Processor::Kind> task_policies;
+	static std::unordered_map<std::string, std::vector<Processor::Kind>> task_policies;
 
-	static std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> default_region_policy;
 	using HashFn1 = PairHash<std::string, std::string>;
-  	static std::unordered_map<std::pair<std::string, std::string>, Memory::Kind, HashFn1> region_policies;
+  	static std::unordered_map<std::pair<std::string, std::string>, std::vector<Memory::Kind>, HashFn1> region_policies;
 	
 	static std::unordered_map<std::string, MSpace*> task2mspace;
 	static std::unordered_map<std::string, FuncDefNode*> task2func;
@@ -853,7 +889,6 @@ public:
 		return true;
 	}
 	
-	// TupleIntNode* machine_space;
 	TupleIntNode* launch_space;
 	  
 	void print() { std::cout << "I am invoked!" << std::endl; }
@@ -865,11 +900,9 @@ public:
 	std::vector<int> run(std::string task, std::vector<int> x);
 };
 
-std::vector<Processor::Kind> Tree2Legion::default_task_policy;
-std::unordered_map<std::string, Processor::Kind> Tree2Legion::task_policies;
-std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> Tree2Legion::default_region_policy;
+std::unordered_map<std::string, std::vector<Processor::Kind>> Tree2Legion::task_policies;
 using HashFn1 = PairHash<std::string, std::string>;
-std::unordered_map<std::pair<std::string, std::string>, Memory::Kind, HashFn1> Tree2Legion::region_policies;
+std::unordered_map<std::pair<std::string, std::string>, std::vector<Memory::Kind>, HashFn1> Tree2Legion::region_policies;
 
 std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
 std::unordered_map<std::string, FuncDefNode*> Tree2Legion::task2func;

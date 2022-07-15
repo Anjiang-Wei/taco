@@ -1,15 +1,28 @@
-task_default GPU,OMP,CPU;
-region_default GPU FBMEM;
-region_default OMP SOCKMEM,SYSMEM;
-region_default CPU SOCKMEM,SYSMEM;
+Task * GPU,OMP,CPU;
+Region * * GPU FBMEM;
+# region *taskname *region_name processor, list_of_memories;
+Region * * OMP SOCKMEM,SYSMEM;
+Region * * CPU SOCKMEM,SYSMEM;
 
+Region task_name region1 SOCKMEM;
+
+# layout * * *  {f, 0} Compact align==128;
+# layout * * *  {f, 0, 1} Compact align==128;
+Layout * * * SOA C_order Compact align==128;
+# layout_default ALLMEM row_major AOS/SOA Compact align==128;
+# layout_default SOCKMEM row_major AOS Compact align==128;
+# AOS F_order --> {f, 0, 1, ...}
+# SOA C_order --> {..., 1, 0, f}
+
+Layout task_name region_name * row_major AOS
+
+# layout *taskname *region_name *memory_type row_major AOS align==128;
 # ZCMEM,FBMEM,SYSMEM,RDMEM
 
 # task_1 arg_1 --> SOCKMEM
 
 # DefaultLayoutConstraint {Mem}* row_major/column_major SOA ()/AOS (LEGION_DIM_F) [>=/=/</...] 128 Compact=True? (sparse)
 # OrderConstrant task_1 {arg_1}* {MEM}* row_major (reverse)
-# rderConstrant SOCKMEM row_major (reverse)
 
 # // may run into backpresssure problem later
 
@@ -35,8 +48,8 @@ def taco(IPoint x, ISpace y, MSpace z)
 {
     # a = x[0] * z.size[0] / y.size[0];
     # b = x[1] * z.size[1] / y.size[1];
-    # return (x[0] * z.size[0] / y.size[0], x[1] * z.size[1] / y.size[1]);
-    return (0, 0);
+    return (x[0] * z.size[0] / y.size[0], x[1] * z.size[1] / y.size[1]);
+    # return (0, 0);
 }
 
 # # IndexTaskMap taco_fill m1 block;
@@ -46,5 +59,3 @@ IndexTaskMap task_2 m1 taco;
 IndexTaskMap task_3 m1 taco;
 IndexTaskMap task_5 m1 taco;
 IndexTaskMap task_7 m1 taco;
-
-IndexTaskMap_Default m1 taco;

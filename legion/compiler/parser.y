@@ -14,10 +14,11 @@ void yyerror(const char*);
 %define parse.error verbose
 
 %token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Volume T_Has
+%token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
 %token T_Int T_Bool T_IPoint T_ISpace T_MSpace T_Def T_Return T_True T_False
-%token T_Task_Default T_Region_Default T_Task T_Region T_IndexTaskMap T_IndexTaskMap_Default T_Print
+%token T_Task T_Region T_Layout T_IndexTaskMap T_Print
 %token T_Le T_Ge T_Eq T_Ne
 %token T_And T_Or
 
@@ -28,14 +29,14 @@ void yyerror(const char*);
 
     class ProgramNode* program;
     class StmtNode* stmt;
-    class TaskDefaultNode* taskdefault;
-    class RegionDefaultNode* regiondefault;
     class ProcLstNode* proclst;
     class ProcNode* proc;
     class MemLstNode* memlst;
     class MemNode* mem;
     class ProcCustomNode* proccustom;
     class RegionCustomNode* regioncustom;
+    class LayoutCustomNode* layoutcustom;
+    class ConstraintsNode* constraints;
     class ArgTypeNode* argtype;
     class AssignNode* assign;
     class ExprNode* expr;
@@ -57,19 +58,18 @@ void yyerror(const char*);
 %token <intVal> T_IntConstant
 %type <program> Program
 %type <stmt> Stmt
-%type <taskdefault> TaskDefault
-%type <regiondefault> RegionDefault
 %type <proclst> ProcLst
 %type <proc> Proc
 %type <memlst> MemLst
 %type <mem> Mem
 %type <proccustom> ProcCustom
 %type <regioncustom> RegionCustom
+%type <layoutcustom> LayoutCustom
+%type <constraints> Constraints
 %type <argtype> TYPE
 %type <assign> Assign_Stmt
 %type <expr> Expr
 %type <indextaskmap> IndexTaskMap
-%type <indextaskmap> IndexTaskMapDefault
 %type <funcdef> FuncDef
 %type <args> ArgLst
 %type <args> ArgLst_
@@ -102,31 +102,40 @@ Program:
 ;
 
 Stmt:
-    TaskDefault       { $$ = $1; }
-|   RegionDefault     { $$ = $1; }
-|   ProcCustom        { $$ = $1; }
+    ProcCustom        { $$ = $1; }
 |   RegionCustom      { $$ = $1; }
+|   LayoutCustom      { $$ = $1; }
 |   FuncDef           { $$ = $1; }
 |   IndexTaskMap      { $$ = $1; }
-|   IndexTaskMapDefault { $$ = $1; }
 |   Assign_Stmt       { $$ = $1; }
 |   Print_Stmt        { $$ = $1; }
 ;
 
-TaskDefault:
-    T_Task_Default ProcLst ';' { $$ = new TaskDefaultNode($2); }
-;
-
-RegionDefault:
-    T_Region_Default Proc MemLst ';' { $$ = new RegionDefaultNode($2, $3); }
-;
-
 ProcCustom:
-    T_Task T_Identifier Proc  ';'  { $$ = new ProcCustomNode($2, $3); }
+    T_Task T_Identifier ProcLst  ';'  { $$ = new ProcCustomNode($2, $3); }
 ;
 
 RegionCustom:
-    T_Region T_Identifier T_Identifier Mem ';' { $$ = new RegionCustomNode($2, $3, $4); }
+    T_Region T_Identifier T_Identifier T_Identifier MemLst ';' { $$ = new RegionCustomNode($2, $3, $4, $5); }
+;
+
+LayoutCustom:
+    T_Layout T_Identifier T_Identifier T_Identifier Constraints ';'   { $$ = new LayoutCustomNode($2, $3, $4, $5); }
+;
+
+Constraints:
+    /* empty */                             { $$ = new ConstraintsNode(); }
+|   Constraints T_Reverse_Dimension         { $1->update("row"); $$ = $1; }
+|   Constraints T_Positive_Dimension        { $1->update("column"); $$ = $1; }
+|   Constraints T_AOS                       { $1->update("aos"); $$ = $1; }
+|   Constraints T_SOA                       { $1->update("soa"); $$ = $1; }
+|   Constraints T_Compact                   { $1->update("compact"); $$ = $1; }
+|   Constraints T_Align '<' T_IntConstant   { $1->update(SMALLER, $4); $$ =f $1; }
+|   Constraints T_Align T_Le T_IntConstant  { $1->update(LE, $4); $$ = $1; }
+|   Constraints T_Align '>' T_IntConstant   { $1->update(BIGGER, $4); $$ = $1; }
+|   Constraints T_Align T_Ge T_IntConstant  { $1->update(GE, $4); $$ = $1; }
+|   Constraints T_Align T_Eq T_IntConstant  { $1->update(EQ, $4); $$ = $1; }
+|   Constraints T_Align T_Ne T_IntConstant  { $1->update(NEQ, $4); $$ = $1; }
 ;
 
 FuncDef:
@@ -136,9 +145,6 @@ FuncDef:
 IndexTaskMap:
     T_IndexTaskMap T_Identifier T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3, $4); }
 ;
-
-IndexTaskMapDefault:
-    T_IndexTaskMap_Default T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode("IndexTaskMapDefault", $2, $3); }
 
 Assign_Stmt:
     T_Identifier '=' Expr ';'   { $$ = new AssignNode($1, $3); }

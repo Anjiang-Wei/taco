@@ -28,12 +28,17 @@ STRING              (\042[^\042\n]*\042)
 {SINGLE_COMMENT2}   { /* skip for single line comment */    }
 
 {OPERATOR}          { return yytext[0]; }
-"task_default"      { return T_Task_Default; }
-"region_default"    { return T_Region_Default; }
-"task"              { return T_Task; }
-"region"            { return T_Region; }
+"Task"              { return T_Task; }
+"Region"            { return T_Region; }
+"Layout"            { return T_Layout; }
 "IndexTaskMap"      { return T_IndexTaskMap; }
-"IndexTaskMap_Default" { return T_IndexTaskMap_Default; }
+
+"row_major"         { return T_Reverse_Dimension; }
+"column_major"      { return T_Positive_Dimension; }
+"AOS"               { return T_AOS; }
+"SOA"               { return T_SOA; }
+"Compact"           { return T_Compact; }
+"align"             { return T_Align; }
 
 "size"              { return T_Size; }
 "split"             { return T_Split; }
