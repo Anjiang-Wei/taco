@@ -908,7 +908,6 @@ public:
 	  
 	void print()
 	{
-		// todo: re-write  this part
 		std::cout << "I am invoked!" << std::endl;
 	}
 
