@@ -226,6 +226,10 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
 {
   log_mapper.debug("Policy file: %s", policy_file.c_str());
   tree_result = Tree2Legion(policy_file);
+  tree_result.print();
+  // todo: re-write this part
+  /*
+  tree_result = Tree2Legion(policy_file);
   if (tree_result.default_task_policy.size() > 0)
   {
     has_default_task_policy = true;
@@ -242,6 +246,7 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
   {
     has_region_policy.insert(v.first.first);
   }
+  */
 }
 
 Processor NSMapper::select_initial_processor_by_kind(const Task &task, Processor::Kind kind)

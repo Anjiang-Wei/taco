@@ -65,6 +65,8 @@ Processor::Kind MyProc2LegionProc(ProcessorEnum myproc)
       return Processor::PROC_SET;
     case OMP:
       return Processor::OMP_PROC;
+    case ALLPROC:
+      return Processor::NO_KIND;
     default:
       assert(false);
       break;
@@ -95,6 +97,8 @@ Memory::Kind MyMem2LegionMem(MemoryEnum mymem)
       return Memory::Z_COPY_MEM;
     case SOCKMEM:
       return Memory::SOCKET_MEM;
+    case ALLMEM:
+      return Memory::NO_MEMKIND;
     default:
       assert(false);
       break;
@@ -120,8 +124,34 @@ Node* ProcCustomNode::run()
 
 Node* RegionCustomNode::run()
 {
-  Tree2Legion::region_policies.insert(
-    {std::make_pair(taskname, region_name), MyMem2LegionMemList(this->mem_types)});
+  std::pair<std::string, std::string> key = std::make_pair(taskname, region_name);
+  Processor::Kind proc = MyProc2LegionProc(this->processor_type);
+  std::vector<Memory::Kind> mem = MyMem2LegionMemList(this->mem_types);
+  if (Tree2Legion::region_policies.count(key) > 0)
+  {
+    Tree2Legion::region_policies.at(key).insert({proc, mem});
+  }
+  else
+  {
+    std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> value = {{proc, mem}};
+    Tree2Legion::region_policies.insert({key, value});
+  }
+  return NULL;
+}
+
+Node* LayoutCustomNode::run()
+{
+  std::pair<std::string, std::string> key = std::make_pair(task_name, region_name);
+  Memory::Kind mem = MyMem2LegionMem(mem_type);
+  if (Tree2Legion::layout_constraints.count(key) > 0)
+  {
+    Tree2Legion::layout_constraints.at(key).insert({mem, this->constraint});
+  }
+  else
+  {
+    std::unordered_map<Memory::Kind, ConstraintsNode*> value = {{mem, this->constraint}};
+    Tree2Legion::layout_constraints.insert({key, value});
+  }
   return NULL;
 }
 

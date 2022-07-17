@@ -56,6 +56,7 @@ void yyerror(const char*);
 %token <string> T_Identifier
 %token <string> T_StringConstant
 %token <intVal> T_IntConstant
+%type <string> Identifier_star
 %type <program> Program
 %type <stmt> Stmt
 %type <proclst> ProcLst
@@ -111,26 +112,32 @@ Stmt:
 |   Print_Stmt        { $$ = $1; }
 ;
 
+Identifier_star:
+    T_Identifier    { $$ = $1; }
+|   '*'             { $$ = "*"; }
+
 ProcCustom:
-    T_Task T_Identifier ProcLst  ';'  { $$ = new ProcCustomNode($2, $3); }
+    T_Task Identifier_star ProcLst  ';'  { $$ = new ProcCustomNode($2, $3); }
 ;
 
 RegionCustom:
-    T_Region T_Identifier T_Identifier T_Identifier MemLst ';' { $$ = new RegionCustomNode($2, $3, $4, $5); }
+    T_Region Identifier_star Identifier_star Proc MemLst ';' { $$ = new RegionCustomNode($2, $3, $4, $5); }
+|   T_Region Identifier_star Identifier_star Identifier_star MemLst ';'  { assert(strcmp($4, "*") == 0); $$ = new RegionCustomNode($2, $3, new ProcNode(ALLPROC), $5); }
 ;
 
 LayoutCustom:
-    T_Layout T_Identifier T_Identifier T_Identifier Constraints ';'   { $$ = new LayoutCustomNode($2, $3, $4, $5); }
+    T_Layout Identifier_star Identifier_star Mem Constraints ';'   { $$ = new LayoutCustomNode($2, $3, $4, $5); }
+|   T_Layout Identifier_star Identifier_star Identifier_star Constraints ';'   { assert(strcmp($4, "*") == 0); $$ = new LayoutCustomNode($2, $3, new MemNode(ALLMEM), $5); }
 ;
 
 Constraints:
     /* empty */                             { $$ = new ConstraintsNode(); }
-|   Constraints T_Reverse_Dimension         { $1->update("row"); $$ = $1; }
-|   Constraints T_Positive_Dimension        { $1->update("column"); $$ = $1; }
+|   Constraints T_Reverse_Dimension         { $1->update("reverse"); $$ = $1; }
+|   Constraints T_Positive_Dimension        { $1->update("positive"); $$ = $1; }
 |   Constraints T_AOS                       { $1->update("aos"); $$ = $1; }
 |   Constraints T_SOA                       { $1->update("soa"); $$ = $1; }
 |   Constraints T_Compact                   { $1->update("compact"); $$ = $1; }
-|   Constraints T_Align '<' T_IntConstant   { $1->update(SMALLER, $4); $$ =f $1; }
+|   Constraints T_Align '<' T_IntConstant   { $1->update(SMALLER, $4); $$ = $1; }
 |   Constraints T_Align T_Le T_IntConstant  { $1->update(LE, $4); $$ = $1; }
 |   Constraints T_Align '>' T_IntConstant   { $1->update(BIGGER, $4); $$ = $1; }
 |   Constraints T_Align T_Ge T_IntConstant  { $1->update(GE, $4); $$ = $1; }
@@ -143,7 +150,7 @@ FuncDef:
 ;
 
 IndexTaskMap:
-    T_IndexTaskMap T_Identifier T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3, $4); }
+    T_IndexTaskMap Identifier_star T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3, $4); }
 ;
 
 Assign_Stmt:

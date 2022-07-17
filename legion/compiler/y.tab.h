@@ -54,42 +54,46 @@ extern int yydebug;
     T_Balance_split = 264,
     T_Volume = 265,
     T_Has = 266,
-    T_CPU = 267,
-    T_GPU = 268,
-    T_IO = 269,
-    T_PY = 270,
-    T_PROC = 271,
-    T_OMP = 272,
-    T_SYSMEM = 273,
-    T_FBMEM = 274,
-    T_RDMEM = 275,
-    T_ZCMEM = 276,
-    T_SOCKMEM = 277,
-    T_Int = 278,
-    T_Bool = 279,
-    T_IPoint = 280,
-    T_ISpace = 281,
-    T_MSpace = 282,
-    T_Def = 283,
-    T_Return = 284,
-    T_True = 285,
-    T_False = 286,
-    T_Task_Default = 287,
-    T_Region_Default = 288,
-    T_Task = 289,
-    T_Region = 290,
-    T_IndexTaskMap = 291,
-    T_IndexTaskMap_Default = 292,
-    T_Print = 293,
-    T_Le = 294,
-    T_Ge = 295,
-    T_Eq = 296,
-    T_Ne = 297,
-    T_And = 298,
-    T_Or = 299,
-    T_Identifier = 300,
-    T_StringConstant = 301,
-    T_IntConstant = 302
+    T_Reverse_Dimension = 267,
+    T_Positive_Dimension = 268,
+    T_AOS = 269,
+    T_SOA = 270,
+    T_Compact = 271,
+    T_Align = 272,
+    T_CPU = 273,
+    T_GPU = 274,
+    T_IO = 275,
+    T_PY = 276,
+    T_PROC = 277,
+    T_OMP = 278,
+    T_SYSMEM = 279,
+    T_FBMEM = 280,
+    T_RDMEM = 281,
+    T_ZCMEM = 282,
+    T_SOCKMEM = 283,
+    T_Int = 284,
+    T_Bool = 285,
+    T_IPoint = 286,
+    T_ISpace = 287,
+    T_MSpace = 288,
+    T_Def = 289,
+    T_Return = 290,
+    T_True = 291,
+    T_False = 292,
+    T_Task = 293,
+    T_Region = 294,
+    T_Layout = 295,
+    T_IndexTaskMap = 296,
+    T_Print = 297,
+    T_Le = 298,
+    T_Ge = 299,
+    T_Eq = 300,
+    T_Ne = 301,
+    T_And = 302,
+    T_Or = 303,
+    T_Identifier = 304,
+    T_StringConstant = 305,
+    T_IntConstant = 306
   };
 #endif
 /* Tokens.  */
@@ -102,63 +106,67 @@ extern int yydebug;
 #define T_Balance_split 264
 #define T_Volume 265
 #define T_Has 266
-#define T_CPU 267
-#define T_GPU 268
-#define T_IO 269
-#define T_PY 270
-#define T_PROC 271
-#define T_OMP 272
-#define T_SYSMEM 273
-#define T_FBMEM 274
-#define T_RDMEM 275
-#define T_ZCMEM 276
-#define T_SOCKMEM 277
-#define T_Int 278
-#define T_Bool 279
-#define T_IPoint 280
-#define T_ISpace 281
-#define T_MSpace 282
-#define T_Def 283
-#define T_Return 284
-#define T_True 285
-#define T_False 286
-#define T_Task_Default 287
-#define T_Region_Default 288
-#define T_Task 289
-#define T_Region 290
-#define T_IndexTaskMap 291
-#define T_IndexTaskMap_Default 292
-#define T_Print 293
-#define T_Le 294
-#define T_Ge 295
-#define T_Eq 296
-#define T_Ne 297
-#define T_And 298
-#define T_Or 299
-#define T_Identifier 300
-#define T_StringConstant 301
-#define T_IntConstant 302
+#define T_Reverse_Dimension 267
+#define T_Positive_Dimension 268
+#define T_AOS 269
+#define T_SOA 270
+#define T_Compact 271
+#define T_Align 272
+#define T_CPU 273
+#define T_GPU 274
+#define T_IO 275
+#define T_PY 276
+#define T_PROC 277
+#define T_OMP 278
+#define T_SYSMEM 279
+#define T_FBMEM 280
+#define T_RDMEM 281
+#define T_ZCMEM 282
+#define T_SOCKMEM 283
+#define T_Int 284
+#define T_Bool 285
+#define T_IPoint 286
+#define T_ISpace 287
+#define T_MSpace 288
+#define T_Def 289
+#define T_Return 290
+#define T_True 291
+#define T_False 292
+#define T_Task 293
+#define T_Region 294
+#define T_Layout 295
+#define T_IndexTaskMap 296
+#define T_Print 297
+#define T_Le 298
+#define T_Ge 299
+#define T_Eq 300
+#define T_Ne 301
+#define T_And 302
+#define T_Or 303
+#define T_Identifier 304
+#define T_StringConstant 305
+#define T_IntConstant 306
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 25 "parser.y" /* yacc.c:1909  */
+#line 26 "parser.y" /* yacc.c:1909  */
 
     char* string;
     int intVal;
 
     class ProgramNode* program;
     class StmtNode* stmt;
-    class TaskDefaultNode* taskdefault;
-    class RegionDefaultNode* regiondefault;
     class ProcLstNode* proclst;
     class ProcNode* proc;
     class MemLstNode* memlst;
     class MemNode* mem;
     class ProcCustomNode* proccustom;
     class RegionCustomNode* regioncustom;
+    class LayoutCustomNode* layoutcustom;
+    class ConstraintsNode* constraints;
     class ArgTypeNode* argtype;
     class AssignNode* assign;
     class ExprNode* expr;
@@ -173,7 +181,7 @@ union YYSTYPE
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
 
-#line 177 "y.tab.h" /* yacc.c:1909  */
+#line 185 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

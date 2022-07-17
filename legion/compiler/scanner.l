@@ -11,12 +11,13 @@ void unterminate_string();
 %option nounput
 
 /* note \042 is '"' */
+/* * is IDENTIFIER */
 WHITESPACE          ([ \t\r\a]+)
 SINGLE_COMMENT1     ("//"[^\n]*)
 SINGLE_COMMENT2     ("#"[^\n]*)
+IDENTIFIER          ([_a-zA-Z][_a-zA-Z0-9]*)
 OPERATOR            ([-+*/%=,;!?:<>(){}\.\[\]])
 INTEGER             ([0-9]+)
-IDENTIFIER          ([_a-zA-Z][_a-zA-Z0-9]*)
 UNTERM_STRING       (\042[^\042\n]*)
 STRING              (\042[^\042\n]*\042)
 
@@ -33,12 +34,12 @@ STRING              (\042[^\042\n]*\042)
 "Layout"            { return T_Layout; }
 "IndexTaskMap"      { return T_IndexTaskMap; }
 
-"row_major"         { return T_Reverse_Dimension; }
-"column_major"      { return T_Positive_Dimension; }
+"F_order"           { return T_Reverse_Dimension; }
+"C_order"           { return T_Positive_Dimension; }
 "AOS"               { return T_AOS; }
 "SOA"               { return T_SOA; }
 "Compact"           { return T_Compact; }
-"align"             { return T_Align; }
+"Align"             { return T_Align; }
 
 "size"              { return T_Size; }
 "split"             { return T_Split; }

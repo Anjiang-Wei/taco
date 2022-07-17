@@ -4,17 +4,17 @@ Region * * GPU FBMEM;
 Region * * OMP SOCKMEM,SYSMEM;
 Region * * CPU SOCKMEM,SYSMEM;
 
-Region task_name region1 SOCKMEM;
+Region task_name region1 * SOCKMEM;
 
 # layout * * *  {f, 0} Compact align==128;
 # layout * * *  {f, 0, 1} Compact align==128;
-Layout * * * SOA C_order Compact align==128;
+Layout * * * SOA F_order Compact Align==128;
 # layout_default ALLMEM row_major AOS/SOA Compact align==128;
 # layout_default SOCKMEM row_major AOS Compact align==128;
 # AOS F_order --> {f, 0, 1, ...}
 # SOA C_order --> {..., 1, 0, f}
 
-Layout task_name region_name * row_major AOS
+Layout task_name region_name * F_order AOS;
 
 # layout *taskname *region_name *memory_type row_major AOS align==128;
 # ZCMEM,FBMEM,SYSMEM,RDMEM

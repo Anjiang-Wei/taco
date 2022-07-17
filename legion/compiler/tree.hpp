@@ -30,6 +30,7 @@ enum ProcessorEnum
 	PY,
 	PROC,
 	OMP,
+	ALLPROC,
 };
 
 const char* ProcessorEnumName[] =
@@ -40,6 +41,7 @@ const char* ProcessorEnumName[] =
 	"PY",
 	"PROC",
 	"OMP",
+	"ALLPROC",
 };
 
 enum MemoryEnum
@@ -49,6 +51,7 @@ enum MemoryEnum
 	RDMEM,
 	ZCMEM,
 	SOCKMEM,
+	ALLMEM,
 };
 
 const char* MemoryEnumName[] =
@@ -58,6 +61,7 @@ const char* MemoryEnumName[] =
 	"RDMEM",
 	"ZCMEM",
 	"SOCKMEM",
+	"ALLMEM",
 };
 
 enum ArgTypeEnum
@@ -356,18 +360,23 @@ class RegionCustomNode : public StmtNode
 public:
 	std::string taskname;
 	std::string region_name;
-	std::string processor_name;
+	ProcessorEnum processor_type;
 	std::vector<MemoryEnum> mem_types;
 
-	RegionCustomNode(const char* x, const char* y, const char* z, const MemLstNode* a)
+	RegionCustomNode(const char* x, const char* y, ProcNode* z, const MemLstNode* a)
 	{
 		type = RegionCustomType;
 		taskname = std::string(x);
 		region_name = std::string(y);
-		processor_name = std::string(z);
+		processor_type = z->proc_type;
 		mem_types = a->mem_type_lst;
 	}
-	void print() { printf("RegionCustomNode %s %s %s\n", taskname.c_str(), region_name.c_str(), MemoryEnumName[mem_types[0]]); }
+	void print()
+	{
+		printf("RegionCustomNode %s %s %s: %s as first\n", 
+			taskname.c_str(), region_name.c_str(), ProcessorEnumName[processor_type],
+			MemoryEnumName[mem_types[0]]);
+	}
 	Node* run();
 };
 
@@ -798,22 +807,22 @@ public:
 class ConstraintsNode : public Node
 {
 public:
-	bool row_major;
+	bool reverse;
 	bool aos;
 	bool compact;
 	bool align;
 	BinOpEnum align_op;
 	int align_int;
-	ConstraintsNode() { row_major = false; aos = true; compact=false; align=false; }
+	ConstraintsNode() { reverse = false; aos = true; compact=false; align=false; }
 	void update(const char* x)
 	{
-		if (!strcmp(x, "row"))
+		if (!strcmp(x, "reverse"))
 		{
-			row_major = true;
+			reverse = true;
 		}
-		else if (!strcmp(x, "column"))
+		else if (!strcmp(x, "positive"))
 		{
-			row_major = false;
+			reverse = false;
 		}
 		else if (!strcmp(x, "aos"))
 		{
@@ -840,7 +849,7 @@ public:
 		align_op = x;
 		align_int = y;
 	}
-	Node* run();
+	Node* run() { return NULL; }
 };
 
 class LayoutCustomNode : public StmtNode
@@ -849,15 +858,17 @@ class LayoutCustomNode : public StmtNode
 public:
 	std::string task_name;
 	std::string region_name;
-	std::string memory_type;
+	MemoryEnum mem_type;
 	ConstraintsNode* constraint;
-	LayoutCustomNode(const char* x0, const char* x1, const char* x2, ConstraintsNode* x3)
+	LayoutCustomNode(const char* x0, const char* x1, MemNode* x2, ConstraintsNode* x3)
 	{
 		task_name = std::string(x0);
 		region_name = std::string(x1);
-		memory_type = std::string(x2);
+		mem_type = x2->mem_type;
 		constraint = x3;
 	}
+	void print() { printf("LayoutCustomNode\n"); }
+	Node* run();
 };
 
 class MSpace;
@@ -871,8 +882,12 @@ public:
 	static std::unordered_map<std::string, std::vector<Processor::Kind>> task_policies;
 
 	using HashFn1 = PairHash<std::string, std::string>;
-  	static std::unordered_map<std::pair<std::string, std::string>, std::vector<Memory::Kind>, HashFn1> region_policies;
+  	static std::unordered_map<std::pair<std::string, std::string>, 
+		std::unordered_map<Processor::Kind, std::vector<Memory::Kind>>, HashFn1> region_policies;
 	
+	static std::unordered_map<std::pair<std::string, std::string>,
+		std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1> 
+		layout_constraints;
 	static std::unordered_map<std::string, MSpace*> task2mspace;
 	static std::unordered_map<std::string, FuncDefNode*> task2func;
 
@@ -882,7 +897,7 @@ public:
 		{
 			return false;
 		}
-		if (task2mspace.count("IndexTaskMapDefault") > 0)
+		if (task2mspace.count("*") > 0)
 		{
 			return false;
 		}
@@ -891,7 +906,11 @@ public:
 	
 	TupleIntNode* launch_space;
 	  
-	void print() { std::cout << "I am invoked!" << std::endl; }
+	void print()
+	{
+		// todo: re-write  this part
+		std::cout << "I am invoked!" << std::endl;
+	}
 
 	void set_launch_space(std::vector<int> x)
 	{
@@ -902,8 +921,13 @@ public:
 
 std::unordered_map<std::string, std::vector<Processor::Kind>> Tree2Legion::task_policies;
 using HashFn1 = PairHash<std::string, std::string>;
-std::unordered_map<std::pair<std::string, std::string>, std::vector<Memory::Kind>, HashFn1> Tree2Legion::region_policies;
+std::unordered_map<std::pair<std::string, std::string>, 
+	std::unordered_map<Processor::Kind, std::vector<Memory::Kind> >, HashFn1>
+	Tree2Legion::region_policies;
 
+std::unordered_map<std::pair<std::string, std::string>,
+	std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1>
+	Tree2Legion::layout_constraints;
 std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
 std::unordered_map<std::string, FuncDefNode*> Tree2Legion::task2func;
 #endif
