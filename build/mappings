@@ -8,7 +8,9 @@ Region task_name region1 * SOCKMEM;
 
 # layout * * *  {f, 0} Compact align==128;
 # layout * * *  {f, 0, 1} Compact align==128;
-Layout * * * SOA F_order Compact Align==128;
+Layout * * * AOS F_order;
+# Compact Align==128;
+# F_order AOS is the right config (no compact, no align)
 # layout_default ALLMEM row_major AOS/SOA Compact align==128;
 # layout_default SOCKMEM row_major AOS Compact align==128;
 # AOS F_order --> {f, 0, 1, ...}

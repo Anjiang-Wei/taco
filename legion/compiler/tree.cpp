@@ -167,10 +167,10 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
     mspace_node = task2mspace.at(task);
     func_node = task2func.at(task);
   }
-  else if (task2mspace.count("IndexTaskMapDefault") > 0)
+  else if (task2mspace.count("*") > 0)
   {
-    mspace_node = task2mspace.at("IndexTaskMapDefault");
-    func_node = task2func.at("IndexTaskMapDefault");
+    mspace_node = task2mspace.at("*");
+    func_node = task2func.at("*");
   }
   else 
   {

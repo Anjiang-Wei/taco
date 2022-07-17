@@ -33,6 +33,7 @@ using namespace Legion;
 using namespace Legion::Mapping;
 
 static Logger log_mapper("nsmapper");
+legion_equality_kind_t myop2legion(BinOpEnum myop);
 
 namespace Legion {
   namespace Internal {
@@ -986,28 +987,108 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
                                                    Legion::LayoutConstraintSet &constraints,
                                                    Legion::Memory target_memory,
                                                    const Legion::RegionRequirement &req) {
+  /*
+  todo: customize the layout constraints for task_names(?) and region_names
+  std::vector<std::string> names;
+  get_handle_names(ctx, req, names);
+  */
+  Memory::Kind target_memory_kind = target_memory.kind();
+
+  ConstraintsNode dsl_constraint;
+  std::pair<std::string, std::string> key = std::make_pair("*", "*");
+  if (tree_result.layout_constraints.count(key) > 0)
+  {
+    std::unordered_map<Memory::Kind, ConstraintsNode*> value = tree_result.layout_constraints.at(key);
+    if (value.count(target_memory_kind) > 0)
+    {
+      log_mapper.debug() << "hit specific memory kind for constraints";
+      dsl_constraint = *(value.at(target_memory_kind));
+    }
+    else if (value.count(Memory::NO_MEMKIND) > 0)
+    {
+      log_mapper.debug() << "hit NO_MEMKIND memory kind for constraints";
+      dsl_constraint = *(value.at(Memory::NO_MEMKIND));
+    }
+  }
   // Ensure that regions are mapped in row-major order.
   Legion::IndexSpace is = req.region.get_index_space();
   Legion::Domain domain = runtime->get_index_space_domain(ctx, is);
   int dim = domain.get_dim();
   std::vector<Legion::DimensionKind> dimension_ordering(dim + 1);
+
+  if (dsl_constraint.reverse)
+  {
+    if (dsl_constraint.aos)
+    {
+      for (int i = 0; i < dim; ++i)
+      {
+        dimension_ordering[dim - i - 1] =
+          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+      }
+      dimension_ordering[dim] = LEGION_DIM_F; // F_order, AOS
+    }
+    else
+    {
+      for (int i = 0; i < dim; ++i)
+      {
+        dimension_ordering[dim - i] =
+          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+      }
+      dimension_ordering[0] = LEGION_DIM_F;
+    }
+  }
+  else
+  {
+    if (dsl_constraint.aos)
+    {
+      for (int i = 0; i < dim; ++i)
+      {
+        dimension_ordering[i] =
+          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+      }
+      dimension_ordering[dim] = LEGION_DIM_F; // C_order, AOS
+    }
+    else
+    {
+      for (int i = 1; i < dim + 1; ++i)
+      {
+        dimension_ordering[i] =
+          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+      }
+      dimension_ordering[0] = LEGION_DIM_F;
+    }
+  }
+  /*
   for (int i = 0; i < dim; ++i) {
     dimension_ordering[dim - i - 1] =
         static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
   } // row-major; reverse is column major, starting from i=1.
   dimension_ordering[dim] = LEGION_DIM_F; // AOS; if SOA, then 0
+  */
   constraints.add_constraint(Legion::OrderingConstraint(dimension_ordering, false/*contiguous*/));
   // If we were requested to have an alignment, add the constraint.
-  if (/*this->*/alignTo128Bytes) {
+  if (dsl_constraint.align)
+  {
+    for (auto it : req.privilege_fields) {
+      constraints.add_constraint(Legion::AlignmentConstraint(it,
+        myop2legion(dsl_constraint.align_op), dsl_constraint.align_int));
+    }
+  }
+  /*
+  if (alignTo128Bytes) {
     for (auto it : req.privilege_fields) {
       constraints.add_constraint(Legion::AlignmentConstraint(it, LEGION_EQ_EK, 128));
     }
   }
+  */
   // If the instance is supposed to be sparse, tell Legion we want it that way.
   // Unfortunately because we are adjusting the SpecializedConstraint, we have to
   // fully override the default mapper because there appears to be some undefined
   // behavior when two specialized constraints are added.
-  if ((req.tag & SPARSE_INSTANCE) != 0) {
+
+  //if ((req.tag & SPARSE_INSTANCE) != 0) {
+  if (dsl_constraint.compact)
+  {
     taco_iassert(req.privilege != LEGION_REDUCE);
     constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
   } else if (req.privilege == LEGION_REDUCE) {
@@ -1029,4 +1110,28 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
       constraints.add_constraint(FieldConstraint(fields,false/*contiguous*/,false/*inorder*/));
     }
   }
+}
+
+legion_equality_kind_t myop2legion(BinOpEnum myop)
+{
+  // BIGGER,	SMALLER,	GE,	LE,	EQ,	NEQ,:
+  switch (myop)
+  {
+    case BIGGER:
+      return LEGION_GT_EK;
+    case SMALLER:
+      return LEGION_LT_EK;
+    case GE:
+      return LEGION_GE_EK;
+    case LE:
+      return LEGION_LE_EK;
+    case EQ:
+      return LEGION_EQ_EK;
+    case NEQ:
+      return LEGION_NE_EK;
+    default:
+      break;
+  }
+  assert(false);
+  return LEGION_EQ_EK;
 }
