@@ -127,7 +127,6 @@ protected:
                           std::vector<TaskSlice> &slices, std::string taskname);
 
 private:
-  std::unordered_map<std::string, Processor::Kind> task_policies;
   std::unordered_map<TaskID, Processor::Kind> cached_task_policies;
 
   std::unordered_set<std::string> has_region_policy;
@@ -137,7 +136,6 @@ private:
   std::unordered_map<std::pair<TaskID, uint32_t>, Memory::Kind, HashFn2> cached_region_policies;
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
 
-  bool has_default_task_policy;
   std::vector<Processor::Kind> default_task_policy;
 
   std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> default_region_policy;
@@ -149,16 +147,6 @@ public:
 
 Tree2Legion NSMapper::tree_result;
 std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
-
-// void NSMapper::set_task_policies(std::string x, Processor::Kind y)
-// {
-//   if (task_policies.count(x) > 0)
-//   {
-//     log_mapper.error() << "Duplicate " << x  << "'s processor mapping";
-//     assert(false);
-//   }
-//   task_policies.insert({x, y});
-// }
 
 std::string NSMapper::get_policy_file()
 {
@@ -230,15 +218,6 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
   // todo: re-write this part
   /*
   tree_result = Tree2Legion(policy_file);
-  if (tree_result.default_task_policy.size() > 0)
-  {
-    has_default_task_policy = true;
-  }
-  else
-  {
-    has_default_task_policy = false;
-  }
-  default_task_policy = tree_result.default_task_policy;
   default_region_policy = tree_result.default_region_policy;
   task_policies = tree_result.task_policies;
   region_policies = tree_result.region_policies;
