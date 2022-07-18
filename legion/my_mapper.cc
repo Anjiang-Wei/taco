@@ -144,22 +144,21 @@ private:
 
 public:
   static Tree2Legion tree_result;
-  void set_task_policies(std::string, Processor::Kind);
   static std::unordered_map<std::string, ShardingID> task2sid;
 };
 
 Tree2Legion NSMapper::tree_result;
 std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
 
-void NSMapper::set_task_policies(std::string x, Processor::Kind y)
-{
-  if (task_policies.count(x) > 0)
-  {
-    log_mapper.error() << "Duplicate " << x  << "'s processor mapping";
-    assert(false);
-  }
-  task_policies.insert({x, y});
-}
+// void NSMapper::set_task_policies(std::string x, Processor::Kind y)
+// {
+//   if (task_policies.count(x) > 0)
+//   {
+//     log_mapper.error() << "Duplicate " << x  << "'s processor mapping";
+//     assert(false);
+//   }
+//   task_policies.insert({x, y});
+// }
 
 std::string NSMapper::get_policy_file()
 {
@@ -342,52 +341,42 @@ Processor NSMapper::default_policy_select_initial_processor(MapperContext ctx, c
       return result;
     }
   }
+  std::string task_name = task.get_task_name();
   {
-    auto finder = task_policies.find(task.get_task_name());
-    if (finder != task_policies.end())
+    std::vector<Processor::Kind> proc_kind_vec;
+    if (tree_result.task_policies.count(task_name) > 0)
     {
-      auto result = select_initial_processor_by_kind(task, finder->second);
-      log_mapper.debug() << task.get_task_name() << " mapped by task_policies: " << processor_kind_to_string(result.kind()).c_str();
-      validate_processor_mapping(ctx, task, result);
-      cached_task_policies[task.task_id] = result.kind();
-      return result;
+      proc_kind_vec = tree_result.task_policies.at(task_name);
     }
-    else if (has_default_task_policy)
+    else if (tree_result.task_policies.count("*") > 0)
     {
-      for (size_t i = 0; i < default_task_policy.size(); i++)
+      proc_kind_vec = tree_result.task_policies.at("*");
+    }
+    for (size_t i = 0; i < proc_kind_vec.size(); i++)
+    {
+      auto result = select_initial_processor_by_kind(task, proc_kind_vec[i]);
+      if (result.kind() != proc_kind_vec[i])
       {
-        auto result = select_initial_processor_by_kind(task, default_task_policy[i]);
-        if (result.kind() != default_task_policy[i])
-        {
-          log_mapper.debug("default_task_policy to map %s onto %s cannot satisfy, try next",
-            task.get_task_name(), processor_kind_to_string(default_task_policy[i]).c_str());
-          continue;
-        }
-        // default policy validation should not be strict, allowing fallback
-        bool success = validate_processor_mapping(ctx, task, result, false);
-        if (success)
-        {
-          log_mapper.debug() << task.get_task_name() << "  mapped by default_task_policy: " << processor_kind_to_string(result.kind()).c_str();
-          cached_task_policies[task.task_id] = result.kind();
-          return result;
-        }
-        else
-        {
-          log_mapper.debug("default_task_policy to map %s onto %s cannot satisfy, try next",
-            task.get_task_name(), processor_kind_to_string(default_task_policy[i]).c_str());
-        }
+        log_mapper.debug("Mapping %s onto %s cannot satisfy, try next",
+          task_name.c_str(), processor_kind_to_string(proc_kind_vec[i]).c_str());
+        continue;
+      }
+      // default policy validation should not be strict, allowing fallback
+      bool success = validate_processor_mapping(ctx, task, result, false);
+      if (success)
+      {
+        log_mapper.debug() << task_name << " mapped to " << processor_kind_to_string(result.kind()).c_str();
+        cached_task_policies[task.task_id] = result.kind();
+        return result;
+      }
+      else
+      {
+        log_mapper.debug("Mapping %s onto %s cannot satisfy with validation, try next",
+          task_name.c_str(), processor_kind_to_string(proc_kind_vec[i]).c_str());
       }
     }
-    if (has_default_task_policy)
-    {
-      log_mapper.debug(
-        "None of the user-specified default processors work for task %s, fall back",
-        task.get_task_name());
-    }
   }
-  log_mapper.debug(
-    "No processor policy is given for task %s, falling back to the default policy",
-    task.get_task_name());
+  log_mapper.debug("%s falls back to the default policy", task_name.c_str());
   return DefaultMapper::default_policy_select_initial_processor(ctx, task);
 }
 
@@ -690,7 +679,6 @@ template<int DIM>
     for (Legion::PointInRectIterator<DIM,coord_t> itr(it.rect); itr(); itr++)
     {
       const Point<DIM,coord_t> point = *itr;
-      // todo: use function's computation results
       std::vector<int> index_point;
       log_mapper.debug("slice point: ");
       for (int i = 0; i < DIM; i++)
@@ -750,7 +738,6 @@ void NSMapper::custom_slice_task(const Task &task,
   log_mapper.debug("Inside custom_slice_task for %s, procs=%ld, dim=%d",
     task.get_task_name(), procs.size(), input.domain.get_dim());
   
-  // todo: use task.get_task_name() to find the slicing function to invoke
   switch (input.domain.get_dim())
   {
 #define BLOCK(DIM) \
@@ -826,45 +813,6 @@ void NSMapper::slice_task(const MapperContext      ctx,
     default:
       assert(false); // unimplemented processor kind
   }
-  // const Rect<1> bounds = input.domain; 
-  // const size_t num_points = bounds.volume();
-  // output.slices.reserve(num_points);
-  // log_mapper.debug("In slice_task");
-  // if (num_points == local_pys.size())
-  // {
-  //   log_mapper.debug("sharded, %ld, %ld", num_points, local_pys.size());
-  //   unsigned index = 0;
-  //   // Already been sharded, just assign to the local python procs
-  //   for (coord_t p = bounds.lo[0]; p <= bounds.hi[0]; p++)
-  //   {
-  //     const Point<1> point(p);
-  //     const Rect<1> rect(point,point);
-  //     output.slices.push_back(TaskSlice(Domain(rect),
-  //           local_pys[index++], false/*recurse*/, false/*stelable*/));
-  //   }
-  // }
-  // else
-  // {
-  //   log_mapper.debug("not sharded, %ld, %ld, %d", num_points, local_pys.size(), total_nodes);
-  //   // Not sharded, so we should have points for all the python procs
-  //   assert(input.domain.get_volume() == (local_pys.size() * total_nodes));
-  //   Machine::ProcessorQuery py_procs(machine);
-  //   py_procs.only_kind(Processor::PY_PROC);
-  //   std::set<AddressSpaceID> spaces;
-  //   for (Machine::ProcessorQuery::iterator it = 
-  //         py_procs.begin(); it != py_procs.end(); it++)
-  //   {
-  //     const AddressSpaceID space = it->address_space();
-  //     if (spaces.find(space) != spaces.end())
-  //       continue;
-  //     const Point<1> lo(space*local_pys.size());
-  //     const Point<1> hi((space+1)*local_pys.size()-1);
-  //     const Rect<1> rect(lo,hi);
-  //     output.slices.push_back(TaskSlice(Domain(rect),
-  //           *it, true/*recurse*/, false/*stelable*/));
-  //     spaces.insert(space);
-  //   }
-  // }
 }
 
 NSMapper::NSMapper(MapperRuntime *rt, Machine machine, Processor local, const char *mapper_name)
@@ -946,7 +894,6 @@ namespace Legion {
       // size_t node_num = Machine::get_machine().get_address_space_count();
       switch (point.get_dim())
       {
-        // TODO: link with AST
 #define DIMFUNC(DIM) \
         case DIM: \
           { \
@@ -981,8 +928,6 @@ namespace Legion {
 
 
 // copied from DISTAL/runtime/taco_mapper.cpp
-// add #define for undeclared fields
-
 void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
                                                    Legion::LayoutConstraintSet &constraints,
                                                    Legion::Memory target_memory,
