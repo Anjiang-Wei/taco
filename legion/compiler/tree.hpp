@@ -916,6 +916,43 @@ public:
 		launch_space = new TupleIntNode(x);
 	}
 	std::vector<int> run(std::string task, std::vector<int> x);
+	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
+	{
+		std::pair<std::string, std::string> key = {task_name, region_name};
+		if (region_policies.count(key) > 0)
+		{
+			std::unordered_map<Processor::Kind, std::vector<Memory::Kind> > value = region_policies.at(key);
+			if (value.count(proc_kind) > 0)
+			{
+				return value.at(proc_kind);
+			}
+		}
+		return {};
+	}
+	std::vector<Memory::Kind> query_memory_list(std::string task_name, std::vector<std::string> region_names, Processor::Kind proc_kind)
+	{
+		// region_names: no "*" included; will need to consider "*"
+		std::vector<Memory::Kind> res;
+		// exact match first
+		for (auto &region_name : region_names)
+		{
+			std::vector<Memory::Kind> to_append = query_memory_policy(task_name, region_name, proc_kind);
+			res.insert(res.end(), to_append.begin(), to_append.end());
+		}
+		// task_name *
+		std::vector<Memory::Kind> to_append2 = query_memory_policy(task_name, "*", proc_kind);
+		res.insert(res.end(), to_append2.begin(), to_append2.end());
+		// * region_name
+		for (auto &region_name : region_names)
+		{
+			std::vector<Memory::Kind> to_append3 = query_memory_policy("*", region_name, proc_kind);
+			res.insert(res.end(), to_append3.begin(), to_append3.end());
+		}
+		// * *
+		std::vector<Memory::Kind> to_append4 = query_memory_policy("*", "*", proc_kind);
+		res.insert(res.end(), to_append4.begin(), to_append4.end());
+		return res;
+	}
 };
 
 std::unordered_map<std::string, std::vector<Processor::Kind>> Tree2Legion::task_policies;

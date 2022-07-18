@@ -130,15 +130,9 @@ private:
   std::unordered_map<TaskID, Processor::Kind> cached_task_policies;
 
   std::unordered_set<std::string> has_region_policy;
-  using HashFn1 = PairHash<std::string, std::string>;
-  std::unordered_map<std::pair<std::string, std::string>, Memory::Kind, HashFn1> region_policies;
   using HashFn2 = PairHash<TaskID, uint32_t>;
   std::unordered_map<std::pair<TaskID, uint32_t>, Memory::Kind, HashFn2> cached_region_policies;
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
-
-  std::vector<Processor::Kind> default_task_policy;
-
-  std::unordered_map<Processor::Kind, std::vector<Memory::Kind>> default_region_policy;
 
 public:
   static Tree2Legion tree_result;
@@ -215,17 +209,6 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
   log_mapper.debug("Policy file: %s", policy_file.c_str());
   tree_result = Tree2Legion(policy_file);
   // tree_result.print();
-  // todo: re-write this part
-  /*
-  tree_result = Tree2Legion(policy_file);
-  default_region_policy = tree_result.default_region_policy;
-  task_policies = tree_result.task_policies;
-  region_policies = tree_result.region_policies;
-  for (auto &v : region_policies)
-  {
-    has_region_policy.insert(v.first.first);
-  }
-  */
 }
 
 Processor NSMapper::select_initial_processor_by_kind(const Task &task, Processor::Kind kind)
@@ -410,6 +393,9 @@ void NSMapper::map_task(const MapperContext      ctx,
                               MapTaskOutput&     output)
 {
   Processor::Kind target_proc_kind = task.target_proc.kind();
+  std::string task_name = task.get_task_name();
+
+  /*
   
   if (has_region_policy.find(task.get_task_name()) == has_region_policy.end() 
       && default_region_policy.find(target_proc_kind) == default_region_policy.end())
@@ -420,6 +406,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     DefaultMapper::map_task(ctx, task, input, output);
     return;
   }
+  */
 
   VariantInfo chosen = default_find_preferred_variant(task, ctx,
                     true/*needs tight bound*/, true/*cache*/, target_proc_kind);
@@ -427,8 +414,8 @@ void NSMapper::map_task(const MapperContext      ctx,
   output.task_priority = default_policy_select_task_priority(ctx, task);
   output.postmap_task = false;
   default_policy_select_target_processors(ctx, task, output.target_procs);
-  log_mapper.debug("map_task for selecting memory will use %s as processor", 
-    processor_kind_to_string(output.target_procs[0].kind()).c_str());
+  log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
+    task_name.c_str(), processor_kind_to_string(output.target_procs[0].kind()).c_str());
 
   if (chosen.is_inner)
   {
@@ -439,20 +426,13 @@ void NSMapper::map_task(const MapperContext      ctx,
     return;
   }
 
-  log_mapper.debug("Before TaskLayoutConstraintSet");
-
   const TaskLayoutConstraintSet &layout_constraints =
     runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
-
-  log_mapper.debug("After TaskLayoutConstraintSet");
 
   for (uint32_t idx = 0; idx < task.regions.size(); ++idx)
   {
     auto &req = task.regions[idx];
-    log_mapper.debug("after task.regions[%d]", idx);
     if (req.privilege == LEGION_NO_ACCESS || req.privilege_fields.empty()) continue;
-
-    log_mapper.debug("after LEGION_NO_ACCESS");
 
     bool found_policy = false;
     Memory::Kind target_kind = Memory::SYSTEM_MEM;
@@ -474,45 +454,26 @@ void NSMapper::map_task(const MapperContext      ctx,
       std::vector<std::string> path;
       get_handle_names(ctx, req, path);
       log_mapper.debug() << "found_policy = false; path.size() = " << path.size(); // use index for regent
-      for (auto &name : path)
+      std::vector<Memory::Kind> memory_list = tree_result.query_memory_list(task_name, path, target_proc_kind);
+      for (auto &mem_kind: memory_list)
       {
-        auto finder = region_policies.find(std::make_pair(task.get_task_name(), name));
-        if (finder != region_policies.end())
+        Machine::MemoryQuery visible_memories(machine);
+        visible_memories.has_affinity_to(task.target_proc);
+        visible_memories.only_kind(mem_kind);
+        if (visible_memories.count() > 0)
         {
-          target_kind = finder->second;
-          log_mapper.debug() << "region_policies: " << memory_kind_to_string(target_kind);
-          found_policy = true;
-        }
-        else if (default_region_policy.find(target_proc_kind) != default_region_policy.end())
-        {
-          for (size_t regidx = 0; regidx < default_region_policy[target_proc_kind].size(); regidx++)
+          target_memory = visible_memories.first();
+          if (target_memory.exists())
           {
-            auto target_kind_cand = default_region_policy[target_proc_kind][regidx];
-            log_mapper.debug() << "default_region_policy " << regidx << " " << memory_kind_to_string(target_kind_cand);
-            Machine::MemoryQuery visible_memories(machine);
-            visible_memories.has_affinity_to(task.target_proc);
-            visible_memories.only_kind(target_kind_cand);
-            if (visible_memories.count() > 0)
-            {
-              target_memory = visible_memories.first();
-              if (target_memory.exists())
-              {
-                target_kind = target_kind_cand;
-                found_policy = true;
-                break;
-              }
-            }
+            target_kind = mem_kind;
+            found_policy = true;
+            auto key = std::make_pair(task.task_id, idx);
+            region_name =  task_name + "_region_" + std::to_string(idx);
+            cached_region_policies[key] = target_kind;
+            cached_region_names[key] = region_name;
+            break;
           }
         }
-        else
-        {
-          assert(false);
-        }
-        auto key = std::make_pair(task.task_id, idx);
-        cached_region_policies[key] = target_kind;
-        cached_region_names[key] = name;
-        region_name = name;
-        break;
       }
     }
 
@@ -593,7 +554,7 @@ void NSMapper::select_sharding_functor(
                                       SelectShardingFunctorOutput& output)
 {
   auto finder1 = task2sid.find(task.get_task_name());
-  auto finder2 = task2sid.find("IndexTaskMapDefault");
+  auto finder2 = task2sid.find("*");
   if (finder1 != task2sid.end())
   {
     output.chosen_functor = finder1->second;
