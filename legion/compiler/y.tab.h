@@ -85,15 +85,16 @@ extern int yydebug;
     T_Layout = 295,
     T_IndexTaskMap = 296,
     T_Print = 297,
-    T_Le = 298,
-    T_Ge = 299,
-    T_Eq = 300,
-    T_Ne = 301,
-    T_And = 302,
-    T_Or = 303,
-    T_Identifier = 304,
-    T_StringConstant = 305,
-    T_IntConstant = 306
+    T_Instance = 298,
+    T_Le = 299,
+    T_Ge = 300,
+    T_Eq = 301,
+    T_Ne = 302,
+    T_And = 303,
+    T_Or = 304,
+    T_Identifier = 305,
+    T_StringConstant = 306,
+    T_IntConstant = 307
   };
 #endif
 /* Tokens.  */
@@ -137,15 +138,16 @@ extern int yydebug;
 #define T_Layout 295
 #define T_IndexTaskMap 296
 #define T_Print 297
-#define T_Le 298
-#define T_Ge 299
-#define T_Eq 300
-#define T_Ne 301
-#define T_And 302
-#define T_Or 303
-#define T_Identifier 304
-#define T_StringConstant 305
-#define T_IntConstant 306
+#define T_Instance 298
+#define T_Le 299
+#define T_Ge 300
+#define T_Eq 301
+#define T_Ne 302
+#define T_And 303
+#define T_Or 304
+#define T_Identifier 305
+#define T_StringConstant 306
+#define T_IntConstant 307
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -180,8 +182,9 @@ union YYSTYPE
     class ReturnNode* returnstmt;
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
+    class InstanceLimitNode* instancelimit;
 
-#line 185 "y.tab.h" /* yacc.c:1909  */
+#line 188 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

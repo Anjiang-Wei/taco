@@ -18,6 +18,8 @@ Layout * * * AOS F_order;
 
 Layout task_name region_name * F_order AOS;
 
+InstanceLimit task_1 OMP 10;
+
 # layout *taskname *region_name *memory_type row_major AOS align==128;
 # ZCMEM,FBMEM,SYSMEM,RDMEM
 

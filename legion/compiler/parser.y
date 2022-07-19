@@ -120,7 +120,7 @@ Identifier_star:
 |   '*'             { $$ = "*"; }
 
 InstanceLimit:
-    T_Instance T_Identifier Proc T_IntConstant  { $$ = new InstanceLimitNode($2, $3, $4); }
+    T_Instance T_Identifier Proc T_IntConstant ';' { $$ = new InstanceLimitNode($2, $3, $4); }
 ;
 
 ProcCustom:
