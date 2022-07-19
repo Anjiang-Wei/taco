@@ -33,6 +33,7 @@ STRING              (\042[^\042\n]*\042)
 "Region"            { return T_Region; }
 "Layout"            { return T_Layout; }
 "InstanceLimit"     { return T_Instance; }
+"CollectMemory"     { return T_Collect; }
 "IndexTaskMap"      { return T_IndexTaskMap; }
 
 "F_order"           { return T_Reverse_Dimension; }

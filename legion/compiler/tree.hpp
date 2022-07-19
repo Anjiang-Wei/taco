@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <stack>
 #include <string.h>
 #include <assert.h>
@@ -871,6 +872,21 @@ public:
 	Node* run();
 };
 
+class MemoryCollectNode : public StmtNode
+{
+	// CollectMemory $task_name $region_name
+public:
+	std::string task_name;
+	std::string region_name;
+	MemoryCollectNode(const char* x0, const char* x1)
+	{
+		task_name = std::string(x0);
+		region_name = std::string(x1);
+	}
+	void print() { printf("MemoryCollectNode %s %s", task_name.c_str(), region_name.c_str()); }
+	Node* run();
+};
+
 class InstanceLimitNode : public StmtNode
 {
 	// InstanceLimit Foo CPU 5
@@ -906,6 +922,8 @@ public:
 		std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1> 
 		layout_constraints;
 	
+	static std::unordered_set<std::pair<std::string, std::string>, HashFn1> memory_collect;
+	
 	static std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> task2limit;
 	
 	static std::unordered_map<std::string, MSpace*> task2mspace;
@@ -922,6 +940,30 @@ public:
 			return false;
 		}
 		return true;
+	}
+
+	bool should_collect_memory(std::string task_name, std::vector<std::string> region_name)
+	{
+		if (memory_collect.size() == 0)
+		{
+			return false;
+		}
+		if (memory_collect.count({"*", "*"}) > 0)
+		{
+			return true;
+		}
+		if (memory_collect.count({task_name, "*"}) > 0)
+		{
+			return true;
+		}
+		for (auto &str: region_name)
+		{
+			if (memory_collect.count({task_name, str}) > 0)
+				return true;
+			if (memory_collect.count({"*", str}) > 0)
+				return true;
+		}
+		return false;
 	}
 	
 	TupleIntNode* launch_space;
@@ -1002,4 +1044,5 @@ std::unordered_map<std::pair<std::string, std::string>,
 std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> Tree2Legion::task2limit;
 std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
 std::unordered_map<std::string, FuncDefNode*> Tree2Legion::task2func;
+std::unordered_set<std::pair<std::string, std::string>, HashFn1> Tree2Legion::memory_collect;
 #endif

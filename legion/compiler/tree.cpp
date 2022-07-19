@@ -171,6 +171,12 @@ Node* InstanceLimitNode::run()
   return NULL;
 }
 
+Node* MemoryCollectNode::run()
+{
+  Tree2Legion::memory_collect.insert({task_name, region_name});
+  return NULL;
+}
+
 std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
 {
   #ifdef DEBUG_TREE

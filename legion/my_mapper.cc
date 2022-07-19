@@ -431,8 +431,26 @@ void NSMapper::map_task(const MapperContext      ctx,
   {
     log_mapper.debug(
       "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
-      task.get_task_name());
+      task_name.c_str());
     DefaultMapper::map_task(ctx, task, input, output);
+    if (tree_result.memory_collect.size() > 0)
+    {
+      for (size_t i = 0; i < task.regions.size(); i++)
+      {
+        auto &rg = task.regions[i];
+        if (rg.privilege == READ_ONLY)
+        {
+          std::vector<std::string> path;
+          get_handle_names(ctx, rg, path);
+          if (tree_result.should_collect_memory(task_name, path))
+          {
+            output.untracked_valid_regions.insert(i);
+          }
+        }
+      }
+    }
+    // if (tree_result.should_collect_memory())
+    // should_collect_memory
     if (tree_result.query_max_instance(task_name, target_proc_kind) > 0)
     {
       output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
@@ -557,6 +575,22 @@ void NSMapper::map_task(const MapperContext      ctx,
     {
       default_report_failed_instance_creation(task, idx,
               task.target_proc, target_memory, footprint);
+    }
+  }
+  if (tree_result.memory_collect.size() > 0)
+  {
+    for (size_t i = 0; i < task.regions.size(); i++)
+    {
+      auto &rg = task.regions[i];
+      if (rg.privilege == READ_ONLY)
+      {
+        std::vector<std::string> path;
+        get_handle_names(ctx, rg, path);
+        if (tree_result.should_collect_memory(task_name, path))
+        {
+          output.untracked_valid_regions.insert(i);
+        }
+      }
     }
   }
   if (tree_result.query_max_instance(task_name, target_proc_kind) > 0)

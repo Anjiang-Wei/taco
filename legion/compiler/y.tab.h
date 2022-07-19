@@ -86,15 +86,16 @@ extern int yydebug;
     T_IndexTaskMap = 296,
     T_Print = 297,
     T_Instance = 298,
-    T_Le = 299,
-    T_Ge = 300,
-    T_Eq = 301,
-    T_Ne = 302,
-    T_And = 303,
-    T_Or = 304,
-    T_Identifier = 305,
-    T_StringConstant = 306,
-    T_IntConstant = 307
+    T_Collect = 299,
+    T_Le = 300,
+    T_Ge = 301,
+    T_Eq = 302,
+    T_Ne = 303,
+    T_And = 304,
+    T_Or = 305,
+    T_Identifier = 306,
+    T_StringConstant = 307,
+    T_IntConstant = 308
   };
 #endif
 /* Tokens.  */
@@ -139,15 +140,16 @@ extern int yydebug;
 #define T_IndexTaskMap 296
 #define T_Print 297
 #define T_Instance 298
-#define T_Le 299
-#define T_Ge 300
-#define T_Eq 301
-#define T_Ne 302
-#define T_And 303
-#define T_Or 304
-#define T_Identifier 305
-#define T_StringConstant 306
-#define T_IntConstant 307
+#define T_Collect 299
+#define T_Le 300
+#define T_Ge 301
+#define T_Eq 302
+#define T_Ne 303
+#define T_And 304
+#define T_Or 305
+#define T_Identifier 306
+#define T_StringConstant 307
+#define T_IntConstant 308
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -169,6 +171,7 @@ union YYSTYPE
     class RegionCustomNode* regioncustom;
     class LayoutCustomNode* layoutcustom;
     class ConstraintsNode* constraints;
+    class MemoryCollectNode* memorycollect;
     class ArgTypeNode* argtype;
     class AssignNode* assign;
     class ExprNode* expr;
@@ -184,7 +187,7 @@ union YYSTYPE
     class ObjectInvokeNode* objinvoke;
     class InstanceLimitNode* instancelimit;
 
-#line 188 "y.tab.h" /* yacc.c:1909  */
+#line 191 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

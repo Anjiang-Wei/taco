@@ -18,7 +18,7 @@ void yyerror(const char*);
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
 %token T_Int T_Bool T_IPoint T_ISpace T_MSpace T_Def T_Return T_True T_False
-%token T_Task T_Region T_Layout T_IndexTaskMap T_Print T_Instance
+%token T_Task T_Region T_Layout T_IndexTaskMap T_Print T_Instance T_Collect
 %token T_Le T_Ge T_Eq T_Ne
 %token T_And T_Or
 
@@ -37,6 +37,7 @@ void yyerror(const char*);
     class RegionCustomNode* regioncustom;
     class LayoutCustomNode* layoutcustom;
     class ConstraintsNode* constraints;
+    class MemoryCollectNode* memorycollect;
     class ArgTypeNode* argtype;
     class AssignNode* assign;
     class ExprNode* expr;
@@ -69,6 +70,7 @@ void yyerror(const char*);
 %type <regioncustom> RegionCustom
 %type <layoutcustom> LayoutCustom
 %type <constraints> Constraints
+%type <memorycollect> MemoryCollect
 %type <argtype> TYPE
 %type <assign> Assign_Stmt
 %type <expr> Expr
@@ -109,6 +111,7 @@ Stmt:
 |   RegionCustom      { $$ = $1; }
 |   LayoutCustom      { $$ = $1; }
 |   InstanceLimit     { $$ = $1; }
+|   MemoryCollect     { $$ = $1; }
 |   FuncDef           { $$ = $1; }
 |   IndexTaskMap      { $$ = $1; }
 |   Assign_Stmt       { $$ = $1; }
@@ -121,6 +124,10 @@ Identifier_star:
 
 InstanceLimit:
     T_Instance T_Identifier Proc T_IntConstant ';' { $$ = new InstanceLimitNode($2, $3, $4); }
+;
+
+MemoryCollect:
+    T_Collect Identifier_star Identifier_star ';' { $$ = new MemoryCollectNode($2, $3); }
 ;
 
 ProcCustom:
