@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 using namespace Legion;
 using namespace Legion::Mapping;
@@ -79,6 +80,19 @@ private:
   void get_handle_names(const MapperContext ctx,
                         const RegionRequirement &req,
                         std::vector<std::string> &names);
+  // InFlightTask represents a task currently being executed.
+  struct InFlightTask {
+    // Unique identifier of the task instance.
+    std::pair<Legion::Domain, size_t> id; // for index launch
+    Legion::UniqueID id2; // for non-index launch task
+    // An event that will be triggered when the task finishes.
+    Legion::Mapping::MapperEvent event;
+    // A clock measurement from when the task was scheduled.
+    std::chrono::high_resolution_clock::time_point schedTime;
+  };
+  // backPressureQueue maintains state for each processor about how many
+  // tasks that are marked to be backpressured are executing on the processor.
+  std::map<Legion::Processor, std::deque<InFlightTask>> backPressureQueue;
 
 public:
   virtual Processor default_policy_select_initial_processor(MapperContext ctx,
@@ -113,6 +127,15 @@ public:
                                                    Legion::LayoutConstraintSet &constraints,
                                                    Legion::Memory target_memory,
                                                    const Legion::RegionRequirement &req);
+  MapperSyncModel get_mapper_sync_model() const override;
+  void report_profiling(const Legion::Mapping::MapperContext ctx,
+                        const Legion::Task& task,
+                        const TaskProfilingInfo& input) override;
+
+  void select_tasks_to_map(const Legion::Mapping::MapperContext ctx,
+                           const SelectMappingInput& input,
+                                 SelectMappingOutput& output) override;
+
 protected:
   void custom_slice_task(const Task &task,
                           const std::vector<Processor> &local_procs,
@@ -542,6 +565,161 @@ void NSMapper::map_task(const MapperContext      ctx,
   }
 }
 
+void NSMapper::report_profiling(const MapperContext ctx,
+                                  const Task& task,
+                                  const TaskProfilingInfo& input) {
+  // We should only get profiling responses if we've enabled backpressuring.
+  std::string task_name = task.get_task_name();
+  Processor::Kind proc_kind  = task.orig_proc.kind();
+  assert(tree_result.query_max_instance(task_name, proc_kind) > 0);
+  bool is_index_launch = task.is_index_space;// && task.get_slice_domain().get_volume() > 1;
+  // taco_iassert(this->enableBackpressure);
+  // We should only get profiling responses for tasks that are supposed to be backpressured.
+  // taco_iassert((task.tag & BACKPRESSURE_TASK) != 0);
+  auto prof = input.profiling_responses.get_measurement<ProfilingMeasurements::OperationStatus>();
+  // All our tasks should complete successfully.
+  assert(prof->result == Realm::ProfilingMeasurements::OperationStatus::COMPLETED_SUCCESSFULLY);
+  // Clean up after ourselves.
+  delete prof;
+  // Backpressured tasks are launched in a loop, and are kept on the originating processor.
+  // So, we'll use orig_proc to index into the queue.
+  auto& inflight = this->backPressureQueue[task.orig_proc];
+  MapperEvent event;
+  // Find this task in the queue.
+  for (auto it = inflight.begin(); it != inflight.end(); it++) {
+    if (is_index_launch)
+    { // if (it->id == task.get_unique_id()) {
+      if (it->id == std::make_pair(task.get_slice_domain(), task.get_context_index())) { 
+        event = it->event;
+        inflight.erase(it);
+        break;
+      }
+    }
+    else
+    {
+      if (it->id2 == task.get_unique_id()) {
+        event = it->event;
+        inflight.erase(it);
+        break;
+      }
+    }
+  }
+  // Assert that we found a valid event.
+  assert(event.exists());
+  // Finally, trigger the event for anyone waiting on it.
+  this->runtime->trigger_mapper_event(ctx, event);
+}
+
+// In select_tasks_to_map, we attempt to perform backpressuring on tasks that
+// need to be backpressured.
+
+void NSMapper::select_tasks_to_map(const MapperContext ctx,
+                                      const SelectMappingInput& input,
+                                           SelectMappingOutput& output) {
+  if (NSMapper::tree_result.task2limit.size() == 0)
+  {
+    DefaultMapper::select_tasks_to_map(ctx, input, output);
+  }
+  else
+  {
+    // Mark when we are potentially scheduling tasks.
+    auto schedTime = std::chrono::high_resolution_clock::now();
+    // Create an event that we will return in case we schedule nothing.
+    MapperEvent returnEvent;
+    // Also maintain a time point of the best return event. We want this function
+    // to get invoked as soon as any backpressure task finishes, so we'll use the
+    // completion event for the earliest one.
+    auto returnTime = std::chrono::high_resolution_clock::time_point::max();
+
+    // Find the depth of the deepest task.
+    int max_depth = 0;
+    for (std::list<const Task*>::const_iterator it =
+        input.ready_tasks.begin(); it != input.ready_tasks.end(); it++)
+    {
+      int depth = (*it)->get_depth();
+      if (depth > max_depth)
+        max_depth = depth;
+    }
+    unsigned count = 0;
+    // Only schedule tasks from the max depth in any pass.
+    for (std::list<const Task*>::const_iterator it =
+        input.ready_tasks.begin(); (count < max_schedule_count) &&
+                                   (it != input.ready_tasks.end()); it++)
+    {
+      auto task = *it;
+      bool schedule = true;
+      std::string task_name = task->get_task_name();
+      bool is_index_launch = task->is_index_space; // && task->get_slice_domain().get_volume() > 1;
+      Processor::Kind proc_kind = task->orig_proc.kind();
+      int max_num = tree_result.query_max_instance(task_name, proc_kind);
+      if (max_num > 0)
+      {
+        // See how many tasks we have in flight. Again, we use the orig_proc here
+        // rather than target_proc to match with our heuristics for where serial task
+        // launch loops go.
+        std::deque<InFlightTask> inflight = this->backPressureQueue[task->orig_proc];
+        if (inflight.size() == max_num) {
+          // We've hit the cap, so we can't schedule any more tasks.
+          schedule = false;
+          // As a heuristic, we'll wait on the first mapper event to
+          // finish, as it's likely that one will finish first. We'll also
+          // try to get a task that will complete before the current best.
+          auto front = inflight.front();
+          if (front.schedTime < returnTime) {
+            returnEvent = front.event;
+            returnTime = front.schedTime;
+          }
+        } else {
+          // Otherwise, we can schedule the task. Create a new event
+          // and queue it up on the processor.
+          if (is_index_launch)
+          {
+            this->backPressureQueue[task->orig_proc].push_back({
+              .id = std::make_pair(task->get_slice_domain(), task->get_context_index()),
+              // .id = task->get_unique_id(),
+              .event = this->runtime->create_mapper_event(ctx),
+              .schedTime = schedTime,
+            });
+          }
+          else
+          {
+            this->backPressureQueue[task->orig_proc].push_back({
+              // .id = Domain::NO_DOMAIN,
+              .id2 = task->get_unique_id(),
+              .event = this->runtime->create_mapper_event(ctx),
+              .schedTime = schedTime,
+            });
+          }
+        }
+      }
+      // Schedule tasks that are valid and have the target depth.
+      if (schedule && (*it)->get_depth() == max_depth)
+      {
+        output.map_tasks.insert(*it);
+        count++;
+      }
+    }
+    // If we didn't schedule any tasks, tell the runtime to ask us again when
+    // our return event triggers.
+    if (output.map_tasks.empty()) {
+      assert(returnEvent.exists());
+      output.deferral_event = returnEvent;
+    }
+  }
+}
+
+
+Mapper::MapperSyncModel NSMapper::get_mapper_sync_model() const {
+  // If we're going to attempt to backpressure tasks, then we need to use
+  // a sync model with high gaurantees.
+  if (NSMapper::tree_result.task2limit.size() > 0) {
+    return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
+  }
+  // Otherwise, we can do whatever the default mapper is doing.
+  return DefaultMapper::get_mapper_sync_model();
+}
+
+
 void NSMapper::select_sharding_functor(
                                 const MapperContext                ctx,
                                 const Task&                        task,
@@ -969,7 +1147,7 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
   //if ((req.tag & SPARSE_INSTANCE) != 0) {
   if (dsl_constraint.compact)
   {
-    taco_iassert(req.privilege != LEGION_REDUCE);
+    assert(req.privilege != LEGION_REDUCE);
     constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
   } else if (req.privilege == LEGION_REDUCE) {
     // Make reduction fold instances.
