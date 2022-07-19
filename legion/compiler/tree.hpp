@@ -871,6 +871,23 @@ public:
 	Node* run();
 };
 
+class InstanceLimitNode : public StmtNode
+{
+	// InstanceLimit Foo CPU 5
+public:
+	std::string task_name;
+	ProcessorEnum proc_type;
+	int num;
+	InstanceLimitNode(const char* task_name_, ProcNode* proc, int num_)
+	{
+		task_name = std::string(task_name_);
+		proc_type = proc->proc_type;
+		num = num_;
+	}
+	void print() { printf("InstanceLimitNode\n"); }
+	Node* run();
+};
+
 class MSpace;
 
 class Tree2Legion
@@ -888,6 +905,9 @@ public:
 	static std::unordered_map<std::pair<std::string, std::string>,
 		std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1> 
 		layout_constraints;
+	
+	static std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> task2limit;
+	
 	static std::unordered_map<std::string, MSpace*> task2mspace;
 	static std::unordered_map<std::string, FuncDefNode*> task2func;
 
@@ -953,6 +973,21 @@ public:
 		res.insert(res.end(), to_append4.begin(), to_append4.end());
 		return res;
 	}
+	int query_max_instance(std::string task_name, Processor::Kind proc_kind)
+	{
+		if (task2limit.count(task_name) > 0)
+		{
+			std::unordered_map<Processor::Kind, int> kind_int = task2limit.at(task_name);
+			if (kind_int.count(proc_kind) > 0)
+			{
+				int res = kind_int.at(proc_kind);
+				assert(res > 0);
+				return res;
+			}
+			return 0;
+		}
+		return 0;
+	}
 };
 
 std::unordered_map<std::string, std::vector<Processor::Kind>> Tree2Legion::task_policies;
@@ -964,6 +999,7 @@ std::unordered_map<std::pair<std::string, std::string>,
 std::unordered_map<std::pair<std::string, std::string>,
 	std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1>
 	Tree2Legion::layout_constraints;
+std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> Tree2Legion::task2limit;
 std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
 std::unordered_map<std::string, FuncDefNode*> Tree2Legion::task2func;
 #endif

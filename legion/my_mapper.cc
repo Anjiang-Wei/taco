@@ -395,19 +395,6 @@ void NSMapper::map_task(const MapperContext      ctx,
   Processor::Kind target_proc_kind = task.target_proc.kind();
   std::string task_name = task.get_task_name();
 
-  /*
-  
-  if (has_region_policy.find(task.get_task_name()) == has_region_policy.end() 
-      && default_region_policy.find(target_proc_kind) == default_region_policy.end())
-  {
-    log_mapper.debug(
-      "No memory policy is given for task %s, falling back to the default policy",
-      task.get_task_name());
-    DefaultMapper::map_task(ctx, task, input, output);
-    return;
-  }
-  */
-
   VariantInfo chosen = default_find_preferred_variant(task, ctx,
                     true/*needs tight bound*/, true/*cache*/, target_proc_kind);
   output.chosen_variant = chosen.variant;
@@ -423,6 +410,10 @@ void NSMapper::map_task(const MapperContext      ctx,
       "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
       task.get_task_name());
     DefaultMapper::map_task(ctx, task, input, output);
+    if (tree_result.query_max_instance(task_name, target_proc_kind) > 0)
+    {
+      output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
+    }
     return;
   }
 
@@ -544,6 +535,10 @@ void NSMapper::map_task(const MapperContext      ctx,
       default_report_failed_instance_creation(task, idx,
               task.target_proc, target_memory, footprint);
     }
+  }
+  if (tree_result.query_max_instance(task_name, target_proc_kind) > 0)
+  {
+    output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
   }
 }
 

@@ -155,6 +155,22 @@ Node* LayoutCustomNode::run()
   return NULL;
 }
 
+Node* InstanceLimitNode::run()
+{
+  Processor::Kind proc_kind = MyProc2LegionProc(proc_type);
+  if (Tree2Legion::task2limit.count(task_name) > 0)
+  {
+    Tree2Legion::task2limit.at(task_name).insert({proc_kind, num});
+  }
+  else
+  {
+    std::unordered_map<Processor::Kind, int> kind_int;
+    kind_int.insert({proc_kind, num});
+    Tree2Legion::task2limit.insert({task_name, kind_int});
+  }
+  return NULL;
+}
+
 std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
 {
   #ifdef DEBUG_TREE

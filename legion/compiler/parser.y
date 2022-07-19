@@ -18,7 +18,7 @@ void yyerror(const char*);
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
 %token T_Int T_Bool T_IPoint T_ISpace T_MSpace T_Def T_Return T_True T_False
-%token T_Task T_Region T_Layout T_IndexTaskMap T_Print
+%token T_Task T_Region T_Layout T_IndexTaskMap T_Print T_Instance
 %token T_Le T_Ge T_Eq T_Ne
 %token T_And T_Or
 
@@ -50,12 +50,14 @@ void yyerror(const char*);
     class ReturnNode* returnstmt;
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
+    class InstanceLimitNode* instancelimit;
 }
 
 // Semantic value
 %token <string> T_Identifier
 %token <string> T_StringConstant
 %token <intVal> T_IntConstant
+%type <instancelimit> InstanceLimit
 %type <string> Identifier_star
 %type <program> Program
 %type <stmt> Stmt
@@ -106,6 +108,7 @@ Stmt:
     ProcCustom        { $$ = $1; }
 |   RegionCustom      { $$ = $1; }
 |   LayoutCustom      { $$ = $1; }
+|   InstanceLimit     { $$ = $1; }
 |   FuncDef           { $$ = $1; }
 |   IndexTaskMap      { $$ = $1; }
 |   Assign_Stmt       { $$ = $1; }
@@ -115,6 +118,10 @@ Stmt:
 Identifier_star:
     T_Identifier    { $$ = $1; }
 |   '*'             { $$ = "*"; }
+
+InstanceLimit:
+    T_Instance T_Identifier Proc T_IntConstant  { $$ = new InstanceLimitNode($2, $3, $4); }
+;
 
 ProcCustom:
     T_Task Identifier_star ProcLst  ';'  { $$ = new ProcCustomNode($2, $3); }
