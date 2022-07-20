@@ -1,4 +1,1 @@
 *.hdf5
-*taco-generated.cu
-*taco-generated.cuh
-cannonMM/taco-generated.cu
