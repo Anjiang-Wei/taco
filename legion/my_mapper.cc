@@ -458,6 +458,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     return;
   }
 
+  // todo: construct a LayoutConstraintSet objectA, and populate the fields
   const TaskLayoutConstraintSet &layout_constraints =
     runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
 
@@ -536,6 +537,7 @@ void NSMapper::map_task(const MapperContext      ctx,
         default_policy_select_target_memory(ctx, task.target_proc, req, mem_constraint);
     }
 
+    // todo: invoke DefaultMapper::default_make_instance(MapperContext ctx
     auto missing_fields = req.privilege_fields;
     if (req.privilege == LEGION_REDUCE)
     {

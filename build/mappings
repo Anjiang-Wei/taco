@@ -1,67 +1,48 @@
 Task * GPU,OMP,CPU;
-Region * * GPU FBMEM;
+# Region * * GPU FBMEM;
 # region *taskname *region_name processor, list_of_memories;
-Region * * OMP SOCKMEM,SYSMEM;
-Region * * CPU SOCKMEM,SYSMEM;
+Region * * best_affinity OMP SOCKMEM,SYSMEM;
+# Region * * has_affinity CPU SOCKMEM,SYSMEM;
+# Region * * has_affinity CPU SOCKMEM,SYSMEM;
 
-Region task_name region1 * SOCKMEM;
-
-# layout * * *  {f, 0} Compact align==128;
-# layout * * *  {f, 0, 1} Compact align==128;
+# ZCMEM,FBMEM,SYSMEM,RDMEM
+# Layout taskname regionname memory AOS F_order;
 Layout * * * AOS F_order;
-# Compact Align==128;
-# F_order AOS is the right config (no compact, no align)
-# layout_default ALLMEM row_major AOS/SOA Compact align==128;
-# layout_default SOCKMEM row_major AOS Compact align==128;
-# AOS F_order --> {f, 0, 1, ...}
-# SOA C_order --> {..., 1, 0, f}
 
-Layout task_name region_name * F_order AOS;
-
-InstanceLimit task_1 OMP 10;
+InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 
 CollectMemory * *;
 
-# layout *taskname *region_name *memory_type row_major AOS align==128;
-# ZCMEM,FBMEM,SYSMEM,RDMEM
+m1 = Machine(OMP); # or GPU
 
-# task_1 arg_1 --> SOCKMEM
-
-# DefaultLayoutConstraint {Mem}* row_major/column_major SOA ()/AOS (LEGION_DIM_F) [>=/=/</...] 128 Compact=True? (sparse)
-# OrderConstrant task_1 {arg_1}* {MEM}* row_major (reverse)
-
-# // may run into backpresssure problem later
-
-m1 = Machine(OMP);
-# m2 = m1.merge(0, 1);
-# m2_size0 = m2.size[0];
-# print("m2.size: {}", m2_size0);
-
-# def block_dim(IPoint x, ISpace y, MSpace z, int dim)
-# {
-#     return x[dim] * z.size[dim] / y.size[dim];
-# }
-
-# def block(IPoint x, ISpace y, MSpace z)
-# {
-#     a = block_dim(x, y, z, 0);
-#     b = block_dim(x, y, z, 1);
-#     print("block {},{}", a, b);
-#     return (a, b);
-# }
-
-def taco(IPoint x, ISpace y, MSpace z)
+def block_dim(IPoint x, ISpace y, MSpace z, int dim)
 {
-    # a = x[0] * z.size[0] / y.size[0];
-    # b = x[1] * z.size[1] / y.size[1];
-    return (x[0] * z.size[0] / y.size[0], x[1] * z.size[1] / y.size[1]);
-    # return (0, 0);
+    return x[dim] * z.size[dim] / y.size[dim];
 }
 
-# # IndexTaskMap taco_fill m1 block;
-IndexTaskMap task_1 m1 taco;
+def block2d(IPoint x, ISpace y, MSpace z)
+{
+    a = block_dim(x, y, z, 0);
+    b = block_dim(x, y, z, 1);
+    print("block2d: {},{}", a, b);
+    return (a, b);
+}
+
+IndexTaskMap * m1 block2d;
 # # All the IndexLauncher over 2d index launch space should be here
-IndexTaskMap task_2 m1 taco;
-IndexTaskMap task_3 m1 taco;
-IndexTaskMap task_5 m1 taco;
-IndexTaskMap task_7 m1 taco;
+IndexTaskMap task_2 m1 block2d;
+IndexTaskMap task_3 m1 block2d;
+IndexTaskMap task_5 m1 block2d;
+IndexTaskMap task_7 m1 block2d;
+
+# not confirmed with Rohan yet
+m2 = m1.merge(0, 1);
+m3 = m2.balance_split(0, 3);
+
+def block3d(IPoint x, ISpace y, MSpace z)
+{
+    a = block_dim(x, y, z, 0);
+    b = block_dim(x, y, z, 1);
+    c = block_dim(x, y, z, 2);
+    return (a, b, c);
+}
