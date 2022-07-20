@@ -530,7 +530,7 @@ std::vector<Legion::Processor> TACOMapper::select_targets_for_task(const Legion:
       kind = Processor::LOC_PROC;
     }
   }
-  std::cout << task.get_task_name() << " is mapped to " << get_proc_kind_name(kind) << std::endl;
+  // std::cout << task.get_task_name() << " is mapped to " << get_proc_kind_name(kind) << std::endl;
 
   // If we're running with multiple shards per node, then we already have a decomposition of tasks
   // onto each shard. So, just return the assigned processor. Note that we only do this for tasks
