@@ -144,6 +144,7 @@ protected:
                                SliceTaskOutput &output) const;
   template<int DIM>
   static void custom_decompose_points(
+                          std::vector<int> &index_launch_space,
                           const DomainT<DIM,coord_t> &point_space,
                           const std::vector<Processor> &targets,
                           bool recurse, bool stealable,
@@ -811,6 +812,7 @@ void NSMapper::select_task_options(const MapperContext    ctx,
 
 template<int DIM>
 /*static*/ void NSMapper::custom_decompose_points(
+                        std::vector<int> &index_launch_space,
                         const DomainT<DIM,coord_t> &point_space,
                         const std::vector<Processor> &targets,
                         bool recurse, bool stealable,
@@ -835,7 +837,7 @@ template<int DIM>
         index_point.push_back(point[i]);
         log_mapper.debug() << point[i] << " ,";
       }
-      size_t slice_res = (size_t) tree_result.run(taskname, index_point)[1];
+      size_t slice_res = (size_t) tree_result.run(taskname, index_point, index_launch_space)[1];
       log_mapper.debug("--> %ld", slice_res);
       if (slice_res >= targets.size())
       {
@@ -887,13 +889,38 @@ void NSMapper::custom_slice_task(const Task &task,
   log_mapper.debug("Inside custom_slice_task for %s, procs=%ld, dim=%d",
     task.get_task_name(), procs.size(), input.domain.get_dim());
   
+  std::vector<int> launch_space;
+  Domain task_index_domain = task.index_domain;
+  switch (task_index_domain.get_dim())
+  {
+#define DIMFUNC(DIM) \
+    case DIM: \
+      { \
+        const DomainT<DIM,coord_t> is = task_index_domain; \
+        for (int i = 0; i < DIM; i++) \
+        { \
+          launch_space.push_back(is.bounds.hi[i] - is.bounds.lo[i] + 1); \
+        } \
+        log_mapper.debug("launch_space for %s: ", task.get_task_name()); \
+        for (int i = 0; i < DIM; i++) \
+        { \
+          log_mapper.debug("%lld, ", is.bounds.hi[i] - is.bounds.lo[i] + 1); \
+        } \
+        break; \
+      }
+    LEGION_FOREACH_N(DIMFUNC)
+#undef DIMFUNC
+    default:
+      assert(false);
+  }
+  
   switch (input.domain.get_dim())
   {
 #define BLOCK(DIM) \
     case DIM: \
       { \
-        DomainT<DIM,coord_t> point_space = input.domain; \
-        custom_decompose_points<DIM>(point_space, procs, \
+        DomainT<DIM,coord_t> partial_point_space = input.domain; \
+        custom_decompose_points<DIM>(launch_space, partial_point_space, procs, \
               false/*recurse*/, stealing_enabled, output.slices, task.get_task_name()); \
         break; \
       }
@@ -1054,14 +1081,13 @@ namespace Legion {
               index_point.push_back(p1[i]); \
               launch_space.push_back(is.bounds.hi[i] - is.bounds.lo[i] + 1); \
             } \
-            NSMapper::tree_result.set_launch_space(launch_space); \
-            log_mapper.debug("shard point: "); \
+            log_mapper.debug("shard point for %s: ", taskname.c_str()); \
             for (int i = 0; i < DIM; i++) \
             { \
               log_mapper.debug("%lld, ", point[i]); \
             } \
-            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.run(taskname, index_point)[0]); \
-            return NSMapper::tree_result.run(taskname, index_point)[0]; \
+            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.run(taskname, index_point, launch_space)[0]); \
+            return NSMapper::tree_result.run(taskname, index_point, launch_space)[0]; \
           }
         LEGION_FOREACH_N(DIMFUNC)
 #undef DIMFUNC

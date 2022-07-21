@@ -909,9 +909,8 @@ class MSpace;
 class Tree2Legion
 {
 public:
-	Tree2Legion() { launch_space = NULL; }
+	Tree2Legion() {}
 	Tree2Legion(std::string filename);
-	// ~Tree2Legion() { if (launch_space != NULL) delete launch_space; } // this will result in SEGV!
 	static std::unordered_map<std::string, std::vector<Processor::Kind>> task_policies;
 
 	using HashFn1 = PairHash<std::string, std::string>;
@@ -965,19 +964,13 @@ public:
 		}
 		return false;
 	}
-	
-	TupleIntNode* launch_space;
 	  
 	void print()
 	{
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	void set_launch_space(std::vector<int> x)
-	{
-		launch_space = new TupleIntNode(x);
-	}
-	std::vector<int> run(std::string task, std::vector<int> x);
+	std::vector<int> run(std::string task, std::vector<int> x, std::vector<int> point_space);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{
 		std::pair<std::string, std::string> key = {task_name, region_name};

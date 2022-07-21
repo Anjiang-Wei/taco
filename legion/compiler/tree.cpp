@@ -177,13 +177,14 @@ Node* MemoryCollectNode::run()
   return NULL;
 }
 
-std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x)
+std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vector<int> point_space)
 {
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif
   MSpace* mspace_node;
   FuncDefNode* func_node;
+  TupleIntNode* launch_space = new TupleIntNode(point_space);// task2launch_space.at(task);
   if (task2mspace.count(task) > 0)
   {
     mspace_node = task2mspace.at(task);
