@@ -1,7 +1,7 @@
 Task * GPU,OMP,CPU;
 # Region * * GPU FBMEM;
 # region *taskname *region_name processor, list_of_memories;
-Region * * best_affinity OMP SOCKMEM,SYSMEM;
+Region * * OMP SOCKMEM,SYSMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
 
