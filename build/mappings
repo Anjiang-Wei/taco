@@ -17,7 +17,17 @@ m1 = Machine(OMP); # or GPU
 
 def block_dim(IPoint x, ISpace y, MSpace z, int dim)
 {
+    a = x[dim];
+    b = z.size[dim];
+    c = y.size[dim];
+    d = a * b / c;
+    print("inside blockdim, {}, {}, {}, dim={} --> {}", a, b, c, dim, d);
     return x[dim] * z.size[dim] / y.size[dim];
+}
+
+def block1d(IPoint x, ISpace y, MSpace z)
+{
+    return block_dim(x, y, z, 0);
 }
 
 def block2d(IPoint x, ISpace y, MSpace z)
@@ -28,7 +38,7 @@ def block2d(IPoint x, ISpace y, MSpace z)
     return (a, b);
 }
 
-IndexTaskMap * m1 block2d;
+# IndexTaskMap * m1 block2d;
 # # All the IndexLauncher over 2d index launch space should be here
 IndexTaskMap task_2 m1 block2d;
 IndexTaskMap task_3 m1 block2d;
