@@ -1,17 +1,19 @@
 Task * GPU,OMP,CPU;
-# Region * * GPU FBMEM;
+# Task taco_validate CPU;
+Region * * GPU FBMEM,ZCMEM;
 # region *taskname *region_name processor, list_of_memories;
 Region * * OMP SOCKMEM,SYSMEM;
+Region * * CPU SOCKMEM,SYSMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
 
 # ZCMEM,FBMEM,SYSMEM,RDMEM
 # Layout taskname regionname memory AOS F_order;
-Layout * * * AOS F_order;
+Layout * * * AOS F_order Align==128; # Compact
 
-InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
+# InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 
-CollectMemory * *;
+# CollectMemory * *;
 
 m1 = Machine(OMP); # or GPU
 
