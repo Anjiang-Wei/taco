@@ -5,6 +5,8 @@
 #include "legion_tensor.h"
 #include "mapping_utilities.h"
 
+#define TACO_USE_LOGGING_MAPPER
+
 using namespace Legion;
 using namespace Legion::Mapping;
 
