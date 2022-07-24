@@ -118,7 +118,7 @@ public:
   virtual void slice_task(const MapperContext      ctx,
                           const Task&              task,
                           const SliceTaskInput&    input,
-                          SliceTaskOutput&   output);
+                          SliceTaskOutput&   output) override;
   virtual void select_task_options(const MapperContext    ctx,
                                   const Task&            task,
                                         TaskOptions&     output);

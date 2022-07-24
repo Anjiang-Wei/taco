@@ -16,6 +16,8 @@ Layout * * * AOS F_order Align==128; # Compact
 # CollectMemory * *;
 
 m1 = Machine(OMP); # or GPU
+m2 = m1.merge(0, 1);
+m3 = m2.balance_split(0, 3);
 
 def block_dim(IPoint x, ISpace y, MSpace z, int dim)
 {
@@ -40,17 +42,6 @@ def block2d(IPoint x, ISpace y, MSpace z)
     return (a, b);
 }
 
-# IndexTaskMap * m1 block2d;
-# # All the IndexLauncher over 2d index launch space should be here
-IndexTaskMap task_2 m1 block2d;
-IndexTaskMap task_3 m1 block2d;
-IndexTaskMap task_5 m1 block2d;
-IndexTaskMap task_7 m1 block2d;
-
-# not confirmed with Rohan yet
-m2 = m1.merge(0, 1);
-m3 = m2.balance_split(0, 3);
-
 def block3d(IPoint x, ISpace y, MSpace z)
 {
     a = block_dim(x, y, z, 0);
@@ -58,3 +49,6 @@ def block3d(IPoint x, ISpace y, MSpace z)
     c = block_dim(x, y, z, 2);
     return (a, b, c);
 }
+
+IndexTaskMap * m1 block2d;
+IndexTaskMap init_cublas m2 block1d;
