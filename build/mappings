@@ -19,6 +19,9 @@ m1 = Machine(OMP); # or GPU
 m2 = m1.merge(0, 1);
 m3 = m2.balance_split(0, 3);
 
+m4 = Machine(GPU);
+m5 = m4.merge(0, 1);
+
 def block_dim(IPoint x, ISpace y, MSpace z, int dim)
 {
     a = x[dim];
@@ -27,6 +30,11 @@ def block_dim(IPoint x, ISpace y, MSpace z, int dim)
     d = a * b / c;
     print("inside blockdim, {}, {}, {}, dim={} --> {}", a, b, c, dim, d);
     return x[dim] * z.size[dim] / y.size[dim];
+}
+
+def cyclic_dim(IPoint x, ISpace y, MSpace z, int dim)
+{
+    return x[dim] % z.size[dim];
 }
 
 def block1d(IPoint x, ISpace y, MSpace z)
@@ -50,5 +58,20 @@ def block3d(IPoint x, ISpace y, MSpace z)
     return (a, b, c);
 }
 
+def cyclic1d(IPoint x, ISpace y, MSpace z)
+{
+    return cyclic_dim(x, y, z, 0);
+}
+
+def cyclic2d(IPoint x, ISpace y, MSpace z)
+{
+    a = cyclic_dim(x, y, z, 0);
+    b = cyclic_dim(x, y, z, 1);
+    return (a, b);
+}
+
 IndexTaskMap * m1 block2d;
-IndexTaskMap init_cublas m2 block1d;
+# IndexTaskMap * m4 block2d;
+IndexTaskMap task_7 m1 block2d;
+IndexTaskMap task_11 m1 block2d;
+IndexTaskMap init_cublas m5 block1d;

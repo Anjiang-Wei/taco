@@ -177,6 +177,26 @@ Node* MemoryCollectNode::run()
   return NULL;
 }
 
+bool Tree2Legion::prerun_validate(std::string task, Processor::Kind proc_kind)
+{
+  MSpace* mspace_node;
+  if (task2mspace.count(task) > 0)
+  {
+    mspace_node = task2mspace.at(task);
+  }
+  else if (task2mspace.count("*") > 0)
+  {
+    mspace_node = task2mspace.at("*");
+  }
+  // run_validate will be invoked in slicing, so it must be sharded by user
+  assert(mspace_node != NULL);
+  if (proc_kind == MyProc2LegionProc(mspace_node->proc_type))
+  {
+    return true;
+  }
+  return false;
+}
+
 std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vector<int> point_space)
 {
   #ifdef DEBUG_TREE

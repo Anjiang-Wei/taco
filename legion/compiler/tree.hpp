@@ -938,6 +938,7 @@ public:
 		{
 			return false;
 		}
+		std::cout << task_name << " will fallback for sharding/slicing, warning!" << std::endl;
 		return true;
 	}
 
@@ -970,6 +971,7 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
+	bool prerun_validate(std::string task, Processor::Kind proc_kind);
 	std::vector<int> run(std::string task, std::vector<int> x, std::vector<int> point_space);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{

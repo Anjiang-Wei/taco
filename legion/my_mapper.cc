@@ -837,6 +837,13 @@ template<int DIM>
         index_point.push_back(point[i]);
         log_mapper.debug() << point[i] << " ,";
       }
+      // todo: think harder!
+      // if (tree_result.prerun_validate(taskname, targets[0].kind()) == false)
+      // {
+      //   log_mapper.error() << taskname << " is actually mapped to " <<
+      //     processor_kind_to_string(targets[0].kind()) << ", please change machine model";
+      //   assert(false);
+      // }
       size_t slice_res = (size_t) tree_result.run(taskname, index_point, index_launch_space)[1];
       log_mapper.debug("--> %ld", slice_res);
       if (slice_res >= targets.size())
