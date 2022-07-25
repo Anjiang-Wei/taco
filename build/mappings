@@ -32,10 +32,10 @@ def block_dim(IPoint x, ISpace y, MSpace z, int dim)
     return x[dim] * z.size[dim] / y.size[dim];
 }
 
-def cyclic_dim(IPoint x, ISpace y, MSpace z, int dim)
-{
-    return x[dim] % z.size[dim];
-}
+# def cyclic_dim(IPoint x, ISpace y, MSpace z, int dim)
+# {
+#     return x[dim] % z.size[dim];
+# }
 
 def block1d(IPoint x, ISpace y, MSpace z)
 {
@@ -50,30 +50,70 @@ def block2d(IPoint x, ISpace y, MSpace z)
     return (a, b);
 }
 
-def block3d(IPoint x, ISpace y, MSpace z)
+# def block3d(IPoint x, ISpace y, MSpace z)
+# {
+#     a = block_dim(x, y, z, 0);
+#     b = block_dim(x, y, z, 1);
+#     c = block_dim(x, y, z, 2);
+#     return (a, b, c);
+# }
+
+# def cyclic1d(IPoint x, ISpace y, MSpace z)
+# {
+#     return cyclic_dim(x, y, z, 0);
+# }
+
+# def cyclic2d(IPoint x, ISpace y, MSpace z)
+# {
+#     a = cyclic_dim(x, y, z, 0);
+#     b = cyclic_dim(x, y, z, 1);
+#     return (a, b);
+# }
+
+def task_5_func(IPoint x, ISpace y, MSpace z)
 {
-    a = block_dim(x, y, z, 0);
-    b = block_dim(x, y, z, 1);
-    c = block_dim(x, y, z, 2);
-    return (a, b, c);
+    # task 5 has no sharding, map to GPU
+    # <0,0> -> 0
+    # <1,0> -> 1
+    # <0,1> -> 2
+    # <1,1> -> 3
+    return (0, x[1] * y.size[0] + x[0]);
 }
 
-def cyclic1d(IPoint x, ISpace y, MSpace z)
+def task_7_func(IPoint x, ISpace y, MSpace z)
 {
-    return cyclic_dim(x, y, z, 0);
+    # task 7 mapped onto OMP, only care about sharding (sane as task_11)
+    # 0 <- (0,0)
+    # 1 <- (0,1)
+    return (x[1], 0);
 }
 
-def cyclic2d(IPoint x, ISpace y, MSpace z)
+def taco_fill_func(IPoint x, ISpace y, MSpace z)
 {
-    a = cyclic_dim(x, y, z, 0);
-    b = cyclic_dim(x, y, z, 1);
-    return (a, b);
+    # taco_fill sharding (same as task_1, task_2, task_3)
+    # 0 <- (0,0) (1,0) (0,1) (1,1)
+    # 1 <- (0,2) (1,2) (0,3) (1,3)
+    # taco_fill slicing (GPU) (same as task_9, but task_9 has no sharding)
+    # <0,0> -> 0
+    # <1,0> -> 1
+    # <0,1> -> 2
+    # <1,1> -> 3
+
+    # <0,2> -> 0
+    # <1,2> -> 1
+    # <0,3> -> 2
+    # <1,3> -> 3
+    return (x[1] * z.size[0] / y[1], x[1] % z.size[0] * y.size[0] + x[0]);
 }
 
-IndexTaskMap * m1 block2d;
-# IndexTaskMap * m4 block2d;
-IndexTaskMap task_7 m1 block2d;
-IndexTaskMap task_11 m1 block2d;
+# IndexTaskMap * m1 block2d;
 IndexTaskMap init_cublas m5 block1d;
-# IndexTaskMap task_5 m4 block2d; # causes error
-# IndexTaskMap taco_fill m4 block2d; # causes error
+IndexTaskMap task_5 m4 task_5_func;
+IndexTaskMap task_7 m1 task_7_func;
+IndexTaskMap task_11 m1 task_7_func;
+IndexTaskMap taco_fill m4 taco_fill_func;
+IndexTaskMap task_1 m4 taco_fill_func;
+IndexTaskMap task_2 m4 taco_fill_func;
+IndexTaskMap task_3 m4 taco_fill_func;
+IndexTaskMap task_9 m4 taco_fill_func;
+IndexTaskMap taco_validate m4 taco_fill_func;
