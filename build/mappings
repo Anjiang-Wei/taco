@@ -75,3 +75,5 @@ IndexTaskMap * m1 block2d;
 IndexTaskMap task_7 m1 block2d;
 IndexTaskMap task_11 m1 block2d;
 IndexTaskMap init_cublas m5 block1d;
+# IndexTaskMap task_5 m4 block2d; # causes error
+# IndexTaskMap taco_fill m4 block2d; # causes error
