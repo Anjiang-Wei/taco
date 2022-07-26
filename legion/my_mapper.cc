@@ -1010,6 +1010,7 @@ NSMapper::NSMapper(MapperRuntime *rt, Machine machine, Processor local, const ch
 
 static void create_mappers(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs)
 {
+  // todo: try only replace once like backpressure mapper
   log_mapper.debug("Inside create_mappers local_procs.size() = %ld", local_procs.size());
   for (std::set<Processor>::const_iterator it = local_procs.begin();
         it != local_procs.end(); it++)
