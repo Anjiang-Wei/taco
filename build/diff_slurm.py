@@ -4,8 +4,9 @@ def truncate(lines):
     ret = []
     for l in lines:
         l = l.strip()
-        l2 = re.sub(r'.*{mapper}', "", l)
-        ret.append(l2)
+        if "{mapper}" in l:
+            l2 = re.sub(r'.*{mapper}', "", l)
+            ret.append(l2)
     return ret
 
 
@@ -23,6 +24,6 @@ def diff_lines(l1, l2):
             print("diff", l2[i], "l2", i)
 
 
-f1 = truncate(readlines("slurm_taco.out"))
-f2 = truncate(readlines("slurm_taco_error.out"))
+f1 = truncate(readlines("slurm_taco_correct0.log"))
+f2 = truncate(readlines("slurm_my_incorrect0.log"))
 diff_lines(f1, f2)

@@ -15,8 +15,11 @@
 #define alignTo128Bytes false
 #define SPARSE_INSTANCE false
 
+#define USE_LOGGING_MAPPER
+
 #include "my_mapper.h"
 
+#include "mappers/logging_wrapper.h"
 #include "mappers/default_mapper.h"
 
 #include "compiler/y.tab.c"
@@ -1016,7 +1019,11 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
     {
       NSMapper::register_user_sharding_functors(runtime);
     }
+#ifdef USE_LOGGING_MAPPER
+    runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), *it);
+#else
     runtime->replace_default_mapper(mapper, *it);
+#endif
   }
 }
 
