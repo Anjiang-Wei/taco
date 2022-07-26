@@ -25,5 +25,5 @@ def diff_lines(l1, l2):
 
 
 f1 = truncate(readlines("slurm_taco_correct0.log"))
-f2 = truncate(readlines("slurm_my_incorrect0.log"))
+f2 = truncate(readlines("slurm_mytry_incorrect0.log"))
 diff_lines(f1, f2)
