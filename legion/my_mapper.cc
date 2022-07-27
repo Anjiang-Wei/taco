@@ -373,7 +373,12 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
                                                        const Task &task,
                                                        std::vector<Processor> &target_procs)
 {
-  target_procs.push_back(task.target_proc);
+  if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
+    // without this if branch, the results are wrong --> there is probably a runtime bug
+    target_procs.push_back(task.orig_proc);
+  } else {
+    target_procs.push_back(task.target_proc);
+  }
 }
 // WERID! after replacing with TacoMapper's default_policy_select_target_processors, GFLOPS go from 5k+ to 800+.
 // but the correctness bug is fixed.
@@ -461,7 +466,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     log_mapper.debug(
       "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
       task_name.c_str());
-    DefaultMapper::map_task(ctx, task, input, output);
+    DefaultMapper::map_task(ctx, task, input, output); // todo?: avoid duplicate for target_procs
     if (tree_result.memory_collect.size() > 0)
     {
       for (size_t i = 0; i < task.regions.size(); i++)
