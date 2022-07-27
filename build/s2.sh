@@ -9,8 +9,11 @@
 # -lg:partcheck -lg:safe_mapper
 # -level mapper=debug -logfile slurm_mytry_incorrect%.log
 # -lg:spy -logfile spy_%.log
+# -lg:safe_ctrlrepl -lg:warn
+#  -dm:replicate 0
+
 
 # mpirun -H g0002,g0003 --bind-to none ./bin/cannonMM -n 8192 -gx 2 -gy 2 -ll:ocpu 2 -ll:othr 9 -ll:nsize 3G -ll:ncsize 0 -mapping mappings -level nsmapper=debug
 # mpirun --bind-to none ./bin/cannonMM-cuda -n 8192 -lg:partcheck -lg:safe_mapper -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -level nsmapper=debug -level mapper=debug # for taco_mapper
-mpirun --bind-to none ./bin/cannonMM-cuda -n 8192 -lg:partcheck -lg:safe_mapper -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -lg:spy -logfile spy_%.log
-# mpirun --bind-to none ./bin/cannonMM-cuda -n 8192 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -level nsmapper=debug -level mapper=debug -logfile slurm_newtaco_correct%.log
+
+mpirun --bind-to none ./bin/cannonMM-cuda -n 8192 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -level nsmapper=debug
