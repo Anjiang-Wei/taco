@@ -4,6 +4,7 @@ git submodule update --init deps/OpenBLAS deps/tblis deps/cub deps/legion
 
 # for sapling
 python3 scripts/install.py --openmp --sockets 2 --cuda --dim 4 --multi-node --threads 20 --tblis
+python3 scripts/myinstall.py --openmp --sockets 2 --cuda --dim 4 --multi-node --threads 20 --tblis
 
 # invokes the compiler to generate code for cannon's matmul algorithm
 cd build
