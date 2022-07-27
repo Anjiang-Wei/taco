@@ -72,40 +72,40 @@ with pushd(args.deps_install_dir):
     os.makedirs(cmakeInstallPath, exist_ok=True)
 
     # HDF5.
-    if not os.path.exists("hdf5-1.10.1"):
-        wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
-        run("tar", "-xf", "hdf5-1.10.1.tar.gz")
-    with pushd("hdf5-1.10.1"):
-        run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
-        run("make", "-j{}".format(args.threads))
-        run("make", "-j{}".format(args.threads), "install")
+    # if not os.path.exists("hdf5-1.10.1"):
+    #     wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
+    #     run("tar", "-xf", "hdf5-1.10.1.tar.gz")
+    # with pushd("hdf5-1.10.1"):
+    #     run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
+    #     run("make", "-j{}".format(args.threads))
+    #     run("make", "-j{}".format(args.threads), "install")
 
-    # OpenBLAS.
-    with pushd(os.path.join(distalRoot, "deps", "OpenBLAS")):
-        env = {}
-        if args.openmp:
-            env["USE_OPENMP"] = "1"
-            env["NUM_PARALLEL"] = str(args.sockets)
-        run("make", "-j{}".format(args.threads), env=env)
-        run("make", "-j{}".format(args.threads), "install", env={
-            "PREFIX": makeInstallPath
-        })
+    # # OpenBLAS.
+    # with pushd(os.path.join(distalRoot, "deps", "OpenBLAS")):
+    #     env = {}
+    #     if args.openmp:
+    #         env["USE_OPENMP"] = "1"
+    #         env["NUM_PARALLEL"] = str(args.sockets)
+    #     run("make", "-j{}".format(args.threads), env=env)
+    #     run("make", "-j{}".format(args.threads), "install", env={
+    #         "PREFIX": makeInstallPath
+    #     })
 
     # TBLIS.
-    if args.tblis:
-        with pushd(os.path.join(distalRoot, "deps", "tblis")):
-            # BLAS is only used for the benchmark program, and hence disabled.
-            cmd = ["./configure",
-                   "--prefix", makeInstallPath,
-                   "--enable-config=auto",
-                   "--without-blas"]
-            if args.openmp:
-                cmd.append("--enable-thread-model=openmp")
-            else:
-                cmd.append("--enable-thread-model=none")
-            run(*cmd)
-            run("make", "-j{}".format(args.threads))
-            run("make", "-j{}".format(args.threads), "install")
+    # if args.tblis:
+    #     with pushd(os.path.join(distalRoot, "deps", "tblis")):
+    #         # BLAS is only used for the benchmark program, and hence disabled.
+    #         cmd = ["./configure",
+    #                "--prefix", makeInstallPath,
+    #                "--enable-config=auto",
+    #                "--without-blas"]
+    #         if args.openmp:
+    #             cmd.append("--enable-thread-model=openmp")
+    #         else:
+    #             cmd.append("--enable-thread-model=none")
+    #         run(*cmd)
+    #         run("make", "-j{}".format(args.threads))
+    #         run("make", "-j{}".format(args.threads), "install")
 
     # Legion.
     os.makedirs("legion-build", exist_ok=True)
@@ -142,22 +142,22 @@ with pushd(args.deps_install_dir):
         run("make", "-j{}".format(args.threads), "install")
 
 # Finally build DISTAL.
-os.makedirs(args.distal_build_dir, exist_ok=True)
-with pushd(args.distal_build_dir):
-    cmakeDefs = {
-        "BLA_VENDOR": "OpenBLAS",
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
-        "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
-    }
-    if args.openmp:
-        cmakeDefs["OPENMP"] = True
-    env = {
-        "HDF5_ROOT": makeInstallPath,
-    }
-    if args.tblis:
-        env["TBLIS_ROOT"] = makeInstallPath
-    cmake(distalRoot, cmakeDefs, env=env)
-    run("make", "-j{}".format(args.threads), "taco-test")
-    run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
-    run("make", "-j{}".format(args.threads), "cannonMM")
+# os.makedirs(args.distal_build_dir, exist_ok=True)
+# with pushd(args.distal_build_dir):
+#     cmakeDefs = {
+#         "BLA_VENDOR": "OpenBLAS",
+#         "CMAKE_BUILD_TYPE": "Release",
+#         "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
+#         "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
+#     }
+#     if args.openmp:
+#         cmakeDefs["OPENMP"] = True
+#     env = {
+#         "HDF5_ROOT": makeInstallPath,
+#     }
+#     if args.tblis:
+#         env["TBLIS_ROOT"] = makeInstallPath
+#     cmake(distalRoot, cmakeDefs, env=env)
+#     run("make", "-j{}".format(args.threads), "taco-test")
+#     run("./bin/taco-test", "--gtest_filter=distributed.cannonMM")
+#     run("make", "-j{}".format(args.threads), "cannonMM")
