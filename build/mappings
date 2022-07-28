@@ -28,7 +28,7 @@ def block_dim(IPoint x, ISpace y, MSpace z, int dim)
     b = z.size[dim];
     c = y.size[dim];
     d = a * b / c;
-    print("inside blockdim, {}, {}, {}, dim={} --> {}", a, b, c, dim, d);
+    # print("inside blockdim, {}, {}, {}, dim={} --> {}", a, b, c, dim, d);
     return x[dim] * z.size[dim] / y.size[dim];
 }
 
