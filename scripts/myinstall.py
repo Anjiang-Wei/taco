@@ -118,12 +118,13 @@ with pushd(args.deps_install_dir):
         cmakeDefs = {
             "BUILD_SHARED_LIBS": True,
             "CMAKE_CXX_FLAGS": "--std=c++11",
-            "CMAKE_BUILD_TYPE": "Debug", # Debug mode
+            "CMAKE_BUILD_TYPE": "Release", # Release mode
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
             "Legion_USE_HDF5": True,
-            "Legion_SPY": True, # below 3 specificially added for debugging
-            "Legion_BOUNDS_CHECKS": True,
-            "Legion_PRIVILEGE_CHECKS": True,
+            # "CMAKE_BUILD_TYPE": "Debug", # Debug mode
+            # "Legion_SPY": True, # below 3 specificially added for debugging
+            # "Legion_BOUNDS_CHECKS": True,
+            # "Legion_PRIVILEGE_CHECKS": True,
         }
         if args.openmp:
             cmakeDefs["Legion_USE_OpenMP"] = True
