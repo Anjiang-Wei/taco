@@ -143,7 +143,10 @@ os.makedirs(args.distal_build_dir, exist_ok=True)
 with pushd(args.distal_build_dir):
     cmakeDefs = {
         "BLA_VENDOR": "OpenBLAS",
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "Legion_SPY": True,
+        "Legion_BOUNDS_CHECKS": True,
+        "Legion_PRIVILEGE_CHECKS": True,
         "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
         "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
     }
