@@ -1,4 +1,5 @@
 import re
+import sys
 
 def truncate(lines):
     ret = []
@@ -24,6 +25,8 @@ def diff_lines(l1, l2):
             print("diff", l2[i], "l2", i)
 
 
-f1 = truncate(readlines("mapper_taco0.log"))
-f2 = truncate(readlines("mapper_dsl0.log"))
+print("l1:", sys.argv[1])
+print("l2:", sys.argv[2])
+f1 = truncate(readlines(sys.argv[1]))
+f2 = truncate(readlines(sys.argv[2]))
 diff_lines(f1, f2)
