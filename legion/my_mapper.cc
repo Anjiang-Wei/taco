@@ -525,7 +525,7 @@ void NSMapper::map_task(const MapperContext      ctx,
       for (auto &mem_kind: memory_list)
       {
         Machine::MemoryQuery visible_memories(machine);
-        visible_memories.has_affinity_to(task.target_proc);
+        visible_memories.best_affinity_to(task.target_proc);
         visible_memories.only_kind(mem_kind);
         if (visible_memories.count() > 0)
         {
@@ -547,7 +547,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     if (found_policy)
     {
       Machine::MemoryQuery visible_memories(machine);
-      visible_memories.has_affinity_to(task.target_proc);
+      visible_memories.best_affinity_to(task.target_proc);
       visible_memories.only_kind(target_kind);
       if (visible_memories.count() > 0)
         target_memory = visible_memories.first();

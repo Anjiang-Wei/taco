@@ -16,6 +16,10 @@ void tacoValidateGPUKernel(
     T value, Pitches<DIM - 1> pitches, Legion::Point<DIM> lo, size_t volume) {
   const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= volume) return;
+  if (a[pitches.unflatten(idx, lo)] != value)
+  {
+    printf("%lf, %lf\n", a[pitches.unflatten(idx, lo)], value);
+  }
   assert(a[pitches.unflatten(idx, lo)] == value);
 }
 
