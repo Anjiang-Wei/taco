@@ -24,6 +24,6 @@ def diff_lines(l1, l2):
             print("diff", l2[i], "l2", i)
 
 
-f1 = truncate(readlines("slurm_newtaco_correct0.log"))
-f2 = truncate(readlines("slurm_newmytry_incorrect0.log"))
+f1 = truncate(readlines("mapper_taco0.log"))
+f2 = truncate(readlines("mapper_dsl0.log"))
 diff_lines(f1, f2)
