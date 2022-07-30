@@ -12,6 +12,38 @@ if(Legion_USE_CUDA)
   find_package(CUDA REQUIRED)
 endif()
 
+# The Legion::Legion target is composed of Legion::LegionRuntime and Legion::RealmRuntime.
+# We can find the locations of each of these explicitly as the logic to iterate over lists
+# etc within CMake is too annoying.
+get_target_property(LEGION_INCLUDE_PATHS Legion::LegionRuntime INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(REALM_INCLUDE_PATHS Legion::RealmRuntime INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(LEGION_LIB_LOCATION Legion::LegionRuntime INTERFACE_LOCATION)
+get_target_property(REALM_LIB_LOCATION Legion::RealmRuntime INTERFACE_LOCATION)
+# We have to clean up the physical paths constructed by CMake as if the full
+# shared library path is passed, NVCC gets unhappy and can't figure out what
+# kind of file a shared library is. So, we have to make sure all of the shared
+# libraries that we construct here actually end with .so, and nothing else. We
+# also have to make sure not to do anything if we end with .dylib for local Mac
+# development.
+if (NOT ${LEGION_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${LEGION_LIB_LOCATION} MATCHES ".*.dylib$")
+  get_filename_component(LEGION_LIB_DIR ${LEGION_LIB_LOCATION} DIRECTORY)
+  get_filename_component(LEGION_LIB_NAME ${LEGION_LIB_LOCATION} NAME_WLE)
+  set(LEGION_LIB_LOCATION "${LEGION_LIB_DIR}/${LEGION_LIB_NAME}")
+endif()
+if (NOT ${REALM_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${REALM_LIB_LOCATION} MATCHES ".*.dylib$")
+  get_filename_component(REALM_LIB_DIR ${REALM_LIB_LOCATION} DIRECTORY)
+  get_filename_component(REALM_LIB_NAME ${REALM_LIB_LOCATION} NAME_WLE)
+  set(REALM_LIB_LOCATION "${REALM_LIB_DIR}/${REALM_LIB_NAME}")
+endif()
+# Package up all of the include paths into properly formatted include paths for the
+# call to the host compiler.
+foreach(PATH IN LISTS LEGION_INCLUDE_PATHS REALM_INCLUDE_PATHS)
+    list(APPEND DISTAL_JIT_INCLUDE_PATHS ${PATH})
+endforeach()
+list(APPEND DISTAL_JIT_INCLUDE_PATHS ${DISTAL_RUNTIME_LIB_INCLUDE} ${BLAS_INCLUDE_DIRS})
+list(TRANSFORM DISTAL_JIT_INCLUDE_PATHS PREPEND "-I")
+list(JOIN DISTAL_JIT_INCLUDE_PATHS " " DISTAL_JIT_INCLUDE_PATHS)
+
 # We're targeting GPUs with at least -sm_60 capability. We need this so that
 # we can use the atomicAdd() function in leaf kernels.
 # On Lassen, we need to target -sm_70.
@@ -34,12 +66,23 @@ if (DISTAL_USE_LOGGING_MAPPER)
 endif()
 # DISTAL-Runtime is the runtime library to interact with DISTAL generated code,
 # as well as support that DISTAL generated kernels need.
+file(GLOB DISTAL_RUNTIME_SOURCE runtime/distal-runtime.h runtime/*.cpp)
+add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
 if (Legion_USE_CUDA)
-    file(GLOB DISTAL_RUNTIME_SOURCE runtime/distal-runtime.h runtime/*.cpp runtime/distal-runtime.h runtime/*.cu)
-    cuda_add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
-else()
-    file(GLOB DISTAL_RUNTIME_SOURCE runtime/distal-runtime.h runtime/*.cpp)
-    add_library(distal-runtime SHARED ${DISTAL_RUNTIME_SOURCE})
+    file(GLOB DISTAL_RUNTIME_CU_SOURCE runtime/*.cu)
+    cuda_compile(DISTAL_CUDA_OBJS ${DISTAL_RUNTIME_CU_SOURCE} OPTIONS 
+	    ${DISTAL_JIT_INCLUDE_PATHS}
+	    -I ${CMAKE_CURRENT_SOURCE_DIR}/include/ 
+	    -I ${CMAKE_CURRENT_SOURCE_DIR}/include/runtime/
+	    -I ${CMAKE_BINARY_DIR}/include
+	    -DTACO_USE_CUDA
+	    -Xcompiler -fPIC 
+	    -Xcompiler -std=c++11
+	    DEBUG -g 
+	    RELEASE -O2 
+	    RELWITHDEBINFO -g -O2
+    )
+    target_sources(distal-runtime PRIVATE ${DISTAL_CUDA_OBJS})
 endif()
 
 target_include_directories(distal-runtime PRIVATE include/ include/runtime/ "${CMAKE_BINARY_DIR}/include")
@@ -92,38 +135,7 @@ install(TARGETS distal-compiler-aot DESTINATION lib)
 # Collect include paths and library locations for the DISTAL runtime library.
 get_filename_component(DISTAL_RUNTIME_LIB_INCLUDE "include/runtime" ABSOLUTE)
 get_property(DISTAL_RUNTIME_LIB_LOCATION TARGET distal-runtime PROPERTY LOCATION)
-# The Legion::Legion target is composed of Legion::LegionRuntime and Legion::RealmRuntime.
-# We can find the locations of each of these explicitly as the logic to iterate over lists
-# etc within CMake is too annoying.
-get_target_property(LEGION_INCLUDE_PATHS Legion::LegionRuntime INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(REALM_INCLUDE_PATHS Legion::RealmRuntime INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(LEGION_LIB_LOCATION Legion::LegionRuntime INTERFACE_LOCATION)
-get_target_property(REALM_LIB_LOCATION Legion::RealmRuntime INTERFACE_LOCATION)
-# We have to clean up the physical paths constructed by CMake as if the full
-# shared library path is passed, NVCC gets unhappy and can't figure out what
-# kind of file a shared library is. So, we have to make sure all of the shared
-# libraries that we construct here actually end with .so, and nothing else. We
-# also have to make sure not to do anything if we end with .dylib for local Mac
-# development.
-if (NOT ${LEGION_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${LEGION_LIB_LOCATION} MATCHES ".*.dylib$")
-  get_filename_component(LEGION_LIB_DIR ${LEGION_LIB_LOCATION} DIRECTORY)
-  get_filename_component(LEGION_LIB_NAME ${LEGION_LIB_LOCATION} NAME_WLE)
-  set(LEGION_LIB_LOCATION "${LEGION_LIB_DIR}/${LEGION_LIB_NAME}")
-endif()
-if (NOT ${REALM_LIB_LOCATION} MATCHES ".*.so$" AND NOT ${REALM_LIB_LOCATION} MATCHES ".*.dylib$")
-  get_filename_component(REALM_LIB_DIR ${REALM_LIB_LOCATION} DIRECTORY)
-  get_filename_component(REALM_LIB_NAME ${REALM_LIB_LOCATION} NAME_WLE)
-  set(REALM_LIB_LOCATION "${REALM_LIB_DIR}/${REALM_LIB_NAME}")
-endif()
 
-# Package up all of the include paths into properly formatted include paths for the
-# call to the host compiler.
-foreach(PATH IN LISTS LEGION_INCLUDE_PATHS REALM_INCLUDE_PATHS)
-    list(APPEND DISTAL_JIT_INCLUDE_PATHS ${PATH})
-endforeach()
-list(APPEND DISTAL_JIT_INCLUDE_PATHS ${DISTAL_RUNTIME_LIB_INCLUDE} ${BLAS_INCLUDE_DIRS})
-list(TRANSFORM DISTAL_JIT_INCLUDE_PATHS PREPEND "-I")
-list(JOIN DISTAL_JIT_INCLUDE_PATHS " " DISTAL_JIT_INCLUDE_PATHS)
 # Package up all of the individual libraries needed by JIT-ed code.
 set(DISTAL_JIT_LINK_FLAGS "${LEGION_LIB_LOCATION} ${REALM_LIB_LOCATION} -lstdc++ ${BLAS_LIBRARIES} ${DISTAL_RUNTIME_LIB_LOCATION}")
 # Using these defined variables, generate a header file preprocessed with the variables.
