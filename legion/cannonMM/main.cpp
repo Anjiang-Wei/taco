@@ -100,7 +100,21 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     }                       \
     registerTACOFillTasks<FillType>();             \
     registerTACOValidateTasks<FillType>();             \
-    register_mappers(); \
+    bool dslmapper = false; \
+    for (int i = 1; i < argc; i++) { \
+      if (strcmp(argv[i], "-dslmapper") == 0) { \
+        register_mappers(); \
+        dslmapper = true; \
+        break; \
+      } \
+    } \
+    if (dslmapper) { \
+      register_mappers(); \
+    } \
+    else \
+    { \
+      Runtime::add_registration_callback(register_taco_mapper); \
+    } \
     initCUDA(); \
     registerTacoTasks();    \
     Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor()); \
