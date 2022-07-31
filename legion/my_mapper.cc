@@ -72,7 +72,6 @@ public:
   static std::string get_policy_file();
   void parse_policy_file(const std::string &policy_file);
   static void register_user_sharding_functors(Runtime *runtime);
-
 private:
   Processor select_initial_processor_by_kind(const Task &task, Processor::Kind kind);
   bool validate_processor_mapping(MapperContext ctx, const Task &task, Processor proc, bool strict=true);
@@ -374,7 +373,7 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
                                                        std::vector<Processor> &target_procs)
 {
   if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
-    // without this if branch, the results are wrong --> there is probably a runtime bug
+    // todo: add feature, staylocal
     target_procs.push_back(task.orig_proc);
   } else {
     target_procs.push_back(task.target_proc);
@@ -457,16 +456,13 @@ void NSMapper::map_task(const MapperContext      ctx,
   output.chosen_variant = chosen.variant;
   output.task_priority = default_policy_select_task_priority(ctx, task);
   output.postmap_task = false;
-  default_policy_select_target_processors(ctx, task, output.target_procs);
-  log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
-    task_name.c_str(), processor_kind_to_string(output.target_procs[0].kind()).c_str());
 
   if (chosen.is_inner)
   {
     log_mapper.debug(
       "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
       task_name.c_str());
-    DefaultMapper::map_task(ctx, task, input, output); // todo?: avoid duplicate for target_procs
+    DefaultMapper::map_task(ctx, task, input, output);
     if (tree_result.memory_collect.size() > 0)
     {
       for (size_t i = 0; i < task.regions.size(); i++)
@@ -491,6 +487,10 @@ void NSMapper::map_task(const MapperContext      ctx,
     }
     return;
   }
+
+  default_policy_select_target_processors(ctx, task, output.target_procs);
+  log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
+    task_name.c_str(), processor_kind_to_string(output.target_procs[0].kind()).c_str());
 
   // todo: construct a LayoutConstraintSet objectA, and populate the fields
   const TaskLayoutConstraintSet &layout_constraints =
@@ -525,13 +525,17 @@ void NSMapper::map_task(const MapperContext      ctx,
       for (auto &mem_kind: memory_list)
       {
         Machine::MemoryQuery visible_memories(machine);
-        visible_memories.best_affinity_to(task.target_proc);
-        visible_memories.only_kind(mem_kind);
+        visible_memories.local_address_space()
+                        .only_kind(mem_kind)
+                        .best_affinity_to(output.target_procs[0])
+                        ;
         if (visible_memories.count() > 0)
         {
           target_memory = visible_memories.first();
           if (target_memory.exists())
           {
+            log_mapper.debug() << target_memory.id << " best affinity to " 
+              << task.target_proc.id << " in task " << task.task_id;
             target_kind = mem_kind;
             found_policy = true;
             auto key = std::make_pair(task.task_id, idx);
@@ -547,8 +551,10 @@ void NSMapper::map_task(const MapperContext      ctx,
     if (found_policy)
     {
       Machine::MemoryQuery visible_memories(machine);
-      visible_memories.best_affinity_to(task.target_proc);
-      visible_memories.only_kind(target_kind);
+      visible_memories.local_address_space()
+                      .only_kind(target_kind)
+                      .best_affinity_to(output.target_procs[0])
+                      ;
       if (visible_memories.count() > 0)
         target_memory = visible_memories.first();
     }
