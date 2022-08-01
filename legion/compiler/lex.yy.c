@@ -949,12 +949,12 @@ YY_RULE_SETUP
 case 12:
 YY_RULE_SETUP
 #line 39 "scanner.l"
-{ return T_Reverse_Dimension; }
+{ return T_Positive_Dimension; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
 #line 40 "scanner.l"
-{ return T_Positive_Dimension; }
+{ return T_Reverse_Dimension; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP

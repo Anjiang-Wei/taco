@@ -814,7 +814,15 @@ public:
 	bool align;
 	BinOpEnum align_op;
 	int align_int;
-	ConstraintsNode() { reverse = false; aos = true; compact=false; align=false; }
+	ConstraintsNode()
+	{
+		reverse = false;
+		aos = true;
+		compact = false;
+		align = false;
+		align_op = PLUS;
+		align_int = 0;
+	}
 	void update(const char* x)
 	{
 		if (!strcmp(x, "reverse"))

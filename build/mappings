@@ -9,7 +9,7 @@ Region * * CPU SOCKMEM,SYSMEM;
 
 # ZCMEM,FBMEM,SYSMEM,RDMEM
 # Layout taskname regionname memory AOS F_order;
-Layout * * * AOS F_order Align==128; # Compact
+Layout * * * SOA C_order; # Align==128 Compact
 
 # InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 

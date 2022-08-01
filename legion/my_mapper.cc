@@ -849,7 +849,6 @@ template<int DIM>
         index_point.push_back(point[i]);
         log_mapper.debug() << point[i] << " ,";
       }
-      // todo: think harder!
       if (tree_result.prerun_validate(taskname, targets[0].kind()) == false)
       {
         log_mapper.error() << taskname << " is actually mapped to " <<
@@ -1019,7 +1018,6 @@ NSMapper::NSMapper(MapperRuntime *rt, Machine machine, Processor local, const ch
 
 static void create_mappers(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs)
 {
-  // todo: try only replace once like backpressure mapper
   log_mapper.debug("Inside create_mappers local_procs.size() = %ld", local_procs.size());
   bool backpressure = false;
   for (std::set<Processor>::const_iterator it = local_procs.begin();
@@ -1160,7 +1158,7 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
       dsl_constraint = *(value.at(Memory::NO_MEMKIND));
     }
   }
-  // Ensure that regions are mapped in row-major order.
+
   Legion::IndexSpace is = req.region.get_index_space();
   Legion::Domain domain = runtime->get_index_space_domain(ctx, is);
   int dim = domain.get_dim();
@@ -1172,49 +1170,42 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
     {
       for (int i = 0; i < dim; ++i)
       {
-        dimension_ordering[dim - i - 1] =
+        dimension_ordering[dim - i] =
           static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
       }
-      dimension_ordering[dim] = LEGION_DIM_F; // F_order, AOS
+      dimension_ordering[0] = LEGION_DIM_F;
     }
     else
     {
       for (int i = 0; i < dim; ++i)
       {
-        dimension_ordering[dim - i] =
+        dimension_ordering[dim - i - 1] =
           static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
       }
-      dimension_ordering[0] = LEGION_DIM_F;
+      dimension_ordering[dim] = LEGION_DIM_F; // soa
     }
   }
   else
   {
     if (dsl_constraint.aos)
     {
-      for (int i = 0; i < dim; ++i)
-      {
-        dimension_ordering[i] =
-          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
-      }
-      dimension_ordering[dim] = LEGION_DIM_F; // C_order, AOS
-    }
-    else
-    {
       for (int i = 1; i < dim + 1; ++i)
       {
         dimension_ordering[i] =
           static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
       }
-      dimension_ordering[0] = LEGION_DIM_F;
+      dimension_ordering[0] = LEGION_DIM_F; // aos
+    }
+    else
+    {
+      for (int i = 0; i < dim; ++i)
+      {
+        dimension_ordering[i] =
+          static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
+      }
+      dimension_ordering[dim] = LEGION_DIM_F; // soa
     }
   }
-  /*
-  for (int i = 0; i < dim; ++i) {
-    dimension_ordering[dim - i - 1] =
-        static_cast<Legion::DimensionKind>(static_cast<int>(LEGION_DIM_X) + i);
-  } // row-major; reverse is column major, starting from i=1.
-  dimension_ordering[dim] = LEGION_DIM_F; // AOS; if SOA, then 0
-  */
   constraints.add_constraint(Legion::OrderingConstraint(dimension_ordering, false/*contiguous*/));
   // If we were requested to have an alignment, add the constraint.
   if (dsl_constraint.align)
@@ -1224,19 +1215,11 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
         myop2legion(dsl_constraint.align_op), dsl_constraint.align_int));
     }
   }
-  /*
-  if (alignTo128Bytes) {
-    for (auto it : req.privilege_fields) {
-      constraints.add_constraint(Legion::AlignmentConstraint(it, LEGION_EQ_EK, 128));
-    }
-  }
-  */
   // If the instance is supposed to be sparse, tell Legion we want it that way.
   // Unfortunately because we are adjusting the SpecializedConstraint, we have to
   // fully override the default mapper because there appears to be some undefined
   // behavior when two specialized constraints are added.
 
-  //if ((req.tag & SPARSE_INSTANCE) != 0) {
   if (dsl_constraint.compact)
   {
     assert(req.privilege != LEGION_REDUCE);
