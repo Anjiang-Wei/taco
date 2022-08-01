@@ -139,6 +139,8 @@ public:
                                  SelectMappingOutput& output) override;
 
 protected:
+  Memory query_best_memory_for_proc(const Processor& proc,
+                                    const Memory::Kind& mem_target_kind);
   void custom_slice_task(const Task &task,
                           const std::vector<Processor> &local_procs,
                           const std::vector<Processor> &remote_procs,
@@ -159,6 +161,7 @@ private:
   using HashFn2 = PairHash<TaskID, uint32_t>;
   std::unordered_map<std::pair<TaskID, uint32_t>, Memory::Kind, HashFn2> cached_region_policies;
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
+  std::unordered_map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
 
 public:
   static Tree2Legion tree_result;
@@ -418,6 +421,32 @@ void NSMapper::get_handle_names(const MapperContext ctx,
     maybe_append_handle_name(ctx, req.parent, names);
 }
 
+Memory NSMapper::query_best_memory_for_proc(const Processor& proc, const Memory::Kind& mem_target_kind)
+{
+  if (cached_affinity_proc2mem.count({proc, mem_target_kind}) > 0)
+  {
+    return cached_affinity_proc2mem.at({proc, mem_target_kind});
+  }
+  Machine::MemoryQuery visible_memories(machine);
+  visible_memories.local_address_space()
+                  .only_kind(mem_target_kind)
+                  .best_affinity_to(proc)
+                  ;
+  if (visible_memories.count() > 0)
+  {
+    Memory result = visible_memories.first();
+    if (result.exists())
+    {
+      cached_affinity_proc2mem.insert({{proc, mem_target_kind}, result});
+      return result;
+    }
+  }
+  else
+  {
+    return Memory::NO_MEMORY;
+  }
+}
+
 void NSMapper::map_task(const MapperContext      ctx,
                         const Task&              task,
                         const MapTaskInput&      input,
@@ -454,8 +483,6 @@ void NSMapper::map_task(const MapperContext      ctx,
         }
       }
     }
-    // if (tree_result.should_collect_memory())
-    // should_collect_memory
     if (tree_result.query_max_instance(task_name, target_proc_kind) > 0)
     {
       output.task_prof_requests.add_measurement<ProfilingMeasurements::OperationStatus>();
@@ -464,8 +491,9 @@ void NSMapper::map_task(const MapperContext      ctx,
   }
 
   default_policy_select_target_processors(ctx, task, output.target_procs);
+  Processor target_processor = output.target_procs[0];
   log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
-    task_name.c_str(), processor_kind_to_string(output.target_procs[0].kind()).c_str());
+    task_name.c_str(), processor_kind_to_string(target_processor.kind()).c_str());
 
   // todo: construct a LayoutConstraintSet objectA, and populate the fields
   const TaskLayoutConstraintSet &layout_constraints =
@@ -477,7 +505,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     if (req.privilege == LEGION_NO_ACCESS || req.privilege_fields.empty()) continue;
 
     bool found_policy = false;
-    Memory::Kind target_kind = Memory::SYSTEM_MEM;
+    Memory::Kind target_kind = Memory::NO_MEMKIND;
     Memory target_memory = Memory::NO_MEMORY;
     std::string region_name;
 
@@ -488,6 +516,8 @@ void NSMapper::map_task(const MapperContext      ctx,
       found_policy = true;
       target_kind = finder->second;
       region_name = cached_region_names.find(cache_key)->second;
+      target_memory = query_best_memory_for_proc(target_processor, target_kind);
+      assert(target_memory.exists());
       log_mapper.debug() << "cached_region_policies: " << memory_kind_to_string(target_kind);
     }
 
@@ -499,53 +529,28 @@ void NSMapper::map_task(const MapperContext      ctx,
       std::vector<Memory::Kind> memory_list = tree_result.query_memory_list(task_name, path, target_proc_kind);
       for (auto &mem_kind: memory_list)
       {
-        Machine::MemoryQuery visible_memories(machine);
-        visible_memories.local_address_space()
-                        .only_kind(mem_kind)
-                        .best_affinity_to(output.target_procs[0])
-                        ;
-        if (visible_memories.count() > 0)
+        Memory target_memory_try = query_best_memory_for_proc(target_processor, mem_kind);
+        if (target_memory_try.exists())
         {
-          target_memory = visible_memories.first();
-          if (target_memory.exists())
-          {
-            log_mapper.debug() << target_memory.id << " best affinity to " 
+          log_mapper.debug() << target_memory_try.id << " best affinity to " 
               << task.target_proc.id << " in task " << task.task_id;
-            target_kind = mem_kind;
-            found_policy = true;
-            auto key = std::make_pair(task.task_id, idx);
-            region_name =  task_name + "_region_" + std::to_string(idx);
-            cached_region_policies[key] = target_kind;
-            cached_region_names[key] = region_name;
-            break;
-          }
+          target_kind = mem_kind;
+          target_memory = target_memory_try;
+          found_policy = true;
+          auto key = std::make_pair(task.task_id, idx);
+          region_name =  task_name + "_region_" + std::to_string(idx);
+          cached_region_policies[key] = target_kind;
+          cached_region_names[key] = region_name;
+          break;
         }
       }
     }
 
-    if (found_policy)
-    {
-      Machine::MemoryQuery visible_memories(machine);
-      visible_memories.local_address_space()
-                      .only_kind(target_kind)
-                      .best_affinity_to(output.target_procs[0])
-                      ;
-      if (visible_memories.count() > 0)
-        target_memory = visible_memories.first();
-    }
-
-    if (target_memory.exists())
-    {
-      auto kind_str = memory_kind_to_string(target_kind);
-      log_mapper.debug(
-          "Region %u of task %s (%s) is mapped to %s",
-          idx, task.get_task_name(), region_name.c_str(), kind_str.c_str());
-    }
-    else
+    if (!found_policy)
     {
       log_mapper.debug(
-        "Unsatisfiable policy for memory: region %u of task %s cannot be mapped to %s, falling back to the default policy",
-        idx, task.get_task_name(), memory_kind_to_string(target_kind).c_str());
+        "Cannot find a policy for memory: region %u of task %s cannot be mapped, falling back to the default policy",
+        idx, task.get_task_name());
       auto mem_constraint =
         find_memory_constraint(ctx, task, output.chosen_variant, idx);
       target_memory =
