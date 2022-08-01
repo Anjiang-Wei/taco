@@ -161,7 +161,7 @@ private:
   using HashFn2 = PairHash<TaskID, uint32_t>;
   std::unordered_map<std::pair<TaskID, uint32_t>, Memory::Kind, HashFn2> cached_region_policies;
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
-  std::unordered_map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
+  std::map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
 
 public:
   static Tree2Legion tree_result;
@@ -441,10 +441,7 @@ Memory NSMapper::query_best_memory_for_proc(const Processor& proc, const Memory:
       return result;
     }
   }
-  else
-  {
-    return Memory::NO_MEMORY;
-  }
+  return Memory::NO_MEMORY;
 }
 
 void NSMapper::map_task(const MapperContext      ctx,
