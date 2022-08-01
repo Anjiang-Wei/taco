@@ -1021,6 +1021,7 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
 {
   // todo: try only replace once like backpressure mapper
   log_mapper.debug("Inside create_mappers local_procs.size() = %ld", local_procs.size());
+  bool backpressure = false;
   for (std::set<Processor>::const_iterator it = local_procs.begin();
         it != local_procs.end(); it++)
   {
@@ -1028,12 +1029,17 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
     if (it == local_procs.begin())
     {
       NSMapper::register_user_sharding_functors(runtime);
+      backpressure = (mapper->tree_result.task2limit.size() > 0);
     }
 #ifdef USE_LOGGING_MAPPER
     runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), *it);
 #else
     runtime->replace_default_mapper(mapper, *it);
 #endif
+    if (backpressure)
+    {
+      break;
+    }
   }
 }
 
