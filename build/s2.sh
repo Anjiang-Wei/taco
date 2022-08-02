@@ -23,4 +23,4 @@
 
 # mpirun --bind-to none ./bin/cannonMM-cuda -n 20000 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings
 # mpirun --bind-to none ./bin/cannonMM-cuda -n 20000 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -level nsmapper=debug -level mapper=debug -logfile mapper_taco%.log -lg:prof 2 -lg:prof_logfile prof_taco%.gz
-mpirun --bind-to none ./bin/cannonMM-cuda -n 20000 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -level nsmapper=debug -dslmapper -level mapper=debug -logfile mapper_dsl%.log -lg:prof 2 -lg:prof_logfile prof_dsl%.gz
+mpirun --bind-to none ./bin/cannonMM-cuda -n 20000 -ll:gpu 4 -ll:fsize 15G -ll:ocpu 1 -ll:othr 1 -ll:nsize 30G -ll:ncsize 0 -gx 1 -gy 2 -mapping mappings -dslmapper # -level nsmapper=debug -level mapper=debug -logfile mapper_dsl%.log -lg:prof 2 -lg:prof_logfile prof_dsl%.gz

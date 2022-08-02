@@ -124,11 +124,12 @@ public:
   virtual void select_task_options(const MapperContext    ctx,
                                   const Task&            task,
                                         TaskOptions&     output);
-  // copied from DISTAL/runtime/taco_mapper.cpp
-  virtual void default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
-                                                   Legion::LayoutConstraintSet &constraints,
-                                                   Legion::Memory target_memory,
-                                                   const Legion::RegionRequirement &req);
+  void custom_policy_select_constraints(const Task &task,
+                                        const std::vector<std::string> &region_names,
+                                        const Legion::Mapping::MapperContext ctx,
+                                        Legion::LayoutConstraintSet &constraints,
+                                        const Legion::Memory &target_memory,
+                                        const Legion::RegionRequirement &req);
   MapperSyncModel get_mapper_sync_model() const override;
   void report_profiling(const Legion::Mapping::MapperContext ctx,
                         const Legion::Task& task,
@@ -166,6 +167,7 @@ private:
   using HashFn2 = PairHash<TaskID, uint32_t>;
   std::unordered_map<std::pair<TaskID, uint32_t>, Memory::Kind, HashFn2> cached_region_policies;
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
+  std::unordered_map<std::pair<TaskID, uint32_t>, LayoutConstraintSet, HashFn2> cached_region_layout;
   std::map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
 
 public:
@@ -495,7 +497,7 @@ void NSMapper::map_task(const MapperContext      ctx,
   if (chosen.is_inner)
   {
     log_mapper.debug(
-      "is_inner = true; Unsupported variant is chosen for task %s, falling back to the default policy",
+      "is_inner = true, falling back to the default policy",
       task_name.c_str());
     DefaultMapper::map_task(ctx, task, input, output);
     map_task_post_function(ctx, task, task_name, target_proc_kind, output);
@@ -507,9 +509,8 @@ void NSMapper::map_task(const MapperContext      ctx,
   log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
     task_name.c_str(), processor_kind_to_string(target_processor.kind()).c_str());
 
-  // todo: construct a LayoutConstraintSet objectA, and populate the fields
-  const TaskLayoutConstraintSet &layout_constraints =
-    runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
+  // const TaskLayoutConstraintSet &layout_constraints =
+  //   runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
 
   for (uint32_t idx = 0; idx < task.regions.size(); ++idx)
   {
@@ -520,6 +521,7 @@ void NSMapper::map_task(const MapperContext      ctx,
     Memory::Kind target_kind = Memory::NO_MEMKIND;
     Memory target_memory = Memory::NO_MEMORY;
     std::string region_name;
+    LayoutConstraintSet layout_constraints;
 
     auto cache_key = std::make_pair(task.task_id, idx);
     auto finder = cached_region_policies.find(cache_key);
@@ -528,6 +530,7 @@ void NSMapper::map_task(const MapperContext      ctx,
       found_policy = true;
       target_kind = finder->second;
       region_name = cached_region_names.find(cache_key)->second;
+      layout_constraints = cached_region_layout.find(cache_key)->second;
       target_memory = query_best_memory_for_proc(target_processor, target_kind);
       assert(target_memory.exists());
       log_mapper.debug() << "cached_region_policies: " << memory_kind_to_string(target_kind);
@@ -549,10 +552,12 @@ void NSMapper::map_task(const MapperContext      ctx,
           target_kind = mem_kind;
           target_memory = target_memory_try;
           found_policy = true;
+          custom_policy_select_constraints(task, path, ctx, layout_constraints, target_memory, req);
           auto key = std::make_pair(task.task_id, idx);
           region_name =  task_name + "_region_" + std::to_string(idx);
           cached_region_policies[key] = target_kind;
           cached_region_names[key] = region_name;
+          cached_region_layout[key] = layout_constraints;
           break;
         }
       }
@@ -569,47 +574,16 @@ void NSMapper::map_task(const MapperContext      ctx,
         default_policy_select_target_memory(ctx, task.target_proc, req, mem_constraint);
     }
 
-    // todo: invoke DefaultMapper::default_make_instance(MapperContext ctx
-    auto missing_fields = req.privilege_fields;
-    if (req.privilege == LEGION_REDUCE)
-    {
-      size_t footprint;
-      if (!default_create_custom_instances(ctx, task.target_proc,
-              target_memory, req, idx, missing_fields,
-              layout_constraints, true,
-              output.chosen_instances[idx], &footprint))
-      {
-        default_report_failed_instance_creation(task, idx,
-              task.target_proc, target_memory, footprint);
-      }
-      continue;
-    }
-
-    std::vector<PhysicalInstance> valid_instances;
-
-    for (auto &instance : input.valid_instances[idx])
-      if (instance.get_location() == target_memory)
-        valid_instances.push_back(instance);
-
-    runtime->filter_instances(ctx, task, idx, output.chosen_variant,
-                              valid_instances, missing_fields);
-
-    bool check = runtime->acquire_and_filter_instances(ctx, valid_instances);
-    assert(check);
-
-    output.chosen_instances[idx] = valid_instances;
-
-    if (missing_fields.empty()) continue;
-
     size_t footprint;
-    if (!default_create_custom_instances(ctx, task.target_proc,
-            target_memory, req, idx, missing_fields,
-            layout_constraints, true,
-            output.chosen_instances[idx], &footprint))
+    PhysicalInstance valid_instance;
+    if (!default_make_instance(ctx, target_memory, layout_constraints, 
+        valid_instance, TASK_MAPPING, req.privilege == LEGION_REDUCE /*force_new*/, 
+        true, req, &footprint))
     {
       default_report_failed_instance_creation(task, idx,
-              task.target_proc, target_memory, footprint);
+              target_processor, target_memory, footprint);
     }
+    output.chosen_instances[idx].push_back(valid_instance);
   }
   map_task_post_function(ctx, task, task_name, target_proc_kind, output);
 }
@@ -1130,33 +1104,21 @@ namespace Legion {
 }
 
 
-// copied from DISTAL/runtime/taco_mapper.cpp
-void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext ctx,
-                                                   Legion::LayoutConstraintSet &constraints,
-                                                   Legion::Memory target_memory,
-                                                   const Legion::RegionRequirement &req) {
-  /*
-  todo: customize the layout constraints for task_names(?) and region_names
-  std::vector<std::string> names;
-  get_handle_names(ctx, req, names);
-  */
+void NSMapper::custom_policy_select_constraints(const Task &task,
+                                      const std::vector<std::string> &region_names,
+                                      const Legion::Mapping::MapperContext ctx,
+                                      Legion::LayoutConstraintSet &constraints,
+                                      const Legion::Memory &target_memory,
+                                      const Legion::RegionRequirement &req)
+{
   Memory::Kind target_memory_kind = target_memory.kind();
 
   ConstraintsNode dsl_constraint;
-  std::pair<std::string, std::string> key = std::make_pair("*", "*");
-  if (tree_result.layout_constraints.count(key) > 0)
+
+  ConstraintsNode* dsl_constraint_pt = tree_result.query_constraint(task.get_task_name(), region_names, target_memory_kind);
+  if (dsl_constraint_pt != NULL)
   {
-    std::unordered_map<Memory::Kind, ConstraintsNode*> value = tree_result.layout_constraints.at(key);
-    if (value.count(target_memory_kind) > 0)
-    {
-      log_mapper.debug() << "hit specific memory kind for constraints";
-      dsl_constraint = *(value.at(target_memory_kind));
-    }
-    else if (value.count(Memory::NO_MEMKIND) > 0)
-    {
-      log_mapper.debug() << "hit NO_MEMKIND memory kind for constraints";
-      dsl_constraint = *(value.at(Memory::NO_MEMKIND));
-    }
+    dsl_constraint = *dsl_constraint_pt;
   }
 
   Legion::IndexSpace is = req.region.get_index_space();
@@ -1231,7 +1193,7 @@ void NSMapper::default_policy_select_constraints(Legion::Mapping::MapperContext 
       .add_constraint(MemoryConstraint(target_memory.kind()));
   } else {
     // Our base default mapper will try to make instances of containing
-    // all fields (in any order) laid out in SOA format to encourage
+    // all fields (in any order) to encourage
     // maximum re-use by any tasks which use subsets of the fields
     constraints.add_constraint(SpecializedConstraint())
                .add_constraint(MemoryConstraint(target_memory.kind()));

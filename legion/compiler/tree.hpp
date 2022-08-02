@@ -1018,6 +1018,56 @@ public:
 		res.insert(res.end(), to_append4.begin(), to_append4.end());
 		return res;
 	}
+	ConstraintsNode* query_constraint_one_region(const std::string &task_name, const std::string &region_name,
+												 const Memory::Kind &mem_kind)
+	{
+		std::pair<std::string, std::string> key = {task_name, region_name};
+		if (layout_constraints.count(key) > 0)
+		{
+			std::unordered_map<Memory::Kind, ConstraintsNode*> value = layout_constraints.at(key);
+			if (value.count(mem_kind) > 0)
+			{
+				return value.at(mem_kind);
+			}
+			if (value.count(Memory::NO_MEMKIND) > 0)
+			{
+				return value.at(Memory::NO_MEMKIND);
+			}
+		}
+		return NULL;
+	}
+	ConstraintsNode* query_constraint(const std::string &task_name, const std::vector<std::string> &region_names,
+									  const Memory::Kind &mem_kind)
+	{
+		// exact match first
+		for (auto &region_name : region_names)
+		{
+			ConstraintsNode* res1 = query_constraint_one_region(task_name, region_name, mem_kind);
+			if (res1 != NULL)
+			{
+				return res1;
+			}
+		}
+		ConstraintsNode* res2 = query_constraint_one_region(task_name, "*", mem_kind);
+		if (res2 != NULL)
+		{
+			return res2;
+		}
+		for (auto &region_name : region_names)
+		{
+			ConstraintsNode* res3 = query_constraint_one_region("*", region_name, mem_kind);
+			if (res3 != NULL)
+			{
+				return res3;
+			}
+		}
+		ConstraintsNode* res4 = query_constraint_one_region("*", "*", mem_kind);
+		if (res4 != NULL)
+		{
+			return res4;
+		}
+		return NULL;
+	}
 	int query_max_instance(std::string task_name, Processor::Kind proc_kind)
 	{
 		if (task2limit.count(task_name) > 0)
