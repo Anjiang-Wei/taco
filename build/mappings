@@ -1,11 +1,12 @@
 Task * GPU,OMP,CPU;
 # Task taco_validate CPU;
-Region * * GPU FBMEM,ZCMEM;
 # region *taskname *region_name processor, list_of_memories;
-Region * * OMP SOCKMEM,SYSMEM;
-Region * * CPU SOCKMEM,SYSMEM;
+Region * * * SOCKMEM,SYSMEM;
+Region * * GPU FBMEM,ZCMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
 # Region * * has_affinity CPU SOCKMEM,SYSMEM;
+
+# Task taco_validate parent_task_procesor;
 
 # ZCMEM,FBMEM,SYSMEM,RDMEM
 # Layout taskname regionname memory AOS F_order;
@@ -15,105 +16,40 @@ Layout * * * SOA C_order; # Align==128 Compact
 
 # CollectMemory * *;
 
-m1 = Machine(OMP); # or GPU
-m2 = m1.merge(0, 1);
-m3 = m2.balance_split(0, 3);
+m1 = Machine(OMP); # nodes * OMP
+m2 = m1.balance_split(0, 2); # node1 * node2 * OMP
+m3 = m2.balance_split(2, 2); # node1 * node2 * OMP1(1) * OMP2(1)
 
-m4 = Machine(GPU);
-m5 = m4.merge(0, 1);
+m4 = Machine(GPU); # nodes * 4
+m5 = m4.balance_split(0, 2); # node1 * node2 * 4
+m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
+m7 = m4.merge(0, 1);
 
-def block_dim(IPoint x, ISpace y, MSpace z, int dim)
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
 {
-    a = x[dim];
-    b = z.size[dim];
-    c = y.size[dim];
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
     d = a * b / c;
     # print("inside blockdim, {}, {}, {}, dim={} --> {}", a, b, c, dim, d);
-    return x[dim] * z.size[dim] / y.size[dim];
+    return d;
 }
-
-# def cyclic_dim(IPoint x, ISpace y, MSpace z, int dim)
-# {
-#     return x[dim] % z.size[dim];
-# }
 
 def block1d(IPoint x, ISpace y, MSpace z)
 {
-    return block_dim(x, y, z, 0);
+    return block_primitive(x, y, z, 0, 0);
 }
 
-def block2d(IPoint x, ISpace y, MSpace z)
+def blockwise(IPoint x, ISpace y, MSpace z)
 {
-    a = block_dim(x, y, z, 0);
-    b = block_dim(x, y, z, 1);
-    print("block2d: {},{}", a, b);
-    return (a, b);
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    c = block_primitive(x, y, z, 0, 2);
+    d = block_primitive(x, y, z, 1, 3);
+    return (a, b, c, d);
 }
 
-# def block3d(IPoint x, ISpace y, MSpace z)
-# {
-#     a = block_dim(x, y, z, 0);
-#     b = block_dim(x, y, z, 1);
-#     c = block_dim(x, y, z, 2);
-#     return (a, b, c);
-# }
-
-# def cyclic1d(IPoint x, ISpace y, MSpace z)
-# {
-#     return cyclic_dim(x, y, z, 0);
-# }
-
-# def cyclic2d(IPoint x, ISpace y, MSpace z)
-# {
-#     a = cyclic_dim(x, y, z, 0);
-#     b = cyclic_dim(x, y, z, 1);
-#     return (a, b);
-# }
-
-def task_5_func(IPoint x, ISpace y, MSpace z)
-{
-    # task 5 has no sharding, map to GPU
-    # <0,0> -> 0
-    # <1,0> -> 1
-    # <0,1> -> 2
-    # <1,1> -> 3
-    return (0, x[1] * y.size[0] + x[0]);
-}
-
-def task_7_func(IPoint x, ISpace y, MSpace z)
-{
-    # task 7 mapped onto OMP, only care about sharding (sane as task_11)
-    # 0 <- (0,0)
-    # 1 <- (0,1)
-    return (x[1], 0);
-}
-
-def taco_fill_func(IPoint x, ISpace y, MSpace z)
-{
-    # taco_fill sharding (same as task_1, task_2, task_3)
-    # 0 <- (0,0) (1,0) (0,1) (1,1)
-    # 1 <- (0,2) (1,2) (0,3) (1,3)
-    # taco_fill slicing (GPU) (same as task_9, but task_9 has no sharding)
-    # <0,0> -> 0
-    # <1,0> -> 1
-    # <0,1> -> 2
-    # <1,1> -> 3
-
-    # <0,2> -> 0
-    # <1,2> -> 1
-    # <0,3> -> 2
-    # <1,3> -> 3
-    return (x[1] * z.size[0] / y.size[1], x[1] % z.size[0] * y.size[0] + x[0]);
-}
-
-# IndexTaskMap * m1 block2d;
-IndexTaskMap init_cublas m5 block1d;
-IndexTaskMap task_5 m4 task_5_func;
-IndexTaskMap task_7 m1 task_7_func;
-IndexTaskMap task_11 m1 task_7_func;
-IndexTaskMap taco_fill m4 taco_fill_func;
-IndexTaskMap task_1 m4 taco_fill_func;
-IndexTaskMap task_2 m4 taco_fill_func;
-IndexTaskMap task_3 m4 taco_fill_func;
-IndexTaskMap task_9 m4 taco_fill_func;
-IndexTaskMap taco_validate m4 taco_fill_func;
+IndexTaskMap * m6 blockwise;
+IndexTaskMap init_cublas m7 block1d;
+IndexTaskMap task_7 m3 blockwise;
+IndexTaskMap task_11 m3 blockwise;
