@@ -544,6 +544,8 @@ void NSMapper::map_task(const MapperContext      ctx,
       std::vector<Memory::Kind> memory_list = tree_result.query_memory_list(task_name, path, target_proc_kind);
       for (auto &mem_kind: memory_list)
       {
+        log_mapper.debug() << "querying " << target_processor.id << 
+          " for memory " << memory_kind_to_string(mem_kind);
         Memory target_memory_try = query_best_memory_for_proc(target_processor, mem_kind);
         if (target_memory_try.exists())
         {

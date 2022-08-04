@@ -946,7 +946,7 @@ public:
 		{
 			return false;
 		}
-		std::cout << task_name << " will fallback for sharding/slicing, warning!" << std::endl;
+		// std::cout << task_name << " will fallback for sharding/slicing, warning!" << std::endl;
 		return true;
 	}
 
@@ -990,6 +990,10 @@ public:
 			if (value.count(proc_kind) > 0)
 			{
 				return value.at(proc_kind);
+			}
+			if (value.count(Processor::NO_KIND) > 0)
+			{
+				return value.at(Processor::NO_KIND);
 			}
 		}
 		return {};
