@@ -1,48 +1,23 @@
 #include "legion.h"
 #include "taco_mapper.h"
 #include "legion_utils.h"
+#include "realm/cmdline.h"
+#include "taco-generated.h"
 
 using namespace Legion;
 
 typedef double valType;
 
-// Defined by the generated TACO code.
-void registerTacoTasks();
-
-std::vector<LogicalPartition> partitionForplaceLegionA(Context ctx, Runtime* runtime, LogicalRegion a, int32_t gridX, int32_t gridY);
-void placeLegionA(Context ctx, Runtime* runtime, LogicalRegion a, LogicalPartition aPartition, int32_t gridX, int32_t gridY);
-
-std::vector<LogicalPartition> partitionForplaceLegionB(Context ctx, Runtime* runtime, LogicalRegion b, int32_t gridX, int32_t gridY);
-void placeLegionB(Context ctx, Runtime* runtime, LogicalRegion b, LogicalPartition bPartition, int32_t gridX, int32_t gridY);
-
-std::vector<LogicalPartition> partitionForplaceLegionC(Context ctx, Runtime* runtime, LogicalRegion c, int32_t gridX, int32_t gridY);
-void placeLegionC(Context ctx, Runtime* runtime, LogicalRegion c, LogicalPartition cPartition, int32_t gridX, int32_t gridY);
-
-std::vector<LogicalPartition> partitionForcomputeLegion(Context ctx, Runtime* runtime, LogicalRegion a, LogicalRegion b, LogicalRegion c, int32_t gridX, int32_t gridY);
-void computeLegion(Context ctx, Runtime* runtime, LogicalRegion a, LogicalRegion b, LogicalRegion c, LogicalPartition aPartition, LogicalPartition bPartition, LogicalPartition cPartition, int32_t gridX, int32_t gridY);
 
 void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   // Create the regions.
   auto args = runtime->get_input_args();
-  int n = -1;
-  int gx = -1;
-  int gy = -1;
-  // Parse input args.
-  for (int i = 1; i < args.argc; i++) {
-    if (strcmp(args.argv[i], "-n") == 0) {
-      n = atoi(args.argv[++i]);
-      continue;
-    }
-    if (strcmp(args.argv[i], "-gx") == 0) {
-      gx = atoi(args.argv[++i]);
-      continue;
-    }
-    if (strcmp(args.argv[i], "-gy") == 0) {
-      gy = atoi(args.argv[++i]);
-      continue;
-    }
-    // TODO (rohany): Add a flag to do the validation or not.
-  }
+  int n = -1, gx = -1, gy = -1;
+  Realm::CommandLineParser parser;
+  parser.add_option_int("-n", n);
+  parser.add_option_int("-gx", gx);
+  parser.add_option_int("-gy", gy);
+  parser.parse_command_line(args.argc, args.argv);
   if (n == -1) {
     std::cout << "Please provide an input matrix size with -n." << std::endl;
     return;
@@ -60,32 +35,31 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
 
   auto fspace = runtime->create_field_space(ctx);
   allocate_tensor_fields<valType>(ctx, runtime, fspace);
-  auto ispace = runtime->create_index_space(ctx, Rect<2>({0, 0}, {n - 1, n - 1}));
-  auto A = runtime->create_logical_region(ctx, ispace, fspace); runtime->attach_name(A, "A");
-  auto B = runtime->create_logical_region(ctx, ispace, fspace); runtime->attach_name(B, "B");
-  auto C = runtime->create_logical_region(ctx, ispace, fspace); runtime->attach_name(C, "C");
+  auto A = createDenseTensor<2, valType>(ctx, runtime, {n, n}, FID_VAL);
+  auto B = createDenseTensor<2, valType>(ctx, runtime, {n, n}, FID_VAL);
+  auto C = createDenseTensor<2, valType>(ctx, runtime, {n, n}, FID_VAL);
 
   // These partitions are disjoint, so we can fill over them.
-  auto aPart = partitionForplaceLegionA(ctx, runtime, A, gx, gy)[0];
-  auto bPart = partitionForplaceLegionB(ctx, runtime, B, gx, gy)[0];
-  auto cPart = partitionForplaceLegionC(ctx, runtime, C, gx, gy)[0];
+  auto aPart = partitionForplaceLegionA(ctx, runtime, &A, gx, gy);
+  auto bPart = partitionForplaceLegionB(ctx, runtime, &B, gx, gy);
+  auto cPart = partitionForplaceLegionC(ctx, runtime, &C, gx, gy);
 
   // Get partitions for the computation.
-  auto parts = partitionForcomputeLegion(ctx, runtime, A, B, C, gx, gy);
+  auto parts = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, gx, gy);
 
   std::vector<size_t> times;
   // Run the benchmark several times.
   for (int i = 0; i < 10; i++) {
-    tacoFill<valType>(ctx, runtime, A, aPart, 0);
-    tacoFill<valType>(ctx, runtime, B, bPart, 1);
-    tacoFill<valType>(ctx, runtime, C, cPart, 1);
+    tacoFill<valType>(ctx, runtime, A.vals, aPart.aPartition.valsPartition, 0);
+    tacoFill<valType>(ctx, runtime, B.vals, bPart.bPartition.valsPartition, 1);
+    tacoFill<valType>(ctx, runtime, C.vals, cPart.cPartition.valsPartition, 1);
 
-    placeLegionA(ctx, runtime, A, aPart, gx, gy);
-    placeLegionB(ctx, runtime, B, bPart, gx, gy);
-    placeLegionC(ctx, runtime, C, cPart, gx, gy);
+    placeLegionA(ctx, runtime, &A, &aPart, gx, gy);
+    placeLegionB(ctx, runtime, &B, &bPart, gx, gy);
+    placeLegionC(ctx, runtime, &C, &cPart, gx, gy);
 
     // Compute on the tensors.
-    benchmark(ctx, runtime, times, [&]() { computeLegion(ctx, runtime, A, B, C, parts[0], parts[1], parts[2], gx, gy); });
+    benchmark(ctx, runtime, times, [&]() { computeLegion(ctx, runtime, &A, &B, &C, &parts, gx, gy); });
   }
 
   // Get the GFLOPS per node.
@@ -95,7 +69,49 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto nodes = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_NODE_COUNT).get<size_t>();
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "On %ld nodes achieved GFLOPS per node: %lf.\n", nodes, gflops / double(nodes));
 
-  tacoValidate<valType>(ctx, runtime, A, aPart, valType(n));
+  tacoValidate<valType>(ctx, runtime, A.vals, aPart.aPartition.valsPartition, valType(n));
 }
 
-TACO_MAIN(valType)
+#include "my_mapper.cc"
+
+#define TACO_MAIN2(FillType) \
+  int main(int argc, char **argv) { \
+    Runtime::set_top_level_task_id(TID_TOP_LEVEL); \
+    {               \
+      TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level"); \
+      registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC)); \
+      registrar.set_replicable();   \
+      Runtime::preregister_task_variant<top_level_task>(registrar, "top_level"); \
+    }                       \
+    if (TACO_FEATURE_OPENMP) {               \
+      TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level"); \
+      registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC)); \
+      registrar.set_replicable();   \
+      Runtime::preregister_task_variant<top_level_task>(registrar, "top_level"); \
+    }                       \
+    registerTACOFillTasks<FillType>();             \
+    registerTACOValidateTasks<FillType>();             \
+    bool dslmapper = false; \
+    for (int i = 1; i < argc; i++) { \
+      if (strcmp(argv[i], "-dslmapper") == 0) { \
+        register_mappers(); \
+        dslmapper = true; \
+        break; \
+      } \
+    } \
+    if (dslmapper) { \
+      register_mappers(); \
+    } \
+    else \
+    { \
+      Runtime::add_registration_callback(register_taco_mapper); \
+    } \
+    initCUDA(); \
+    registerTacoTasks();    \
+    Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor()); \
+    return Runtime::start(argc, argv);             \
+  }
+
+TACO_MAIN2(valType)
+
+// TACO_MAIN(valType)
