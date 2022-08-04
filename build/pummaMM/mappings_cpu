@@ -1,0 +1,2 @@
+Task * OMP,CPU;
+Region * * * SOCKMEM,SYSMEM;
