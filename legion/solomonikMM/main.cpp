@@ -61,9 +61,9 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
     // TODO (rohany): We could potentially eliminate these fills to place the data right where
     //  we need it just like Johnson's algorithm. This would allow us to use larger values of c
     //  as well which might improve performance.
-    tacoFill<valType>(ctx, runtime, A.vals, aPart.aPartition.valsPartition, 0);
-    tacoFill<valType>(ctx, runtime, B.vals, bPart.bPartition.valsPartition, 1);
-    tacoFill<valType>(ctx, runtime, C.vals, cPart.cPartition.valsPartition, 1);
+    tacoFill<valType>(ctx, runtime, A.vals, aPart.APartition.valsPartition, 0);
+    tacoFill<valType>(ctx, runtime, B.vals, bPart.BPartition.valsPartition, 1);
+    tacoFill<valType>(ctx, runtime, C.vals, cPart.CPartition.valsPartition, 1);
 
     // Place the tensors.
     placeLegionA(ctx, runtime, &A, &aPart, rpoc, c);
@@ -89,7 +89,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto nodes = runtime->select_tunable_value(ctx, Mapping::DefaultMapper::DEFAULT_TUNABLE_NODE_COUNT).get<size_t>();
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "On %ld nodes achieved GFLOPS per node: %lf.\n", nodes, gflops / double(nodes));
 
-  tacoValidate<valType>(ctx, runtime, A.vals, aPart.aPartition.valsPartition, valType(n));
+  tacoValidate<valType>(ctx, runtime, A.vals, aPart.APartition.valsPartition, valType(n));
 }
 
 #include "my_mapper.cc"
