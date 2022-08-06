@@ -576,6 +576,31 @@ void NSMapper::map_task(const MapperContext      ctx,
         default_policy_select_target_memory(ctx, task.target_proc, req, mem_constraint);
     }
 
+    std::set<FieldID> missing_fields = req.privilege_fields;
+    if (req.privilege == LEGION_REDUCE)
+    {
+      log_mapper.debug() << "privilege = LEGION_REDUCE";
+      std::vector<PhysicalInstance> valid_instances_reduce;
+      valid_instances_reduce.resize(missing_fields.size());
+      size_t footprint;
+      size_t instance_idx = 0;
+      for (std::set<FieldID>::const_iterator it =
+            missing_fields.begin(); it !=
+            missing_fields.end(); it++, instance_idx++)
+      {
+        layout_constraints.field_constraint.field_set.clear();
+        layout_constraints.field_constraint.field_set.push_back(*it);
+        if (!default_make_instance(ctx, target_memory, layout_constraints,
+                    valid_instances_reduce[instance_idx], TASK_MAPPING, true /*force_new_instances*/,
+                    true/*meets*/, req, &footprint))
+        {
+          default_report_failed_instance_creation(task, idx,
+            target_processor, target_memory, footprint);
+        }
+      }
+      output.chosen_instances[idx] = valid_instances_reduce;
+      continue;
+    }
     size_t footprint;
     PhysicalInstance valid_instance;
     if (!default_make_instance(ctx, target_memory, layout_constraints, 
@@ -1121,6 +1146,7 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
   if (dsl_constraint_pt != NULL)
   {
     dsl_constraint = *dsl_constraint_pt;
+    log_mapper.debug() << "dsl_constraint specified by the user";
   }
 
   Legion::IndexSpace is = req.region.get_index_space();
@@ -1130,8 +1156,10 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
 
   if (dsl_constraint.reverse)
   {
+    log_mapper.debug() << "dsl_constraint.reverse = true";
     if (dsl_constraint.aos)
     {
+      log_mapper.debug() << "dsl_constraint.aos = true";
       for (int i = 0; i < dim; ++i)
       {
         dimension_ordering[dim - i] =
@@ -1141,6 +1169,7 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
     }
     else
     {
+      log_mapper.debug() << "dsl_constraint.aos = false";
       for (int i = 0; i < dim; ++i)
       {
         dimension_ordering[dim - i - 1] =
@@ -1151,8 +1180,10 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
   }
   else
   {
+    log_mapper.debug() << "dsl_constraint.reverse = false";
     if (dsl_constraint.aos)
     {
+      log_mapper.debug() << "dsl_constraint.aos = true";
       for (int i = 1; i < dim + 1; ++i)
       {
         dimension_ordering[i] =
@@ -1162,6 +1193,7 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
     }
     else
     {
+      log_mapper.debug() << "dsl_constraint.aos = false";
       for (int i = 0; i < dim; ++i)
       {
         dimension_ordering[i] =
@@ -1174,6 +1206,7 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
   // If we were requested to have an alignment, add the constraint.
   if (dsl_constraint.align)
   {
+    log_mapper.debug() << "dsl_constraint.align = true";
     for (auto it : req.privilege_fields) {
       constraints.add_constraint(Legion::AlignmentConstraint(it,
         myop2legion(dsl_constraint.align_op), dsl_constraint.align_int));
@@ -1186,6 +1219,7 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
 
   if (dsl_constraint.compact)
   {
+    log_mapper.debug() << "dsl_constraint.compact = true";
     assert(req.privilege != LEGION_REDUCE);
     constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
   } else if (req.privilege == LEGION_REDUCE) {

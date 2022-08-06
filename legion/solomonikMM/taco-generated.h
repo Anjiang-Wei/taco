@@ -4,35 +4,35 @@
 #include "legion_tensor.h"
 
 struct partitionPackForplaceLegionA {
-  LegionTensorPartition APartition;
+  LegionTensorPartition aPartition;
 };
 
 struct partitionPackForplaceLegionB {
-  LegionTensorPartition BPartition;
+  LegionTensorPartition bPartition;
 };
 
 struct partitionPackForplaceLegionC {
-  LegionTensorPartition CPartition;
+  LegionTensorPartition cPartition;
 };
 
 struct partitionPackForcomputeLegion {
-  LegionTensorPartition APartition;
-  LegionTensorPartition BPartition;
-  LegionTensorPartition CPartition;
+  LegionTensorPartition aPartition;
+  LegionTensorPartition bPartition;
+  LegionTensorPartition cPartition;
 };
 
 
-extern "C" partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, int32_t rpoc);
+extern "C" partitionPackForplaceLegionA partitionForplaceLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, int32_t gridX, int32_t gridY);
 
 
 extern "C" void placeLegionA(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, partitionPackForplaceLegionA* partitionPack, int32_t gridX, int32_t gridY);
 
-extern "C" partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, int32_t rpoc);
+extern "C" partitionPackForplaceLegionB partitionForplaceLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, int32_t gridX, int32_t gridY);
 
 
 extern "C" void placeLegionB(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* b, partitionPackForplaceLegionB* partitionPack, int32_t gridX, int32_t gridY);
 
-extern "C" partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, int32_t rpoc);
+extern "C" partitionPackForplaceLegionC partitionForplaceLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, int32_t gridX, int32_t gridY);
 
 
 extern "C" void placeLegionC(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* c, partitionPackForplaceLegionC* partitionPack, int32_t gridX, int32_t gridY);
@@ -42,7 +42,7 @@ extern "C" partitionPackForcomputeLegion partitionForcomputeLegion(Legion::Conte
 
 
 
-extern "C" void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t rpoc, int32_t c2, int32_t rpoc3);
+extern "C" void computeLegion(Legion::Context ctx, Legion::Runtime* runtime, LegionTensor* a, LegionTensor* b, LegionTensor* c, partitionPackForcomputeLegion* partitionPack, int32_t gridX, int32_t gridY);
 extern "C" void registerTacoTasks();
 extern "C" void dynamicallyRegisterDISTALTasks(void** args);
 #endif // TACO_GENERATED_H

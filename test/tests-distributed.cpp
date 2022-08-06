@@ -1282,15 +1282,7 @@ TEST(distributed, cuda_solomonikMM) {
   auto lowered = lowerLegionSeparatePartitionCompute(stmt, "computeLegion", false /* waitOnFutureMap */);
   // Code-generate all of the placement and compute code.
   auto all = ir::Block::make({placeALowered, placeBLowered, placeCLowered, lowered});
-  auto codegen = std::make_shared<ir::CodegenLegionCuda>(std::cout, taco::ir::CodeGen::ImplementationGen);
-  codegen->compile(all);
-  {
-    ofstream f("../legion/solomonikMM/taco-generated.cu");
-    auto codegen = std::make_shared<ir::CodegenLegionCuda>(f, taco::ir::CodeGen::ImplementationGen);
-    codegen->compile(all);
-    f.close();
-  }
-
+  ir::CodegenLegionCuda::compileToDirectory("../legion/solomonikMM/", all);
 }
 
 TEST(distributed, reduction) {

@@ -2,7 +2,12 @@
 #include "taco_mapper.h"
 #include "legion_utils.h"
 #include "realm/cmdline.h"
+
+#ifdef TACO_USE_CUDA
+#include "taco-generated.cuh"
+#else
 #include "taco-generated.h"
+#endif
 
 using namespace Legion;
 
@@ -53,7 +58,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   auto bPart = partitionForplaceLegionB(ctx, runtime, &B, rpoc);
   auto cPart = partitionForplaceLegionC(ctx, runtime, &C, rpoc);
 
-  auto parts = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, rpoc, c);
+  auto parts = partitionForcomputeLegion(ctx, runtime, &A, &B, &C, rpoc, c, rpoc3);
 
   std::vector<size_t> times;
   // Run the benchmark several times.
