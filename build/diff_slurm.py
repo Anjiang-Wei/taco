@@ -2,9 +2,36 @@ import re
 import sys
 from pprint import pprint
 
+fail_first = False
+
 def readlines(f):
     with open(f) as fin:
         return fin.readlines()
+
+def process(one_line):
+    if "PhysicalInstance" not in one_line:
+        return one_line
+    else:
+        return re.sub(r'PhysicalInstance\[.*\]', r"PhysicalInstance[XXX]", one_line)
+
+def find_file_line(fname, target_lines):
+    all_lines = readlines(fname)
+    res = []
+    for i in range(len(all_lines)):
+        if target_lines[0] in all_lines[i]:
+            matched = True
+            for j in range(len(target_lines)):
+                if target_lines[j] not in process(all_lines[i+j]):
+                    matched = False
+                    break
+            if matched:
+                res.append(i)
+    if len(res) > 1:
+        print("Found multiple line matches", res)
+    if len(res) == 0:
+        print("Found 0 line match")
+    # assert(len(res) == 1)
+    return res
 
 def filter_mapper(lines):
     ret = []
@@ -44,56 +71,87 @@ def filter_slicing(lines):
     return filter_keyword(lines, start_kw, continue_kw)
 
 def filter_maptask(lines):
-    res = {} # header --> {set of (sentences)}
+    res = {} # header (including input) --> [(sentences), appear_times]}
     # because even the index_points are the same, the results can still differ
     start_kw = "MAP_TASK for"
     next_kw_lst = ["SLICE_TASK for", "SELECT_SHARDING_FUNCTOR for", "MAP_TASK for"]
-    def same_kw(line):
+    def judge_stage(line):
         for nxt_kw in next_kw_lst:
             if nxt_kw in line:
-                return False
-        return True
-    def process(one_line):
-        if "PhysicalInstance" not in one_line:
-            return one_line
-        else:
-            return re.sub(r'PhysicalInstance\[.*\]', r"PhysicalInstance[XXX]", one_line)
+                return 0 # not MAP_TASK any more
+        if "TARGET PROCS:" in line:
+            return 1 # output mode
+        return 2 # can be either in input or output (depending on the "state")
     for i in range(len(lines)):
         if start_kw in lines[i]:
             assert("<" in lines[i])
-            key = re.sub(r'<.*>' ,"", lines[i]).strip() # remove task_id, e.g., <80>
+            header = re.sub(r'<.*>' ,"", lines[i]).strip() # remove task_id, e.g., <80>
+            key = [header]
             value = []
+            output_mode = False
             for j in range(i + 1, len(lines)):
-                if same_kw(lines[j]):
+                judge_result = judge_stage(lines[j])
+                if judge_result == 0:
+                    break
+                elif judge_result == 1:
+                    output_mode = True
+                if output_mode:
                     value.append(process(lines[j].strip()))
                 else:
-                    break
+                    key.append(process(lines[j].strip())) 
+            key = tuple(key)
             value = tuple(value) # convert list to tuple
             if key in res.keys():
-                res[key].add(value)
+                assert(res[key][0] == value)
+                res[key][1] += 1 # counting occuring times
             else:
-                res[key] = {value}
+                res[key] = [value, 1]
     return res
 
 def print_maptask_diff(map1, map2):
     fail = False
     for k in map1.keys():
         if k not in map2.keys():
-            print(k, "only appears in", sys.argv[1])
-            break
-        v1 = sorted(list(map1[k]))
-        v2 = sorted(list(map2[k]))
+            print("only appears in", sys.argv[1], "for", map1[k][1], "times")
+            pprint(k)
+            pprint(map1[k])
+            print("line:", find_file_line(sys.argv[1], k))
+            if fail_first:
+                break
+            else:
+                continue
+        v1 = sorted(map1[k][0])
+        v2 = sorted(map2[k][0])
         for i in range(len(v1)):
-            if v1[i] != v2[i]:
+            if v1[i][0] != v2[i][0]:
                 print(k)
-                pprint(v1[i])
-                pprint(v2[i])
+                pprint(v1[i][0])
+                pprint(v2[i][0])
                 fail = True
+                print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
+                print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
                 break # stop at first diff
+            if v1[i][1] != v2[i][1]:
+                print(k)
+                print("appears in {} for {} times, in {} for {} times", sys.argv[1], v1[i][1],
+                    sys.argv[2], v2[i][1])
+                fail = True
+                if fail_first:
+                    break
         assert(len(v1) == len(v2))
-        if fail:
+        if fail and fail_first:
             break
-    assert(len(map1) == len(map2))
+    for k in map2.keys():
+        if k not in map1.keys():
+            print("only appears in", sys.argv[2], "for", map2[k][1], "times")
+            pprint(k)
+            pprint(map2[k][0])
+            print("line:", find_file_line(sys.argv[2], k))
+            if fail_first:
+                break
+    if (len(map1) != len(map2)):
+        print("key numbers mismatch:", len(map1), len(map2))
+    # assert(len(map1) == len(map2))
 
 if __name__ == "__main__":
     print("l1:", sys.argv[1])
