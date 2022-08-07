@@ -494,15 +494,15 @@ void NSMapper::map_task(const MapperContext      ctx,
   output.task_priority = default_policy_select_task_priority(ctx, task);
   output.postmap_task = false;
 
-  if (chosen.is_inner)
-  {
-    log_mapper.debug(
-      "is_inner = true, falling back to the default policy",
-      task_name.c_str());
-    DefaultMapper::map_task(ctx, task, input, output);
-    map_task_post_function(ctx, task, task_name, target_proc_kind, output);
-    return;
-  }
+  // if (chosen.is_inner)
+  // {
+  //   log_mapper.debug(
+  //     "is_inner = true, falling back to the default policy",
+  //     task_name.c_str());
+  //   DefaultMapper::map_task(ctx, task, input, output);
+  //   map_task_post_function(ctx, task, task_name, target_proc_kind, output);
+  //   return;
+  // }
 
   default_policy_select_target_processors(ctx, task, output.target_procs);
   Processor target_processor = output.target_procs[0];
@@ -516,6 +516,12 @@ void NSMapper::map_task(const MapperContext      ctx,
   {
     auto &req = task.regions[idx];
     if (req.privilege == LEGION_NO_ACCESS || req.privilege_fields.empty()) continue;
+    if ((req.tag & DefaultMapper::VIRTUAL_MAP) != 0 && req.privilege != LEGION_REDUCE)
+    {
+      PhysicalInstance virt_inst = PhysicalInstance::get_virtual_instance();
+      output.chosen_instances[idx].push_back(virt_inst);
+      continue;
+    }
 
     bool found_policy = false;
     Memory::Kind target_kind = Memory::NO_MEMKIND;
