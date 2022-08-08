@@ -23,6 +23,8 @@ m3 = m2.balance_split(2, 2); # node1 * node2 * OMP1(1) * OMP2(1)
 m4 = Machine(GPU); # nodes * 4
 m5 = m4.balance_split(0, 2); # node1 * node2 * 4
 m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
+m10 = m6.swap(0, 1);
+
 m7 = m4.merge(0, 1);
 m8 = m4.balance_split(1, 2); # nodes * 2 * 2
 m9 = m8.swap(1, 2);
@@ -59,8 +61,10 @@ def block3d(IPoint x, ISpace y, MSpace z)
     return (a, b, c);
 }
 
-IndexTaskMap * m9 block3d;
-# IndexTaskMap * m6 blockwise;
+IndexTaskMap * m10 blockwise;
+IndexTaskMap task_1 m9 block3d;
+IndexTaskMap task_2 m9 block3d;
+IndexTaskMap task_3 m9 block3d;
 IndexTaskMap init_cublas m7 block1d;
 # IndexTaskMap task_7 m3 blockwise;
 IndexTaskMap task_11 m3 blockwise;

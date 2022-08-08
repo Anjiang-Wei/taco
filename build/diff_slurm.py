@@ -4,9 +4,18 @@ from pprint import pprint
 
 fail_first = False
 
+def filter_mapper(lines):
+    ret = []
+    for l in lines:
+        l = l.strip()
+        if "{mapper}" in l:
+            l2 = re.sub(r'.*{mapper}:', "", l)
+            ret.append(l2)
+    return ret
+
 def readlines(f):
     with open(f) as fin:
-        return fin.readlines()
+        return filter_mapper(fin.readlines())
 
 def process(one_line):
     if "PhysicalInstance" not in one_line:
@@ -21,7 +30,7 @@ def find_file_line(fname, target_lines):
         if target_lines[0] in all_lines[i]:
             matched = True
             for j in range(len(target_lines)):
-                if target_lines[j] not in process(all_lines[i+j]):
+                if i + j < len(all_lines) and target_lines[j] not in process(all_lines[i+j]):
                     matched = False
                     break
             if matched:
@@ -29,15 +38,6 @@ def find_file_line(fname, target_lines):
     print(f"{len(res)} matches")
     assert(len(res) >= 1)
     return res
-
-def filter_mapper(lines):
-    ret = []
-    for l in lines:
-        l = l.strip()
-        if "{mapper}" in l:
-            l2 = re.sub(r'.*{mapper}:', "", l)
-            ret.append(l2)
-    return ret
 
 def filter_keyword(lines, start_kw, continue_kw):
     res = {} # header -> [sentences]
@@ -67,11 +67,44 @@ def filter_slicing(lines):
     continue_kw = "->"
     return filter_keyword(lines, start_kw, continue_kw)
 
-def filter_maptask(lines):
+def print_shardslice_diff(map1, map2):
+    for k in map1.keys():
+        if k not in map2.keys():
+            pprint(k)
+            pprint(map1[k])
+            print("only appears in", sys.argv[1])
+            print("line:", find_file_line(sys.argv[1], k))
+            print("----------------------------------------")
+            if fail_first:
+                assert(False)
+            else:
+                continue
+        v1 = map1[k]
+        v2 = map2[k]
+        if v1 != v2:
+            pprint(k)
+            pprint(v1)
+            pprint(v2)
+            print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
+            print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
+            print("----------------------------------------")
+            if fail_first:
+                assert(False)
+    for k in map2.keys():
+        if k not in map1.keys():
+            pprint(k)
+            pprint(map2[k])
+            print("only appears in", sys.argv[2])
+            print("line:", find_file_line(sys.argv[1], k))
+            print("----------------------------------------")
+            if fail_first:
+                assert(False)
+
+def filter_maptask(lines, filename):
     res = {} # header (including input) --> [(sentences), appear_times]}
     # because even the index_points are the same, the results can still differ
     start_kw = "MAP_TASK for"
-    next_kw_lst = ["SLICE_TASK for", "SELECT_SHARDING_FUNCTOR for", "MAP_TASK for"]
+    next_kw_lst = ["SLICE_TASK for", "SELECT_SHARDING_FUNCTOR for", "MAP_TASK for", "SELECT_TASK_SOURCES for"]
     def judge_stage(line):
         for nxt_kw in next_kw_lst:
             if nxt_kw in line:
@@ -99,6 +132,18 @@ def filter_maptask(lines):
             key = tuple(key)
             value = tuple(value) # convert list to tuple
             if key in res.keys():
+                if res[key][0] != value:
+                    print(f"results are different across runs in {filename}")
+                    pprint(key)
+                    pprint(res[key][0])
+                    print(find_file_line(filename, key+res[key][0]))
+                    pprint(value)
+                    print(find_file_line(filename, key+value))
+                    print("------------------------------------")
+                    if fail_first:
+                        assert(False)
+                    else:
+                        continue
                 assert(res[key][0] == value)
                 res[key][1] += 1 # counting occuring times
             else:
@@ -125,17 +170,19 @@ def print_maptask_diff(map1, map2):
         v1 = map1[k][0] # tuple of sentences
         v2 = map2[k][0]
         for i in range(len(v1)):
-            if v1[i][0] != v2[i][0]:
+            if v1[i] != v2[i]:
                 pprint(k)
-                pprint(v1[i][0])
-                pprint(v2[i][0])
+                pprint(v1[i])
+                pprint(v2[i])
                 print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
                 print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
                 print("----------------------------------------")
                 if fail_first:
                     assert(False)
-        assert(len(v1) == len(v2))
-        assert(v1 == v2)
+        if v1 != v2:
+            print("Difference detected!")
+        if fail_first:
+            assert(v1 == v2)
         if map1[k][1] != map2[k][1]:
             pprint(k)
             pprint(map1[k][0])
@@ -162,18 +209,20 @@ def print_maptask_diff(map1, map2):
 if __name__ == "__main__":
     print("l1:", sys.argv[1])
     print("l2:", sys.argv[2])
-    f1_line = filter_mapper(readlines(sys.argv[1]))
-    f2_line = filter_mapper(readlines(sys.argv[2]))
+    f1_line = readlines(sys.argv[1])
+    f2_line = readlines(sys.argv[2])
     f1_sharding = filter_sharding(f1_line)
     f2_sharding = filter_sharding(f2_line)
+    print_shardslice_diff(f1_sharding, f2_sharding)
     assert(f1_sharding == f2_sharding)
     print("pass sharding check:", len(f1_sharding))
     f1_slicing = filter_slicing(f1_line)
     f2_slicing = filter_slicing(f2_line)
+    print_shardslice_diff(f1_slicing, f2_slicing)
     assert(f1_slicing == f2_slicing)
     print("pass slicing check:", len(f1_slicing))
-    f1_maptask = filter_maptask(f1_line)
-    f2_maptask = filter_maptask(f2_line)
+    f1_maptask = filter_maptask(f1_line, sys.argv[1])
+    f2_maptask = filter_maptask(f2_line, sys.argv[2])
     print_maptask_diff(f1_maptask, f2_maptask)
     assert(f1_maptask == f2_maptask)
     print("pass maptask check:", len(f1_maptask))
