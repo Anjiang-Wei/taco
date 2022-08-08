@@ -2,7 +2,7 @@ import re
 import sys
 from pprint import pprint
 
-fail_first = False
+fail_first = True
 
 def filter_mapper(lines):
     ret = []
@@ -39,15 +39,20 @@ def find_file_line(fname, target_lines):
     assert(len(res) >= 1)
     return res
 
-def filter_keyword(lines, start_kw, continue_kw):
+def filter_keyword(lines, start_kw, continue_kw_lst):
     res = {} # header -> [sentences]
+    def judge_kw(one_line):
+        for item in continue_kw_lst:
+            if item in one_line:
+                return True
+        return False
     for i in range(len(lines)):
         if start_kw in lines[i]:
             assert("<" in lines[i])
             key = re.sub(r'<.*>' ,"", lines[i]).strip() # remove task_id, e.g., <80>
             value = []
             for j in range(i + 1, len(lines)):
-                if continue_kw in lines[j]:
+                if judge_kw(lines[j]):
                     value.append(lines[j].strip())
                 else:
                     break
@@ -59,12 +64,12 @@ def filter_keyword(lines, start_kw, continue_kw):
 
 def filter_sharding(lines):
     start_kw = "SELECT_SHARDING_FUNCTOR for"
-    continue_kw = "<-"
+    continue_kw = ["<-"]
     return filter_keyword(lines, start_kw, continue_kw)
 
 def filter_slicing(lines):
     start_kw = "SLICE_TASK for"
-    continue_kw = "->"
+    continue_kw = ["->", "INPUT:", "OUTPUT:"]
     return filter_keyword(lines, start_kw, continue_kw)
 
 def print_shardslice_diff(map1, map2):
