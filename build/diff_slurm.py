@@ -26,11 +26,8 @@ def find_file_line(fname, target_lines):
                     break
             if matched:
                 res.append(i)
-    if len(res) > 1:
-        print("Found multiple line matches", res)
-    if len(res) == 0:
-        print("Found 0 line match")
-    # assert(len(res) == 1)
+    print(f"{len(res)} matches")
+    assert(len(res) >= 1)
     return res
 
 def filter_mapper(lines):
@@ -142,8 +139,8 @@ def print_maptask_diff(map1, map2):
         if map1[k][1] != map2[k][1]:
             pprint(k)
             pprint(map1[k][0])
-            print(f"appears in {sys.argv[1]} for {map1[k][1]} times")
-            print(f"appears in {sys.argv[2]} for {map2[k][1]} times")
+            print(f"appears in {sys.argv[1]} for {map1[k][1]} times", find_file_line(sys.argv[1], k))
+            print(f"appears in {sys.argv[2]} for {map2[k][1]} times", find_file_line(sys.argv[2], k))
             print("----------------------------------------")
             if fail_first:
                 assert(False)
