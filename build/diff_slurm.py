@@ -109,49 +109,58 @@ def filter_maptask(lines):
     return res
 
 def print_maptask_diff(map1, map2):
-    fail = False
+    maptask_times1 = sum(map(lambda x: x[1], map1.values()))
+    maptask_times2 = sum(map(lambda x: x[1], map2.values()))
+    print(f"map_task invoked {maptask_times1}, {maptask_times2} times respectively")
+    if maptask_times1 != maptask_times2 and fail_first:
+        assert(False)
     for k in map1.keys():
         if k not in map2.keys():
-            print("only appears in", sys.argv[1], "for", map1[k][1], "times")
             pprint(k)
-            pprint(map1[k])
+            pprint(map1[k][0])
+            print("only appears in", sys.argv[1], "for", map1[k][1], "times")
             print("line:", find_file_line(sys.argv[1], k))
+            print("----------------------------------------")
             if fail_first:
                 break
             else:
                 continue
-        v1 = sorted(map1[k][0])
-        v2 = sorted(map2[k][0])
+        v1 = map1[k][0] # tuple of sentences
+        v2 = map2[k][0]
         for i in range(len(v1)):
             if v1[i][0] != v2[i][0]:
-                print(k)
+                pprint(k)
                 pprint(v1[i][0])
                 pprint(v2[i][0])
-                fail = True
                 print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
                 print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
-                break # stop at first diff
-            if v1[i][1] != v2[i][1]:
-                print(k)
-                print("appears in {} for {} times, in {} for {} times", sys.argv[1], v1[i][1],
-                    sys.argv[2], v2[i][1])
-                fail = True
+                print("----------------------------------------")
                 if fail_first:
-                    break
+                    assert(False)
         assert(len(v1) == len(v2))
-        if fail and fail_first:
-            break
+        assert(v1 == v2)
+        if map1[k][1] != map2[k][1]:
+            pprint(k)
+            pprint(map1[k][0])
+            print(f"appears in {sys.argv[1]} for {map1[k][1]} times")
+            print(f"appears in {sys.argv[2]} for {map2[k][1]} times")
+            print("----------------------------------------")
+            if fail_first:
+                assert(False)
+        if fail_first:
+            assert(map1[k] == map2[k])
     for k in map2.keys():
         if k not in map1.keys():
-            print("only appears in", sys.argv[2], "for", map2[k][1], "times")
             pprint(k)
             pprint(map2[k][0])
             print("line:", find_file_line(sys.argv[2], k))
+            print("only appears in", sys.argv[2], "for", map2[k][1], "times")
+            print("----------------------------------------")
             if fail_first:
                 break
     if (len(map1) != len(map2)):
         print("key numbers mismatch:", len(map1), len(map2))
-    # assert(len(map1) == len(map2))
+    assert(len(map1) == len(map2))
 
 if __name__ == "__main__":
     print("l1:", sys.argv[1])
