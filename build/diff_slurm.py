@@ -202,7 +202,6 @@ def print_maptask_diff(map1, map2):
         if k not in map1.keys():
             pprint(k)
             pprint(map2[k][0])
-            print("line:", find_file_line(sys.argv[2], k))
             print("only appears in", sys.argv[2], "for", map2[k][1], "times")
             print("line:", find_file_line(sys.argv[2], k))
             print("----------------------------------------")
