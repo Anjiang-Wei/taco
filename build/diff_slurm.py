@@ -2,7 +2,7 @@ import re
 import sys
 from pprint import pprint
 
-fail_first = True
+fail_first = False
 
 def filter_mapper(lines):
     ret = []
@@ -204,12 +204,14 @@ def print_maptask_diff(map1, map2):
             pprint(map2[k][0])
             print("line:", find_file_line(sys.argv[2], k))
             print("only appears in", sys.argv[2], "for", map2[k][1], "times")
+            print("line:", find_file_line(sys.argv[2], k))
             print("----------------------------------------")
             if fail_first:
-                break
+                assert(False)
     if (len(map1) != len(map2)):
         print("key numbers mismatch:", len(map1), len(map2))
-    assert(len(map1) == len(map2))
+        if fail_first:
+            assert(len(map1) == len(map2))
 
 if __name__ == "__main__":
     print("l1:", sys.argv[1])
