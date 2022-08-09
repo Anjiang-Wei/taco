@@ -88,10 +88,10 @@ def print_shardslice_diff(map1, map2):
         v2 = map2[k]
         if v1 != v2:
             pprint(k)
-            pprint(v1)
-            pprint(v2)
             print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
+            pprint(v1)
             print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
+            pprint(v2)
             print("----------------------------------------")
             if fail_first:
                 assert(False)
