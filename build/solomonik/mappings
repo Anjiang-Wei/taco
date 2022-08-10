@@ -1,0 +1,70 @@
+Task * GPU,OMP,CPU;
+# Task taco_validate CPU;
+# region *taskname *region_name processor, list_of_memories;
+Region * * * SOCKMEM,SYSMEM;
+Region * * GPU FBMEM,ZCMEM;
+# Region * * has_affinity CPU SOCKMEM,SYSMEM;
+# Region * * has_affinity CPU SOCKMEM,SYSMEM;
+
+# Task taco_validate parent_task_procesor;
+
+# ZCMEM,FBMEM,SYSMEM,RDMEM
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
+
+# CollectMemory * *;
+
+m4 = Machine(GPU); # nodes * 4
+m5 = m4.balance_split(0, 2); # node1 * node2 * 4
+m6 = m5.swap(0, 1);
+
+m7 = m4.merge(0, 1);
+# m8 = m4.balance_split(1, 2); # nodes * 2 * 2
+# m9 = m8.swap(1, 2);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    return x[dim1] * z.size[dim2] / y.size[dim1];
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    return x[dim1] % z.size[dim2];
+}
+
+def block1d(IPoint x, ISpace y, MSpace z)
+{
+    return block_primitive(x, y, z, 0, 0);
+}
+
+def linearize3d(IPoint x, ISpace y, MSpace z)
+{
+    # 2node: y.size = (2, 2, 2)   z.size = (2, 1)
+    # 4node: y.size = (4, 4, 1)   z.size = (2, 2)
+    two_node_result = x[1] + x[2] * 2; # x[0] is fixed after sharding
+    four_node_result = x[0] + x[1] * 2; # x[2] is always 0; 
+    return z.size[1] == 1 ? two_node_result : four_node_result;
+}
+
+def blockcyclic(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    c = linearize3d(x, y, z) % z.size[2];
+    return (a, b, c);
+}
+
+def cyclic2d(IPoint x, ISpace y, MSpace z)
+{
+    a = cyclic_primitive(x, y, z, 0, 0);
+    b = cyclic_primitive(x, y, z, 1, 1);
+    return (a, b);
+}
+
+IndexTaskMap * m6 blockcyclic;
+IndexTaskMap task_1 m4 cyclic2d;
+IndexTaskMap task_2 m4 cyclic2d;
+IndexTaskMap task_3 m4 cyclic2d;
+IndexTaskMap init_cublas m7 block1d;

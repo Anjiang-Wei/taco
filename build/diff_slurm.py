@@ -138,7 +138,7 @@ def filter_maptask(lines, filename):
             value = tuple(value) # convert list to tuple
             if key in res.keys():
                 if res[key][0] != value:
-                    print(f"results are different across runs in {filename}")
+                    print(f"different across runs in {filename}")
                     pprint(key)
                     pprint(res[key][0])
                     print(find_file_line(filename, key+res[key][0]))
@@ -184,8 +184,9 @@ def print_maptask_diff(map1, map2):
                 print("----------------------------------------")
                 if fail_first:
                     assert(False)
+                break
         if v1 != v2:
-            print("Difference detected!")
+            print("different results detected!")
         if fail_first:
             assert(v1 == v2)
         if map1[k][1] != map2[k][1]:
