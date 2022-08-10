@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# python3 scripts/install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20
+# python3 scripts/install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
 
 import argparse
 from contextlib import contextmanager
