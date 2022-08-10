@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# python3 scripts/install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20
+
 import argparse
 from contextlib import contextmanager
 import os
@@ -81,7 +83,7 @@ with pushd(args.deps_install_dir):
         run("make", "-j{}".format(args.threads), "install")
 
     # OpenBLAS.
-    with pushd(os.path.join(distalRoot, "deps", "OpenBLAS")):
+    with pushd(os.path.join(distalRoot, "legion", "OpenBLAS")):
         env = {}
         if args.openmp:
             env["USE_OPENMP"] = "1"
@@ -133,7 +135,7 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_EMBED_GASNet"] = True
             cmakeDefs["GASNet_CONDUIT"] = args.conduit
 
-        cmake(os.path.join(distalRoot, "deps", "legion"), cmakeDefs, env={
+        cmake(os.path.join(distalRoot, "legion", "legion"), cmakeDefs, env={
             "HDF5_ROOT": makeInstallPath,
         })
         run("make", "-j{}".format(args.threads), "install")
