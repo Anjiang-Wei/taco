@@ -204,7 +204,7 @@ class CannonBench(DMMBench):
         psize = self.problemSize(procs)
         gx = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/cannonMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx)] + \
+               ['../bin/cannonMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx)] + \
                lgCPUArgs()
 
 class SUMMABench(DMMBench):
@@ -219,7 +219,7 @@ class SUMMABench(DMMBench):
         psize = self.problemSize(procs)
         gx = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/summaMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx)] + \
+               ['../bin/summaMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx)] + \
                lgCPUArgs()
 
 class SUMMAGPUBench(SUMMABench):
@@ -231,7 +231,7 @@ class SUMMAGPUBench(SUMMABench):
         psize = self.problemSize(procs)
         gx = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/summaMM-cuda', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-dm:exact_region', '-tm:untrack_valid_regions'] + \
+               ['../bin/summaMM-cuda', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-dm:exact_region', '-tm:untrack_valid_regions'] + \
                lgGPUArgs(self.gpus) + self.backpressureArgs(procs)
 
 class PUMMABench(SUMMABench):
@@ -239,7 +239,7 @@ class PUMMABench(SUMMABench):
         psize = self.problemSize(procs)
         gx = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/pummaMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-tm:untrack_valid_regions'] + \
+               ['../bin/pummaMM', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-tm:untrack_valid_regions'] + \
                lgCPUArgs()
 
 class PUMMAGPUBench(SUMMAGPUBench):
@@ -247,7 +247,7 @@ class PUMMAGPUBench(SUMMAGPUBench):
         psize = self.problemSize(procs)
         gx = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/pummaMM-cuda', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-dm:exact_region', '-tm:untrack_valid_regions'] + \
+               ['../bin/pummaMM-cuda', '-n', str(psize), '-gx', str(gx), '-gy', str(procs // gx), '-dm:exact_region', '-tm:untrack_valid_regions'] + \
                lgGPUArgs(self.gpus) + self.backpressureArgs(procs)
 
 class CannonGPUBench(CannonBench):
@@ -261,7 +261,7 @@ class CannonGPUBench(CannonBench):
         # This has a performance impact with multiple GPUs per node.
         gy = self.getgx(procs)
         return lassenHeader(procs) + \
-               ['bin/cannonMM-cuda', '-n', str(psize), '-gx', str(procs // gy), '-gy', str(gy), \
+               ['../bin/cannonMM-cuda', '-n', str(psize), '-gx', str(procs // gy), '-gy', str(gy), \
                 '-dm:exact_region', '-tm:untrack_valid_regions'] + \
                lgGPUArgs(self.gpus) + self.backpressureArgs(procs)
 
@@ -283,7 +283,7 @@ class JohnsonBench(DMMBench):
         assert(2 * procs in dims)
         gdim = dims[2 * procs]
         return lassenHeader(procs) + \
-               ['bin/johnsonMM', '-n', str(psize), '-gdim', str(gdim)] + \
+               ['../bin/johnsonMM', '-n', str(psize), '-gdim', str(gdim)] + \
                lgCPUArgs()
 
 class JohnsonGPUBench(DMMBench):
@@ -308,7 +308,7 @@ class JohnsonGPUBench(DMMBench):
         assert(self.gpus * procs in self.dims)
         gdim = self.dims[self.gpus * procs]
         return lassenHeader(procs) + \
-               ['bin/johnsonMM-cuda', '-n', str(psize), '-gdim', str(gdim), '-tm:untrack_valid_regions'] + \
+               ['../bin/johnsonMM-cuda', '-n', str(psize), '-gdim', str(gdim), '-tm:untrack_valid_regions'] + \
                lgGPUMultShardsArgs(self.gpus)
 
 class COSMABench(DMMBench):
@@ -357,7 +357,7 @@ class LgCOSMABench(DMMBench):
         assert(2 * procs in self.decomp)
         decomp = self.decomp[2 * procs]
         return lassenHeader(procs) + \
-               ['bin/cosma', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2])] + \
+               ['../bin/cosma', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2])] + \
                lgCPUArgs()
 
 class LgCOSMAGPUBench(LgCOSMABench):
@@ -371,7 +371,7 @@ class LgCOSMAGPUBench(LgCOSMABench):
         assert(self.gpus * procs in self.decomp)
         decomp = self.decomp[self.gpus * procs]
         return lassenHeader(procs) + \
-               ['bin/cosma-cuda', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2]), '-tm:untrack_valid_regions'] + \
+               ['../bin/cosma-cuda', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2]), '-tm:untrack_valid_regions'] + \
                lgGPUMultShardsArgs(self.gpus)
 
 class SolomonikBench(DMMBench):
@@ -391,7 +391,7 @@ class SolomonikBench(DMMBench):
         assert(2 * procs in self.params)
         params = self.params[2 * procs]
         return lassenHeader(procs) + \
-               ['bin/solomonikMM', '-n', psize, '-rpoc', str(params[0]), '-c', str(params[1]), '-rpoc3', str(params[2]), '-tm:untrack_valid_regions'] + \
+               ['../bin/solomonikMM', '-n', psize, '-rpoc', str(params[0]), '-c', str(params[1]), '-rpoc3', str(params[2]), '-tm:untrack_valid_regions'] + \
                lgCPUArgs()
 
 class SolomonikGPUBench(DMMBench):
@@ -416,7 +416,7 @@ class SolomonikGPUBench(DMMBench):
         assert(self.gpus * procs in self.params)
         params = self.params[self.gpus * procs]
         return lassenHeader(procs) + \
-               ['bin/solomonikMM-cuda', '-n', psize, '-rpoc', str(params[0]), '-c', str(params[1]), '-rpoc3', str(params[2]), '-tm:untrack_valid_regions'] + \
+               ['../bin/solomonikMM-cuda', '-n', psize, '-rpoc', str(params[0]), '-c', str(params[1]), '-rpoc3', str(params[2]), '-tm:untrack_valid_regions'] + \
                lgGPUArgs(self.gpus) + self.backpressureArgs(procs)
 
 class SCALAPACKBench(SUMMABench):
@@ -438,7 +438,7 @@ class LegateBench(DMMBench):
         legateNumpyDir = os.getenv('LEGATE_NUMPY_DIR')
         assert(legateNumpyDir is not None)
         return [
-            os.path.join(legateDir, 'bin/legate'), os.path.join(legateNumpyDir, 'examples/gemm.py'), '-n', psize, '-p', '64', '-i', '10', '--num_nodes', str(procs),
+            os.path.join(legateDir, '../bin/legate'), os.path.join(legateNumpyDir, 'examples/gemm.py'), '-n', psize, '-p', '64', '-i', '10', '--num_nodes', str(procs),
             '--omps', '2', '--ompthreads', '18', '--nodes', str(procs), '--numamem', '30000', '--eager-alloc-percentage', '1', '--cpus', '1', '--sysmem', '10000',
             '--launcher', 'jsrun', '--cores-per-node', '40', '--verbose',
         ]
@@ -455,7 +455,7 @@ class LegateGPUBench(DMMBench):
         legateNumpyDir = os.getenv('LEGATE_NUMPY_DIR')
         assert(legateNumpyDir is not None)
         return [
-            os.path.join(legateDir, 'bin/legate'), os.path.join(legateNumpyDir, 'examples/gemm.py'), '-n', psize, '-p', '64', '-i', '10',
+            os.path.join(legateDir, '../bin/legate'), os.path.join(legateNumpyDir, 'examples/gemm.py'), '-n', psize, '-p', '64', '-i', '10',
             '--omps', '1', '--ompthreads', '10', '--nodes', str(procs), '--sysmem', '75000', '--eager-alloc-percentage', '1', '--fbmem', '15000', '--gpus', str(self.gpus), '--verbose',
             '--launcher', 'jsrun', '--cores-per-node', '40',
         ]
@@ -470,12 +470,12 @@ class CTFBench(DMMBench):
         envs = ['env', 'LD_LIBRARY_PATH=LD_LIBRARY_PATH:{}'.format(openblasLib)]
         header = ['jsrun', '-b', 'rs', '-c', '10', '-r', '4', '-n', str(4 * procs)]
         return envs + header + \
-               [os.path.join(ctfDir, 'bin/matmul'), '-m', psize, '-n', psize, '-k', psize, '-niter', '10', '-sp_A', '1', '-sp_B', '1', '-sp_C', '1', '-test', '0', '--procs_per_node', '4']
+               [os.path.join(ctfDir, '../bin/matmul'), '-m', psize, '-n', psize, '-k', psize, '-niter', '10', '-sp_A', '1', '-sp_B', '1', '-sp_C', '1', '-test', '0', '--procs_per_node', '4']
 
 class LgTTMCBench(TTMCBench):
     def getCommand(self, procs):
         psize = str(self.problemSize(procs))
-        return lassenHeader(procs) + ['bin/ttmc', '-n', psize, '-pieces', str(procs * 2)] + lgCPUArgs()
+        return lassenHeader(procs) + ['../bin/ttmc', '-n', psize, '-pieces', str(procs * 2)] + lgCPUArgs()
 
 class LgTTMCGPUBench(TTMCBench):
     def __init__(self, initialProblemSize, gpus):
@@ -484,7 +484,7 @@ class LgTTMCGPUBench(TTMCBench):
 
     def getCommand(self, procs):
         psize = str(self.problemSize(procs))
-        return lassenHeader(procs) + ['bin/ttmc-cuda', '-n', psize, '-pieces', str(procs * self.gpus)] + lgGPUArgs(self.gpus)
+        return lassenHeader(procs) + ['../bin/ttmc-cuda', '-n', psize, '-pieces', str(procs * self.gpus)] + lgGPUArgs(self.gpus)
 
 class CTFTTMCBench(TTMCBench):
     def getCommand(self, procs):
@@ -496,7 +496,7 @@ class CTFTTMCBench(TTMCBench):
         envs = ['env', 'LD_LIBRARY_PATH=LD_LIBRARY_PATH:{}'.format(openblasLib)]
         header = ['jsrun', '-b', 'rs', '-c', '10', '-r', '4', '-n', str(4 * procs)]
         return envs + header + \
-               [os.path.join(ctfDir, 'bin/ttmc'), '-n', psize, '-procsPerNode', '4']
+               [os.path.join(ctfDir, '../bin/ttmc'), '-n', psize, '-procsPerNode', '4']
 
 class CTFMTTKRPBench(MTTKRPBench):
     def getCommand(self, procs):
@@ -508,7 +508,7 @@ class CTFMTTKRPBench(MTTKRPBench):
         envs = ['env', 'LD_LIBRARY_PATH=LD_LIBRARY_PATH:{}'.format(openblasLib)]
         header = ['jsrun', '-b', 'rs', '-c', '10', '-r', '4', '-n', str(4 * procs)]
         return envs + header + \
-               [os.path.join(ctfDir, 'bin/mymttkrp'), '-n', psize, '-procsPerNode', '4']
+               [os.path.join(ctfDir, '../bin/mymttkrp'), '-n', psize, '-procsPerNode', '4']
 
 class LgMTTKRPBench(MTTKRPBench):
     def __init__(self, initialProblemSize):
@@ -531,7 +531,7 @@ class LgMTTKRPBench(MTTKRPBench):
         assert(procs in self.sizes)
         x, y, z = self.sizes[procs]
         return lassenHeader(procs) + [
-            'bin/mttkrp', '-n', psize, '-gx', str(2 * x), '-gy', str(y), '-gz', str(z), '-tm:numa_aware_alloc', '-lg:eager_alloc_percentage', '50',
+            '../bin/mttkrp', '-n', psize, '-gx', str(2 * x), '-gy', str(y), '-gz', str(z), '-tm:numa_aware_alloc', '-lg:eager_alloc_percentage', '50',
         ] + lgCPUArgs()
 
 class LgGPUMTTKRPBench(LgMTTKRPBench):
@@ -560,7 +560,7 @@ class LgGPUMTTKRPBench(LgMTTKRPBench):
         if procs >= 128:
             bp = 1
         return lassenHeader(procs) + [
-            'bin/mttkrp-cuda', '-n', psize, '-gx', str(x), '-gy', str(y), '-gz', str(z), '-lg:eager_alloc_percentage', '50', '-gex:bindcuda', '0',
+            '../bin/mttkrp-cuda', '-n', psize, '-gx', str(x), '-gy', str(y), '-gz', str(z), '-lg:eager_alloc_percentage', '50', '-gex:bindcuda', '0',
             '-tm:enable_backpressure', '-tm:backpressure_max_in_flight', str(bp),
         ] + lgGPUArgs(self.gpus)
 
@@ -570,7 +570,7 @@ class LgTTVBench(TTVBench):
         gx = self.getgx(procs)
         return lassenHeader(procs) + [
             # Do gx * 2 to account for multiple OMP procs per node.
-            'bin/ttv', '-n', psize, '-gx', str(2 * gx), '-gy', str(procs // gx), '-tm:numa_aware_alloc'
+            '../bin/ttv', '-n', psize, '-gx', str(2 * gx), '-gy', str(procs // gx), '-tm:numa_aware_alloc'
         ] + lgCPUArgs(othrs=76) # Run with more openmp threads than normal to make use of SMT.
 
 class LgTTVGPUBench(TTVBench):
@@ -581,7 +581,7 @@ class LgTTVGPUBench(TTVBench):
         psize = str(self.problemSize(procs))
         gx = self.getgx(procs)
         return lassenHeader(procs) + [
-            'bin/ttv-cuda', '-n', psize, '-gx', str(2 * gx), '-gy', str(2 * procs // gx),
+            '../bin/ttv-cuda', '-n', psize, '-gx', str(2 * gx), '-gy', str(2 * procs // gx),
         ] + lgGPUArgs(self.gpus)
 
 class CTFTTVBench(TTVBench):
@@ -594,14 +594,14 @@ class CTFTTVBench(TTVBench):
         envs = ['env', 'LD_LIBRARY_PATH=LD_LIBRARY_PATH:{}'.format(openblasLib)]
         header = ['jsrun', '-b', 'rs', '-c', '10', '-r', '4', '-n', str(4 * procs)]
         return envs + header + \
-               [os.path.join(ctfDir, 'bin/ttv'), '-n', psize, '-procsPerNode', '4']
+               [os.path.join(ctfDir, '../bin/ttv'), '-n', psize, '-procsPerNode', '4']
 
 class LgInnerProdBench(InnerProdBench):
     def getCommand(self, procs):
         psize = str(self.problemSize(procs))
         return lassenHeader(procs) + [
             # Do procs * 2 to account for multiple OMP procs per node.
-            'bin/innerprod', '-n', psize, '-pieces', str(2 * procs), '-tm:numa_aware_alloc'
+            '../bin/innerprod', '-n', psize, '-pieces', str(2 * procs), '-tm:numa_aware_alloc'
         ] + lgCPUArgs(othrs=76) # Run with more openmp threads than normal to make use of SMT.
 
 class LgInnerProdGPUBench(InnerProdBench):
@@ -611,7 +611,7 @@ class LgInnerProdGPUBench(InnerProdBench):
     def getCommand(self, procs):
         psize = str(self.problemSize(procs))
         return lassenHeader(procs) + [
-            'bin/innerprod-cuda', '-n', psize, '-pieces', str(self.gpus * procs),
+            '../bin/innerprod-cuda', '-n', psize, '-pieces', str(self.gpus * procs),
         ] + lgGPUArgs(self.gpus)
 
 class CTFInnerProdBench(InnerProdBench):
@@ -626,7 +626,7 @@ class CTFInnerProdBench(InnerProdBench):
         # I have verified that TTV does not see a benefit with 40 ranks per node.
         header = ['jsrun', '-b', 'rs', '-c', '1', '-r', '40', '-n', str(40 * procs)]
         return envs + header + \
-               [os.path.join(ctfDir, 'bin/innerprod'), '-n', psize, '-procsPerNode', '40']
+               [os.path.join(ctfDir, '../bin/innerprod'), '-n', psize, '-procsPerNode', '40']
 
 class AdaptBench:
     def __init__(self, initialProblemSize, gpus, match):
@@ -642,7 +642,7 @@ class AdaptBench:
         return size
 
     def getCommand(self, procs):
-        cmd = ['bin/matvec-adapt-cuda', '-pieces', str(procs * self.gpus), '-n', str(self.problemSize(procs))]
+        cmd = ['../bin/matvec-adapt-cuda', '-pieces', str(procs * self.gpus), '-n', str(self.problemSize(procs))]
         cmd += lgGPUArgs(self.gpus)
         if self.match:
             cmd += ['-match']
@@ -651,12 +651,12 @@ class AdaptBench:
 def executeCmd(cmd):
     cmdStr = " ".join(cmd)
     print("Executing command: {}".format(cmdStr))
-    try:
-        result = subprocess.run(cmd, capture_output=True)
-        print(result.stdout.decode())
-        print(result.stderr.decode())
-    except Exception as e:
-        print("Failed with exception: {}".format(str(e)))
+    # try:
+    #     result = subprocess.run(cmd, capture_output=True)
+    #     print(result.stdout.decode())
+    #     print(result.stderr.decode())
+    # except Exception as e:
+    #     print("Failed with exception: {}".format(str(e)))
 
 def main():
     # Default problem sizes.
