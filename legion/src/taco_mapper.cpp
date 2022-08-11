@@ -4,6 +4,8 @@
 using namespace Legion;
 using namespace Legion::Mapping;
 
+#define TACO_USE_LOGGING_MAPPER
+
 const char* TACOMapperName = "TACOMapper";
 
 void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs) {
