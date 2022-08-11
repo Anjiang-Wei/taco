@@ -128,4 +128,46 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "On %ld nodes achieved GB/s BW per node: %lf.\n", nodes, bw / double(nodes));
 }
 
-TACO_MAIN(valType)
+#include "../my_mapper.cc"
+
+#define TACO_MAIN2(FillType) \
+  int main(int argc, char **argv) { \
+    Runtime::set_top_level_task_id(TID_TOP_LEVEL); \
+    {               \
+      TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level"); \
+      registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC)); \
+      registrar.set_replicable();   \
+      Runtime::preregister_task_variant<top_level_task>(registrar, "top_level"); \
+    }                       \
+    if (TACO_FEATURE_OPENMP) {               \
+      TaskVariantRegistrar registrar(TID_TOP_LEVEL, "top_level"); \
+      registrar.add_constraint(ProcessorConstraint(Processor::OMP_PROC)); \
+      registrar.set_replicable();   \
+      Runtime::preregister_task_variant<top_level_task>(registrar, "top_level"); \
+    }                       \
+    registerTACOFillTasks<FillType>();             \
+    registerTACOValidateTasks<FillType>();             \
+    bool dslmapper = false; \
+    for (int i = 1; i < argc; i++) { \
+      if (strcmp(argv[i], "-dslmapper") == 0) { \
+        register_mappers(); \
+        dslmapper = true; \
+        break; \
+      } \
+    } \
+    if (dslmapper) { \
+      register_mappers(); \
+    } \
+    else \
+    { \
+      Runtime::add_registration_callback(register_taco_mapper); \
+    } \
+    initCUDA(); \
+    registerTacoTasks();    \
+    Runtime::preregister_sharding_functor(TACOShardingFunctorID, new TACOShardingFunctor()); \
+    return Runtime::start(argc, argv);             \
+  }
+
+TACO_MAIN2(valType)
+
+// TACO_MAIN(valType)
