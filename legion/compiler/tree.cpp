@@ -581,6 +581,16 @@ Node* IndexExprNode::run()
     }
     return new IntValNode(tuple_int->tupleint[int_index]);
   }
+  else if (tuple_->type == TupleExprType)
+  {
+    TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
+    if (int_index >= (int) tuple_expr->exprlst.size())
+    {
+      std::cout << "Index Out Of Bound!" << std::endl;
+      assert(false);
+    }
+    return tuple_expr->exprlst[int_index];
+  }
   else
   {
     std::cout << "unsupported IndexExprNode tuple_->type" << std::endl;
