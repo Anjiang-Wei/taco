@@ -221,15 +221,21 @@ if __name__ == "__main__":
     f1_sharding = filter_sharding(f1_line)
     f2_sharding = filter_sharding(f2_line)
     print_shardslice_diff(f1_sharding, f2_sharding)
-    assert(f1_sharding == f2_sharding)
-    print("pass sharding check:", len(f1_sharding))
+    if f1_sharding == f2_sharding:
+        print("pass sharding check:", len(f1_sharding))
+    else:
+        print("fail sharding check:", len(f1_sharding))
     f1_slicing = filter_slicing(f1_line)
     f2_slicing = filter_slicing(f2_line)
     print_shardslice_diff(f1_slicing, f2_slicing)
-    assert(f1_slicing == f2_slicing)
-    print("pass slicing check:", len(f1_slicing))
+    if f1_slicing == f2_slicing:
+        print("pass slicing check:", len(f1_slicing))
+    else:
+        print("fail slicing check:", len(f1_slicing))
     f1_maptask = filter_maptask(f1_line, sys.argv[1])
     f2_maptask = filter_maptask(f2_line, sys.argv[2])
     print_maptask_diff(f1_maptask, f2_maptask)
-    assert(f1_maptask == f2_maptask)
-    print("pass maptask check:", len(f1_maptask))
+    if f1_maptask == f2_maptask:
+        print("pass maptask check:", len(f1_maptask))
+    else:
+        print("fail maptask check:", len(f1_maptask))
