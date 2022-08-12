@@ -169,7 +169,7 @@ def print_maptask_diff(map1, map2):
             pprint(k)
             pprint(map1[k][0])
             print("only appears in", sys.argv[1], "for", map1[k][1], "times")
-            print("line:", find_file_line(sys.argv[1], k))
+            print("line:", find_file_line(sys.argv[1], k+map1[k][0]))
             print("----------------------------------------")
             if fail_first:
                 break
@@ -182,8 +182,8 @@ def print_maptask_diff(map1, map2):
                 pprint(k)
                 pprint(v1[i])
                 pprint(v2[i])
-                print("line:", sys.argv[1], find_file_line(sys.argv[1], k))
-                print("line:", sys.argv[2], find_file_line(sys.argv[2], k))
+                print("line:", sys.argv[1], find_file_line(sys.argv[1], k+v1))
+                print("line:", sys.argv[2], find_file_line(sys.argv[2], k+v2))
                 print("----------------------------------------")
                 if fail_first:
                     assert(False)
@@ -195,8 +195,9 @@ def print_maptask_diff(map1, map2):
         if map1[k][1] != map2[k][1]:
             pprint(k)
             pprint(map1[k][0])
-            print(f"appears in {sys.argv[1]} for {map1[k][1]} times", find_file_line(sys.argv[1], k))
-            print(f"appears in {sys.argv[2]} for {map2[k][1]} times", find_file_line(sys.argv[2], k))
+            print(f"appears in {sys.argv[1]} for {map1[k][1]} times", find_file_line(sys.argv[1], k+map1[k][0]))
+            pprint(map2[k][0])
+            print(f"appears in {sys.argv[2]} for {map2[k][1]} times", find_file_line(sys.argv[2], k+map2[k][0]))
             print("----------------------------------------")
             if fail_first:
                 assert(False)
@@ -207,7 +208,7 @@ def print_maptask_diff(map1, map2):
             pprint(k)
             pprint(map2[k][0])
             print("only appears in", sys.argv[2], "for", map2[k][1], "times")
-            print("line:", find_file_line(sys.argv[2], k))
+            print("line:", find_file_line(sys.argv[2], k+map2[k][0]))
             print("----------------------------------------")
             if fail_first:
                 assert(False)
