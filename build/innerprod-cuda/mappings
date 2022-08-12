@@ -1,0 +1,59 @@
+Task * GPU,OMP,CPU;
+# Task taco_validate CPU;
+# region $taskname $region_name $processor $list_of_memories;
+Region * * * SOCKMEM,SYSMEM;
+Region * * GPU FBMEM,ZCMEM;
+
+# Other supported Memory: RDMEM
+
+# Task taco_validate parent_task_procesor; # We don't know how to deal with this yet
+
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
+
+CollectMemory * *;
+
+m1 = Machine(OMP); # nodes * OMP
+m2 = m1.balance_split(0, 2); # node1 * node2 * OMP
+m3 = m2.balance_split(2, 2); # node1 * node2 * OMP1 * OMP2
+m3_ = m3.swap(0, 1);
+m3__ = m3_.swap(2, 3);
+
+m4 = Machine(GPU); # nodes * 4GPUs
+# split the first dimension (i.e., nodes dimension) in as square as possible
+m5 = m4.balance_split(0, 2); # node1 * node2 * 4 GPUs
+# split the third dimension (i.e., processor dimension) as square as possible
+m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
+m6_ = m6.swap(0, 1);
+m6__ = m6_.swap(2, 3);
+
+m7 = m4.merge(0, 1);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a * b / c;
+    return d;
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a % b;
+    return d;
+}
+
+def block1d(IPoint x, ISpace y, MSpace z)
+{
+    # x, y, z are all 1-dim
+    return block_primitive(x, y, z, 0, 0);
+}
+
+IndexTaskMap taco_fill m7 block1d;
+IndexTaskMap task_1 m7 block1d;
