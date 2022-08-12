@@ -6,8 +6,8 @@
 #define TACO_MIN(_a,_b) ((_a) < (_b) ? (_a) : (_b))
 using namespace Legion;
 typedef FieldAccessor<READ_ONLY,double,1,coord_t,Realm::AffineAccessor<double,1,coord_t>> AccessorROdouble1;
-typedef FieldAccessor<READ_WRITE,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorRWdouble2;
 typedef FieldAccessor<READ_ONLY,double,3,coord_t,Realm::AffineAccessor<double,3,coord_t>> AccessorROdouble3;
+typedef FieldAccessor<READ_WRITE,double,2,coord_t,Realm::AffineAccessor<double,2,coord_t>> AccessorRWdouble2;
 
 struct task_1Args {
   int32_t gridX;
@@ -22,9 +22,6 @@ struct task_3Args {
   int32_t gridY;
 };
 struct task_4Args {
-  int32_t B1_dimension;
-  int32_t B2_dimension;
-  int32_t C1_dimension;
 };
 
 LogicalPartition partitionLegionA(Context ctx, Runtime* runtime, LogicalRegion A, int32_t gridX, int32_t gridY) {
@@ -231,74 +228,39 @@ LogicalPartition placeLegionC(Context ctx, Runtime* runtime, LogicalRegion C, in
 
 }
 
-__global__
-void task_4DeviceKernel0(int64_t BPartitionBounds0hi, int64_t BPartitionBounds0lo, int64_t BPartitionBounds1hi, int64_t BPartitionBounds1lo, AccessorRWdouble2 A_vals, AccessorROdouble3 B_vals, AccessorROdouble1 C_vals, int32_t B1_dimension, int32_t B2_dimension, int32_t C1_dimension, int32_t distFused) {
-
-  int32_t io = blockIdx.x + (0 / 64);
-  int32_t ii = (threadIdx.x % (64));
-  if (threadIdx.x >= 64) {
-    return;
-  }
-
-  int32_t f2 = io * 64 + ii;
-  int32_t f = f2 / C1_dimension;
-  int32_t il = f / ((BPartitionBounds1hi - BPartitionBounds1lo) + 1);
-  int32_t i = il + BPartitionBounds0lo;
-  if (i >= B1_dimension)
-    return;
-
-  if (i > BPartitionBounds0hi)
-    return;
-
-  int32_t jl = f % ((BPartitionBounds1hi - BPartitionBounds1lo) + 1);
-  int32_t j = jl + BPartitionBounds1lo;
-  int32_t jB = i * B2_dimension + j;
-  Point<2> A_access_point = Point<2>(i, j);
-  if (j >= B2_dimension)
-    return;
-
-  if (j > BPartitionBounds1hi)
-    return;
-
-  int32_t k = f2 % C1_dimension;
-  Point<3> B_access_point = Point<3>(i, j, k);
-  Point<1> C_access_point = Point<1>(k);
-  if (k >= C1_dimension)
-    return;
-
-  atomicAddWarp(&A_vals[A_access_point], flattenPoint(A_vals, A_access_point), B_vals[B_access_point] * C_vals[C_access_point]);
-}
-
 void task_4(const Task* task, const std::vector<PhysicalRegion>& regions, Context ctx, Runtime* runtime) {
   PhysicalRegion A = regions[0];
   PhysicalRegion B = regions[1];
   PhysicalRegion C = regions[2];
 
   int32_t distFused = task->index_point[0];
-  task_4Args* args = (task_4Args*)(task->args);
-  int32_t B1_dimension = args->B1_dimension;
-  int32_t B2_dimension = args->B2_dimension;
-  int32_t C1_dimension = args->C1_dimension;
-
   auto A_index_space = get_index_space(A);
+  auto B_index_space = get_index_space(B);
+  auto C_index_space = get_index_space(C);
   AccessorROdouble1 C_vals(C, FID_VAL);
   AccessorROdouble3 B_vals(B, FID_VAL);
   AccessorRWdouble2 A_vals(A, FID_VAL);
 
   int32_t in = getIndexPoint(task, 0);
   int32_t jn = getIndexPoint(task, 1);
-  auto APartitionBounds = runtime->get_index_space_domain(ctx, A_index_space);
-  int64_t BPartitionBounds0lo = APartitionBounds.lo()[0];
-  int64_t BPartitionBounds0hi = APartitionBounds.hi()[0];
-  int64_t BPartitionBounds1lo = APartitionBounds.lo()[1];
-  int64_t BPartitionBounds1hi = APartitionBounds.hi()[1];
-  task_4DeviceKernel0<<<(((((BPartitionBounds0hi - BPartitionBounds0lo) + 1) * ((BPartitionBounds1hi - BPartitionBounds1lo) + 1)) * C1_dimension + 63) / 64 - 0 / 64), 64>>>(BPartitionBounds0hi, BPartitionBounds0lo, BPartitionBounds1hi, BPartitionBounds1lo, A_vals, B_vals, C_vals, B1_dimension, B2_dimension, C1_dimension, distFused);
+  auto BPartitionBounds = runtime->get_index_space_domain(ctx, B_index_space);
+  auto aDomain = runtime->get_index_space_domain(ctx, A_index_space);
+  auto bDomain = runtime->get_index_space_domain(ctx, B_index_space);
+  auto cDomain = runtime->get_index_space_domain(ctx, C_index_space);
+  if (bDomain.get_volume() == 0 || cDomain.get_volume() == 0)
+    return ;
+
+  TTVPack pack = TTVPack();
+  pack.iDim = 1 + (bDomain.hi()[0] - bDomain.lo()[0]);
+  pack.jDim = 1 + (bDomain.hi()[1] - bDomain.lo()[1]);
+  pack.kDim = 1 + (bDomain.hi()[2] - bDomain.lo()[2]);
+  pack.ldA = A_vals.accessor.strides[0] / sizeof(double);
+  pack.ldB2 = (B_vals.accessor.strides[0] / sizeof(double)) / (B_vals.accessor.strides[1] / sizeof(double));
+  pack.ldB3 = B_vals.accessor.strides[1] / sizeof(double);
+  cu_ttv<double>(pack, A_vals.ptr(aDomain.lo()), B_vals.ptr(bDomain.lo()), C_vals.ptr(cDomain.lo()));
 }
 
-void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion B, LogicalRegion C, LogicalPartition BPartition, LogicalPartition APartition) {
-  int B1_dimension = runtime->get_index_space_domain(get_index_space(B)).hi()[0] + 1;
-  int B2_dimension = runtime->get_index_space_domain(get_index_space(B)).hi()[1] + 1;
-  int C1_dimension = runtime->get_index_space_domain(get_index_space(C)).hi()[0] + 1;
+void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion B, LogicalRegion C, LogicalPartition BPartition, LogicalPartition APartition, LogicalPartition CPartition) {
   auto C_index_space = get_index_space(C);
 
   DomainT<2> domain = runtime->get_index_partition_color_space(ctx, get_index_partition(BPartition));
@@ -312,20 +274,16 @@ void computeLegion(Context ctx, Runtime* runtime, LogicalRegion A, LogicalRegion
   AReq.add_field(FID_VAL);
   RegionRequirement BReq = RegionRequirement(BPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(B));
   BReq.add_field(FID_VAL);
-  RegionRequirement CReq = RegionRequirement(get_logical_region(C), READ_ONLY, EXCLUSIVE, get_logical_region(C));
+  RegionRequirement CReq = RegionRequirement(CPartition, 0, READ_ONLY, EXCLUSIVE, get_logical_region(C));
   CReq.add_field(FID_VAL);
   task_4Args taskArgsRaw;
-  taskArgsRaw.B1_dimension = B1_dimension;
-  taskArgsRaw.B2_dimension = B2_dimension;
-  taskArgsRaw.C1_dimension = C1_dimension;
   TaskArgument taskArgs = TaskArgument(&taskArgsRaw, sizeof(task_4Args));
   IndexLauncher launcher = IndexLauncher(taskID(4), domain, taskArgs, ArgumentMap());
   launcher.add_region_requirement(AReq);
   launcher.add_region_requirement(BReq);
   launcher.add_region_requirement(CReq);
   launcher.tag = launcher.tag | TACOMapper::UNTRACK_VALID_REGIONS;
-  auto fm = runtime->execute_index_space(ctx, launcher);
-  fm.wait_all_results();
+  runtime->execute_index_space(ctx, launcher);
 
 }
 void registerTacoTasks() {
