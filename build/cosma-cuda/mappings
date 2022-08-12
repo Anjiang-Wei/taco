@@ -12,11 +12,7 @@ CollectMemory * *;
 
 m4 = Machine(GPU); # nodes * 4
 m5 = m4.balance_split(0, 2); # node1 * node2 * 4
-m6 = m5.swap(0, 1);
-
-m7 = m4.merge(0, 1);
-# m8 = m4.balance_split(1, 2); # nodes * 2 * 2
-# m9 = m8.swap(1, 2);
+m5_ = m5.swap(0, 1);
 
 def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
 {
@@ -28,29 +24,45 @@ def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
     return x[dim1] % z.size[dim2];
 }
 
-def block1d(IPoint x, ISpace y, MSpace z)
-{
-    return block_primitive(x, y, z, 0, 0);
-}
-
-def blockwise(IPoint x, ISpace y, MSpace z)
+def block_zero(IPoint x, ISpace y, MSpace z)
 {
     a = block_primitive(x, y, z, 0, 0);
-    b = block_primitive(x, y, z, 1, 1);
-    c = block_primitive(x, y, z, 0, 2);
-    d = block_primitive(x, y, z, 0, 3);
-    return (a, b, c, d);
-}
-
-def block2d(IPoint x, ISpace y, MSpace z)
-{
-    a = block_primitive(x, y, z, 0, 0);
-    b = block_primitive(x, y, z, 1, 1);
+    b = 0;
     return (a, b);
 }
 
-IndexTaskMap * m6 blockwise;
-IndexTaskMap task_1 m4 block2d;
-IndexTaskMap task_2 m4 block2d;
-IndexTaskMap task_3 m4 block2d;
-IndexTaskMap init_cublas m7 block1d;
+def cyclic_zero(IPoint x, ISpace y, MSpace z)
+{
+    a = cyclic_primitive(x, y, z, 0, 0);
+    b = 0;
+    return (a, b);
+}
+
+def block2_zero(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 1, 0);
+    b = 0;
+    return (a, b);
+}
+
+def block_block_zero(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    c = 0;
+    return (a, b, c);
+}
+
+def block_block02_zero(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 2, 1);
+    c = 0;
+    return (a, b, c);
+}
+
+IndexTaskMap task_1 m5_ block_block_zero; # task_1: (gx, gy, 1), always slicing to 0
+IndexTaskMap task_2 m4 cyclic_zero; # task_2: (gx, 1, gz)
+IndexTaskMap task_3 m4 block2_zero; # task_3: (1, gy, gz)
+IndexTaskMap task_4 m5_ block_block02_zero; # task_4: (gx, gy, gz)
+IndexTaskMap init_cublas m4 block_zero;
