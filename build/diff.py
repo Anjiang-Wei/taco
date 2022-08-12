@@ -57,7 +57,10 @@ def filter_keyword(lines, start_kw, continue_kw_lst):
                 else:
                     break
             if key in res.keys():
-                assert(value == res[key]) # it should always be the same
+                if value != res[key]:
+                    print(f"{key}'s results are different across runs!")
+                if fail_first:
+                    assert(value == res[key]) # it should always be the same
             else:
                 res[key] = value
     return res
@@ -100,7 +103,7 @@ def print_shardslice_diff(map1, map2):
             pprint(k)
             pprint(map2[k])
             print("only appears in", sys.argv[2])
-            print("line:", find_file_line(sys.argv[1], k))
+            print("line:", find_file_line(sys.argv[2], k))
             print("----------------------------------------")
             if fail_first:
                 assert(False)
