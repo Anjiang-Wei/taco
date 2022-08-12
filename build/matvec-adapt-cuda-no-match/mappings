@@ -57,3 +57,4 @@ def block1d(IPoint x, ISpace y, MSpace z)
 
 IndexTaskMap taco_fill m7 block1d;
 IndexTaskMap task_1 m7 block1d;
+IndexTaskMap task_2 m7 block1d;
