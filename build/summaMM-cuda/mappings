@@ -67,8 +67,10 @@ def blockcyclic(IPoint x, ISpace y, MSpace z)
     return (a, b, c, d);
 }
 
-IndexTaskMap * m6__ blockcyclic;
+# task_5: always (2, 2) only for slicing, no sharding
+# 4nodes: gridX, gridY = 2, 2
+IndexTaskMap * m6__ blockcyclic; # task_1, task_2, task_3: (gridX * 2, gridY * 2)
 IndexTaskMap init_cublas m7 block1d;
-IndexTaskMap task_7 m3__ blockcyclic;
+IndexTaskMap task_7 m3__ blockcyclic; # task_7: (gridX, gridY)
 # if only turn this on, and comment out all the above IndexTaskMap, then ~1.5X faster! Don't understand why yet.
 # IndexTaskMap taco_fill m6 blockcyclic;
