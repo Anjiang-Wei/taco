@@ -8,7 +8,7 @@ Layout * * * SOA C_order; # Align==128 Compact
 
 # InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 
-CollectMemory * *;
+CollectMemory task_4 *;
 
 m4 = Machine(GPU); # nodes * 4
 m5 = m4.balance_split(0, 2); # node1 * node2 * 4
@@ -39,8 +39,9 @@ def block_block_zero(IPoint x, ISpace y, MSpace z)
     return (a, b, c);
 }
 
-IndexTaskMap task_1 m4 block_zero; # ispace: grid * grid * 1
-IndexTaskMap task_2 m4 block_zero; # ispace: grid * 1 * grid
-IndexTaskMap task_3 m4 block_zero; # ispace : 1 * grid * grid
-IndexTaskMap task_4 m5_ block_block_zero; # ispace: grid * grid * grid
+# node4: -gdim 4
+IndexTaskMap task_1 m4 block_zero; # ispace: grid * grid * 1, PLACEMENT_SHARD
+IndexTaskMap task_2 m4 block_zero; # ispace: grid * 1 * grid, PLACEMENT_SHARD
+IndexTaskMap task_3 m4 block_zero; # ispace : 1 * grid * grid, PLACEMENT_SHARD
+IndexTaskMap task_4 m5_ block_block_zero; # ispace: grid * grid * grid, UNTRACK_VALID_REGIONS
 IndexTaskMap init_cublas m4 block_zero;

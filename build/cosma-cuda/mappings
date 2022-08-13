@@ -61,8 +61,10 @@ def block_block02_zero(IPoint x, ISpace y, MSpace z)
     return (a, b, c);
 }
 
-IndexTaskMap task_1 m5_ block_block_zero; # task_1: (gx, gy, 1), always slicing to 0
-IndexTaskMap task_2 m4 cyclic_zero; # task_2: (gx, 1, gz)
-IndexTaskMap task_3 m4 block2_zero; # task_3: (1, gy, gz)
+# node4: -gx 2 -gy 2 -gz 4
+# PLACEMENT_SHARD: gx, gy, gz
+IndexTaskMap task_1 m5_ block_block_zero; # task_1: (gx, gy, 1), always slicing to 0, PLACEMENT_SHARD
+IndexTaskMap task_2 m4 cyclic_zero; # task_2: (gx, 1, gz), PLACEMENT_SHARD
+IndexTaskMap task_3 m4 block2_zero; # task_3: (1, gy, gz), PLACEMENT_SHARD
 IndexTaskMap task_4 m5_ block_block02_zero; # task_4: (gx, gy, gz)
 IndexTaskMap init_cublas m4 block_zero;
