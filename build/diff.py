@@ -177,19 +177,20 @@ def print_maptask_diff(map1, map2):
                 continue
         v1 = map1[k][0] # tuple of sentences
         v2 = map2[k][0]
-        for i in range(len(v1)):
-            if v1[i] != v2[i]:
-                pprint(k)
-                pprint(v1[i])
-                pprint(v2[i])
-                print("line:", sys.argv[1], find_file_line(sys.argv[1], k+v1))
-                print("line:", sys.argv[2], find_file_line(sys.argv[2], k+v2))
-                print("----------------------------------------")
-                if fail_first:
-                    assert(False)
-                break
         if v1 != v2:
             print("different results detected!")
+            pprint(k)
+            pprint(v1)
+            print("line:", sys.argv[1], find_file_line(sys.argv[1], k+v1))
+            for i in range(0, min(len(v1), len(v2))):
+                if v1[i] != v2[i]:
+                    pprint(v1[i])
+                    print("However:")
+                    pprint(v2[i])
+                    print("line:", sys.argv[2], find_file_line(sys.argv[2], k+v2))
+            if fail_first:
+                assert(False)
+            print("----------------------------------------")
         if fail_first:
             assert(v1 == v2)
         if map1[k][1] != map2[k][1]:
