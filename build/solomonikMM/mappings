@@ -1,0 +1,59 @@
+Task * OMP,CPU;
+Region * * * SOCKMEM,SYSMEM;
+
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_4 * 10; # controlled by command line in TacoMapper
+
+CollectMemory task_4 *; # controlled by command line in TacoMapper
+
+m1 = Machine(OMP); # nodes * proc
+m2 = m1.balance_split(0, 2); # node1 * node2 * proc
+m2_ = m2.swap(0, 1);
+# m3 = m2.balance_split(2, 2); # node1 * node2 * proc1 * proc2
+# m3_ = m3.swap(0, 1);
+# m3__ = m3_.swap(2, 3);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a * b / c;
+    return d;
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a % b;
+    return d;
+}
+
+def block2d(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    return (a, b);
+}
+
+def block3d(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    c = cyclic_primitive(x, y, z, 0, 2);
+    return (a, b, c);
+}
+
+# 4nodes: -rpoc 4 -c 1 -rpoc3 2 -tm:untrack_valid_regions
+# task_1: (rpoc, rpoc, 1) PLACEMENT_SHARD: rpoc, rpoc, c
+# task_2: same as above
+# task_3: same as above
+# task_4: not index launch UNTRACK_VALID_REGIONS, BACKPRESSURE_TASK
+# task_5: (rproc, rproc, c)
+
+IndexTaskMap * m1 block2d;
+IndexTaskMap task_5 m2_ block3d;
