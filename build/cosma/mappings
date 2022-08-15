@@ -1,0 +1,51 @@
+Task * OMP,CPU;
+Region * * * SOCKMEM,SYSMEM;
+
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_5 * 10; # controlled by command line in TacoMapper
+# InstanceLimit task_7 * 10; # controlled by command line in TacoMapper
+
+# CollectMemory task_4 *; # controlled by command line in TacoMapper
+
+m1 = Machine(OMP); # nodes * proc
+m2 = m1.balance_split(0, 2); # node1 * node2 * proc
+m2_ = m2.swap(0, 1);
+# m3 = m2.balance_split(2, 2); # node1 * node2 * proc1 * proc2
+# m3_ = m3.swap(0, 1);
+# m3__ = m3_.swap(2, 3);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a * b / c;
+    return d;
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a % b;
+    return d;
+}
+
+def block3d(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = block_primitive(x, y, z, 1, 1);
+    c = block_primitive(x, y, z, 2, 2);
+    return (a, b, c);
+}
+
+# 4nodes: -gx 2 -gy 2 -gz 2
+# task_1: (gx, gy, 1) PLACEMENT_SHARD: gx, gy, gz
+# task_2: (gx, 1, gz) PLACEMENT_SHARD: same as above
+# task_3: (1, gy, gz) PLACEMENT_SHARD: same as above
+# task_4: (gx, gy, gz), UNTRACK_VALID_REGIONS
+
+IndexTaskMap * m2_ block3d;
