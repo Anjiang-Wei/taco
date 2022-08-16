@@ -1,0 +1,48 @@
+Task * OMP,CPU;
+Region * * * SOCKMEM,SYSMEM;
+
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_5 * 10; # controlled by command line in TacoMapper
+# InstanceLimit task_7 * 10; # controlled by command line in TacoMapper
+
+# CollectMemory task_4 *; # controlled by command line in TacoMapper
+
+m1 = Machine(OMP); # nodes * OMP
+# m2 = m1.balance_split(0, 2); # node1 * node2 * OMP
+# m2_ = m2.swap(0, 1);
+# m3 = m2.balance_split(2, 2); # node1 * node2 * OMP1 * OMP2
+# m3_ = m3.swap(0, 1);
+# m3__ = m3_.swap(2, 3);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a * b / c;
+    return d;
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a % b;
+    return d;
+}
+
+def block_cyclic(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = cyclic_primitive(x, y, z, 1, 1);
+    return (a, b);
+}
+
+# 4nodes:  -gx 4 -gy 2
+# task_1, task_2, task_3: (gridX, gridY)
+# task_4: dynamically determined, UNTRACK_VALID_REGIONS
+
+IndexTaskMap * m1 block_cyclic;
