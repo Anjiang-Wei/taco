@@ -1,0 +1,44 @@
+Task * OMP,CPU;
+Region * * * SOCKMEM,SYSMEM;
+
+# Layout taskname regionname memory AOS F_order;
+Layout * * * SOA C_order; # Align==128 Compact
+
+# InstanceLimit task_5 * 10; # controlled by command line in TacoMapper
+# InstanceLimit task_7 * 10; # controlled by command line in TacoMapper
+
+# CollectMemory task_1 *; # controlled by command line in TacoMapper
+
+m1 = Machine(OMP); # nodes * OMP
+m2 = Machine(CPU);
+
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a * b / c;
+    return d;
+}
+
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
+{
+    a = x[dim1];
+    b = z.size[dim2];
+    c = y.size[dim1];
+    d = a % b;
+    return d;
+}
+
+def block_cyclic(IPoint x, ISpace y, MSpace z)
+{
+    a = block_primitive(x, y, z, 0, 0);
+    b = cyclic_primitive(x, y, z, 0, 1);
+    return (a, b);
+}
+
+# 4nodes: -pieces 8
+# task_1: dynamically computed..., I guess it is (pieces)
+
+IndexTaskMap taco_fill m1 block_cyclic; # OMP
+IndexTaskMap task_1 m2 block_cyclic; # CPU
