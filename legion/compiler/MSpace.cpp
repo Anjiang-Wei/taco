@@ -262,14 +262,18 @@ public:
             {
                 if (added_dim_num == 2)
                 {
-                    result.push_back(old_point[i] * new_dims[1] + old_point[i+1]);
+                    // result.push_back(old_point[i] * new_dims[1] + old_point[i+1]);
+                    result.push_back(old_point[i] + new_dims[0] * old_point[i+1]);
                     i += 1;
                 }
                 else if (added_dim_num == 3)
                 {
-                    result.push_back(old_point[i] * new_dims[1] * new_dims[2]
-                                    + old_point[i+1] * new_dims[2]
-                                    + old_point[i+2]);
+                    // result.push_back(old_point[i] * new_dims[1] * new_dims[2]
+                    //                 + old_point[i+1] * new_dims[2]
+                    //                 + old_point[i+2]);
+                    result.push_back(old_point[i]
+                                    + old_point[i+1] * new_dims[0]
+                                    + old_point[i+2] * new_dims[0] * new_dims[1]);
                     i += 2;
                 }
             }
