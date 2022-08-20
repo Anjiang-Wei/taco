@@ -67,7 +67,8 @@ public:
         {
             result.push_back(old_point[i]);
         }
-        result.push_back(old_point[split_dim] * split_factor + old_point[split_dim + 1]);
+        // result.push_back(old_point[split_dim] * split_factor + old_point[split_dim + 1]);
+        result.push_back(old_point[split_dim] + old_point[split_dim + 1] * split_factor);
         for (int i = split_dim + 2; i < (int) old_point.size(); i++)
         {
             result.push_back(old_point[i]);
@@ -81,8 +82,10 @@ public:
         {
             result.push_back(old_dim[i]);
         }
-        result.push_back(old_dim[split_dim] / split_factor);
+        // result.push_back(old_dim[split_dim] / split_factor);
+        // result.push_back(split_factor);
         result.push_back(split_factor);
+        result.push_back(old_dim[split_dim] / split_factor);
         for (size_t i = split_dim + 1; i < old_dim.size(); i++)
         {
             result.push_back(old_dim[i]);

@@ -33,6 +33,15 @@ def block_zero(IPoint x, ISpace y, MSpace z)
 
 def cyclic_zero(IPoint x, ISpace y, MSpace z)
 {
+# [0 - 7f21400f4000]    0.770026 {2}{mapper}: SELECT_SHARDING_FUNCTOR for task_2 <108>
+# [0 - 7f21400f4000]    0.770035 {2}{mapper}:   0 <- (0,0,0) (0,0,1) (0,0,2) (0,0,3)
+# [0 - 7f21400f4000]    0.770038 {2}{mapper}:   1 <- (1,0,0) (1,0,1) (1,0,2) (1,0,3)
+# [0 - 7f21400f4000]    0.770040 {2}{mapper}:   2 <-
+# [0 - 7f21400f4000]    0.770043 {2}{mapper}:   3 <-
+# [0 - 7f21400f4000]    0.770956 {2}{mapper}: SLICE_TASK for task_2 <116>
+# [0 - 7f21400f4000]    0.770966 {2}{mapper}:   INPUT: <0,0,0>..<0,0,3>
+# [0 - 7f21400f4000]    0.770969 {2}{mapper}:   OUTPUT:
+# [0 - 7f21400f4000]    0.770972 {2}{mapper}:     <0,0,0>..<0,0,3> -> 1d00000000000003
     a = cyclic_primitive(x, y, z, 0, 0);
     b = 0;
     return (a, b);
@@ -40,6 +49,15 @@ def cyclic_zero(IPoint x, ISpace y, MSpace z)
 
 def block2_zero(IPoint x, ISpace y, MSpace z)
 {
+# [0 - 7f21400f4000]    0.773046 {2}{mapper}: SELECT_SHARDING_FUNCTOR for task_3 <140>
+# [0 - 7f21400f4000]    0.773055 {2}{mapper}:   0 <- (0,0,0) (0,0,1) (0,0,2) (0,0,3)
+# [0 - 7f21400f4000]    0.773058 {2}{mapper}:   1 <-
+# [0 - 7f21400f4000]    0.773060 {2}{mapper}:   2 <- (0,1,0) (0,1,1) (0,1,2) (0,1,3)
+# [0 - 7f21400f4000]    0.773063 {2}{mapper}:   3 <-
+# [0 - 7f21400f4000]    0.773951 {2}{mapper}: SLICE_TASK for task_3 <148>
+# [0 - 7f21400f4000]    0.773961 {2}{mapper}:   INPUT: <0,0,0>..<0,0,3>
+# [0 - 7f21400f4000]    0.773964 {2}{mapper}:   OUTPUT:
+# [0 - 7f21400f4000]    0.773967 {2}{mapper}:     <0,0,0>..<0,0,3> -> 1d00000000000003
     a = block_primitive(x, y, z, 1, 0);
     b = 0;
     return (a, b);
@@ -47,6 +65,15 @@ def block2_zero(IPoint x, ISpace y, MSpace z)
 
 def block_block_zero(IPoint x, ISpace y, MSpace z)
 {
+# [0 - 7f21400f4000]    0.765771 {2}{mapper}: SELECT_SHARDING_FUNCTOR for task_1 <88>
+# [0 - 7f21400f4000]    0.765797 {2}{mapper}:   0 <- (0,0,0)
+# [0 - 7f21400f4000]    0.765804 {2}{mapper}:   1 <- (1,0,0)
+# [0 - 7f21400f4000]    0.765809 {2}{mapper}:   2 <- (0,1,0)
+# [0 - 7f21400f4000]    0.765815 {2}{mapper}:   3 <- (1,1,0)
+# [0 - 7f21400f4000]    0.767800 {2}{mapper}: SLICE_TASK for task_1 <96>
+# [0 - 7f21400f4000]    0.767819 {2}{mapper}:   INPUT: <0,0,0>..<0,0,0>
+# [0 - 7f21400f4000]    0.767825 {2}{mapper}:   OUTPUT:
+# [0 - 7f21400f4000]    0.767831 {2}{mapper}:     <0,0,0>..<0,0,0> -> 1d00000000000003
     a = block_primitive(x, y, z, 0, 0);
     b = block_primitive(x, y, z, 1, 1);
     c = 0;
@@ -55,13 +82,26 @@ def block_block_zero(IPoint x, ISpace y, MSpace z)
 
 def block_block02_zero(IPoint x, ISpace y, MSpace z)
 {
+# [0 - 7f21400f4000]    0.776728 {2}{mapper}: SELECT_SHARDING_FUNCTOR for task_4 <172>
+# [0 - 7f21400f4000]    0.776736 {2}{mapper}:   0 <- (0,0,0) (0,1,0) (0,0,1) (0,1,1)
+# [0 - 7f21400f4000]    0.776739 {2}{mapper}:   1 <- (1,0,0) (1,1,0) (1,0,1) (1,1,1)
+# [0 - 7f21400f4000]    0.776742 {2}{mapper}:   2 <- (0,0,2) (0,1,2) (0,0,3) (0,1,3)
+# [0 - 7f21400f4000]    0.776744 {2}{mapper}:   3 <- (1,0,2) (1,1,2) (1,0,3) (1,1,3)
+# [0 - 7f21400f4000]    0.777227 {2}{mapper}: SLICE_TASK for task_4 <196>
+# [0 - 7f21400f4000]    0.777236 {2}{mapper}:   INPUT: <0,0,0>..<0,1,1>
+# [0 - 7f21400f4000]    0.777239 {2}{mapper}:   OUTPUT:
+# [0 - 7f21400f4000]    0.777242 {2}{mapper}:     <0,0,0>..<0,1,1> -> 1d00000000000003
     a = block_primitive(x, y, z, 0, 0);
     b = block_primitive(x, y, z, 2, 1);
     c = 0;
     return (a, b, c);
 }
 
+# node2: -gx 2 -gy 2 -gz 2
 # node4: -gx 2 -gy 2 -gz 4
+# node8: -gx 2 -gy 4 -gz 4
+# node16: -gx 4 -gy 4 -gz 4
+# node32: -gx 4 -gy 4 -gz 8
 # PLACEMENT_SHARD: gx, gy, gz
 IndexTaskMap task_1 m5_ block_block_zero; # task_1: (gx, gy, 1), always slicing to 0, PLACEMENT_SHARD
 IndexTaskMap task_2 m4 cyclic_zero; # task_2: (gx, 1, gz), PLACEMENT_SHARD
