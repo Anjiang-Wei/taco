@@ -230,6 +230,7 @@ Expr:
 |   Expr '(' ExprN_1 ')'      { $$ = new FuncInvokeNode($1, $3); }
 |   Expr '[' Expr ']'       { $$ = new IndexExprNode($1, $3); }
 |   '-' Expr %prec '!'      { $$ = new NegativeExprNode($2); }
+|   '!' Expr %prec '!'      { $$ = new ExclamationNode($2); }
 |   T_IntConstant           { $$ = new IntValNode($1); }
 |   T_True                  { $$ = new BoolValNode(true); }
 |   T_False                 { $$ = new BoolValNode(false); }

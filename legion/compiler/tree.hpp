@@ -168,6 +168,7 @@ enum NodeType
 	FuncInvokeType,
 	IndexExprType,
 	NegativeExprType,
+	ExclamationType,
 	APIType,
 	TenaryExprType,
 	UnpackExprType,
@@ -204,6 +205,7 @@ const char* NodeTypeName[] =
   "FuncInvokeType",
   "IndexExprType",
   "NegativeExprType",
+  "ExclamationType",
   "APIType",
   "TenaryExprType",
   "UnpackExprType",
@@ -700,6 +702,22 @@ public:
 	{
 		printf("NegativeExprNode\n");
 		neg->print();
+	}
+};
+
+class ExclamationNode : public ExprNode
+{
+public:
+	ExprNode* expr;
+	ExclamationNode(ExprNode* x)
+	{
+		type = ExclamationType;
+		expr = x;
+	}
+	void print()
+	{
+		printf("ExclamationNode\n");
+		expr->print();
 	}
 };
 
