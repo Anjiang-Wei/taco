@@ -59,7 +59,7 @@ def cyclic_primitive2(IPoint x, IPoint y, IPoint z, int dim1, int dim2)
     return x[dim1] % z[dim2];
 }
 
-d = cyclic_primitive2((1,1,1),(3,3,3),(4,4,4,4,4,4),(0,1,2),(3,4,5));
+d = cyclic_primitive2((1,1,1),(3,3,3),(4,4,4,4,4,4),!(0,1,2),!(3,4,5));
 # (d,e,f) = cyclic_primitive((1,1,1),(3,3,3),(4,4,4,4,4,4),(0,1,2),(3,4,5));
 
 IndexTaskMap task_5 m6 blockcyclic; # task_5: (rpoc, rpoc, c)

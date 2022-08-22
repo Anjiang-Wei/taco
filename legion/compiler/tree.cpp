@@ -348,6 +348,7 @@ Node* FuncInvokeNode::run()
   Node* args = args_node->run();
   assert(args->type == TupleExprType);
   TupleExprNode* args_c = (TupleExprNode*) args;
+  // Machine model initialization
   if (func_node->type == MSpaceType)
   {
     MSpace* func_c = (MSpace*) func_node;
@@ -357,6 +358,7 @@ Node* FuncInvokeNode::run()
     func_c->set_proc_type(proc_c->proc_type);
     return func_c;
   }
+  // functions for built-in objects (Machine Model)
   else if (func_node->type == ObjectInvokeType)
   {
     ObjectInvokeNode* func_c = (ObjectInvokeNode*) func_node;
@@ -434,6 +436,7 @@ Node* FuncInvokeNode::run()
       std::cout << "unsupported func_c->api" << std::endl;
     }
   }
+  // user-defined function
   else if (func_node->type == IdentifierExprType)
   {
     Node* func_node_ = func_node->run();
