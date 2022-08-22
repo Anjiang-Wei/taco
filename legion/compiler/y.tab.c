@@ -1961,7 +1961,7 @@ yyreduce:
 
   case 72:
 #line 238 "parser.y" /* yacc.c:1646  */
-    { (yyval.expr) = (yyvsp[-1].exprn); }
+    { (yyval.expr) = (yyvsp[-1].exprn)->Convert2TupleInt(); }
 #line 1966 "y.tab.c" /* yacc.c:1646  */
     break;
 

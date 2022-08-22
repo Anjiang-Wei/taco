@@ -627,6 +627,7 @@ public:
 		}
 	}
 	Node* run();
+	ExprNode* Convert2TupleInt(); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
 };
 
 class FuncInvokeNode : public ExprNode

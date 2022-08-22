@@ -235,7 +235,7 @@ Expr:
 |   T_True                  { $$ = new BoolValNode(true); }
 |   T_False                 { $$ = new BoolValNode(false); }
 |   T_Identifier            { if (!strcmp($1, "Machine")) $$ = new MSpace(); else $$ = new IdentifierExprNode($1); }
-|   '(' ExprN ')'           { $$ = $2; }
+|   '(' ExprN ')'           { $$ = $2->Convert2TupleInt(); }
 |   Proc                    { $$ = $1; }
 |   Mem                     { $$ = $1; }
 |   Expr '.' Prop           { $$ = new ObjectInvokeNode($1, $3); }

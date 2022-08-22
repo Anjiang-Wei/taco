@@ -652,6 +652,25 @@ Node* TupleExprNode::run()
   return res;
 }
 
+ExprNode* TupleExprNode::Convert2TupleInt()
+{
+  // if all nodes in std::vector<Node*> exprlst; are IntValNode(IntValType), then can be converted to TupleIntNode
+  std::vector<int> tuple_int;
+  for (int i = 0; i < this->exprlst.size(); i++)
+  {
+    if (this->exprlst[i]->type == IntValType)
+    {
+      IntValNode* int_node = (IntValNode*) this->exprlst[i];
+      tuple_int.push_back(int_node->intval);
+    }
+    else
+    {
+      return this;
+    }
+  }
+  return new TupleIntNode(tuple_int);
+}
+
 Node* PrintNode::run()
 {
   std::string s = format_string;
