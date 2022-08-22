@@ -68,9 +68,11 @@ Processor::Kind MyProc2LegionProc(ProcessorEnum myproc)
     case ALLPROC:
       return Processor::NO_KIND;
     default:
+      std::cout << "Unsupported Processor Type" << std::endl;
       assert(false);
       break;
   }
+  std::cout << "Reach undesired region in MyProc2LegionProc" << std::endl;
   assert(false);
   return Processor::LOC_PROC;
 }
@@ -100,9 +102,11 @@ Memory::Kind MyMem2LegionMem(MemoryEnum mymem)
     case ALLMEM:
       return Memory::NO_MEMKIND;
     default:
+      std::cout << "Reach undesired region in MyMem2LegionMem" << std::endl;
       assert(false);
       break;
   }
+  std::cout << "Reach undesired region in MyMem2LegionMem" << std::endl;
   assert(false);
   return Memory::Z_COPY_MEM;
 }
@@ -189,7 +193,11 @@ bool Tree2Legion::prerun_validate(std::string task, Processor::Kind proc_kind)
     mspace_node = task2mspace.at("*");
   }
   // run_validate will be invoked in slicing, so it must be sharded by user
-  assert(mspace_node != NULL);
+  if (mspace_node == NULL)
+  {
+    std::cout << "prerun_validate fails because machine model is NULL" << std::endl;
+    assert(false);
+  }
   if (proc_kind == MyProc2LegionProc(mspace_node->proc_type))
   {
     return true;
@@ -228,14 +236,23 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
   func_symbols.insert({func_node->func_args->arg_lst[1]->argname, launch_space});
   func_symbols.insert({func_node->func_args->arg_lst[2]->argname, mspace_node});
 
-  assert(local_symbol.size() == 0);
+  if (local_symbol.size() != 0)
+  {
+    std::cout << "local_symbol.size() != 0 inside Tree2Legion::run" << std::endl;
+    assert(false);
+  }
   local_symbol.push(func_symbols);
   Node* res = func_node->invoked();
   local_symbol.pop();
 
   delete ipoint_input;
 
-  assert(res->type == TupleIntType || res->type == TupleExprType || res->type == IntValType);
+  if (!(res->type == TupleIntType || res->type == TupleExprType || res->type == IntValType))
+  {
+    std::cout << "Undesired return type in Tree2Legion::run:" <<
+      " only allows TupleIntType, TupleExprType, and IntValType" << std::endl;
+    assert(false);
+  }
   // printf("Index Launch Computation Finished\n");
   if (res->type == TupleIntType)
   {
@@ -253,7 +270,11 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
     std::vector<int> res3;
     for (size_t i = 0; i < res2->exprlst.size(); i++)
     {
-      assert(res2->exprlst[i]->type == IntValType);
+      if (res2->exprlst[i]->type != IntValType)
+      {
+        std::cout << "Tree2Legion::run, TupleExpr's each element must be integer!" << std::endl;
+        assert(false);
+      }
       res3.push_back(((IntValNode*) res2->exprlst[i])->intval);
     }
     if (res3.size() != mspace_node->get_size().size())
@@ -268,6 +289,7 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
     IntValNode* res2 = (IntValNode*) res;
      return mspace_node->get_node_proc(std::vector<int>{res2->intval});
   }
+  std::cout << "Reaching undesired region in Tree2Legion::run" << std::endl;
   assert(false);
   return x;
 }
@@ -566,7 +588,11 @@ Node* ObjectInvokeNode::run()
 Node* IndexExprNode::run()
 {
 	Node* index_ = index->run();
-  assert(index_->type == IntValType);
+  if (index_->type != IntValType)
+  {
+    std::cout << "IndexExprNode must use int to index" << std::endl;
+    assert(false);
+  }  
   IntValNode* int_node = (IntValNode*) index_;
   int int_index = int_node->intval;
 
@@ -596,6 +622,7 @@ Node* IndexExprNode::run()
     std::cout << "unsupported IndexExprNode tuple_->type" << std::endl;
     assert(false);
   }
+  std::cout << "Reaching undesired region in IndexExprNode" << std::endl;
   assert(false);
   return NULL;
 }
