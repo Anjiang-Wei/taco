@@ -343,6 +343,96 @@ Node* FuncDefNode::invoked()
   assert(false);
 }
 
+
+// Node* FuncInvokeNode::broadcast()
+// {
+//   /*
+//   ExprNode* func_node;
+// 	TupleExprNode* args_node; // std::vector<Node*> exprlst;
+//   */
+//   bool exclamation = false;
+//   int num_element = 0;
+//   // first, we check whether there is broadcast needed
+//   for (int i = 0; i < exprlst.size(); i++)
+//   {
+//     if (exprlst[i]->type == ExclamationType)
+//     {
+//       ExclamationNode* exclam_node = (ExclamationNode*) exprlst[i];
+//       int num_element_;
+//       // exclam_node has: ExprNode* expr;
+//       // expr can be either TupleIntNode, std::vector<int> tupleint;
+//       // or TupleExprNode, std::vector<Node*> exprlst; (recursive case)
+//       if (exclam_node->expr->type == TupleIntType)
+//       {
+//         TupleIntNode* tuple_int_node = (TupleIntNode*) exclam_node->expr;
+//         num_element_ = tuple_int_node->tupleint.size();
+//       }
+//       else if (exclam_node->expr->type == TupleExprType)
+//       {
+//         TupleExprNode* tuple_expr_node = (TupleExprNode*) exclam_node->expr;
+//         num_element_ = tuple_expr_node->exprlst.size();
+//       }
+//       else
+//       {
+//         std::cout << "Unsupported type after '!'" << std::endl;
+//         assert(false);
+//       }
+//       if (exclamation)
+//       {
+//         if (num_element != num_element_)
+//         {
+//           std::cout << "Number of elements of '!' should be the same" << std::endl;
+//           assert(false);
+//         }
+//       }
+//       else
+//       {
+//         exclamation = true;
+//         num_element = num_element_;
+//       }
+//     }
+//   }
+//   if (exclamation == false)
+//   {
+//     return this;
+//   }
+//   // Turn func_(a, !(1, 2, 3), !(x, y, z)) 
+//   // into (func_(a, 1, x), func_(a, 2, y), func_(a, 3, z))
+//   std::vector<FuncInvokeNode*> tuple_res;
+//   for (int k = 0; k < num_element; k++)
+//   {
+//     std::vector<Node*> func_args;
+//     for (int i = 0; i < exprlst.size(); i++)
+//     {
+//       if (exprlst[i]->type == ExclamationType)
+//       {
+//         ExclamationNode* exclam_node = (ExclamationNode*) exprlst[i];
+//         if (exclam_node->expr->type == TupleIntType)
+//         {
+//           TupleIntNode* tuple_int_node = (TupleIntNode*) exclam_node->expr;
+//           // convert it to IntValNode
+//           num_element_ = tuple_int_node->tupleint.size();
+//         }
+//         else if (exclam_node->expr->type == TupleExprType)
+//         {
+//           TupleExprNode* tuple_expr_node = (TupleExprNode*) exclam_node->expr;
+//           num_element_ = tuple_expr_node->exprlst.size();
+//         }
+//         else
+//         {
+//           std::cout << "Unsupported type after '!'" << std::endl;
+//           assert(false);
+//         }
+//       }
+//     }
+//     TupleExprNode* func_args_node = new TupleExprNode(func_args);
+//     FuncInvokeNode* func_invoke_node = new FuncInvokeNode(this->func_node, func_args_node);
+//     tuple_res.push_back(func_invoke_node);
+//   }
+//   return new TupleExprNode(tuple_res);
+// }
+
+
 Node* FuncInvokeNode::run()
 {
   Node* args = args_node->run();

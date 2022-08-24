@@ -227,7 +227,7 @@ Expr:
 |   Expr T_Ne Expr          { $$ = new BinaryExprNode($1, NEQ, $3); }
 |   Expr T_Or Expr          { $$ = new BinaryExprNode($1, OR, $3); }
 |   Expr T_And Expr         { $$ = new BinaryExprNode($1, AND, $3); }
-|   Expr '(' ExprN_1 ')'      { $$ = new FuncInvokeNode($1, $3); }
+|   Expr '(' ExprN_1 ')'    { $$ = new FuncInvokeNode($1, $3); }
 |   Expr '[' Expr ']'       { $$ = new IndexExprNode($1, $3); }
 |   '-' Expr %prec '!'      { $$ = new NegativeExprNode($2); }
 |   '!' Expr %prec '!'      { $$ = new ExclamationNode($2); }
