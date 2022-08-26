@@ -54,48 +54,51 @@ extern int yydebug;
     T_Balance_split = 264,
     T_Volume = 265,
     T_Has = 266,
-    T_Reverse_Dimension = 267,
-    T_Positive_Dimension = 268,
-    T_AOS = 269,
-    T_SOA = 270,
-    T_Compact = 271,
-    T_Align = 272,
-    T_CPU = 273,
-    T_GPU = 274,
-    T_IO = 275,
-    T_PY = 276,
-    T_PROC = 277,
-    T_OMP = 278,
-    T_SYSMEM = 279,
-    T_FBMEM = 280,
-    T_RDMEM = 281,
-    T_ZCMEM = 282,
-    T_SOCKMEM = 283,
-    T_Int = 284,
-    T_Bool = 285,
-    T_IPoint = 286,
-    T_ISpace = 287,
-    T_MSpace = 288,
-    T_Def = 289,
-    T_Return = 290,
-    T_True = 291,
-    T_False = 292,
-    T_Task = 293,
-    T_Region = 294,
-    T_Layout = 295,
-    T_IndexTaskMap = 296,
-    T_Print = 297,
-    T_Instance = 298,
-    T_Collect = 299,
-    T_Le = 300,
-    T_Ge = 301,
-    T_Eq = 302,
-    T_Ne = 303,
-    T_And = 304,
-    T_Or = 305,
-    T_Identifier = 306,
-    T_StringConstant = 307,
-    T_IntConstant = 308
+    T_Tuple = 267,
+    T_For = 268,
+    T_In = 269,
+    T_Reverse_Dimension = 270,
+    T_Positive_Dimension = 271,
+    T_AOS = 272,
+    T_SOA = 273,
+    T_Compact = 274,
+    T_Align = 275,
+    T_CPU = 276,
+    T_GPU = 277,
+    T_IO = 278,
+    T_PY = 279,
+    T_PROC = 280,
+    T_OMP = 281,
+    T_SYSMEM = 282,
+    T_FBMEM = 283,
+    T_RDMEM = 284,
+    T_ZCMEM = 285,
+    T_SOCKMEM = 286,
+    T_Int = 287,
+    T_Bool = 288,
+    T_IPoint = 289,
+    T_ISpace = 290,
+    T_MSpace = 291,
+    T_Def = 292,
+    T_Return = 293,
+    T_True = 294,
+    T_False = 295,
+    T_Task = 296,
+    T_Region = 297,
+    T_Layout = 298,
+    T_IndexTaskMap = 299,
+    T_Print = 300,
+    T_Instance = 301,
+    T_Collect = 302,
+    T_Le = 303,
+    T_Ge = 304,
+    T_Eq = 305,
+    T_Ne = 306,
+    T_And = 307,
+    T_Or = 308,
+    T_Identifier = 309,
+    T_StringConstant = 310,
+    T_IntConstant = 311
   };
 #endif
 /* Tokens.  */
@@ -108,48 +111,51 @@ extern int yydebug;
 #define T_Balance_split 264
 #define T_Volume 265
 #define T_Has 266
-#define T_Reverse_Dimension 267
-#define T_Positive_Dimension 268
-#define T_AOS 269
-#define T_SOA 270
-#define T_Compact 271
-#define T_Align 272
-#define T_CPU 273
-#define T_GPU 274
-#define T_IO 275
-#define T_PY 276
-#define T_PROC 277
-#define T_OMP 278
-#define T_SYSMEM 279
-#define T_FBMEM 280
-#define T_RDMEM 281
-#define T_ZCMEM 282
-#define T_SOCKMEM 283
-#define T_Int 284
-#define T_Bool 285
-#define T_IPoint 286
-#define T_ISpace 287
-#define T_MSpace 288
-#define T_Def 289
-#define T_Return 290
-#define T_True 291
-#define T_False 292
-#define T_Task 293
-#define T_Region 294
-#define T_Layout 295
-#define T_IndexTaskMap 296
-#define T_Print 297
-#define T_Instance 298
-#define T_Collect 299
-#define T_Le 300
-#define T_Ge 301
-#define T_Eq 302
-#define T_Ne 303
-#define T_And 304
-#define T_Or 305
-#define T_Identifier 306
-#define T_StringConstant 307
-#define T_IntConstant 308
+#define T_Tuple 267
+#define T_For 268
+#define T_In 269
+#define T_Reverse_Dimension 270
+#define T_Positive_Dimension 271
+#define T_AOS 272
+#define T_SOA 273
+#define T_Compact 274
+#define T_Align 275
+#define T_CPU 276
+#define T_GPU 277
+#define T_IO 278
+#define T_PY 279
+#define T_PROC 280
+#define T_OMP 281
+#define T_SYSMEM 282
+#define T_FBMEM 283
+#define T_RDMEM 284
+#define T_ZCMEM 285
+#define T_SOCKMEM 286
+#define T_Int 287
+#define T_Bool 288
+#define T_IPoint 289
+#define T_ISpace 290
+#define T_MSpace 291
+#define T_Def 292
+#define T_Return 293
+#define T_True 294
+#define T_False 295
+#define T_Task 296
+#define T_Region 297
+#define T_Layout 298
+#define T_IndexTaskMap 299
+#define T_Print 300
+#define T_Instance 301
+#define T_Collect 302
+#define T_Le 303
+#define T_Ge 304
+#define T_Eq 305
+#define T_Ne 306
+#define T_And 307
+#define T_Or 308
+#define T_Identifier 309
+#define T_StringConstant 310
+#define T_IntConstant 311
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -187,7 +193,7 @@ union YYSTYPE
     class ObjectInvokeNode* objinvoke;
     class InstanceLimitNode* instancelimit;
 
-#line 191 "y.tab.h" /* yacc.c:1909  */
+#line 197 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

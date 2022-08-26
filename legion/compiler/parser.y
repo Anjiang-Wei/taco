@@ -13,7 +13,7 @@ void yyerror(const char*);
 
 %define parse.error verbose
 
-%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Volume T_Has
+%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Volume T_Has T_Tuple T_For T_In
 %token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
@@ -230,7 +230,7 @@ Expr:
 |   Expr '(' ExprN_1 ')'    { $$ = new FuncInvokeNode($1, $3); }
 |   Expr '[' Expr ']'       { $$ = new IndexExprNode($1, $3); }
 |   '-' Expr %prec '!'      { $$ = new NegativeExprNode($2); }
-|   '!' Expr %prec '!'      { $$ = new ExclamationNode($2); }
+/* |   '!' Expr %prec '!'      { $$ = new ExclamationNode($2); } */
 |   T_IntConstant           { $$ = new IntValNode($1); }
 |   T_True                  { $$ = new BoolValNode(true); }
 |   T_False                 { $$ = new BoolValNode(false); }
@@ -241,6 +241,7 @@ Expr:
 |   Expr '.' Prop           { $$ = new ObjectInvokeNode($1, $3); }
 |   Expr '?' Expr ':' Expr %prec '?' { $$ = new TenaryExprNode($1, $3, $5); }
 |   '*' Expr                { $$ = new UnpackExprNode($2); }
+|   T_Tuple '(' Expr T_For T_Identifier T_In Expr ')' { $$ = new ForTupleExprNode($3, $5, $7); }
 ;
 
 ExprN_1:

@@ -630,6 +630,33 @@ public:
 	ExprNode* Convert2TupleInt(); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
 };
 
+class ForTupleExprNode : public ExprNode
+{
+public:
+	ExprNode* expr;
+	std::string identifier;
+	ExprNode* range;
+	ForTupleExprNode(ExprNode* x, const char* y, ExprNode* z)
+	{
+		expr = x;
+		identifier = std::string(y);
+		if ((z->type != TupleExprType && z->type != TupleIntType))
+		{
+			std::cout << "For-comprehension must itererate over TupleExpr or TupleInt" << std::endl;
+			assert(false);
+		}
+		range = z;
+	}
+	void print()
+	{
+		printf("ForTupleExprNode\n");
+		expr->print();
+		std::cout << identifier << std::endl;
+		range->print();
+	}
+	Node* run();
+};
+
 class FuncInvokeNode : public ExprNode
 {
 public:
@@ -707,6 +734,7 @@ public:
 	}
 };
 
+/*
 class ExclamationNode : public ExprNode
 {
 public:
@@ -722,6 +750,7 @@ public:
 		expr->print();
 	}
 };
+*/
 
 class TenaryExprNode : public ExprNode
 {

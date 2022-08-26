@@ -59,7 +59,7 @@ def cyclic_primitive2(IPoint x, IPoint y, IPoint z, int dim1, int dim2)
     return x[dim1] % z[dim2];
 }
 
-lower = tuple(block_primitive(x,y,z, i, i + 3) for i in (0,1,2))
+lower = tuple(block_primitive((1,1,1), (2,2,2), m6, i, i+1) for i in (0,1,2));
 
 IndexTaskMap task_5 m6 blockcyclic; # task_5: (rpoc, rpoc, c)
 IndexTaskMap task_1 m4 block2d; # task_1, task_2, task_3: (rpoc, rpoc, 1)

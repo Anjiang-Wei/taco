@@ -75,6 +75,10 @@ STRING              (\042[^\042\n]*\042)
 "ISpace"            { return T_ISpace; }
 "MSpace"            { return T_MSpace; }
 
+"tuple"             { return T_Tuple; }
+"for"               { return T_For; }
+"in"                { return T_In; }
+
 "True"              { return T_True; }
 "False"             { return T_False; }
 

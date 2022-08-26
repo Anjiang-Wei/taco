@@ -731,6 +731,7 @@ Node* TupleExprNode::run()
     {
       UnpackExprNode* unpack_node = (UnpackExprNode*) simplified;
       assert(unpack_node->expr->type == TupleExprType);
+      // todo: support both TupleExprType and TupleIntType
       TupleExprNode* tuple_node = (TupleExprNode*) unpack_node->expr;
       for (size_t i = 0; i < tuple_node->exprlst.size(); i++)
       {
@@ -762,6 +763,41 @@ ExprNode* TupleExprNode::Convert2TupleInt()
     }
   }
   return new TupleIntNode(tuple_int);
+}
+
+Node* ForTupleExprNode::run()
+{
+  std::vector<Node*> result;
+  std::unordered_map<std::string, Node*> variable_binding;
+  // range can only be TupleExprType or TupleIntType
+  if (range->type == TupleExprType)
+  {
+    TupleExprNode* range_ = (TupleExprNode*) range;
+    for (size_t i = 0; i < range_->exprlst.size(); i++)
+    {
+      Node* feed_in = range_->exprlst[i];
+      variable_binding[identifier] = feed_in; // insert or overwrite
+      local_symbol.push(variable_binding);
+      Node* res = expr->run();
+      local_symbol.pop();
+      result.push_back(res);
+    }
+    return new TupleExprNode(result);
+  }
+  else // TupleIntType
+  {
+    TupleIntNode* range_ = (TupleIntNode*) range;
+    for (size_t i = 0; i < range_->tupleint.size(); i++)
+    {
+      Node* feed_in = new IntValNode(range_->tupleint[i]);
+      variable_binding[identifier] = feed_in; // insert or overwrite
+      local_symbol.push(variable_binding);
+      Node* res = expr->run();
+      local_symbol.pop();
+      result.push_back(res);
+    }
+    return new TupleExprNode(result);
+  }
 }
 
 Node* PrintNode::run()
