@@ -860,7 +860,7 @@ template<int DIM>
         index_point.push_back(point[i]);
         log_mapper.debug() << point[i] << " ,";
       }
-      if (tree_result.prerun_validate(taskname, targets[0].kind()) == false)
+      if (tree_result.prerun_validate(taskname) == false)
       {
         log_mapper.error() << taskname << " is actually mapped to " <<
           processor_kind_to_string(targets[0].kind()) << ", please change machine model";

@@ -193,8 +193,9 @@ union YYSTYPE
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
     class InstanceLimitNode* instancelimit;
+    class IdentifierLstNode* stringlist;
 
-#line 198 "y.tab.h" /* yacc.c:1909  */
+#line 199 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

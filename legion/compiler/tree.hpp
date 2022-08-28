@@ -162,6 +162,7 @@ enum NodeType
 	FuncDefType,
 	BinaryExprType,
 	IdentifierExprType,
+	IdentifierLstType,
 	IntValType,
 	BoolValType,
 	TupleExprType,
@@ -200,6 +201,7 @@ const char* NodeTypeName[] =
   "FuncDefType",
   "BinaryExprType",
   "IdentifierExprType",
+  "IdentifierLstType",
   "IntValType",
   "BoolValType",
   "TupleExprType",
@@ -452,6 +454,22 @@ public:
 	Node* run();
 };
 
+class IdentifierLstNode : public Node
+{
+public:
+	std::vector<std::string> idlst;
+	IdentifierLstNode(const char* x, const char* y)
+	{
+		type = IdentifierLstType;
+		idlst.push_back(std::string(x));
+		idlst.push_back(std::string(y));
+	}
+	void append(const char* x)
+	{
+		idlst.push_back(std::string(x));
+	}
+};
+
 class IdentifierExprNode : public ExprNode
 {
 public:
@@ -543,19 +561,23 @@ public:
 
 class IndexTaskMapNode : public StmtNode
 {
-	std::string task_name;
-	std::string machine_name;
+	std::vector<std::string> task_name;
 	std::string func_name;
 
 public:
-	IndexTaskMapNode(const char* x, const char* y, const char* z)
+	IndexTaskMapNode(const char* x, const char* y)
 	{
 		type = IndexTaskMapType;
-		task_name = std::string(x);
-		machine_name = std::string(y);
-		func_name = std::string(z);
+		task_name.push_back(std::string(x));
+		func_name = std::string(y);
 	}
-	void print() { printf("IndexTaskMapNode %s %s %s\n", task_name.c_str(), machine_name.c_str(), func_name.c_str()); }
+	IndexTaskMapNode(IdentifierLstNode* x, const char* y)
+	{
+		type = IndexTaskMapType;
+		task_name = x->idlst;
+		func_name= std::string(y);
+	}
+	void print() { printf("IndexTaskMapNode (%s,...), %s\n", task_name[0].c_str(), func_name.c_str()); }
 	Node* run();
 };
 
@@ -1027,16 +1049,16 @@ public:
 	
 	static std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> task2limit;
 	
-	static std::unordered_map<std::string, MSpace*> task2mspace;
+	// static std::unordered_map<std::string, MSpace*> task2mspace;
 	static std::unordered_map<std::string, FuncDefNode*> task2func;
 
 	bool should_fall_back(std::string task_name)
 	{
-		if (task2mspace.count(task_name) > 0)
+		if (task2func.count(task_name) > 0)
 		{
 			return false;
 		}
-		if (task2mspace.count("*") > 0)
+		if (task2func.count("*") > 0)
 		{
 			return false;
 		}
@@ -1073,7 +1095,7 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	bool prerun_validate(std::string task, Processor::Kind proc_kind);
+	bool prerun_validate(std::string task);
 	std::vector<int> run(std::string task, std::vector<int> x, std::vector<int> point_space);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{
@@ -1193,7 +1215,7 @@ std::unordered_map<std::pair<std::string, std::string>,
 	std::unordered_map<Memory::Kind, ConstraintsNode*>, HashFn1>
 	Tree2Legion::layout_constraints;
 std::unordered_map<std::string, std::unordered_map<Processor::Kind, int>> Tree2Legion::task2limit;
-std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
+// std::unordered_map<std::string, MSpace*> Tree2Legion::task2mspace;
 std::unordered_map<std::string, FuncDefNode*> Tree2Legion::task2func;
 std::unordered_set<std::pair<std::string, std::string>, HashFn1> Tree2Legion::memory_collect;
 #endif

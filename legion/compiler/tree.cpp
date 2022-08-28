@@ -181,27 +181,18 @@ Node* MemoryCollectNode::run()
   return NULL;
 }
 
-bool Tree2Legion::prerun_validate(std::string task, Processor::Kind proc_kind)
+bool Tree2Legion::prerun_validate(std::string task)
 {
-  MSpace* mspace_node;
-  if (task2mspace.count(task) > 0)
-  {
-    mspace_node = task2mspace.at(task);
-  }
-  else if (task2mspace.count("*") > 0)
-  {
-    mspace_node = task2mspace.at("*");
-  }
-  // run_validate will be invoked in slicing, so it must be sharded by user
-  if (mspace_node == NULL)
-  {
-    std::cout << "prerun_validate fails because machine model is NULL" << std::endl;
-    assert(false);
-  }
-  if (proc_kind == MyProc2LegionProc(mspace_node->proc_type))
+  if (task2func.count(task) > 0)
   {
     return true;
   }
+  else if (task2func.count("*") > 0)
+  {
+    return true;
+  }
+  printf("prerun_validate fails because mapping function does not exist");
+  assert(false);
   return false;
 }
 
@@ -210,17 +201,14 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif
-  MSpace* mspace_node;
   FuncDefNode* func_node;
   TupleIntNode* launch_space = new TupleIntNode(point_space);// task2launch_space.at(task);
-  if (task2mspace.count(task) > 0)
+  if (task2func.count(task) > 0)
   {
-    mspace_node = task2mspace.at(task);
     func_node = task2func.at(task);
   }
-  else if (task2mspace.count("*") > 0)
+  else if (task2func.count("*") > 0)
   {
-    mspace_node = task2mspace.at("*");
     func_node = task2func.at("*");
   }
   else 
@@ -234,7 +222,6 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
   TupleIntNode* ipoint_input = new TupleIntNode(x);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, ipoint_input});
   func_symbols.insert({func_node->func_args->arg_lst[1]->argname, launch_space});
-  func_symbols.insert({func_node->func_args->arg_lst[2]->argname, mspace_node});
 
   if (local_symbol.size() != 0)
   {
@@ -262,6 +249,7 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
       std::cout << "Not compatible with the machine model's dimension!" << std::endl;
       assert(false);
     }
+    // todo: deal with this mspace_node
     return mspace_node->get_node_proc(res2->tupleint);
   }
   else if (res->type == TupleExprType)
@@ -296,29 +284,29 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
 
 Node* IndexTaskMapNode::run()
 {
-  if (global_symbol.count(func_name) == 0 || global_symbol.count(machine_name) == 0)
+  if (global_symbol.count(func_name) == 0)
   {
-    std::cout << "IndexTaskMap's function or machine model undefined" << std::endl;
+    printf("IndexTaskMap's function undefined\n");
     assert(false);
   }
   Node* fun_node = global_symbol.at(func_name);
-  assert(fun_node->type == FuncDefType);
+  if (fun_node->type != FuncDefType)
+  {
+    printf("IndexTaskMap's mapping function is undefined\n");
+    assert(false);
+  }
   FuncDefNode* func_node_c = (FuncDefNode*) fun_node;
 
   std::vector<ArgNode*> params = func_node_c->func_args->arg_lst;
 
-  Node* machine_node = global_symbol.at(machine_name);
-  assert(machine_node->type == MSpaceType);
-  MSpace* mspace_node = (MSpace*) machine_node;
-
-  Tree2Legion::task2mspace.insert({task_name, mspace_node});
-  Tree2Legion::task2func.insert({task_name, func_node_c});
-
-  // IPoint x, ISpace y, MSpace z
-  if (!(params.size() == 3 && params[0]->argtype == IPOINT && \
-      params[1]->argtype == ISPACE && params[2]->argtype == MSPACE))
+  for (int i = 0; i < task_name.size(); i++)
   {
-    std::cout << "Entry function input must be (IPoint, ISpace, MSpace)" << std::endl;
+    Tree2Legion::task2func.insert({task_name[i], func_node_c});
+  }
+  // IPoint x, ISpace y
+  if (!(params.size() == 2 && params[0]->argtype == IPOINT && params[1]->argtype == ISPACE))
+  {
+    std::cout << "Entry mapping function's input must be (IPoint, ISpace)" << std::endl;
     assert(false);
   }
   return NULL;

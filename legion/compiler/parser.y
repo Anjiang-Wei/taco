@@ -53,6 +53,7 @@ void yyerror(const char*);
     class FuncStmtsNode* funcstmt;
     class ObjectInvokeNode* objinvoke;
     class InstanceLimitNode* instancelimit;
+    class IdentifierLstNode* stringlist;
 }
 
 // Semantic value
@@ -61,6 +62,7 @@ void yyerror(const char*);
 %token <intVal> T_IntConstant
 %type <instancelimit> InstanceLimit
 %type <string> Identifier_star
+%type <stringlist> Identifier_List
 %type <program> Program
 %type <stmt> Stmt
 %type <proclst> ProcLst
@@ -123,6 +125,12 @@ Stmt:
 Identifier_star:
     T_Identifier    { $$ = $1; }
 |   '*'             { $$ = "*"; }
+;
+
+Identifier_List:
+    T_Identifier ','  T_Identifier   { $$ = new IdentifierLstNode($1, $3); }
+|   Identifier_List ',' T_Identifier { $1->append($3); }
+;
 
 InstanceLimit:
     T_Instance T_Identifier Proc T_IntConstant ';' { $$ = new InstanceLimitNode($2, $3, $4); }
@@ -166,7 +174,8 @@ FuncDef:
 ;
 
 IndexTaskMap:
-    T_IndexTaskMap Identifier_star T_Identifier T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3, $4); }
+    T_IndexTaskMap Identifier_star T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3); }
+|   T_IndexTaskMap Identifier_List T_Identifier ';' { $$ =  new IndexTaskMapNode($2, $3); }
 ;
 
 Assign_Stmt:
