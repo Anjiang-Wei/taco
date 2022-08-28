@@ -686,7 +686,7 @@ Node* IndexExprNode::run()
   {
     std::cout << "IndexExprNode must use int to index" << std::endl;
     assert(false);
-  }  
+  }
   IntValNode* int_node = (IntValNode*) index_;
   int int_index = int_node->intval;
 
@@ -731,12 +731,27 @@ Node* TupleExprNode::run()
     if (simplified->type == UnpackExprType)
     {
       UnpackExprNode* unpack_node = (UnpackExprNode*) simplified;
-      assert(unpack_node->expr->type == TupleExprType);
-      // todo: support both TupleExprType and TupleIntType
-      TupleExprNode* tuple_node = (TupleExprNode*) unpack_node->expr;
-      for (size_t i = 0; i < tuple_node->exprlst.size(); i++)
+      // support both TupleExprType and TupleIntType
+      if (unpack_node->expr->type == TupleExprType)
       {
-        res->exprlst.push_back(tuple_node->exprlst[i]->run());
+        TupleExprNode* tuple_node = (TupleExprNode*) unpack_node->expr;
+        for (size_t i = 0; i < tuple_node->exprlst.size(); i++)
+        {
+          res->exprlst.push_back(tuple_node->exprlst[i]->run());
+        }
+      }
+      else if (unpack_node->expr->type == TupleIntType)
+      {
+        TupleIntNode* tuple_int_node = (TupleIntNode*) unpack_node->expr;
+        for (size_t i = 0; i < tuple_int_node->tupleint.size(); i++)
+        {
+          res->exprlst.push_back(new IntValNode(tuple_int_node->tupleint[i]));
+        }
+      }
+      else
+      {
+        printf("Unsupported node type after UnpackingNode*\n");
+        assert(false);
       }
     }
     else
