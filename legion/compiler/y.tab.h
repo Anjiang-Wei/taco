@@ -185,6 +185,7 @@ union YYSTYPE
     class FuncDefNode* funcdef;
     class ArgLstNode* args;
     class TupleExprNode* exprn;
+    class SliceExprNode* sliceexpr;
     class APINode* prop;
     class PrintArgsNode* printargs;
     class PrintNode* printstmt;
@@ -193,7 +194,7 @@ union YYSTYPE
     class ObjectInvokeNode* objinvoke;
     class InstanceLimitNode* instancelimit;
 
-#line 197 "y.tab.h" /* yacc.c:1909  */
+#line 198 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

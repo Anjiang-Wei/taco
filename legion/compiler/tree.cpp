@@ -681,6 +681,7 @@ Node* ObjectInvokeNode::run()
 Node* IndexExprNode::run()
 {
 	Node* index_ = index->run();
+  // todo: add support for SliceExprNode
   if (index_->type != IntValType)
   {
     std::cout << "IndexExprNode must use int to index" << std::endl;

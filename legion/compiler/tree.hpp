@@ -637,6 +637,14 @@ public:
 	ExprNode* Convert2TupleInt(); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
 };
 
+class SliceExprNode : public ExprNode
+{
+public:
+	SliceExprNode() { /*todo*/ }
+	void print() {}
+	Node* run() { return this; }
+};
+
 class ForTupleExprNode : public ExprNode
 {
 public:
