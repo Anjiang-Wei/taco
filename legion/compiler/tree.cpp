@@ -583,6 +583,14 @@ Node* BinaryExprNode::run()
 {
   Node* simplified_left = left->run();
   Node* simplified_right = right->run();
+  if (simplified_left->type == TupleExprType)
+  {
+    simplified_left = ((TupleExprNode*) simplified_left)->Convert2TupleInt();
+  }
+  if (simplified_right->type == TupleExprType)
+  {
+    simplified_right = ((TupleExprNode*) simplified_right)->Convert2TupleInt();
+  }
   if (simplified_left->type != simplified_right->type)
   {
     std::cout << "type mismatch!!" << std::endl;
@@ -594,55 +602,27 @@ Node* BinaryExprNode::run()
   {
     BoolValNode* lt = (BoolValNode*) simplified_left;
     BoolValNode* rt = (BoolValNode*) simplified_right;
-    switch(op)
-    {
-      case EQ:
-        return new BoolValNode(lt->boolval == rt->boolval);
-      case NEQ:
-        return new BoolValNode(lt->boolval != rt->boolval);
-      case OR:
-        std::cout << "OR detected: " <<  (lt->boolval || rt->boolval) << std::endl;
-        return new BoolValNode(lt->boolval || rt->boolval);
-      case AND:
-        return new BoolValNode(lt->boolval && rt->boolval);
-      default:
-        assert(false);
-    }
+    return lt->binary_op(rt, op);
   }
   else if (simplified_left->type == IntValType)
   {
     IntValNode* lt = (IntValNode*) simplified_left;
     IntValNode* rt = (IntValNode*) simplified_right;
-    switch (op)
-    {
-      case PLUS:
-        // std::cout << "PLUS: " << lt->intval + rt->intval << std::endl;
-        return new IntValNode(lt->intval + rt->intval);
-      case MINUS:
-        return new IntValNode(lt->intval - rt->intval);
-      case MULTIPLY:
-        // std::cout << "MUL: " << lt->intval * rt->intval << std::endl;
-        return new IntValNode(lt->intval * rt->intval);
-      case DIVIDE:
-        return new IntValNode(lt->intval / rt->intval);
-      case MOD:
-        return new IntValNode(lt->intval % rt->intval);
-      case BIGGER:
-        return new BoolValNode(lt->intval > rt->intval);
-      case SMALLER:
-        return new BoolValNode(lt->intval < rt->intval);
-      case GE:
-        return new BoolValNode(lt->intval >= rt->intval);
-      case LE:
-        return new BoolValNode(lt->intval <= rt->intval);
-      case EQ:
-        return new BoolValNode(lt->intval == rt->intval);
-      case NEQ:
-        return new BoolValNode(lt->intval != rt->intval);
-      default:
-        assert(false);
-    }
+    return lt->binary_op(rt, op);
   }
+  else if (simplified_left->type == TupleExprType)
+  {
+    TupleExprNode* lt = (TupleExprNode*) simplified_left;
+    TupleExprNode* rt = (TupleExprNode*) simplified_right;
+    return lt->binary_op(rt, op);
+  }
+  else if (simplified_left->type == TupleIntType)
+  {
+    TupleIntNode* lt = (TupleIntNode*) simplified_left;
+    TupleIntNode* rt = (TupleIntNode*) simplified_right;
+    return lt->binary_op(rt, op);
+  }
+  printf("Unsupported operator type in BinaryExprNode\n");
   assert(false);
   return NULL;
 }
@@ -676,6 +656,196 @@ Node* ObjectInvokeNode::run()
   }
   assert(false);
   return NULL;
+}
+
+Node* IntValNode::binary_op(IntValNode* rt, BinOpEnum op)
+{
+  switch (op)
+    {
+    case PLUS:
+      return new IntValNode(this->intval + rt->intval);
+    case MINUS:
+      return new IntValNode(this->intval - rt->intval);
+    case MULTIPLY:
+      return new IntValNode(this->intval * rt->intval);
+    case DIVIDE:
+      return new IntValNode(this->intval / rt->intval);
+    case MOD:
+      return new IntValNode(this->intval % rt->intval);
+    case BIGGER:
+      return new BoolValNode(this->intval > rt->intval);
+    case SMALLER:
+      return new BoolValNode(this->intval < rt->intval);
+    case GE:
+      return new BoolValNode(this->intval >= rt->intval);
+    case LE:
+      return new BoolValNode(this->intval <= rt->intval);
+    case EQ:
+      return new BoolValNode(this->intval == rt->intval);
+    case NEQ:
+      return new BoolValNode(this->intval != rt->intval);
+    default:
+      printf("Unsupported binary operator for Integer\n");
+      assert(false);
+  }
+  return NULL;
+}
+
+TupleExprNode* TupleExprNode::binary_op(TupleExprNode* right_op, BinOpEnum op)
+{
+  // self as left_op
+  if (exprlst.size() != right_op->exprlst.size())
+  {
+    printf("Dimension mismatch in TupleExprNode's binary operator\n");
+    assert(false);
+  }
+  std::vector<Node*> res;
+  for (int i = 0; i < exprlst.size(); i++)
+  {
+    if (!(exprlst[i]->type == IntValType && right_op->exprlst[i]->type == IntValType))
+    {
+      printf("Only IntValType inside TupleExprNode is allowed in binary operation\n");
+      assert(false);
+    }
+    IntValNode* int_node_left = (IntValNode*) exprlst[i];
+    IntValNode* int_node_right = (IntValNode*) (right_op->exprlst[i]);
+    res.push_back(int_node_left->binary_op(int_node_right, op));
+  }
+  return new TupleExprNode(res);
+}
+
+TupleIntNode* TupleIntNode::binary_op(TupleIntNode* rt, BinOpEnum op)
+{
+  // self as left_op
+  std::vector<int> res;
+  if (tupleint.size() != rt->tupleint.size())
+  {
+    printf("Dimension mismatch in TupleIntNode's binary operation\n");
+    assert(false);
+  }
+  for (int i = 0; i < tupleint.size(); i++)
+  {
+    int new_res;
+    switch (op)
+    {
+      case PLUS:
+        new_res = this->tupleint[i] + rt->tupleint[i]; break;
+      case MINUS:
+        new_res = this->tupleint[i] - rt->tupleint[i]; break;
+      case MULTIPLY:
+        new_res = this->tupleint[i] * rt->tupleint[i]; break;
+      case DIVIDE:
+        new_res = this->tupleint[i] / rt->tupleint[i]; break;
+      case MOD:
+        new_res = this->tupleint[i] % rt->tupleint[i]; break;
+      default:
+        printf("Unsupported binary operator for TupleIntNode\n");
+        assert(false);
+    }
+    res.push_back(new_res);
+  }
+  return new TupleIntNode(res);
+}
+
+BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op)
+{
+  switch(op)
+  {
+  case EQ:
+    return new BoolValNode(this->boolval == rt->boolval);
+  case NEQ:
+    return new BoolValNode(this->boolval != rt->boolval);
+  case OR:
+    return new BoolValNode(this->boolval || rt->boolval);
+  case AND:
+    return new BoolValNode(this->boolval && rt->boolval);
+  default:
+    printf("Unsupported binary operator for Boolean variable\n");
+    assert(false);
+  }
+  return NULL;
+}
+
+TupleIntNode* TupleIntNode::slice(int a, int b)
+{
+  if (b >= tupleint.size())
+  {
+    printf("slice's right index is out of bound!\n");
+    assert(false);
+  }
+  a = (a < 0 ? tupleint.size() + a : a);
+  b = (b <= 0 ? tupleint.size() + b : b); // b == 0 means not slicing the right side
+  std::vector<int> res;
+  for (int i = a; i < b; i++)
+  {
+    res.push_back(tupleint[i]);
+  }
+  return new TupleIntNode(res);
+}
+
+TupleExprNode* TupleExprNode::slice(int a, int b)
+{
+  if (b >= exprlst.size())
+  {
+    printf("slice's right index is out of bound!\n");
+    assert(false);
+  }
+  a = (a < 0 ? exprlst.size() + a : a);
+  b = (b <= 0 ? exprlst.size() + b : b); // b == 0 means not slicing the right side
+  std::vector<Node*> res;
+  for (int i = a; i < b; i++)
+  {
+    res.push_back(exprlst[i]);
+  }
+  return new TupleExprNode(res);
+}
+
+TupleExprNode* TupleExprNode::negate()
+{
+  std::vector<Node*> res;
+  for (int i = 0; i < exprlst.size(); i++)
+  {
+    if (exprlst[i]->type != IntValType)
+    {
+      printf("We can only negate IntValType inside TupleExprNode\n");
+      assert(false);
+    }
+    IntValNode* int_node = (IntValNode*) exprlst[i];
+    res.push_back(int_node->negate());
+  }
+  return new TupleExprNode(res);
+}
+
+
+Node* NegativeExprNode::run()
+{
+  if (neg->type == IntValType)
+  {
+    return ((IntValNode*)neg)->negate();
+  }
+  else if (neg->type == TupleExprType)
+  {
+    return ((TupleExprNode*)neg)->negate();
+  }
+  else if (neg->type == TupleIntType)
+  {
+    return ((TupleIntNode*)neg)->negate();
+  }
+  else
+  {
+    printf("Negating node must be applied to Int/TupleExpr/TupleInt\n");
+  }
+  return NULL;
+}
+
+TupleIntNode* TupleIntNode::negate()
+{
+  std::vector<int> res;
+  for (int i = 0; i < tupleint.size(); i++)
+  {
+    res.push_back(-tupleint[i]);
+  }
+  return new TupleIntNode(res);
 }
 
 Node* IndexExprNode::run()

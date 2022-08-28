@@ -502,6 +502,7 @@ public:
 	{
 		return new IntValNode(-intval);
 	}
+	Node* binary_op(IntValNode* rt, BinOpEnum op);
 };
 
 class TupleIntNode : public ExprNode
@@ -521,31 +522,9 @@ public:
 		}
 	}
 	TupleIntNode* run() { return this; }
-	TupleIntNode* negate()
-	{
-		std::vector<int> res;
-		for (int i = 0; i < tupleint.size(); i++)
-		{
-			res.push_back(-tupleint[i]);
-		}
-		return new TupleIntNode(res);
-	}
-	TupleIntNode* slice(int a, int b)
-	{
-		if (b >= tupleint.size())
-		{
-			printf("slice's right index is out of bound!\n");
-			assert(false);
-		}
-		a = (a < 0 ? tupleint.size() + a : a);
-		b = (b <= 0 ? tupleint.size() + b : b); // b == 0 means not slicing the right side
-		std::vector<int> res;
-		for (int i = a; i < b; i++)
-		{
-			res.push_back(tupleint[i]);
-		}
-		return new TupleIntNode(res);
-	}
+	TupleIntNode* negate();
+	TupleIntNode* slice(int a, int b);
+	TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op);
 };
 
 class BoolValNode : public ExprNode
@@ -559,6 +538,7 @@ public:
 		printf("BoolValNode: %s\n", boolval ? "true" : "false");
 	}
 	Node* run() { return this; }
+	BoolValNode* binary_op(BoolValNode* rt, BinOpEnum op);
 };
 
 class IndexTaskMapNode : public StmtNode
@@ -666,37 +646,9 @@ public:
 	}
 	Node* run();
 	ExprNode* Convert2TupleInt(); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
-	TupleExprNode* negate()
-	{
-		std::vector<Node*> res;
-		for (int i = 0; i < exprlst.size(); i++)
-		{
-			if (exprlst[i]->type != IntValType)
-			{
-				printf("We can only negate IntValType inside TupleExprNode\n");
-				assert(false);
-			}
-			IntValNode* int_node = (IntValNode*) exprlst[i];
-			res.push_back(int_node->negate());
-		}
-		return new TupleExprNode(res);
-	}
-	TupleExprNode* slice(int a, int b)
-	{
-		if (b >= exprlst.size())
-		{
-			printf("slice's right index is out of bound!\n");
-			assert(false);
-		}
-		a = (a < 0 ? exprlst.size() + a : a);
-		b = (b <= 0 ? exprlst.size() + b : b); // b == 0 means not slicing the right side
-		std::vector<Node*> res;
-		for (int i = a; i < b; i++)
-		{
-			res.push_back(exprlst[i]);
-		}
-		return new TupleExprNode(res);
-	}
+	TupleExprNode* negate();
+	TupleExprNode* slice(int a, int b);
+	TupleExprNode* binary_op(TupleExprNode* right_op, BinOpEnum op);
 };
 
 class SliceExprNode : public ExprNode
@@ -824,26 +776,7 @@ public:
 		printf("NegativeExprNode\n");
 		neg->print();
 	}
-	Node* run()
-	{
-		if (neg->type == IntValType)
-		{
-			return ((IntValNode*)neg)->negate();
-		}
-		else if (neg->type == TupleExprType)
-		{
-			return ((TupleExprNode*)neg)->negate();
-		}
-		else if (neg->type == TupleIntType)
-		{
-			return ((TupleIntNode*)neg)->negate();
-		}
-		else
-		{
-			printf("Negating node must be applied to Int/TupleExpr/TupleInt\n");
-		}
-		return NULL;
-	}
+	Node* run();
 };
 
 /*
