@@ -192,7 +192,7 @@ Print_Stmt:
 
 Print_Args:
     /* empty */                 { $$ = new PrintArgsNode(); }
-|   Print_Args ',' T_Identifier { $1->printargs.push_back(new IdentifierExprNode($3)); }
+|   Print_Args ',' Expr         { $1->printargs.push_back($3); }
 ;
 
 ArgLst:

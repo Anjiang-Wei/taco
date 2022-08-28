@@ -61,7 +61,7 @@ Grammar
    42 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' ';'
 
    43 Print_Args: %empty
-   44           | Print_Args ',' T_Identifier
+   44           | Print_Args ',' Expr
 
    45 ArgLst: %empty
    46       | ArgLst_
@@ -215,7 +215,7 @@ T_Eq (305) 31 59
 T_Ne (306) 32 60
 T_And (307) 62
 T_Or (308) 61
-T_Identifier (309) 12 14 33 34 35 44 47 48 69 76
+T_Identifier (309) 12 14 33 34 35 47 48 69 76
 T_StringConstant (310) 42
 T_IntConstant (311) 14 27 28 29 30 31 32 66
 
@@ -265,8 +265,8 @@ ArgLst_ (96)
     on left: 47 48, on right: 46 48
 Expr (97)
     on left: 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66
-    67 68 69 70 71 72 73 74 75 76, on right: 35 41 49 50 51 52 53 54
-    55 56 57 58 59 60 61 62 63 64 65 73 74 75 76 77 78 79 80
+    67 68 69 70 71 72 73 74 75 76, on right: 35 41 44 49 50 51 52 53
+    54 55 56 57 58 59 60 61 62 63 64 65 73 74 75 76 77 78 79 80
 ExprN_1 (98)
     on left: 77 78, on right: 63 78
 ExprN (99)
@@ -1119,7 +1119,7 @@ State 79
 State 80
 
    42 Print_Stmt: T_Print '(' T_StringConstant Print_Args . ')' ';'
-   44 Print_Args: Print_Args . ',' T_Identifier
+   44 Print_Args: Print_Args . ',' Expr
 
     ','  shift, and go to state 116
     ')'  shift, and go to state 117
@@ -1881,9 +1881,31 @@ State 115
 
 State 116
 
-   44 Print_Args: Print_Args ',' . T_Identifier
+   44 Print_Args: Print_Args ',' . Expr
 
-    T_Identifier  shift, and go to state 164
+    T_Tuple        shift, and go to state 49
+    T_CPU          shift, and go to state 35
+    T_GPU          shift, and go to state 36
+    T_IO           shift, and go to state 37
+    T_PY           shift, and go to state 38
+    T_PROC         shift, and go to state 39
+    T_OMP          shift, and go to state 40
+    T_SYSMEM       shift, and go to state 50
+    T_FBMEM        shift, and go to state 51
+    T_RDMEM        shift, and go to state 52
+    T_ZCMEM        shift, and go to state 53
+    T_SOCKMEM      shift, and go to state 54
+    T_True         shift, and go to state 55
+    T_False        shift, and go to state 56
+    T_Identifier   shift, and go to state 57
+    T_IntConstant  shift, and go to state 58
+    '-'            shift, and go to state 59
+    '*'            shift, and go to state 60
+    '('            shift, and go to state 61
+
+    Expr  go to state 164
+    Mem   go to state 63
+    Proc  go to state 64
 
 
 State 117
@@ -2764,7 +2786,42 @@ State 163
 
 State 164
 
-   44 Print_Args: Print_Args ',' T_Identifier .
+   44 Print_Args: Print_Args ',' Expr .
+   49 Expr: Expr . '+' Expr
+   50     | Expr . '-' Expr
+   51     | Expr . '*' Expr
+   52     | Expr . '/' Expr
+   53     | Expr . '%' Expr
+   54     | Expr . '>' Expr
+   55     | Expr . '<' Expr
+   57     | Expr . T_Ge Expr
+   58     | Expr . T_Le Expr
+   59     | Expr . T_Eq Expr
+   60     | Expr . T_Ne Expr
+   61     | Expr . T_Or Expr
+   62     | Expr . T_And Expr
+   63     | Expr . '(' ExprN_1 ')'
+   64     | Expr . '[' Expr ']'
+   73     | Expr . '.' Prop
+   74     | Expr . '?' Expr ':' Expr
+
+    T_Le   shift, and go to state 88
+    T_Ge   shift, and go to state 89
+    T_Eq   shift, and go to state 90
+    T_Ne   shift, and go to state 91
+    T_And  shift, and go to state 92
+    T_Or   shift, and go to state 93
+    '?'    shift, and go to state 94
+    '<'    shift, and go to state 95
+    '>'    shift, and go to state 96
+    '+'    shift, and go to state 97
+    '-'    shift, and go to state 98
+    '*'    shift, and go to state 99
+    '/'    shift, and go to state 100
+    '%'    shift, and go to state 101
+    '['    shift, and go to state 102
+    '('    shift, and go to state 103
+    '.'    shift, and go to state 104
 
     $default  reduce using rule 44 (Print_Args)
 

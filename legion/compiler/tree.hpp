@@ -507,7 +507,11 @@ public:
 	{
 		for (size_t i = 0; i < tupleint.size(); i++) 
 		{
-			printf("%d, ", tupleint[i]);
+			printf("%d", tupleint[i]);
+			if (i != tupleint.size() - 1)
+			{
+				printf(",");
+			}
 		}
 	}
 	Node* run() { return this; }
@@ -620,10 +624,13 @@ public:
 	}
 	void print()
 	{
-		printf("TupleExprNode: %ld\n", exprlst.size());
 		for (size_t i = 0; i < exprlst.size(); i++)
 		{
 			exprlst[i]->print();
+			if (i != exprlst.size() - 1)
+			{
+				printf(",");
+			}
 		}
 	}
 	Node* run();
@@ -809,7 +816,7 @@ public:
 class PrintArgsNode : public Node
 {
 public:
-	std::vector<IdentifierExprNode*> printargs;
+	std::vector<ExprNode*> printargs;
 
 	PrintArgsNode() { type = PrintArgsType; }
 };
@@ -818,7 +825,7 @@ class PrintNode : public StmtNode
 {
 public:
 	std::string format_string;
-	std::vector<IdentifierExprNode*> printargs;
+	std::vector<ExprNode*> printargs;
 	PrintNode(const char* x, PrintArgsNode* y)
 	{
 		type = PrintType;
