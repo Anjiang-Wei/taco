@@ -248,10 +248,10 @@ Expr:
 ;
 
 SliceExpr:
-    Expr ':' Expr           { $$ = new SliceExprNode(); }
-|        ':' Expr           { $$ = new SliceExprNode(); }
-|   Expr ':'                { $$ = new SliceExprNode(); }
-|        ':'                { $$ = new SliceExprNode(); }
+    Expr ':' Expr           { $$ = new SliceExprNode($1, $3); }
+|        ':' Expr           { $$ = new SliceExprNode(NULL, $2); }
+|   Expr ':'                { $$ = new SliceExprNode($1, NULL); }
+|        ':'                { $$ = new SliceExprNode(NULL, NULL); }
 
 ExprN_1:
     Expr                     { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }

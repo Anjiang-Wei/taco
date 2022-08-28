@@ -2034,25 +2034,25 @@ yyreduce:
 
   case 79:
 #line 251 "parser.y" /* yacc.c:1646  */
-    { (yyval.sliceexpr) = new SliceExprNode(); }
+    { (yyval.sliceexpr) = new SliceExprNode((yyvsp[-2].expr), (yyvsp[0].expr)); }
 #line 2039 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
 #line 252 "parser.y" /* yacc.c:1646  */
-    { (yyval.sliceexpr) = new SliceExprNode(); }
+    { (yyval.sliceexpr) = new SliceExprNode(NULL, (yyvsp[0].expr)); }
 #line 2045 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
 #line 253 "parser.y" /* yacc.c:1646  */
-    { (yyval.sliceexpr) = new SliceExprNode(); }
+    { (yyval.sliceexpr) = new SliceExprNode((yyvsp[-1].expr), NULL); }
 #line 2051 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
 #line 254 "parser.y" /* yacc.c:1646  */
-    { (yyval.sliceexpr) = new SliceExprNode(); }
+    { (yyval.sliceexpr) = new SliceExprNode(NULL, NULL); }
 #line 2057 "y.tab.c" /* yacc.c:1646  */
     break;
 

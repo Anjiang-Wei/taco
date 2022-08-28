@@ -681,42 +681,67 @@ Node* ObjectInvokeNode::run()
 Node* IndexExprNode::run()
 {
 	Node* index_ = index->run();
-  // todo: add support for SliceExprNode
-  if (index_->type != IntValType)
-  {
-    std::cout << "IndexExprNode must use int to index" << std::endl;
-    assert(false);
-  }
-  IntValNode* int_node = (IntValNode*) index_;
-  int int_index = int_node->intval;
-
   Node* tuple_ = tuple->run();
-  if (tuple_->type == TupleIntType)
+  if (index_->type == IntValType)
   {
-    TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
-    if (int_index >= (int) tuple_int->tupleint.size())
+    IntValNode* int_node = (IntValNode*) index_;
+    int int_index = int_node->intval;
+    if (tuple_->type == TupleIntType)
     {
-      std::cout << "Index Out Of Bound!" << std::endl;
+      TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
+      if (int_index >= (int) tuple_int->tupleint.size())
+      {
+        std::cout << "Index Out Of Bound!" << std::endl;
+        assert(false);
+      }
+      return new IntValNode(tuple_int->tupleint[int_index]);
+    }
+    else if (tuple_->type == TupleExprType)
+    {
+      TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
+      if (int_index >= (int) tuple_expr->exprlst.size())
+      {
+        std::cout << "Index Out Of Bound!" << std::endl;
+        assert(false);
+      }
+      return tuple_expr->exprlst[int_index];
+    }
+    else
+    {
+      std::cout << "unsupported IndexExprNode tuple_->type" << std::endl;
       assert(false);
     }
-    return new IntValNode(tuple_int->tupleint[int_index]);
   }
-  else if (tuple_->type == TupleExprType)
+  else if (index_->type == SliceExprType)
   {
-    TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
-    if (int_index >= (int) tuple_expr->exprlst.size())
+    SliceExprNode* slice_node = (SliceExprNode*) index_;
+    Node* left = slice_node->left == NULL ? NULL : slice_node->left->run();
+    Node* right = slice_node->right == NULL ? NULL : slice_node->right->run();
+    if ( (!(left == NULL || left->type == IntValType)) 
+         || (!(right == NULL || right->type == IntValType)) )
     {
-      std::cout << "Index Out Of Bound!" << std::endl;
+      printf("Left/Right side of SliceExprNode must be NULL or integer\n");
       assert(false);
     }
-    return tuple_expr->exprlst[int_index];
+    int left_int = (left == NULL ? 0 : ((IntValNode*)left)->intval);
+    int right_int = (right == NULL ? 0 : ((IntValNode*)right)->intval);
+    if (tuple_->type == TupleIntType)
+    {
+      TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
+      return tuple_int->slice(left_int, right_int);
+    }
+    else if (tuple_->type == TupleExprType)
+    {
+      TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
+      return tuple_expr->slice(left_int, right_int);
+    }
+    else
+    {
+      printf("unsupported IndexExprNode's type for slicing\n");
+      assert(false);
+    }
   }
-  else
-  {
-    std::cout << "unsupported IndexExprNode tuple_->type" << std::endl;
-    assert(false);
-  }
-  std::cout << "Reaching undesired region in IndexExprNode" << std::endl;
+  printf("Reaching undesired region in IndexExprNode\n");
   assert(false);
   return NULL;
 }
