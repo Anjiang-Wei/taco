@@ -543,6 +543,8 @@ public:
 	TupleIntNode* negate();
 	TupleIntNode* slice(int a, int b);
 	TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op);
+	IntValNode* at(int x);
+	IntValNode* at(IntValNode* x);
 };
 
 class BoolValNode : public ExprNode
@@ -671,6 +673,9 @@ public:
 	TupleExprNode* negate();
 	TupleExprNode* slice(int a, int b);
 	TupleExprNode* binary_op(TupleExprNode* right_op, BinOpEnum op);
+	Node* at(int x);
+	Node* at(IntValNode* x);
+	IntValNode* one_int_only();
 };
 
 class SliceExprNode : public ExprNode
@@ -773,6 +778,12 @@ public:
 	{
 		type = IndexExprType;
 		tuple = x;
+		index = y;
+	}
+	IndexExprNode(ExprNode* x, TupleExprNode* y)
+	{
+		type = IndexExprType;
+		tuple = x; // must be a machine model (identifier)
 		index = y;
 	}
 	void print()

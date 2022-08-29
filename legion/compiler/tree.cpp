@@ -202,7 +202,7 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif
   FuncDefNode* func_node;
-  TupleIntNode* launch_space = new TupleIntNode(point_space);// task2launch_space.at(task);
+  TupleIntNode* launch_space = new TupleIntNode(point_space);
   if (task2func.count(task) > 0)
   {
     func_node = task2func.at(task);
@@ -234,52 +234,17 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
 
   delete ipoint_input;
 
-  if (!(res->type == TupleIntType || res->type == TupleExprType || res->type == IntValType))
-  {
-    std::cout << "Undesired return type in Tree2Legion::run:" <<
-      " only allows TupleIntType, TupleExprType, and IntValType" << std::endl;
-    assert(false);
-  }
-  // printf("Index Launch Computation Finished\n");
   if (res->type == TupleIntType)
   {
     TupleIntNode* res2 = (TupleIntNode*) res;
-    if (res2->tupleint.size() != mspace_node->get_size().size())
-    {
-      std::cout << "Not compatible with the machine model's dimension!" << std::endl;
-      assert(false);
-    }
-    // todo: deal with this mspace_node
-    return mspace_node->get_node_proc(res2->tupleint);
-  }
-  else if (res->type == TupleExprType)
-  {
-    TupleExprNode* res2 = (TupleExprNode*) res;
-    std::vector<int> res3;
-    for (size_t i = 0; i < res2->exprlst.size(); i++)
-    {
-      if (res2->exprlst[i]->type != IntValType)
-      {
-        std::cout << "Tree2Legion::run, TupleExpr's each element must be integer!" << std::endl;
-        assert(false);
-      }
-      res3.push_back(((IntValNode*) res2->exprlst[i])->intval);
-    }
-    if (res3.size() != mspace_node->get_size().size())
-    {
-      std::cout << "Not compatible with the machine model's dimension!" << std::endl;
-      assert(false);
-    }
-    return mspace_node->get_node_proc(res3);
+    return res2->tupleint;
   }
   else
   {
-    IntValNode* res2 = (IntValNode*) res;
-     return mspace_node->get_node_proc(std::vector<int>{res2->intval});
+    printf("Must return TupleIntType after invoking mapping function\n");
+    assert(false);
   }
-  std::cout << "Reaching undesired region in Tree2Legion::run" << std::endl;
-  assert(false);
-  return x;
+  return {};
 }
 
 Node* IndexTaskMapNode::run()
@@ -836,38 +801,70 @@ TupleIntNode* TupleIntNode::negate()
   return new TupleIntNode(res);
 }
 
+IntValNode* TupleIntNode::at(int x)
+{
+  if (x < tupleint.size())
+  {
+    return new IntValNode(this->tupleint[x >= 0 ? x : tupleint.size() + x]);
+  }
+  printf("Index out of bound for TupleIntNode\n");
+  assert(false);
+  return NULL;
+}
+
+IntValNode* TupleIntNode::at(IntValNode* x)
+{
+  return this->at(x->intval);
+}
+
+Node* TupleExprNode::at(int x)
+{
+  if (x < exprlst.size())
+  {
+    return this->exprlst[x >= 0 ? x : exprlst.size() + x];
+  }
+  printf("Index out of bound for TupleIntNode\n");
+  assert(false);
+  return NULL;
+}
+
+Node* TupleExprNode::at(IntValNode* x)
+{
+  return this->at(x->intval);
+}
+
 Node* IndexExprNode::run()
 {
 	Node* index_ = index->run();
   Node* tuple_ = tuple->run();
-  if (index_->type == IntValType)
+  if (index_->type == TupleExprType)
   {
-    IntValNode* int_node = (IntValNode*) index_;
-    int int_index = int_node->intval;
-    if (tuple_->type == TupleIntType)
+    TupleExprNode* index_node = (TupleExprNode*) index_;
+    IntValNode* int_node = index_node->one_int_only();
+    if (int_node != NULL)
     {
-      TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
-      if (int_index >= (int) tuple_int->tupleint.size())
+      if (tuple_->type == TupleIntType)
       {
-        std::cout << "Index Out Of Bound!" << std::endl;
+        TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
+        return tuple_int->at(int_node);
+      }
+      else if (tuple_->type == TupleExprType)
+      {
+        TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
+        return tuple_expr->at(int_node);
+      }
+      else
+      {
+        std::cout << "Unsupported IndexExprNode tuple's type with integer index" << std::endl;
         assert(false);
       }
-      return new IntValNode(tuple_int->tupleint[int_index]);
-    }
-    else if (tuple_->type == TupleExprType)
-    {
-      TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
-      if (int_index >= (int) tuple_expr->exprlst.size())
-      {
-        std::cout << "Index Out Of Bound!" << std::endl;
-        assert(false);
-      }
-      return tuple_expr->exprlst[int_index];
     }
     else
     {
-      std::cout << "unsupported IndexExprNode tuple_->type" << std::endl;
-      assert(false);
+      if (tuple_->type == IdentifierExprType) // dynamic machine model
+      {
+        // todo: fill this in tomorrow
+      }
     }
   }
   else if (index_->type == SliceExprType)
@@ -899,11 +896,19 @@ Node* IndexExprNode::run()
       assert(false);
     }
   }
-  printf("Reaching undesired region in IndexExprNode\n");
+  printf("Unsupported index type in IndexExprNode\n");
   assert(false);
   return NULL;
 }
 
+IntValNode* TupleExprNode::one_int_only()
+{
+  if (exprlst.size() == 1 && exprlst[0]->type == IntValType)
+  {
+    return (IntValNode*) exprlst[0];
+  }
+  return NULL;
+}
 
 Node* TupleExprNode::run()
 {

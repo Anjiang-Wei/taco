@@ -88,8 +88,8 @@ Grammar
    64     | Expr T_Or Expr
    65     | Expr T_And Expr
    66     | Expr '(' ExprN_1 ')'
-   67     | Expr '[' Expr ']'
-   68     | Expr '[' SliceExpr ']'
+   67     | Expr '[' SliceExpr ']'
+   68     | Expr '[' ExprN_1 ']'
    69     | '-' Expr
    70     | T_IntConstant
    71     | T_True
@@ -281,9 +281,9 @@ Expr (98)
     56 57 58 59 60 61 62 63 64 65 66 67 68 69 77 78 79 80 81 82 83
     85 86 87 88
 SliceExpr (99)
-    on left: 81 82 83 84, on right: 68
+    on left: 81 82 83 84, on right: 67
 ExprN_1 (100)
-    on left: 85 86, on right: 66 86
+    on left: 85 86, on right: 66 68 86
 ExprN (101)
     on left: 87 88, on right: 74 88
 Prop (102)
@@ -1002,8 +1002,8 @@ State 67
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -1263,8 +1263,8 @@ State 92
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    69     | '-' Expr .
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
@@ -1292,8 +1292,8 @@ State 93
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    79     | '*' Expr .
@@ -1322,8 +1322,8 @@ State 94
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    87 ExprN: Expr . ',' Expr
@@ -1766,8 +1766,8 @@ State 109
 
 State 110
 
-   67 Expr: Expr '[' . Expr ']'
-   68     | Expr '[' . SliceExpr ']'
+   67 Expr: Expr '[' . SliceExpr ']'
+   68     | Expr '[' . ExprN_1 ']'
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -1792,6 +1792,7 @@ State 110
 
     Expr       go to state 146
     SliceExpr  go to state 147
+    ExprN_1    go to state 148
     Mem        go to state 68
     Proc       go to state 69
 
@@ -1820,8 +1821,8 @@ State 111
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr     go to state 148
-    ExprN_1  go to state 149
+    Expr     go to state 149
+    ExprN_1  go to state 150
     Mem      go to state 68
     Proc     go to state 69
 
@@ -1830,17 +1831,17 @@ State 112
 
    77 Expr: Expr '.' . Prop
 
-    T_Size           shift, and go to state 150
-    T_Split          shift, and go to state 151
-    T_Merge          shift, and go to state 152
-    T_Swap           shift, and go to state 153
-    T_Slice          shift, and go to state 154
-    T_Reverse        shift, and go to state 155
-    T_Balance_split  shift, and go to state 156
-    T_Volume         shift, and go to state 157
-    T_Has            shift, and go to state 158
+    T_Size           shift, and go to state 151
+    T_Split          shift, and go to state 152
+    T_Merge          shift, and go to state 153
+    T_Swap           shift, and go to state 154
+    T_Slice          shift, and go to state 155
+    T_Reverse        shift, and go to state 156
+    T_Balance_split  shift, and go to state 157
+    T_Volume         shift, and go to state 158
+    T_Has            shift, and go to state 159
 
-    Prop  go to state 159
+    Prop  go to state 160
 
 
 State 113
@@ -1854,7 +1855,7 @@ State 114
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' . '{' Func_Stmts '}'
 
-    '{'  shift, and go to state 160
+    '{'  shift, and go to state 161
 
 
 State 115
@@ -1867,7 +1868,7 @@ State 115
     T_ISpace  shift, and go to state 73
     T_MSpace  shift, and go to state 74
 
-    TYPE  go to state 161
+    TYPE  go to state 162
 
 
 State 116
@@ -1889,8 +1890,8 @@ State 118
    20 RegionCustom: T_Region Identifier_star Identifier_star Identifier_star MemLst . ';'
   106 MemLst: MemLst . ',' Mem
 
-    ','  shift, and go to state 162
-    ';'  shift, and go to state 163
+    ','  shift, and go to state 163
+    ';'  shift, and go to state 164
 
 
 State 119
@@ -1905,8 +1906,8 @@ State 120
    19 RegionCustom: T_Region Identifier_star Identifier_star Proc MemLst . ';'
   106 MemLst: MemLst . ',' Mem
 
-    ','  shift, and go to state 162
-    ';'  shift, and go to state 164
+    ','  shift, and go to state 163
+    ';'  shift, and go to state 165
 
 
 State 121
@@ -1924,13 +1925,13 @@ State 121
    33            | Constraints . T_Align T_Eq T_IntConstant
    34            | Constraints . T_Align T_Ne T_IntConstant
 
-    T_Reverse_Dimension   shift, and go to state 165
-    T_Positive_Dimension  shift, and go to state 166
-    T_AOS                 shift, and go to state 167
-    T_SOA                 shift, and go to state 168
-    T_Compact             shift, and go to state 169
-    T_Align               shift, and go to state 170
-    ';'                   shift, and go to state 171
+    T_Reverse_Dimension   shift, and go to state 166
+    T_Positive_Dimension  shift, and go to state 167
+    T_AOS                 shift, and go to state 168
+    T_SOA                 shift, and go to state 169
+    T_Compact             shift, and go to state 170
+    T_Align               shift, and go to state 171
+    ';'                   shift, and go to state 172
 
 
 State 122
@@ -1948,13 +1949,13 @@ State 122
    33            | Constraints . T_Align T_Eq T_IntConstant
    34            | Constraints . T_Align T_Ne T_IntConstant
 
-    T_Reverse_Dimension   shift, and go to state 165
-    T_Positive_Dimension  shift, and go to state 166
-    T_AOS                 shift, and go to state 167
-    T_SOA                 shift, and go to state 168
-    T_Compact             shift, and go to state 169
-    T_Align               shift, and go to state 170
-    ';'                   shift, and go to state 172
+    T_Reverse_Dimension   shift, and go to state 166
+    T_Positive_Dimension  shift, and go to state 167
+    T_AOS                 shift, and go to state 168
+    T_SOA                 shift, and go to state 169
+    T_Compact             shift, and go to state 170
+    T_Align               shift, and go to state 171
+    ';'                   shift, and go to state 173
 
 
 State 123
@@ -1981,7 +1982,7 @@ State 123
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 173
+    Expr  go to state 174
     Mem   go to state 68
     Proc  go to state 69
 
@@ -1990,7 +1991,7 @@ State 124
 
    45 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' . ';'
 
-    ';'  shift, and go to state 174
+    ';'  shift, and go to state 175
 
 
 State 125
@@ -2016,13 +2017,13 @@ State 126
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    80     | T_Tuple '(' Expr . T_For T_Identifier T_In Expr ')'
 
-    T_For  shift, and go to state 175
+    T_For  shift, and go to state 176
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
     T_Eq   shift, and go to state 98
@@ -2066,7 +2067,7 @@ State 127
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 176
+    Expr  go to state 177
     Mem   go to state 68
     Proc  go to state 69
 
@@ -2102,7 +2103,7 @@ State 129
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 177
+    Expr  go to state 178
     Mem   go to state 68
     Proc  go to state 69
 
@@ -2131,8 +2132,8 @@ State 131
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2165,8 +2166,8 @@ State 132
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2199,8 +2200,8 @@ State 133
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2237,8 +2238,8 @@ State 134
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2275,8 +2276,8 @@ State 135
    65     | Expr . T_And Expr
    65     | Expr T_And Expr .
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2315,8 +2316,8 @@ State 136
    64     | Expr T_Or Expr .
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2355,8 +2356,8 @@ State 137
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    78     | Expr '?' Expr . ':' Expr
@@ -2368,7 +2369,7 @@ State 137
     T_And  shift, and go to state 100
     T_Or   shift, and go to state 101
     '?'    shift, and go to state 102
-    ':'    shift, and go to state 178
+    ':'    shift, and go to state 179
     '<'    shift, and go to state 103
     '>'    shift, and go to state 104
     '+'    shift, and go to state 105
@@ -2398,8 +2399,8 @@ State 138
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2432,8 +2433,8 @@ State 139
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2466,8 +2467,8 @@ State 140
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2498,8 +2499,8 @@ State 141
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2530,8 +2531,8 @@ State 142
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2559,8 +2560,8 @@ State 143
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2588,8 +2589,8 @@ State 144
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2627,7 +2628,7 @@ State 145
 
     $default  reduce using rule 84 (SliceExpr)
 
-    Expr  go to state 179
+    Expr  go to state 180
     Mem   go to state 68
     Proc  go to state 69
 
@@ -2648,13 +2649,13 @@ State 146
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   67     | Expr '[' Expr . ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    81 SliceExpr: Expr . ':' Expr
    83          | Expr . ':'
+   85 ExprN_1: Expr .
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -2663,7 +2664,7 @@ State 146
     T_And  shift, and go to state 100
     T_Or   shift, and go to state 101
     '?'    shift, and go to state 102
-    ':'    shift, and go to state 180
+    ':'    shift, and go to state 181
     '<'    shift, and go to state 103
     '>'    shift, and go to state 104
     '+'    shift, and go to state 105
@@ -2672,19 +2673,29 @@ State 146
     '/'    shift, and go to state 108
     '%'    shift, and go to state 109
     '['    shift, and go to state 110
-    ']'    shift, and go to state 181
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
+
+    $default  reduce using rule 85 (ExprN_1)
 
 
 State 147
 
-   68 Expr: Expr '[' SliceExpr . ']'
+   67 Expr: Expr '[' SliceExpr . ']'
 
     ']'  shift, and go to state 182
 
 
 State 148
+
+   68 Expr: Expr '[' ExprN_1 . ']'
+   86 ExprN_1: ExprN_1 . ',' Expr
+
+    ','  shift, and go to state 183
+    ']'  shift, and go to state 184
+
+
+State 149
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -2700,8 +2711,8 @@ State 148
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    85 ExprN_1: Expr .
@@ -2727,108 +2738,108 @@ State 148
     $default  reduce using rule 85 (ExprN_1)
 
 
-State 149
+State 150
 
    66 Expr: Expr '(' ExprN_1 . ')'
    86 ExprN_1: ExprN_1 . ',' Expr
 
     ','  shift, and go to state 183
-    ')'  shift, and go to state 184
+    ')'  shift, and go to state 185
 
 
-State 150
+State 151
 
    89 Prop: T_Size .
 
     $default  reduce using rule 89 (Prop)
 
 
-State 151
+State 152
 
    90 Prop: T_Split .
 
     $default  reduce using rule 90 (Prop)
 
 
-State 152
+State 153
 
    91 Prop: T_Merge .
 
     $default  reduce using rule 91 (Prop)
 
 
-State 153
+State 154
 
    92 Prop: T_Swap .
 
     $default  reduce using rule 92 (Prop)
 
 
-State 154
+State 155
 
    93 Prop: T_Slice .
 
     $default  reduce using rule 93 (Prop)
 
 
-State 155
+State 156
 
    94 Prop: T_Reverse .
 
     $default  reduce using rule 94 (Prop)
 
 
-State 156
+State 157
 
    95 Prop: T_Balance_split .
 
     $default  reduce using rule 95 (Prop)
 
 
-State 157
+State 158
 
    96 Prop: T_Volume .
 
     $default  reduce using rule 96 (Prop)
 
 
-State 158
+State 159
 
    97 Prop: T_Has .
 
     $default  reduce using rule 97 (Prop)
 
 
-State 159
+State 160
 
    77 Expr: Expr '.' Prop .
 
     $default  reduce using rule 77 (Expr)
 
 
-State 160
+State 161
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' . Func_Stmts '}'
 
-    T_Return      shift, and go to state 185
+    T_Return      shift, and go to state 186
     T_Print       shift, and go to state 6
     T_Identifier  shift, and go to state 9
 
-    Assign_Stmt  go to state 186
-    Func_Stmts   go to state 187
-    Func_Stmt    go to state 188
-    Return_Stmt  go to state 189
-    Print_Stmt   go to state 190
-
-
-State 161
-
-   51 ArgLst_: ArgLst_ ',' TYPE . T_Identifier
-
-    T_Identifier  shift, and go to state 191
+    Assign_Stmt  go to state 187
+    Func_Stmts   go to state 188
+    Func_Stmt    go to state 189
+    Return_Stmt  go to state 190
+    Print_Stmt   go to state 191
 
 
 State 162
+
+   51 ArgLst_: ArgLst_ ',' TYPE . T_Identifier
+
+    T_Identifier  shift, and go to state 192
+
+
+State 163
 
   106 MemLst: MemLst ',' . Mem
 
@@ -2838,59 +2849,59 @@ State 162
     T_ZCMEM    shift, and go to state 58
     T_SOCKMEM  shift, and go to state 59
 
-    Mem  go to state 192
+    Mem  go to state 193
 
 
-State 163
+State 164
 
    20 RegionCustom: T_Region Identifier_star Identifier_star Identifier_star MemLst ';' .
 
     $default  reduce using rule 20 (RegionCustom)
 
 
-State 164
+State 165
 
    19 RegionCustom: T_Region Identifier_star Identifier_star Proc MemLst ';' .
 
     $default  reduce using rule 19 (RegionCustom)
 
 
-State 165
+State 166
 
    24 Constraints: Constraints T_Reverse_Dimension .
 
     $default  reduce using rule 24 (Constraints)
 
 
-State 166
+State 167
 
    25 Constraints: Constraints T_Positive_Dimension .
 
     $default  reduce using rule 25 (Constraints)
 
 
-State 167
+State 168
 
    26 Constraints: Constraints T_AOS .
 
     $default  reduce using rule 26 (Constraints)
 
 
-State 168
+State 169
 
    27 Constraints: Constraints T_SOA .
 
     $default  reduce using rule 27 (Constraints)
 
 
-State 169
+State 170
 
    28 Constraints: Constraints T_Compact .
 
     $default  reduce using rule 28 (Constraints)
 
 
-State 170
+State 171
 
    29 Constraints: Constraints T_Align . '<' T_IntConstant
    30            | Constraints T_Align . T_Le T_IntConstant
@@ -2899,29 +2910,29 @@ State 170
    33            | Constraints T_Align . T_Eq T_IntConstant
    34            | Constraints T_Align . T_Ne T_IntConstant
 
-    T_Le  shift, and go to state 193
-    T_Ge  shift, and go to state 194
-    T_Eq  shift, and go to state 195
-    T_Ne  shift, and go to state 196
-    '<'   shift, and go to state 197
-    '>'   shift, and go to state 198
+    T_Le  shift, and go to state 194
+    T_Ge  shift, and go to state 195
+    T_Eq  shift, and go to state 196
+    T_Ne  shift, and go to state 197
+    '<'   shift, and go to state 198
+    '>'   shift, and go to state 199
 
 
-State 171
+State 172
 
    22 LayoutCustom: T_Layout Identifier_star Identifier_star Identifier_star Constraints ';' .
 
     $default  reduce using rule 22 (LayoutCustom)
 
 
-State 172
+State 173
 
    21 LayoutCustom: T_Layout Identifier_star Identifier_star Mem Constraints ';' .
 
     $default  reduce using rule 21 (LayoutCustom)
 
 
-State 173
+State 174
 
    47 Print_Args: Print_Args ',' Expr .
    52 Expr: Expr . '+' Expr
@@ -2938,8 +2949,8 @@ State 173
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2964,21 +2975,21 @@ State 173
     $default  reduce using rule 47 (Print_Args)
 
 
-State 174
+State 175
 
    45 Print_Stmt: T_Print '(' T_StringConstant Print_Args ')' ';' .
 
     $default  reduce using rule 45 (Print_Stmt)
 
 
-State 175
+State 176
 
    80 Expr: T_Tuple '(' Expr T_For . T_Identifier T_In Expr ')'
 
-    T_Identifier  shift, and go to state 199
+    T_Identifier  shift, and go to state 200
 
 
-State 176
+State 177
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -2994,8 +3005,8 @@ State 176
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    87 ExprN: Expr ',' Expr .
@@ -3021,7 +3032,7 @@ State 176
     $default  reduce using rule 87 (ExprN)
 
 
-State 177
+State 178
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3037,8 +3048,8 @@ State 177
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    88 ExprN: ExprN ',' Expr .
@@ -3064,7 +3075,7 @@ State 177
     $default  reduce using rule 88 (ExprN)
 
 
-State 178
+State 179
 
    78 Expr: Expr '?' Expr ':' . Expr
 
@@ -3088,12 +3099,12 @@ State 178
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 200
+    Expr  go to state 201
     Mem   go to state 68
     Proc  go to state 69
 
 
-State 179
+State 180
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3109,8 +3120,8 @@ State 179
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    82 SliceExpr: ':' Expr .
@@ -3136,7 +3147,7 @@ State 179
     $default  reduce using rule 82 (SliceExpr)
 
 
-State 180
+State 181
 
    81 SliceExpr: Expr ':' . Expr
    83          | Expr ':' .
@@ -3163,23 +3174,16 @@ State 180
 
     $default  reduce using rule 83 (SliceExpr)
 
-    Expr  go to state 201
+    Expr  go to state 202
     Mem   go to state 68
     Proc  go to state 69
 
 
-State 181
-
-   67 Expr: Expr '[' Expr ']' .
-
-    $default  reduce using rule 67 (Expr)
-
-
 State 182
 
-   68 Expr: Expr '[' SliceExpr ']' .
+   67 Expr: Expr '[' SliceExpr ']' .
 
-    $default  reduce using rule 68 (Expr)
+    $default  reduce using rule 67 (Expr)
 
 
 State 183
@@ -3206,19 +3210,26 @@ State 183
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 202
+    Expr  go to state 203
     Mem   go to state 68
     Proc  go to state 69
 
 
 State 184
 
+   68 Expr: Expr '[' ExprN_1 ']' .
+
+    $default  reduce using rule 68 (Expr)
+
+
+State 185
+
    66 Expr: Expr '(' ExprN_1 ')' .
 
     $default  reduce using rule 66 (Expr)
 
 
-State 185
+State 186
 
    44 Return_Stmt: T_Return . Expr ';'
 
@@ -3242,119 +3253,119 @@ State 185
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 203
+    Expr  go to state 204
     Mem   go to state 68
     Proc  go to state 69
 
 
-State 186
+State 187
 
    41 Func_Stmt: Assign_Stmt .
 
     $default  reduce using rule 41 (Func_Stmt)
 
 
-State 187
+State 188
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts . '}'
    40 Func_Stmts: Func_Stmts . Func_Stmt
 
-    T_Return      shift, and go to state 185
+    T_Return      shift, and go to state 186
     T_Print       shift, and go to state 6
     T_Identifier  shift, and go to state 9
-    '}'           shift, and go to state 204
+    '}'           shift, and go to state 205
 
-    Assign_Stmt  go to state 186
-    Func_Stmt    go to state 205
-    Return_Stmt  go to state 189
-    Print_Stmt   go to state 190
+    Assign_Stmt  go to state 187
+    Func_Stmt    go to state 206
+    Return_Stmt  go to state 190
+    Print_Stmt   go to state 191
 
 
-State 188
+State 189
 
    39 Func_Stmts: Func_Stmt .
 
     $default  reduce using rule 39 (Func_Stmts)
 
 
-State 189
+State 190
 
    42 Func_Stmt: Return_Stmt .
 
     $default  reduce using rule 42 (Func_Stmt)
 
 
-State 190
+State 191
 
    43 Func_Stmt: Print_Stmt .
 
     $default  reduce using rule 43 (Func_Stmt)
 
 
-State 191
+State 192
 
    51 ArgLst_: ArgLst_ ',' TYPE T_Identifier .
 
     $default  reduce using rule 51 (ArgLst_)
 
 
-State 192
+State 193
 
   106 MemLst: MemLst ',' Mem .
 
     $default  reduce using rule 106 (MemLst)
 
 
-State 193
-
-   30 Constraints: Constraints T_Align T_Le . T_IntConstant
-
-    T_IntConstant  shift, and go to state 206
-
-
 State 194
 
-   32 Constraints: Constraints T_Align T_Ge . T_IntConstant
+   30 Constraints: Constraints T_Align T_Le . T_IntConstant
 
     T_IntConstant  shift, and go to state 207
 
 
 State 195
 
-   33 Constraints: Constraints T_Align T_Eq . T_IntConstant
+   32 Constraints: Constraints T_Align T_Ge . T_IntConstant
 
     T_IntConstant  shift, and go to state 208
 
 
 State 196
 
-   34 Constraints: Constraints T_Align T_Ne . T_IntConstant
+   33 Constraints: Constraints T_Align T_Eq . T_IntConstant
 
     T_IntConstant  shift, and go to state 209
 
 
 State 197
 
-   29 Constraints: Constraints T_Align '<' . T_IntConstant
+   34 Constraints: Constraints T_Align T_Ne . T_IntConstant
 
     T_IntConstant  shift, and go to state 210
 
 
 State 198
 
-   31 Constraints: Constraints T_Align '>' . T_IntConstant
+   29 Constraints: Constraints T_Align '<' . T_IntConstant
 
     T_IntConstant  shift, and go to state 211
 
 
 State 199
 
-   80 Expr: T_Tuple '(' Expr T_For T_Identifier . T_In Expr ')'
+   31 Constraints: Constraints T_Align '>' . T_IntConstant
 
-    T_In  shift, and go to state 212
+    T_IntConstant  shift, and go to state 212
 
 
 State 200
+
+   80 Expr: T_Tuple '(' Expr T_For T_Identifier . T_In Expr ')'
+
+    T_In  shift, and go to state 213
+
+
+State 201
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3370,8 +3381,8 @@ State 200
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    78     | Expr '?' Expr ':' Expr .
@@ -3396,7 +3407,7 @@ State 200
     $default  reduce using rule 78 (Expr)
 
 
-State 201
+State 202
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3412,8 +3423,8 @@ State 201
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    81 SliceExpr: Expr ':' Expr .
@@ -3439,7 +3450,7 @@ State 201
     $default  reduce using rule 81 (SliceExpr)
 
 
-State 202
+State 203
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3455,8 +3466,8 @@ State 202
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    86 ExprN_1: ExprN_1 ',' Expr .
@@ -3482,7 +3493,7 @@ State 202
     $default  reduce using rule 86 (ExprN_1)
 
 
-State 203
+State 204
 
    44 Return_Stmt: T_Return Expr . ';'
    52 Expr: Expr . '+' Expr
@@ -3499,8 +3510,8 @@ State 203
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -3521,66 +3532,66 @@ State 203
     '['    shift, and go to state 110
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
-    ';'    shift, and go to state 213
+    ';'    shift, and go to state 214
 
 
-State 204
+State 205
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts '}' .
 
     $default  reduce using rule 35 (FuncDef)
 
 
-State 205
+State 206
 
    40 Func_Stmts: Func_Stmts Func_Stmt .
 
     $default  reduce using rule 40 (Func_Stmts)
 
 
-State 206
+State 207
 
    30 Constraints: Constraints T_Align T_Le T_IntConstant .
 
     $default  reduce using rule 30 (Constraints)
 
 
-State 207
+State 208
 
    32 Constraints: Constraints T_Align T_Ge T_IntConstant .
 
     $default  reduce using rule 32 (Constraints)
 
 
-State 208
+State 209
 
    33 Constraints: Constraints T_Align T_Eq T_IntConstant .
 
     $default  reduce using rule 33 (Constraints)
 
 
-State 209
+State 210
 
    34 Constraints: Constraints T_Align T_Ne T_IntConstant .
 
     $default  reduce using rule 34 (Constraints)
 
 
-State 210
+State 211
 
    29 Constraints: Constraints T_Align '<' T_IntConstant .
 
     $default  reduce using rule 29 (Constraints)
 
 
-State 211
+State 212
 
    31 Constraints: Constraints T_Align '>' T_IntConstant .
 
     $default  reduce using rule 31 (Constraints)
 
 
-State 212
+State 213
 
    80 Expr: T_Tuple '(' Expr T_For T_Identifier T_In . Expr ')'
 
@@ -3604,19 +3615,19 @@ State 212
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 214
+    Expr  go to state 215
     Mem   go to state 68
     Proc  go to state 69
 
 
-State 213
+State 214
 
    44 Return_Stmt: T_Return Expr ';' .
 
     $default  reduce using rule 44 (Return_Stmt)
 
 
-State 214
+State 215
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3632,8 +3643,8 @@ State 214
    64     | Expr . T_Or Expr
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
-   67     | Expr . '[' Expr ']'
-   68     | Expr . '[' SliceExpr ']'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_1 ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    80     | T_Tuple '(' Expr T_For T_Identifier T_In Expr . ')'
@@ -3654,11 +3665,11 @@ State 214
     '%'    shift, and go to state 109
     '['    shift, and go to state 110
     '('    shift, and go to state 111
-    ')'    shift, and go to state 215
+    ')'    shift, and go to state 216
     '.'    shift, and go to state 112
 
 
-State 215
+State 216
 
    80 Expr: T_Tuple '(' Expr T_For T_Identifier T_In Expr ')' .
 
