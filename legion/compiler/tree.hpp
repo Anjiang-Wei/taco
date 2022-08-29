@@ -276,6 +276,7 @@ public:
 ProgramNode* root;
 std::unordered_map<std::string, Node*> global_symbol;
 std::stack<std::unordered_map<std::string, Node*>> local_symbol;
+void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x);
 
 
 class FuncStmtsNode : public Node

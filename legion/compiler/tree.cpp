@@ -994,6 +994,20 @@ ExprNode* TupleExprNode::Convert2TupleInt()
   return new TupleIntNode(tuple_int);
 }
 
+void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x)
+{
+	if (local_symbol.size() == 0)
+	{
+		local_symbol.push(x);
+	}
+	else
+	{
+		std::unordered_map<std::string, Node*> current_top = local_symbol.top();
+		x.insert(current_top.begin(), current_top.end());
+		local_symbol.push(x);
+	}
+}
+
 Node* ForTupleExprNode::run()
 {
   std::vector<Node*> result;
@@ -1006,7 +1020,7 @@ Node* ForTupleExprNode::run()
     {
       Node* feed_in = range_->exprlst[i];
       variable_binding[identifier] = feed_in; // insert or overwrite
-      local_symbol.push(variable_binding);
+      push_local_symbol_with_top_merge(variable_binding);
       Node* res = expr->run();
       local_symbol.pop();
       result.push_back(res);
@@ -1020,7 +1034,7 @@ Node* ForTupleExprNode::run()
     {
       Node* feed_in = new IntValNode(range_->tupleint[i]);
       variable_binding[identifier] = feed_in; // insert or overwrite
-      local_symbol.push(variable_binding);
+      push_local_symbol_with_top_merge(variable_binding);
       Node* res = expr->run();
       local_symbol.pop();
       result.push_back(res);
