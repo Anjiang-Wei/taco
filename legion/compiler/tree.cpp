@@ -841,7 +841,7 @@ Node* IndexExprNode::run()
   {
     TupleExprNode* index_node = (TupleExprNode*) index_;
     IntValNode* int_node = index_node->one_int_only();
-    if (int_node != NULL)
+    if (int_node != NULL) // integer indexing
     {
       if (tuple_->type == TupleIntType)
       {
@@ -853,18 +853,38 @@ Node* IndexExprNode::run()
         TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
         return tuple_expr->at(int_node);
       }
+      else if (tuple_->type == MSpaceType) // dynamic machine model
+      {
+        MSpace* mspace = (MSpace*) tuple_;
+        return new TupleIntNode(mspace->get_node_proc(std::vector<int>{int_node->intval}));
+      }
       else
       {
         std::cout << "Unsupported IndexExprNode tuple's type with integer index" << std::endl;
         assert(false);
       }
     }
+    else if (tuple_->type == MSpaceType)
+    // index_node is a tuple of expression, dynamic machine model
+    {
+      MSpace* machine_space = (MSpace*) tuple_;
+      Node* converted = index_node->Convert2TupleInt();
+      if (converted->type == TupleIntType)
+      {
+        TupleIntNode* tuple_int_node = (TupleIntNode*) converted;
+        std::vector<int> result = machine_space->get_node_proc(tuple_int_node->tupleint);
+        return new TupleIntNode(result);
+      }
+      else
+      {
+        printf("Must only use tuple of integers to index a machine model\n");
+        assert(false);
+      }
+    }
     else
     {
-      if (tuple_->type == IdentifierExprType) // dynamic machine model
-      {
-        // todo: fill this in tomorrow
-      }
+      printf("Please use tuple-indexing only for a machine model\n");
+      assert(false);
     }
   }
   else if (index_->type == SliceExprType)
@@ -889,6 +909,11 @@ Node* IndexExprNode::run()
     {
       TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
       return tuple_expr->slice(left_int, right_int);
+    }
+    else if (tuple_->type == MSpaceType) // slicing a machine will return TupleInt 
+    {
+      MSpace* machine = (MSpace*) tuple_;
+      return (new TupleIntNode(machine->get_size()))->slice(left_int, right_int);
     }
     else
     {
