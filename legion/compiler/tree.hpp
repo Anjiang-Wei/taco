@@ -13,6 +13,8 @@
 using namespace Legion;
 using namespace Legion::Mapping;
 
+extern std::string processor_kind_to_string(Processor::Kind kind);
+
 template <typename T1, typename T2>
 struct PairHash
 {
@@ -530,7 +532,11 @@ class TupleIntNode : public ExprNode
 {
 public:
 	std::vector<int> tupleint;
-	TupleIntNode(std::vector<int> x) { type = TupleIntType; tupleint = x;}
+	ProcessorEnum final_proc; // validate mapping decision against dynamic machine model
+	TupleIntNode(std::vector<int> x)
+		{ type = TupleIntType; tupleint = x; final_proc = ALLPROC; }
+	TupleIntNode(std::vector<int> x, ProcessorEnum proc)
+		{ type = TupleIntType; tupleint = x; final_proc = proc; }
 	void print() 
 	{
 		for (size_t i = 0; i < tupleint.size(); i++) 
@@ -1111,8 +1117,8 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	bool prerun_validate(std::string task);
-	std::vector<int> run(std::string task, std::vector<int> x, std::vector<int> point_space);
+	std::vector<int> run(std::string task, std::vector<int> x,
+						 std::vector<int> point_space, Processor::Kind proc_kind);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{
 		std::pair<std::string, std::string> key = {task_name, region_name};

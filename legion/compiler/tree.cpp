@@ -181,22 +181,8 @@ Node* MemoryCollectNode::run()
   return NULL;
 }
 
-bool Tree2Legion::prerun_validate(std::string task)
-{
-  if (task2func.count(task) > 0)
-  {
-    return true;
-  }
-  else if (task2func.count("*") > 0)
-  {
-    return true;
-  }
-  printf("prerun_validate fails because mapping function does not exist");
-  assert(false);
-  return false;
-}
-
-std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vector<int> point_space)
+std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x,
+            std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
 {
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
@@ -237,6 +223,17 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x, std::vec
   if (res->type == TupleIntType)
   {
     TupleIntNode* res2 = (TupleIntNode*) res;
+    if (proc_kind != Processor::NO_KIND)
+    {
+      if (MyProc2LegionProc(res2->final_proc) != proc_kind)
+      {
+        printf("%s is actually mapped to %s, but machine model is for %s", 
+                task.c_str(),
+                processor_kind_to_string(proc_kind).c_str(),
+                ProcessorEnumName[res2->final_proc]);
+        assert(false);
+      }
+    }
     return res2->tupleint;
   }
   else
@@ -898,7 +895,9 @@ Node* IndexExprNode::run()
       else if (tuple_->type == MSpaceType) // dynamic machine model
       {
         MSpace* mspace = (MSpace*) tuple_;
-        return new TupleIntNode(mspace->get_node_proc(std::vector<int>{int_node->intval}));
+        return new TupleIntNode(
+          mspace->get_node_proc(std::vector<int>{int_node->intval}),
+          mspace->proc_type);
       }
       else
       {
@@ -917,7 +916,7 @@ Node* IndexExprNode::run()
       {
         TupleIntNode* tuple_int_node = (TupleIntNode*) converted;
         std::vector<int> result = machine_space->get_node_proc(tuple_int_node->tupleint);
-        return new TupleIntNode(result);
+        return new TupleIntNode(result, machine_space->proc_type);
       }
       else
       {
