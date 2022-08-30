@@ -52,6 +52,7 @@ STRING              (\042[^\042\n]*\042)
 "balance_split"     { return T_Balance_split; }
 "volume"            { return T_Volume; }
 "has"               { return T_Has; }
+"len"               { return T_Len; }
 
 "CPU"               { return T_CPU; }
 "GPU"               { return T_GPU; }

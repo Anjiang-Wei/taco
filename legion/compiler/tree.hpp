@@ -129,6 +129,7 @@ enum APIEnum
 	BALANCE_SPLIT,
 	VOLUME,
 	HAS,
+	LEN,
 };
 
 const char* APIName[] =
@@ -142,6 +143,7 @@ const char* APIName[] =
 	"BALANCE_SPLIT",
 	"VOLUME",
 	"HAS",
+	"LEN",
 };
 
 enum NodeType
@@ -546,6 +548,8 @@ public:
 	TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op);
 	IntValNode* at(int x);
 	IntValNode* at(IntValNode* x);
+	IntValNode* volume();
+	IntValNode* len();
 };
 
 class BoolValNode : public ExprNode

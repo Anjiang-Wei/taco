@@ -407,6 +407,7 @@ Node* FuncInvokeNode::run()
     ObjectInvokeNode* func_c = (ObjectInvokeNode*) func_node;
     if (func_c->api == HAS)
     {
+      // m[0].has(GPU)
       assert(func_c->obj->type == IndexExprType);
       IndexExprNode* index_node = (IndexExprNode*) func_c->obj;
       Node* mspace_node = index_node->tuple->run(); // get the MSpace node from the Identifier node's run()
@@ -580,10 +581,30 @@ Node* BinaryExprNode::run()
   return NULL;
 }
 
+
+IntValNode* TupleIntNode::len()
+{
+  return new IntValNode(tupleint.size());
+}
+
+IntValNode* TupleIntNode::volume()
+{
+  int res = 1;
+  for (size_t i = 0; i < tupleint.size(); i++)
+  {
+    res *= tupleint[i];
+  }
+  return new IntValNode(res);
+}
+
 Node* ObjectInvokeNode::run()
 {
   assert(obj->type == IdentifierExprType);
   Node* obj_tbd = obj->run();
+  if (obj_tbd->type == TupleExprType)
+  {
+    obj_tbd = ((TupleExprNode*) obj_tbd)->Convert2TupleInt();
+  }
   if (obj_tbd->type != MSpaceType && obj_tbd->type != TupleIntType)
   {
     std::cout << NodeTypeName[obj_tbd->type] <<  " does not support volume/size" << std::endl;
@@ -591,22 +612,43 @@ Node* ObjectInvokeNode::run()
   }
   if (obj_tbd->type == TupleIntType)
   {
-    return obj_tbd;
-  }
-  MSpace* machine_ = (MSpace*) obj_tbd;
-  if (api == VOLUME)
-  {
-    return new IntValNode(machine_->get_volume());
-  }
-  else if (api == SIZE)
-  {
-    return new TupleIntNode(machine_->get_size());
-  }
-  else
-  {
-    std::cout << "unsupported ObjectInvokeNode api" << std::endl;
+    TupleIntNode* tuple_int = (TupleIntNode*) obj_tbd;
+    if (api == VOLUME)
+    {
+      return tuple_int->volume();
+    }
+    else if (api == SIZE)
+    {
+      return tuple_int;
+    }
+    else if (api == LEN)
+    {
+      return tuple_int->len();
+    }
+    printf("TupleInt only support volume/size/len\n");
     assert(false);
+    return NULL;
   }
+  else if (obj_tbd->type == MSpaceType)
+  {
+    MSpace* machine_ = (MSpace*) obj_tbd;
+    if (api == VOLUME)
+    {
+      return new IntValNode(machine_->get_volume());
+    }
+    else if (api == SIZE)
+    {
+      return new TupleIntNode(machine_->get_size());
+    }
+    else if (api == LEN)
+    {
+      return new IntValNode(machine_->get_size().size());
+    }
+    printf("MSpace only support Volume/Size/LEN in ObjectInvokeNode\n");
+    assert(false);
+    return NULL;
+  }
+  printf("ObjectInvokeNode only supports TupleInt or MSpace\n");
   assert(false);
   return NULL;
 }
@@ -721,7 +763,7 @@ BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op)
 
 TupleIntNode* TupleIntNode::slice(int a, int b)
 {
-  if (b >= tupleint.size())
+  if (b >= tupleint.size() && b >= 0)
   {
     printf("slice's right index is out of bound!\n");
     assert(false);
@@ -738,7 +780,7 @@ TupleIntNode* TupleIntNode::slice(int a, int b)
 
 TupleExprNode* TupleExprNode::slice(int a, int b)
 {
-  if (b >= exprlst.size())
+  if (b >= exprlst.size() && b >= 0)
   {
     printf("slice's right index is out of bound!\n");
     assert(false);
@@ -860,7 +902,9 @@ Node* IndexExprNode::run()
       }
       else
       {
-        std::cout << "Unsupported IndexExprNode tuple's type with integer index" << std::endl;
+        printf("Unsupported IndexExprNode tuple's type: %s using integer index\n", NodeTypeName[tuple_->type]);
+        index_->print();
+        tuple_->print();
         assert(false);
       }
     }

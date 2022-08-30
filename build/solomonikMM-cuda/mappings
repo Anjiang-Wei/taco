@@ -82,6 +82,9 @@ def new_func(IPoint x, ISpace y)
     lower = tuple(block_primitive(x,y,z, i, i + 3) for i in (0,1,2));
     # lower = tuple(block_primitive(x,y,z, i[0], i[1]) for i in ((0, 3), (1, 4), (2, 5)));
     print("result={}", z[*upper, *lower]);
+    print("lentest={}", z.len);
+    print("slicetest={}", z[:-1] + z[1:]);
+    print("machine_test={}", m4.size * m4.size);
     return z[*upper, *lower];
 }
 
