@@ -436,6 +436,31 @@ Node* FuncInvokeNode::run()
 
       return new MSpace(mspace_node, func_c->api, int_node_1->intval);
     }
+    else if (func_c->api == AUTO_SPLIT)
+    {
+      Node* mspace_node_ = func_c->obj->run();
+      assert(mspace_node_->type == MSpaceType);
+      MSpace* mspace_node = (MSpace*) mspace_node_;
+
+      assert(args_c->exprlst.size() == 2);
+      Node* intnode_1 = args_c->exprlst[0]->run();
+      Node* tuple_int_node_2 = args_c->exprlst[1]->run();
+      if (tuple_int_node_2->type == TupleExprType)
+      {
+        tuple_int_node_2 = ((TupleExprNode*) tuple_int_node_2)->Convert2TupleInt();
+      }
+      assert(intnode_1->type == IntValType);
+      if (tuple_int_node_2->type != TupleIntType)
+      {
+        printf("Autosplit's second argument must be tuple of integers, while getting %s\n",
+              NodeTypeName[tuple_int_node_2->type]);
+        assert(false);
+      }
+      IntValNode* int_node_1 = (IntValNode*) intnode_1;
+      TupleIntNode* node_2 = (TupleIntNode*) tuple_int_node_2;
+
+      return new MSpace(mspace_node, func_c->api, int_node_1->intval, node_2->tupleint);
+    }
     else if (func_c->api == SPLIT || func_c->api == SWAP || \
             func_c->api == MERGE || func_c->api == BALANCE_SPLIT)
     {

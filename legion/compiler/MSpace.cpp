@@ -488,6 +488,22 @@ public:
         }
         each_dim = trans_op->trans_dim(old->each_dim);
     }
+    MSpace(MSpace* old, APIEnum api, int int1, const std::vector<int>& tupleint2)
+    {
+        type = MSpaceType;
+        proc_type = old->proc_type;
+        prev_machine = old;
+        if (api == AUTO_SPLIT)
+        {
+            // todo: work on Aug 30 morning!
+            // trans_op = new Auto_SplitMSpace(int1, tupleint2);
+        }
+        else
+        {
+            printf("Unsupported API signature, which should be used in auto_split\n");
+            assert(false);
+        }
+    }
     MSpace(MSpace* old, APIEnum api, int int1, int int2, int int3)
     {
         type = MSpaceType;
