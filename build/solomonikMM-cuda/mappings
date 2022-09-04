@@ -4,7 +4,7 @@ Region * * * SOCKMEM,SYSMEM;
 Region * * GPU FBMEM,ZCMEM;
 
 # Layout taskname regionname memory AOS F_order;
-Layout * * * SOA C_order; # Align==128 Compact
+Layout * * * SOA C_order; # Exact; # Align==128 Compact
 
 # InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 
@@ -68,6 +68,7 @@ print("test_unpack={}, test_add={}", test_unpack, test_unpack + test_unpack);
 print("test_multi={}", test_unpack * (1, 2, 3, 4, 5));
 
 def new_func(IPoint x, ISpace y)
+# def new_func(Task task, IPoint x, ISpace y)
 {
     m4 = Machine(GPU);
     m5 = m4.balance_split(0, 3);

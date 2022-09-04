@@ -283,14 +283,14 @@ public:
         }
         return result;
     }
-    void generate_prime_factor(int big_number, std::vector<int>& factors)
+    static void generate_prime_factor(int big_number, std::vector<int>& factors)
     {
         auto generate_factors = [&](int factor)
         {
             while (big_number % factor == 0)
             {
-            factors.push_back(factor);
-            big_number /= factor;
+                factors.push_back(factor);
+                big_number /= factor;
             }
         };
         generate_factors(2);
@@ -332,6 +332,66 @@ public:
             }
         }
         return result;
+    }
+};
+
+class AutoSplitMSpace : public MSpaceOp
+{
+public:
+    int dim; // the dimension of the machine model to be splitted
+    std::vector<int> input_dim; // launch domain
+    std::vector<int> factor_result; // the factorization of workload constant
+    std::vector<int> new_dims; // dimension sizes for the newly-splitted machine model
+    std::vector<int> newdim_preprod; // 1, new_dims[0], new_dims[0] * new_dims[1], ...
+    AutoSplitMSpace() {}
+    AutoSplitMSpace(int dim_, std::vector<int> input_dim_)
+    {
+        trans_op = AUTO_SPLIT;
+        dim = dim_; input_dim = input_dim_;
+    }
+    std::vector<int> trans(const std::vector<int>& old_point)
+    {
+        std::vector<int> result;
+        for (size_t i = 0; i < old_point.size(); i++)
+        {
+            if ((int) i != dim)
+            {
+                result.push_back(old_point[i]);
+            }
+            else
+            {
+                int added_dim_num = new_dims.size();
+                int new_result = 0;
+                for (int kk = 0; kk < added_dim_num; kk++)
+                {
+                    new_result += newdim_preprod[kk] * old_point[i+kk];
+                }
+                i += (added_dim_num - 1);
+            }
+        }
+        return result;
+    }
+    inline static int volume(const std::vector<int>& vec)
+    {
+        int res = 1;
+        for (int i = 0; i < vec.size(); i++)
+            res *= vec[i];
+        return res;
+    }
+    std::vector<int> trans_dim(const std::vector<int>& old_dim)
+    {
+        // BalSplitMSpace::generate_prime_factor(old_dim[dim], factor_result);
+        // auto factor_it = factor_result.begin();
+        new_dims.resize(input_dim.size(), 1);
+        int launch_domain_volume = volume(input_dim);
+        int node_count = old_dim[dim];
+        if (launch_domain_volume % node_count != 0)
+        {
+            printf("Launch volume = %d, machine model's dimension size = %d\n", 
+                launch_domain_volume, node_count);
+            printf("CAUTION: this will result in unbalanced workload distribution\n");
+        }
+        int workload_product = launch_domain_volume / node_count;
     }
 };
 
