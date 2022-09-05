@@ -47,41 +47,42 @@ std::vector<int> greedy(int number, std::vector<int> launch_domain)
         return result;
     }
 
-    // number into primes
+    // factorize number into prime_nums (sorted from smallest to largest)
     std::vector<int> prime_nums;
     generate_prime_factor(number, prime_nums);
-    // Assign prime nums onto the dimensions for the target rect
-    // from the largest primes down to the smallest. The goal here
-    // is to assign all of the elements (in number) while
-    // maintaining a block size that is as square as possible.
-    double dim_chunks[dim];
+    // Assign prime nums onto the dimensions
+    // from the largest primes down to the smallest, in a greedy approach
+    std::vector<double> domain_vec;
     for (int i = 0; i < dim; i++)
-        dim_chunks[i] = (double) launch_domain[i]; // integer to double
+        domain_vec.push_back((double) launch_domain[i]); // integer to double
+
     // from the largest primes down to the smallest
     for (int idx = prime_nums.size() - 1; idx >= 0; idx--)
     {
-        // Find the dimension with the biggest dim_chunk
-        int next_dim = -1;
-        double max_chunk = -1;
-        for (int i = 0; i < dim; i++)
-        {
-            if (dim_chunks[i] > max_chunk)
-            {
-                max_chunk = dim_chunks[i];
-                next_dim = i;
-            }
-        }
-        const int next_prime = prime_nums[idx];
+        // Find the dimension with the biggest domain_vec
+        int next_dim = std::max_element(domain_vec.begin(), domain_vec.end()) - domain_vec.begin();
+
+        int next_prime = prime_nums[idx];
 
         result[next_dim] *= next_prime;
-        dim_chunks[next_dim] /= next_prime;
+        domain_vec[next_dim] /= next_prime;
     }
     return result;
 }
 
 std::vector<int> brute_force(int number, std::vector<int> launch_domain)
 {
+    int dim = launch_domain.size();
+    std::vector<int> result;
+    result.resize(dim, 1);
+    if (number == 1)
+    {
+        return result;
+    }
 
+    // factorize number into prime_nums (sorted from smallest to largest)
+    std::vector<int> prime_nums;
+    generate_prime_factor(number, prime_nums);
 }
 
 std::vector<int> sliding_window(int number, std::vector<int> launch_domain)
