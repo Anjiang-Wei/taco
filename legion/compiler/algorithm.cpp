@@ -13,7 +13,7 @@
 
 void printvec(const std::vector<int>& my_vector);
 
-// This function factorize a number (big_number) into sorted prime factors (factors_result)
+// Helper function: factorize a number (big_number) into sorted prime factors (factors_result)
 void generate_prime_factor(int big_number, std::vector<int>& factors_result)
 {
     auto generate_factors = [&](int factor)
@@ -44,6 +44,7 @@ void generate_prime_factor(int big_number, std::vector<int>& factors_result)
         factors_result.push_back(big_number);
 }
 
+// DefaultMapper's algorithm
 std::vector<int> greedy(int number, std::vector<int> launch_domain)
 {
     int dim = launch_domain.size();
@@ -74,9 +75,23 @@ std::vector<int> greedy(int number, std::vector<int> launch_domain)
     return result;
 }
 
+// Helper function: divide a / b elementwise, return float
+std::vector<float> divide(std::vector<int> a, std::vector<int> b)
+{
+    assert(a.size() == b.size());
+    std::vector<float> result;
+    for (int i = 0; i < a.size(); i++)
+    {
+        result.push_back((float) a[i] / (float) b[i]);
+    }
+    return result;
+}
+
+
 // This is not a good algorithm. Dynamic programming here is equivalent to brute force + memorization
 std::vector<int> brute_force(int number, std::vector<int> launch_domain)
 {
+    // number can be regarded as #nodes
     int dim = launch_domain.size();
     std::vector<int> result;
     result.resize(dim, 1);
@@ -85,72 +100,65 @@ std::vector<int> brute_force(int number, std::vector<int> launch_domain)
         return result;
     }
 
-    int launch_total_size = std::accumulate(
-        launch_domain.begin(), launch_domain.end(), 1, std::multiplies<int>());
-    int workload_per_node = launch_total_size / number;
     // factorize workload constant into prime_nums (sorted from smallest to largest)
     std::vector<int> prime_nums;
-    generate_prime_factor(workload_per_node, prime_nums);
-    // workload_per_node = p_1 * p_2 * ... * p_m
-    // workload_per_node = w_1 * w_2 * ... * w_{dim}, w_i should be as square as possible
-    // There are dim^{m} different ways to map p_i (i<=m) to w_j (j<=dim)
+    generate_prime_factor(number, prime_nums);
+    // number = p_1 * p_2 * ... * p_m
+    // number = o_1 * o_2 * ... * o_{dim}
+    // There are dim^{m} different ways to map p_i (i<=m) to o_j (j<=dim)
 
     // Use <long long int> to represent the mapping state
     // Each digit is a base-{dim} number, and it has at most m digits
     // The first p_i has weight 1={base}^0, the next p_i has weight {base}^1, the next has {base}^2...
     
-    // state_w_vec[k][state]: after placing first k primes (mapping recorded in state), the vector of w_i
-    // vector<int>: w_1, w_2, ..., w_n
-    std::vector<std::unordered_map<long long int, std::vector<int>>> state_w_vec;
+    // state_o_vec[k][state]: after placing first k primes (mapping recorded in state), the vector of o_i
+    // vector<int>: o_1, o_2, ..., o_n
+    std::vector<std::unordered_map<long long int, std::vector<int>>> state_o_vec;
 
-    // Before choose any mapping, all w_{i} should be initialized to 1
+    // Before choose any mapping, all o_{i} should be initialized to 1
     std::vector<int> vec_init(result);
-    std::unordered_map<long long int, std::vector<int>> state_w_vec_0({{0, vec_init}});
-    state_w_vec.push_back(state_w_vec_0);
+    std::unordered_map<long long int, std::vector<int>> state_o_vec_0({{0, vec_init}});
+    state_o_vec.push_back(state_o_vec_0);
 
     // For step k (selecting the p_k's mapping):
     // Enumerate all possible state \in { state | state_of_first_{k-1}_primes' mapping choices } 
     // Enumerate all possible mapping choices j for p_k (j can choose any index from 0 to dim)
-    // state_w_vec[k][state \union p_k] =  state_w[k-1][state].update(j, multiplied by p_k)
+    // state_o_vec[k][state \union p_k] =  state_w[k-1][state].update(j, multiplied by p_k)
 
     for (int i = 0; i < prime_nums.size(); i++) // Each step decides the mapping for p_i
     {
-        std::unordered_map<long long int, std::vector<int>> state_w_vec_i;
-        for (const auto item: state_w_vec[i])
+        std::unordered_map<long long int, std::vector<int>> state_o_vec_i;
+        for (const auto item: state_o_vec[i])
         {
             const long long int pre_state = item.first;
-            std::vector<int> pre_w_vec = item.second;
-            for (int j = 0; j < dim; j++) // for each prime i, enumerate every w_j to be mapped
+            std::vector<int> pre_o_vec = item.second;
+            for (int j = 0; j < dim; j++) // for each prime i, enumerate every o_j to be mapped
             {
                 long long int new_state = pre_state + j * pow(dim, i);
-                std::vector<int> new_w_vec(pre_w_vec);
-                new_w_vec[j] *= prime_nums[i];
-                assert(state_w_vec_i.count(new_state) == 0); // must be unique
-                state_w_vec_i.insert({new_state, new_w_vec});
+                std::vector<int> new_o_vec(pre_o_vec);
+                new_o_vec[j] *= prime_nums[i];
+                assert(state_o_vec_i.count(new_state) == 0); // must be unique
+                state_o_vec_i.insert({new_state, new_o_vec});
             }
         }
-        state_w_vec.push_back(state_w_vec_i);
+        state_o_vec.push_back(state_o_vec_i);
     }
 
-    // minimal maximum difference: iterate each state in state_max[m][*]
-    // find the smallest (max_element([m][state]) - min_element[n][state])
-    std::unordered_map<long long int, std::vector<int>> final_states = state_w_vec[state_w_vec.size()-1];
-    std::vector<int> best_w_vec;
-    int minimal_diff = INT32_MAX;
+    // minimize maximum difference: iterate each state in state_max[m][*]
+    // Compute the workload vector w_i: w_i = L_i / o_i
+    // find the smallest (max_element(w_i) - min_element(w_i))
+    std::unordered_map<long long int, std::vector<int>> final_states = state_o_vec[state_o_vec.size()-1];
+    float minimal_diff = INT32_MAX;
     for (const auto& item : final_states)
     {
-        std::vector<int> w_vec = item.second;
-        int cur = (*std::max_element(w_vec.begin(), w_vec.end())) - (*std::min_element(w_vec.begin(), w_vec.end()));
+        std::vector<int> o_vec = item.second;
+        std::vector<float> w_vec = divide(launch_domain, o_vec);
+        float cur = (*std::max_element(w_vec.begin(), w_vec.end())) - (*std::min_element(w_vec.begin(), w_vec.end()));
         if (cur < minimal_diff)
         {
             minimal_diff = cur;
-            best_w_vec = w_vec;
+            result = o_vec;
         }
-    }
-    std::sort(best_w_vec.begin(), best_w_vec.end()); // normalize the results
-    for (int i = 0; i < result.size(); i++)
-    {
-        result[i] = launch_domain[i] / best_w_vec[i];
     }
     return result;
 }
