@@ -163,8 +163,39 @@ std::vector<int> brute_force(int number, std::vector<int> launch_domain)
     return result;
 }
 
+
+// Helper function: generate all factors (not just prime factors) for a number
+void generate_all_factor(int big_num, std::vector<int>& result)
+{
+    for (int i = 2; i < big_num; i++)
+    {
+        if (i * i > big_num)
+            break;
+        if (big_num % i == 0)
+        {
+            result.push_back(i);
+            result.push_back(big_num / i); // may be redundant...
+        }
+    }
+}
+
 std::vector<int> sliding_window(int number, std::vector<int> launch_domain)
 {
+        // number can be regarded as #nodes
+    int dim = launch_domain.size();
+    std::vector<int> result;
+    result.resize(dim, 1);
+    if (number == 1)
+    {
+        return result;
+    }
+
+    // Get all the factors for {number}
+    std::vector<int> factors;
+    generate_all_factor(number, factors);
+
+
+
     return {};
 }
 
