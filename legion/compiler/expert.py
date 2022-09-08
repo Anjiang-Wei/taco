@@ -119,11 +119,14 @@ def weighted_expert(expert_num, candidate_num, all_scores, cur_weight, delta):
     
     expert_score = compute_expert_score(best_index, norm_all_scores)
     expert_score_norm = normalize_expert_score(expert_score)
+    best_expert = expert_score_norm.index(max(expert_score_norm))
 
     if DEBUG:
         print(expert_score_norm)
+
+    updated_expert_weight = update_expert_weight(cur_weight, expert_score_norm, delta)
     
-    return update_expert_weight(cur_weight, expert_score_norm, delta)
+    return best_score, best_index, best_expert, updated_expert_weight
 
 if __name__ == "__main__":
     # 3 * 4 matrix
