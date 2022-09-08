@@ -161,27 +161,47 @@ std::vector<int> brute_force(int number, std::vector<int> launch_domain)
         }
     }
     return result;
+    // Complexity analysis: suppose C=number, dim=launch_domain.size()
+    // #State: #choices for mapping C's prime numbers into dim positions
+    // #C's prime numbers: O(log(C, base=2))
+    // #State: O({dim}^{log(C)})
+    // Iterative picking prime: O(dim * {dim}^{log(C)}) = O({dim}^{log(C)+1})
+    // Last For-loop: picking maximum/minimum among {dim} numbers for each state: O({dim}^{log(C)+1})
+    // Complexity: O({dim}^{log(C)})
 }
 
 
-// Helper function: generate all factors (not just prime factors) for a number
-void generate_all_factor(int big_num, std::vector<int>& result)
+// quick pow for int
+inline int binpow(int a, int b)
 {
-    for (int i = 2; i < big_num; i++)
+    int res = 1;
+    while (b > 0)
     {
-        if (i * i > big_num)
-            break;
-        if (big_num % i == 0)
+        if (b & 1)
         {
-            result.push_back(i);
-            result.push_back(big_num / i); // may be redundant...
+            res = res * a;
         }
+        a = a * a;
+        b >>= 1;
     }
+    return res;
 }
 
-std::vector<int> sliding_window(int number, std::vector<int> launch_domain)
+// 
+std::vector<int> brute_force2(int number, std::vector<int> launch_domain)
 {
-        // number can be regarded as #nodes
+
+}
+
+
+// bool is_feasible(int min_w, int max_w, int number, const std::vector<int>& launch_domain)
+// {
+//     for (int i = 0; i < )
+// }
+
+std::vector<int> precise_enumerate(int number, std::vector<int> launch_domain)
+{
+    // number can be regarded as #nodes
     int dim = launch_domain.size();
     std::vector<int> result;
     result.resize(dim, 1);
@@ -189,11 +209,8 @@ std::vector<int> sliding_window(int number, std::vector<int> launch_domain)
     {
         return result;
     }
-
     // Get all the factors for {number}
     std::vector<int> factors;
-    generate_all_factor(number, factors);
-
 
 
     return {};
@@ -213,7 +230,9 @@ void printvec(const std::vector<int>& my_vector)
 
 int main()
 {
-    printvec(greedy(8, std::vector<int>{2, 2, 8}));
-    printvec(brute_force(8, std::vector<int>{2, 2, 8}));
+    printvec(greedy(1024, std::vector<int>{2, 2, 8}));
+    printvec(brute_force(1024, std::vector<int>{2, 2, 8}));
+    printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
+    // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
     return 0;
 }
