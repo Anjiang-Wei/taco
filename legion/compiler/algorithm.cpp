@@ -280,13 +280,16 @@ std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<i
 int main()
 {
     std::vector<std::vector<int>> results;
-    int node_num = 3532;
-    std::vector<int> launch_domain = std::vector<int>{3, 9, 6, 7};
-    results.push_back(greedy(node_num, launch_domain));
-    results.push_back((brute_force(node_num, launch_domain, true)));
-    results.push_back((brute_force(node_num, launch_domain, false)));
-    printvec(judge(results, launch_domain));
-    // printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
-    // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
+    for (int node_num = 0; node_num < 1025; node_num++)
+    {
+        // int node_num = 3532;
+        std::vector<int> launch_domain = std::vector<int>{3, 9, 6, 7};
+        results.push_back(greedy(node_num, launch_domain));
+        results.push_back((brute_force(node_num, launch_domain, true)));
+        results.push_back((brute_force(node_num, launch_domain, false)));
+        printvec(judge(results, launch_domain));
+        // printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
+        // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
+    }
     return 0;
 }
