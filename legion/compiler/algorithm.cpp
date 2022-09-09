@@ -82,7 +82,7 @@ std::vector<float> divide(std::vector<int> a, std::vector<int> b)
     std::vector<float> result;
     for (int i = 0; i < a.size(); i++)
     {
-        result.push_back((float) a[i] / (float) b[i]);
+        result.push_back((float) a[i] * 1.0 / (float) b[i]);
     }
     return result;
 }
@@ -157,13 +157,15 @@ std::vector<int> brute_force(int number, std::vector<int> launch_domain, bool pr
         float cur = 0;
         if (proxy)
         {
+            // std::vector<float> w_vec = std::transform(launch_domain.begin(), launch_domain.end(), 
+            //     o_vec.begin(), o_vec.end(), std::divides<int>());
             std::vector<float> w_vec = divide(launch_domain, o_vec);
             cur = (*std::max_element(w_vec.begin(), w_vec.end())) - (*std::min_element(w_vec.begin(), w_vec.end()));
         }
         else
         {
             std::vector<float> o_over_L = divide(o_vec, launch_domain);
-            cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0);
+            cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0.0);
         }
         if (cur < minimal)
         {
@@ -237,7 +239,7 @@ inline std::string vec2str(const std::vector<int>& my_vector)
 inline std::string vec2str(const std::vector<float>& my_vector)
 {
     std::stringstream result;
-    std::copy(my_vector.begin(), my_vector.end(), std::ostream_iterator<int>(result, " "));
+    std::copy(my_vector.begin(), my_vector.end(), std::ostream_iterator<float>(result, " "));
     return result.str();
 }
 
@@ -258,8 +260,10 @@ std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<i
     std::vector<float> results;
     for (int i = 0; i < candidates.size(); i++)
     {
+        // printf("Result:\n");
+        // printvec(candidates[i]);
         std::vector<float> o_over_L = divide(candidates[i], launch_space);
-        float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0);
+        float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0.0); // Never use 0 to replace 0.0
         results.push_back(cur);
         if (cur < best_num)
         {
@@ -272,6 +276,10 @@ std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<i
         if (fabs(results[i] - best_num) > 0.000001)
         {
             printf("%d is different from optimal %lf vs %lf\n", i, best_num, results[i]);
+            printf("Optimal's orientation is from %d: ", best_idx);
+            printvec(candidates[best_idx]);
+            printf("Suboptimal's orientation is from %d:", i);
+            printvec(candidates[i]);
         }
     }
     return results;
@@ -288,6 +296,7 @@ int main()
         results.push_back((brute_force(node_num, launch_domain, true)));
         results.push_back((brute_force(node_num, launch_domain, false)));
         printvec(judge(results, launch_domain));
+        results.clear();
         // printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
         // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
     }
