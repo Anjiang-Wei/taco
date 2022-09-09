@@ -88,8 +88,9 @@ std::vector<float> divide(std::vector<int> a, std::vector<int> b)
 }
 
 
-// This is not a good algorithm. Dynamic programming here is equivalent to brute force + memorization
-std::vector<int> brute_force(int number, std::vector<int> launch_domain)
+// This is not the best enumeration algorithm. Dynamic programming here is equivalent to brute force + memorization
+// proxy: True: minimize maximal difference; False: directly minimizing sum of O_i/L_i 
+std::vector<int> brute_force(int number, std::vector<int> launch_domain, bool proxy)
 {
     // number can be regarded as #nodes
     int dim = launch_domain.size();
@@ -146,17 +147,27 @@ std::vector<int> brute_force(int number, std::vector<int> launch_domain)
 
     // minimize maximum difference: iterate each state in state_max[m][*]
     // Compute the workload vector w_i: w_i = L_i / o_i
-    // find the smallest (max_element(w_i) - min_element(w_i))
+    // Proxy==True: find the smallest (max_element(w_i) - min_element(w_i))
+    // Proxy==False: minimize sum{o_i / L_i} (proxy = False)
     std::unordered_map<long long int, std::vector<int>> final_states = state_o_vec[state_o_vec.size()-1];
-    float minimal_diff = INT32_MAX;
+    float minimal = INT32_MAX;
     for (const auto& item : final_states)
     {
         std::vector<int> o_vec = item.second;
-        std::vector<float> w_vec = divide(launch_domain, o_vec);
-        float cur = (*std::max_element(w_vec.begin(), w_vec.end())) - (*std::min_element(w_vec.begin(), w_vec.end()));
-        if (cur < minimal_diff)
+        float cur = 0;
+        if (proxy)
         {
-            minimal_diff = cur;
+            std::vector<float> w_vec = divide(launch_domain, o_vec);
+            cur = (*std::max_element(w_vec.begin(), w_vec.end())) - (*std::min_element(w_vec.begin(), w_vec.end()));
+        }
+        else
+        {
+            std::vector<float> o_over_L = divide(o_vec, launch_domain);
+            cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0);
+        }
+        if (cur < minimal)
+        {
+            minimal = cur;
             result = o_vec;
         }
     }
@@ -223,16 +234,59 @@ inline std::string vec2str(const std::vector<int>& my_vector)
     return result.str();
 }
 
+inline std::string vec2str(const std::vector<float>& my_vector)
+{
+    std::stringstream result;
+    std::copy(my_vector.begin(), my_vector.end(), std::ostream_iterator<int>(result, " "));
+    return result.str();
+}
+
 void printvec(const std::vector<int>& my_vector)
 {
     std::cout << vec2str(my_vector) << std::endl;
 }
 
+void printvec(const std::vector<float>& my_vector)
+{
+    std::cout << vec2str(my_vector) << std::endl;
+}
+
+std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<int> launch_space)
+{
+    float best_num = INT32_MAX;
+    int best_idx = 0;
+    std::vector<float> results;
+    for (int i = 0; i < candidates.size(); i++)
+    {
+        std::vector<float> o_over_L = divide(candidates[i], launch_space);
+        float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0);
+        results.push_back(cur);
+        if (cur < best_num)
+        {
+            best_num = cur;
+            best_idx = i;
+        }
+    }
+    for (int i = 0; i < results.size(); i++)
+    {
+        if (fabs(results[i] - best_num) > 0.000001)
+        {
+            printf("%d is different from optimal %lf vs %lf\n", i, best_num, results[i]);
+        }
+    }
+    return results;
+}
+
 int main()
 {
-    printvec(greedy(1024, std::vector<int>{2, 2, 8}));
-    printvec(brute_force(1024, std::vector<int>{2, 2, 8}));
-    printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
+    std::vector<std::vector<int>> results;
+    int node_num = 3532;
+    std::vector<int> launch_domain = std::vector<int>{3, 9, 6, 7};
+    results.push_back(greedy(node_num, launch_domain));
+    results.push_back((brute_force(node_num, launch_domain, true)));
+    results.push_back((brute_force(node_num, launch_domain, false)));
+    printvec(judge(results, launch_domain));
+    // printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
     // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
     return 0;
 }
