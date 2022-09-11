@@ -45,7 +45,7 @@ void generate_prime_factor(int big_number, std::vector<int>& factors_result)
 }
 
 // DefaultMapper's algorithm
-std::vector<int> greedy(int number, std::vector<int> launch_domain)
+std::vector<int> greedy(const int number, const std::vector<int>& launch_domain)
 {
     int dim = launch_domain.size();
     std::vector<int> result;
@@ -76,7 +76,7 @@ std::vector<int> greedy(int number, std::vector<int> launch_domain)
 }
 
 // Helper function: divide a / b elementwise, return float
-std::vector<float> divide(std::vector<int> a, std::vector<int> b)
+std::vector<float> divide(const std::vector<int>& a, const std::vector<int>& b)
 {
     assert(a.size() == b.size());
     std::vector<float> result;
@@ -90,7 +90,7 @@ std::vector<float> divide(std::vector<int> a, std::vector<int> b)
 
 // This is not the best enumeration algorithm. Dynamic programming here is equivalent to brute force + memorization
 // proxy: True: minimize maximal difference; False: directly minimizing sum of O_i/L_i 
-std::vector<int> brute_force(int number, std::vector<int> launch_domain, bool proxy)
+std::vector<int> brute_force(const int number, const std::vector<int>& launch_domain, const bool proxy)
 {
     // number can be regarded as #nodes
     int dim = launch_domain.size();
@@ -200,19 +200,89 @@ inline int binpow(int a, int b)
     return res;
 }
 
-// 
-std::vector<int> brute_force2(int number, std::vector<int> launch_domain)
+void generate_prime_factorization(const int number, std::unordered_map<int, int>& result, std::vector<int>& unique_prime)
 {
+    std::vector<int> prime_nums;
+    generate_prime_factor(number, prime_nums);
 
+    std::set<int> prime_num_set(prime_nums.begin(), prime_nums.end());
+    unique_prime = std::vector<int>(prime_num_set.begin(), prime_num_set.end());
+
+    std::multiset<int> prime_num_multiset(prime_nums.begin(), prime_nums.end());
+    int total_elements = 0;
+    for (int i = 0; i < prime_nums.size(); i++)
+    {
+        if (result.count(prime_nums[i]) == 0)
+        {
+            int appear_times = prime_num_multiset.count(prime_nums[i]);
+            total_elements += appear_times;
+            result.insert({prime_nums[i], appear_times});
+        }
+    }
+    assert(total_elements == prime_nums.size());
 }
 
+// result contain all possible ways of placement to decompose {prime}^{power} into {num_places}
+void enumerate_placement(const int prime, int power, int num_places, 
+                         std::vector<int> partial_result, std::vector<std::vector<int>>& final_result)
+{
+    if (power < 0)
+    {
+        assert(false);
+    }
+    if (num_places == 1)
+    {
+        int last_element = binpow(prime, power);
+        partial_result.push_back(last_element);
+        final_result.push_back(partial_result);
+        return;
+    }
+    int cur_element = 1;
+    for (int i = 0; i <= power; i++)
+    {
+        partial_result.push_back(cur_element);
+        enumerate_placement(prime, power - i, num_places - 1, partial_result, final_result);
+        partial_result.pop_back();
+        cur_element *= prime; // cur_element = {prime}^{i}
+    }
+}
 
-// bool is_feasible(int min_w, int max_w, int number, const std::vector<int>& launch_domain)
-// {
-//     for (int i = 0; i < )
-// }
+void cartesian_product(std::vector<int> unique_prime, 
+                       const std::unordered_map<int, std::vector<std::vector<int>>>& prime_placement,
+                       const std::vector<int>& partial_result,
+                       std::vector<std::vector<int>>& final_result)
+{
+    if (unique_prime.size() == 0)
+    {
+        final_result.push_back(partial_result);
+        return;
+    }
+    int prime = unique_prime[unique_prime.size()-1];
+    std::vector<std::vector<int>> all_placement = prime_placement.at(prime);
+    unique_prime.pop_back();
 
-std::vector<int> precise_enumerate(int number, std::vector<int> launch_domain)
+    std::vector<int> new_partial_result(partial_result);
+    for (auto item : all_placement)
+    {
+        std::transform(partial_result.begin(), partial_result.end(), item.begin(), new_partial_result.begin(), std::multiplies<int>());
+        cartesian_product(unique_prime, prime_placement, new_partial_result, final_result);
+    }
+}
+
+// the number of ways to choose k elements from n elements
+int C(int n, int k)
+{
+    if (k == 0 || k == n)
+        return 1;
+    int ans = 1;
+    for (int i = 1; i <= k; i++)
+    {
+        ans *= (n - i + 1) / i;
+    }
+    return ans;
+}
+
+std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_domain)
 {
     // number can be regarded as #nodes
     int dim = launch_domain.size();
@@ -222,10 +292,31 @@ std::vector<int> precise_enumerate(int number, std::vector<int> launch_domain)
     {
         return result;
     }
-    // Get all the factors for {number}
-    std::vector<int> factors;
+    // number = p1^a1 * p2^a2 * p3^a3 * ...
+    // prime_factor[p_i] = a_i
+    // unique_prime: p1, p2, ...
+    std::unordered_map<int, int> prime2power;
+    std::vector<int> unique_prime;
+    generate_prime_factorization(number, prime2power, unique_prime);
 
-
+    // prime_placement[p_i] records different ways to decompose {p_i}^{a_i} into {dim} places (each way is a {dim}-sized vector), 
+    std::unordered_map<int, std::vector<std::vector<int>>> prime_placement;
+    int total_choices = 1;
+    for (int i = 0; i < unique_prime.size(); i++)
+    {
+        int prime_num = unique_prime[i];
+        int power = prime2power.at(prime_num);
+        std::vector<std::vector<int>> ways;
+        enumerate_placement(prime_num, power, dim, std::vector<int>(), ways);
+        int num_ways = C(power + dim - 1, dim - 1);
+        assert(ways.size() == num_ways);
+        total_choices *= num_ways;
+        prime_placement.insert({prime_num, ways});
+    }
+    // all possible ways to decompose {number} into {dim} places
+    std::vector<std::vector<int>> choices;
+    cartesian_product(unique_prime, prime_placement, std::vector<int>(result), choices);
+    assert(choices.size() == total_choices);
     return {};
 }
 
@@ -293,12 +384,13 @@ int main()
         // int node_num = 3532;
         std::vector<int> launch_domain = std::vector<int>{3, 9, 6, 7};
         results.push_back(greedy(node_num, launch_domain));
-        results.push_back((brute_force(node_num, launch_domain, true)));
-        results.push_back((brute_force(node_num, launch_domain, false)));
-        printvec(judge(results, launch_domain));
+        results.push_back(brute_force(node_num, launch_domain, true));
+        results.push_back(brute_force(node_num, launch_domain, false));
+        results.push_back(precise_enumerate(node_num, launch_domain));
+
+        // printvec(judge(results, launch_domain));
+        
         results.clear();
-        // printvec(brute_force2(1024, std::vector<int>{2, 2, 8}));
-        // printvec(sliding_window(8, std::vector<int>{2, 2, 8}));
     }
     return 0;
 }
