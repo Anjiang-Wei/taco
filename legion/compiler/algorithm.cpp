@@ -405,6 +405,7 @@ int main()
 {
     std::vector<std::vector<int>> results;
     int improve_cnt = 0;
+    float improve_perc_total = 0.0;
     float best_improve_perc = 0.0;
     int best_node_cnt, best_dx, best_dy;
     best_node_cnt = best_dx = best_dy = 0;
@@ -426,6 +427,7 @@ int main()
                 if (cur_improve_perc > 0)
                 {
                     improve_cnt++;
+                    improve_perc_total += cur_improve_perc;
                     if (cur_improve_perc > best_improve_perc)
                     {
                         best_improve_perc = cur_improve_perc;
@@ -439,8 +441,9 @@ int main()
         }
     }
     int total_cnt = (node_num_max - 2) * (x_max - 2) * (y_max - 2);
-    printf("improve percentage= %d / %d = %lf, best improve perc = %lf, coming from %d and (%d, %d)\n", 
-        improve_cnt, total_cnt, improve_cnt * 1.0 / total_cnt,
+    printf("improve percentage= %d / %d = %lf, average improve perc = %lf,\
+        best improve perc = %lf, coming from %d and (%d, %d)\n", 
+        improve_cnt, total_cnt, improve_cnt * 1.0 / total_cnt, improve_perc_total / improve_cnt,
         best_improve_perc, best_node_cnt, best_dx, best_dy);
     return 0;
 }
