@@ -277,7 +277,7 @@ int C(int n, int k)
     int ans = 1;
     for (int i = 1; i <= k; i++)
     {
-        ans *= (n - i + 1) / i;
+        ans = ans * (n - i + 1) / i; // Never shortened as *= because of integer division problem
     }
     return ans;
 }
@@ -317,7 +317,19 @@ std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_do
     std::vector<std::vector<int>> choices;
     cartesian_product(unique_prime, prime_placement, std::vector<int>(result), choices);
     assert(choices.size() == total_choices);
-    return {};
+
+    float minimal = INT32_MAX;
+    for (const auto& o_vec : choices)
+    {
+        std::vector<float> o_over_L = divide(o_vec, launch_domain);
+        float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0.0);
+        if (cur < minimal)
+        {
+            minimal = cur;
+            result = o_vec;
+        }
+    }
+    return result;
 }
 
 inline std::string vec2str(const std::vector<int>& my_vector)
@@ -344,7 +356,8 @@ void printvec(const std::vector<float>& my_vector)
     std::cout << vec2str(my_vector) << std::endl;
 }
 
-std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<int> launch_space)
+float judge(std::vector<std::vector<int>> candidates, std::vector<int> launch_space,
+            int node_num=0, int dx=0, int dy=0)
 {
     float best_num = INT32_MAX;
     int best_idx = 0;
@@ -356,41 +369,78 @@ std::vector<float> judge(std::vector<std::vector<int>> candidates, std::vector<i
         std::vector<float> o_over_L = divide(candidates[i], launch_space);
         float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0.0); // Never use 0 to replace 0.0
         results.push_back(cur);
-        if (cur < best_num)
+        if (cur <= best_num)
         {
             best_num = cur;
             best_idx = i;
         }
     }
+    // assert(fabs(results[results.size()-1] - results[results.size()-2]) < 0.00001);
+    float perc_improve = 0.0;
     for (int i = 0; i < results.size(); i++)
     {
         if (fabs(results[i] - best_num) > 0.000001)
         {
-            printf("%d is different from optimal %lf vs %lf\n", i, best_num, results[i]);
+            printf("Find nonequal results for node_num = %d, launch_domain = (%d, %d)\n",
+                node_num, dx, dy);
+            printvec(results);
+            printf("%d is worse, %lf - %lf = diff = %lf\n", i, results[i], best_num, results[i]-best_num);
             printf("Optimal's orientation is from %d: ", best_idx);
             printvec(candidates[best_idx]);
             printf("Suboptimal's orientation is from %d:", i);
             printvec(candidates[i]);
         }
     }
-    return results;
+    if (results[best_idx] < results[0])
+    {
+        float delta = results[0] - results[best_idx];
+        perc_improve = delta / results[0];
+    }
+    // assert(best_idx == 3);
+    assert(best_idx == 1);
+    return perc_improve;
 }
 
 int main()
 {
     std::vector<std::vector<int>> results;
-    for (int node_num = 0; node_num < 1025; node_num++)
+    int improve_cnt = 0;
+    float best_improve_perc = 0.0;
+    int best_node_cnt, best_dx, best_dy;
+    best_node_cnt = best_dx = best_dy = 0;
+    int node_num_max, x_max, y_max;
+    node_num_max = 1025;
+    x_max = y_max = 32;
+    for (int node_num = 2; node_num < node_num_max; node_num++)
     {
-        // int node_num = 3532;
-        std::vector<int> launch_domain = std::vector<int>{3, 9, 6, 7};
-        results.push_back(greedy(node_num, launch_domain));
-        results.push_back(brute_force(node_num, launch_domain, true));
-        results.push_back(brute_force(node_num, launch_domain, false));
-        results.push_back(precise_enumerate(node_num, launch_domain));
-
-        // printvec(judge(results, launch_domain));
-        
-        results.clear();
+        for (int domain_x = 2; domain_x < x_max; domain_x++)
+        {
+            for (int domain_y = 2; domain_y < y_max; domain_y++)
+            {
+                std::vector<int> launch_domain = std::vector<int>{domain_x, domain_y};
+                results.push_back(greedy(node_num, launch_domain)); // Default Mapper's heursitics
+                // results.push_back(brute_force(node_num, launch_domain, true)); // minimize maximal difference
+                // results.push_back(brute_force(node_num, launch_domain, false)); // minimize real cost
+                results.push_back(precise_enumerate(node_num, launch_domain)); // smarter algorithm to minimize cost
+                float cur_improve_perc = judge(results, launch_domain, node_num, domain_x, domain_y);
+                if (cur_improve_perc > 0)
+                {
+                    improve_cnt++;
+                    if (cur_improve_perc > best_improve_perc)
+                    {
+                        best_improve_perc = cur_improve_perc;
+                        best_node_cnt = node_num;
+                        best_dx = domain_x;
+                        best_dy = domain_y;
+                    }
+                }
+                results.clear();
+            }
+        }
     }
+    int total_cnt = (node_num_max - 2) * (x_max - 2) * (y_max - 2);
+    printf("improve percentage= %d / %d = %lf, best improve perc = %lf, coming from %d and (%d, %d)\n", 
+        improve_cnt, total_cnt, improve_cnt * 1.0 / total_cnt,
+        best_improve_perc, best_node_cnt, best_dx, best_dy);
     return 0;
 }
