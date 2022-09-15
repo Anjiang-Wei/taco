@@ -581,6 +581,10 @@ void NSMapper::map_task(const MapperContext      ctx,
       target_memory =
         default_policy_select_target_memory(ctx, task.target_proc, req, mem_constraint);
     }
+    // target memories need to have affinity to all processors; otherwise error
+    // I only need to create one instance
+    // std::vector<Processor>                      target_procs
+    // chosen_instances is still one
 
     std::set<FieldID> missing_fields = req.privilege_fields;
     if (req.privilege == LEGION_REDUCE)

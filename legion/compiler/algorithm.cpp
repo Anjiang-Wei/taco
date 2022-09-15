@@ -410,14 +410,16 @@ int main()
     int best_node_cnt, best_dx, best_dy;
     best_node_cnt = best_dx = best_dy = 0;
     int node_num_max, x_max, y_max;
-    node_num_max = 1025;
-    x_max = y_max = 32;
+    node_num_max = 128;
+    x_max = y_max = 128;
     for (int node_num = 2; node_num < node_num_max; node_num++)
     {
         for (int domain_x = 2; domain_x < x_max; domain_x++)
         {
             for (int domain_y = 2; domain_y < y_max; domain_y++)
             {
+                if (domain_x * domain_y < node_num)
+                    continue;
                 std::vector<int> launch_domain = std::vector<int>{domain_x, domain_y};
                 results.push_back(greedy(node_num, launch_domain)); // Default Mapper's heursitics
                 // results.push_back(brute_force(node_num, launch_domain, true)); // minimize maximal difference
