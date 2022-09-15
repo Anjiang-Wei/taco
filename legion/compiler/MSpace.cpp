@@ -2,6 +2,7 @@
 #define __MSPACE
 
 #include "tree.hpp"
+#include "myalgorithm.h"
 
 #include <iostream>
 #include <stdio.h>
