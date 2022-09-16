@@ -181,7 +181,7 @@ Node* MemoryCollectNode::run()
   return NULL;
 }
 
-std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x,
+std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int> x,
             std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
 {
   #ifdef DEBUG_TREE
@@ -234,11 +234,27 @@ std::vector<int> Tree2Legion::run(std::string task, std::vector<int> x,
         assert(false);
       }
     }
-    return res2->tupleint;
+    return std::vector<std::vector<int>>(res2->tupleint);
+  }
+  else if (res->type == SetTupleIntType)
+  {
+    SetTupleIntNode* res2 = (SetTupleIntNode*) res;
+    if (proc_kind != Processor::NO_KIND)
+    {
+      if (MyProc2LegionProc(res2->final_proc) != proc_kind)
+      {
+        printf("%s is actually mapped to %s, but machine model is for %s", 
+                task.c_str(),
+                processor_kind_to_string(proc_kind).c_str(),
+                ProcessorEnumName[res2->final_proc]);
+        assert(false);
+      }
+    }
+    return res2->tupletupleint;
   }
   else
   {
-    printf("Must return TupleIntType after invoking mapping function\n");
+    printf("Must return TupleIntType or SetTupleIntType after invoking mapping function\n");
     assert(false);
   }
   return {};

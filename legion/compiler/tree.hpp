@@ -189,6 +189,8 @@ enum NodeType
 	ObjectInvokeType,
 	MSpaceType,
 	TupleIntType,
+	SetTupleIntType,
+	StarExprType,
 };
 
 const char* NodeTypeName[] =
@@ -228,6 +230,8 @@ const char* NodeTypeName[] =
   "ObjectInvokeType",
   "MSpaceType",
   "TupleIntType",
+  "SetTupleIntType",
+  "StarExprType",
 };
 
 class Node
@@ -562,6 +566,33 @@ public:
 	IntValNode* len();
 };
 
+class SetTupleIntNode : public ExprNode
+{
+public:
+	std::vector<std::vector<int>> tupletupleint;
+	ProcessorEnum final_proc; // validate mapping decision against dynamic machine model
+	SetTupleIntNode(std::vector<std::vector<int>> x)
+		{ type = SetTupleIntType; tupletupleint = x; final_proc = ALLPROC; }
+	SetTupleIntNode(std::vector<std::vector<int>> x, ProcessorEnum proc)
+		{ type = SetTupleIntType; tupletupleint = x; final_proc = proc; }
+	void print()
+	{
+		for (size_t kk = 0; kk < tupletupleint.size(); kk++) 
+		{
+			for (int i = 0; i < tupletupleint[kk].size(); i++)
+			{
+				printf("%d", tupletupleint[kk][i]);
+				if (i != tupletupleint[kk].size() - 1)
+				{
+					printf(",");
+				}
+			}
+			printf("\n");
+		}
+	}
+	SetTupleIntNode* run() { return this; }
+};
+
 class BoolValNode : public ExprNode
 {
 public:
@@ -691,6 +722,14 @@ public:
 	Node* at(int x);
 	Node* at(IntValNode* x);
 	IntValNode* one_int_only();
+};
+
+class StarExprNode : public ExprNode
+{
+public:
+	StarExprNode() { type = StarExprType; }
+	void print() { printf("*"); }
+	StarExprNode* run() { return this; }
 };
 
 class SliceExprNode : public ExprNode

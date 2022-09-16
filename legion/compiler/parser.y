@@ -264,6 +264,7 @@ SliceExpr:
 
 ExprN_1:
     Expr                     { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }
+|   '*'                      { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back(new StarExprNode()); $$ = t; }
 |   ExprN_1 ',' Expr         { $1->exprlst.push_back($3); $$ = $1; }
 
 ExprN:
