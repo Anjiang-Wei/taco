@@ -67,10 +67,12 @@ test_unpack = (*lower, *mytest);
 print("test_unpack={}, test_add={}", test_unpack, test_unpack + test_unpack);
 print("test_multi={}", test_unpack * (1, 2, 3, 4, 5));
 
+m4 = Machine(GPU);
+
 def new_func(IPoint x, ISpace y)
 # def new_func(Task task, IPoint x, ISpace y)
 {
-    m4 = Machine(GPU);
+    print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
     m5 = m4.auto_split(0, y);
     z = m5.auto_split(3, y);
     print("-----------m4={}, y={}", m4.size, y);
