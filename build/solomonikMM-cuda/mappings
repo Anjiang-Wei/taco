@@ -64,20 +64,22 @@ lower = tuple(block_primitive((1,1,1), (2,2,2), m6, i, i+1) for i in (0,1,2));
 mytest = lower[:2];
 # print("mytest={}", mytest);
 test_unpack = (*lower, *mytest);
-print("test_unpack={}, test_add={}", test_unpack, test_unpack + test_unpack);
-print("test_multi={}", test_unpack * (1, 2, 3, 4, 5));
+# print("test_unpack={}, test_add={}", test_unpack, test_unpack + test_unpack);
+# print("test_multi={}", test_unpack * (1, 2, 3, 4, 5));
 
 m4 = Machine(GPU);
+print("m4 = {}, m4[0,1]={}", m4.size, m4[0,1]);
+print("m4[0,*]={}", m4[0,*]);
 
 def new_func(IPoint x, ISpace y)
 # def new_func(Task task, IPoint x, ISpace y)
 {
-    print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
+    # print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
     m5 = m4.auto_split(0, y);
     z = m5.auto_split(3, y);
-    print("-----------m4={}, y={}", m4.size, y);
-    print("---------- m5={}, z={}", m5.size, z.size);
-    print("---------- greedysplit={}", m4.greedy_split(0, y).size);
+    # print("-----------m4={}, y={}", m4.size, y);
+    # print("---------- m5={}, z={}", m5.size, z.size);
+    # print("---------- greedysplit={}", m4.greedy_split(0, y).size);
     # node1 * node2 * 4 GPUs
     # split the third dimension (i.e., processor dimension) as square as possible
     # z0 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
@@ -87,10 +89,10 @@ def new_func(IPoint x, ISpace y)
     upper = tuple(block_primitive(x,y,z, i, i) for i in (0,1,2));
     lower = tuple(block_primitive(x,y,z, i, i + 3) for i in (0,1,2));
     # lower = tuple(block_primitive(x,y,z, i[0], i[1]) for i in ((0, 3), (1, 4), (2, 5)));
-    print("result={}", z[*upper, *lower]);
-    print("lentest={}", z.len);
-    print("slicetest={}", z[:-1] + z[1:]);
-    print("machine_test={}", m4.size * m4.size);
+    # print("result={}", z[*upper, *lower]);
+    # print("lentest={}", z.len);
+    # print("slicetest={}", z[:-1] + z[1:]);
+    # print("machine_test={}", m4.size * m4.size);
     return z[*upper, *lower];
 }
 

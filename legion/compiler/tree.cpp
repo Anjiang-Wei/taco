@@ -234,7 +234,7 @@ std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int
         assert(false);
       }
     }
-    return std::vector<std::vector<int>>(res2->tupleint);
+    return std::vector<std::vector<int>>({res2->tupleint});
   }
   else if (res->type == SetTupleIntType)
   {

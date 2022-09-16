@@ -83,7 +83,6 @@ void yyerror(const char*);
 %type <args> ArgLst_
 %type <exprn> ExprN
 %type <exprn> ExprN_1
-%type <exprn> ExprN_Star
 %type <sliceexpr> SliceExpr
 %type <prop> Prop
 %type <printargs> Print_Args
@@ -241,7 +240,8 @@ Expr:
 |   Expr T_And Expr         { $$ = new BinaryExprNode($1, AND, $3); }
 |   Expr '(' ExprN_1 ')'    { $$ = new FuncInvokeNode($1, $3); }
 |   Expr '[' SliceExpr ']'  { $$ = new IndexExprNode($1, $3); }
-|   Expr '[' ExprN_Star ']' { $$ = new IndexExprNode($1, $3); } // can index dynamic machine model
+|   Expr '[' ExprN_1 ']'    { $$ = new IndexExprNode($1, $3); } // can index dynamic machine model
+|   '*'                     { $$ = new StarExprNode(); }
 |   '-' Expr %prec '!'      { $$ = new NegativeExprNode($2); }
 /* |   '!' Expr %prec '!'      { $$ = new ExclamationNode($2); } */
 |   T_IntConstant           { $$ = new IntValNode($1); }
@@ -266,11 +266,6 @@ SliceExpr:
 ExprN_1:
     Expr                     { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }
 |   ExprN_1 ',' Expr         { $1->exprlst.push_back($3); $$ = $1; }
-
-ExprN_Star:
-    Expr                     { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); $$ = t; }
-|   '*'                      { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back(new StarExprNode()); $$ = t; }
-|   ExprN_Star ',' Expr      { $1->exprlst.push_back($3); $$ = $1; }
 
 ExprN:
     Expr ',' Expr           { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back($1); t->exprlst.push_back($3); $$ = t; }

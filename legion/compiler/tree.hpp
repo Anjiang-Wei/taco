@@ -1160,7 +1160,7 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	std::vector<int> run(std::string task, std::vector<int> x,
+	std::vector<std::vector<int>> run(std::string task, std::vector<int> x,
 						 std::vector<int> point_space, Processor::Kind proc_kind);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{

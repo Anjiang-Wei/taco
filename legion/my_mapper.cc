@@ -865,7 +865,7 @@ template<int DIM>
         log_mapper.debug() << point[i] << " ,";
       }
       size_t slice_res = 
-        (size_t) tree_result.run(taskname, index_point, index_launch_space,targets[0].kind())[1];
+        (size_t) tree_result.run(taskname, index_point, index_launch_space,targets[0].kind())[0][1];
       log_mapper.debug("--> %ld", slice_res);
       if (slice_res >= targets.size())
       {
@@ -1124,8 +1124,8 @@ namespace Legion {
             { \
               log_mapper.debug("%lld, ", point[i]); \
             } \
-            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.run(taskname, index_point, launch_space)[0]); \
-            return NSMapper::tree_result.run(taskname, index_point, launch_space)[0]; \
+            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.run(taskname, index_point, launch_space)[0][0]); \
+            return NSMapper::tree_result.run(taskname, index_point, launch_space)[0][0]; \
           }
         LEGION_FOREACH_N(DIMFUNC)
 #undef DIMFUNC
