@@ -715,7 +715,7 @@ public:
 		}
 	}
 	Node* run();
-	ExprNode* Convert2TupleInt(); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
+	ExprNode* Convert2TupleInt(bool allow_star=false); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
 	TupleExprNode* negate();
 	TupleExprNode* slice(int a, int b);
 	TupleExprNode* binary_op(TupleExprNode* right_op, BinOpEnum op);

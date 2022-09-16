@@ -951,7 +951,7 @@ Node* IndexExprNode::run()
     // index_node is a tuple of expression, dynamic machine model
     {
       MSpace* machine_space = (MSpace*) tuple_;
-      Node* converted = index_node->Convert2TupleInt();
+      Node* converted = index_node->Convert2TupleInt(true);
       if (converted->type == TupleIntType)
       {
         TupleIntNode* tuple_int_node = (TupleIntNode*) converted;
@@ -1058,7 +1058,7 @@ Node* TupleExprNode::run()
   return res;
 }
 
-ExprNode* TupleExprNode::Convert2TupleInt()
+ExprNode* TupleExprNode::Convert2TupleInt(bool allow_star)
 {
   // if all nodes in std::vector<Node*> exprlst; are IntValNode(IntValType), then can be converted to TupleIntNode
   std::vector<int> tuple_int;
@@ -1068,6 +1068,10 @@ ExprNode* TupleExprNode::Convert2TupleInt()
     {
       IntValNode* int_node = (IntValNode*) this->exprlst[i];
       tuple_int.push_back(int_node->intval);
+    }
+    else if (this->exprlst[i]->type == StarExprType && allow_star==true)
+    {
+      tuple_int.push_back(-1);
     }
     else
     {
