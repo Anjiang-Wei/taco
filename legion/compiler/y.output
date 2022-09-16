@@ -89,7 +89,7 @@ Grammar
    65     | Expr T_And Expr
    66     | Expr '(' ExprN_1 ')'
    67     | Expr '[' SliceExpr ']'
-   68     | Expr '[' ExprN_1 ']'
+   68     | Expr '[' ExprN_Star ']'
    69     | '-' Expr
    70     | T_IntConstant
    71     | T_True
@@ -109,49 +109,52 @@ Grammar
    84          | ':'
 
    85 ExprN_1: Expr
-   86        | '*'
-   87        | ExprN_1 ',' Expr
+   86        | ExprN_1 ',' Expr
 
-   88 ExprN: Expr ',' Expr
-   89      | ExprN ',' Expr
+   87 ExprN_Star: Expr
+   88           | '*'
+   89           | ExprN_Star ',' Expr
 
-   90 Prop: T_Size
-   91     | T_Split
-   92     | T_Merge
-   93     | T_Swap
-   94     | T_Slice
-   95     | T_Reverse
-   96     | T_Balance_split
-   97     | T_Auto_split
-   98     | T_Greedy_split
-   99     | T_Volume
-  100     | T_Has
-  101     | T_Len
+   90 ExprN: Expr ',' Expr
+   91      | ExprN ',' Expr
 
-  102 TYPE: T_Int
-  103     | T_Bool
-  104     | T_IPoint
-  105     | T_ISpace
-  106     | T_MSpace
+   92 Prop: T_Size
+   93     | T_Split
+   94     | T_Merge
+   95     | T_Swap
+   96     | T_Slice
+   97     | T_Reverse
+   98     | T_Balance_split
+   99     | T_Auto_split
+  100     | T_Greedy_split
+  101     | T_Volume
+  102     | T_Has
+  103     | T_Len
 
-  107 ProcLst: Proc
-  108        | ProcLst ',' Proc
+  104 TYPE: T_Int
+  105     | T_Bool
+  106     | T_IPoint
+  107     | T_ISpace
+  108     | T_MSpace
 
-  109 MemLst: Mem
-  110       | MemLst ',' Mem
+  109 ProcLst: Proc
+  110        | ProcLst ',' Proc
 
-  111 Mem: T_SYSMEM
-  112    | T_FBMEM
-  113    | T_RDMEM
-  114    | T_ZCMEM
-  115    | T_SOCKMEM
+  111 MemLst: Mem
+  112       | MemLst ',' Mem
 
-  116 Proc: T_CPU
-  117     | T_GPU
-  118     | T_IO
-  119     | T_PY
-  120     | T_PROC
-  121     | T_OMP
+  113 Mem: T_SYSMEM
+  114    | T_FBMEM
+  115    | T_RDMEM
+  116    | T_ZCMEM
+  117    | T_SOCKMEM
+
+  118 Proc: T_CPU
+  119     | T_GPU
+  120     | T_IO
+  121     | T_PY
+  122     | T_PROC
+  123     | T_OMP
 
 
 Terminals, with rules where they appear
@@ -161,9 +164,9 @@ Terminals, with rules where they appear
     '%' (37) 56
     '(' (40) 35 45 59 66 74 80
     ')' (41) 35 45 59 66 74 80
-    '*' (42) 13 54 79 86
+    '*' (42) 13 54 79 88
     '+' (43) 52
-    ',' (44) 14 15 47 51 87 88 89 108 110
+    ',' (44) 14 15 47 51 86 89 90 91 110 112
     '-' (45) 53 69
     '.' (46) 77
     '/' (47) 55
@@ -178,43 +181,43 @@ Terminals, with rules where they appear
     '{' (123) 35
     '}' (125) 35
     error (256)
-    T_Size (258) 90
-    T_Split (259) 91
-    T_Merge (260) 92
-    T_Swap (261) 93
-    T_Slice (262) 94
-    T_Reverse (263) 95
-    T_Balance_split (264) 96
-    T_Auto_split (265) 97
-    T_Greedy_split (266) 98
-    T_Volume (267) 99
-    T_Has (268) 100
+    T_Size (258) 92
+    T_Split (259) 93
+    T_Merge (260) 94
+    T_Swap (261) 95
+    T_Slice (262) 96
+    T_Reverse (263) 97
+    T_Balance_split (264) 98
+    T_Auto_split (265) 99
+    T_Greedy_split (266) 100
+    T_Volume (267) 101
+    T_Has (268) 102
     T_Tuple (269) 80
     T_For (270) 80
     T_In (271) 80
-    T_Len (272) 101
+    T_Len (272) 103
     T_Reverse_Dimension (273) 24
     T_Positive_Dimension (274) 25
     T_AOS (275) 26
     T_SOA (276) 27
     T_Compact (277) 28
     T_Align (278) 29 30 31 32 33 34
-    T_CPU (279) 116
-    T_GPU (280) 117
-    T_IO (281) 118
-    T_PY (282) 119
-    T_PROC (283) 120
-    T_OMP (284) 121
-    T_SYSMEM (285) 111
-    T_FBMEM (286) 112
-    T_RDMEM (287) 113
-    T_ZCMEM (288) 114
-    T_SOCKMEM (289) 115
-    T_Int (290) 102
-    T_Bool (291) 103
-    T_IPoint (292) 104
-    T_ISpace (293) 105
-    T_MSpace (294) 106
+    T_CPU (279) 118
+    T_GPU (280) 119
+    T_IO (281) 120
+    T_PY (282) 121
+    T_PROC (283) 122
+    T_OMP (284) 123
+    T_SYSMEM (285) 113
+    T_FBMEM (286) 114
+    T_RDMEM (287) 115
+    T_ZCMEM (288) 116
+    T_SOCKMEM (289) 117
+    T_Int (290) 104
+    T_Bool (291) 105
+    T_IPoint (292) 106
+    T_ISpace (293) 107
+    T_MSpace (294) 108
     T_Def (295) 35
     T_Return (296) 44
     T_True (297) 71
@@ -303,34 +306,37 @@ Nonterminals, with rules where they appear
         on right: 49 51
     Expr <expr> (101)
         on left: 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80
-        on right: 38 44 47 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 77 78 79 80 81 82 83 85 87 88 89
+        on right: 38 44 47 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 77 78 79 80 81 82 83 85 86 87 89 90 91
     SliceExpr <sliceexpr> (102)
         on left: 81 82 83 84
         on right: 67
     ExprN_1 <exprn> (103)
-        on left: 85 86 87
-        on right: 66 68 87
-    ExprN <exprn> (104)
-        on left: 88 89
-        on right: 74 89
-    Prop <prop> (105)
-        on left: 90 91 92 93 94 95 96 97 98 99 100 101
+        on left: 85 86
+        on right: 66 86
+    ExprN_Star <exprn> (104)
+        on left: 87 88 89
+        on right: 68 89
+    ExprN <exprn> (105)
+        on left: 90 91
+        on right: 74 91
+    Prop <prop> (106)
+        on left: 92 93 94 95 96 97 98 99 100 101 102 103
         on right: 77
-    TYPE <argtype> (106)
-        on left: 102 103 104 105 106
+    TYPE <argtype> (107)
+        on left: 104 105 106 107 108
         on right: 50 51
-    ProcLst <proclst> (107)
-        on left: 107 108
-        on right: 18 108
-    MemLst <memlst> (108)
+    ProcLst <proclst> (108)
         on left: 109 110
-        on right: 19 20 110
-    Mem <mem> (109)
-        on left: 111 112 113 114 115
-        on right: 21 76 109 110
-    Proc <proc> (110)
-        on left: 116 117 118 119 120 121
-        on right: 16 19 75 107 108
+        on right: 18 110
+    MemLst <memlst> (109)
+        on left: 111 112
+        on right: 19 20 112
+    Mem <mem> (110)
+        on left: 113 114 115 116 117
+        on right: 21 76 111 112
+    Proc <proc> (111)
+        on left: 118 119 120 121 122 123
+        on right: 16 19 75 109 110
 
 
 State 0
@@ -717,50 +723,50 @@ State 36
 
 State 37
 
-  116 Proc: T_CPU .
-
-    $default  reduce using rule 116 (Proc)
-
-
-State 38
-
-  117 Proc: T_GPU .
-
-    $default  reduce using rule 117 (Proc)
-
-
-State 39
-
-  118 Proc: T_IO .
+  118 Proc: T_CPU .
 
     $default  reduce using rule 118 (Proc)
 
 
-State 40
+State 38
 
-  119 Proc: T_PY .
+  119 Proc: T_GPU .
 
     $default  reduce using rule 119 (Proc)
 
 
-State 41
+State 39
 
-  120 Proc: T_PROC .
+  120 Proc: T_IO .
 
     $default  reduce using rule 120 (Proc)
 
 
-State 42
+State 40
 
-  121 Proc: T_OMP .
+  121 Proc: T_PY .
 
     $default  reduce using rule 121 (Proc)
+
+
+State 41
+
+  122 Proc: T_PROC .
+
+    $default  reduce using rule 122 (Proc)
+
+
+State 42
+
+  123 Proc: T_OMP .
+
+    $default  reduce using rule 123 (Proc)
 
 
 State 43
 
    18 ProcCustom: T_Task Identifier_star ProcLst . ';'
-  108 ProcLst: ProcLst . ',' Proc
+  110 ProcLst: ProcLst . ',' Proc
 
     ','  shift, and go to state 78
     ';'  shift, and go to state 79
@@ -768,9 +774,9 @@ State 43
 
 State 44
 
-  107 ProcLst: Proc .
+  109 ProcLst: Proc .
 
-    $default  reduce using rule 107 (ProcLst)
+    $default  reduce using rule 109 (ProcLst)
 
 
 State 45
@@ -868,37 +874,37 @@ State 54
 
 State 55
 
-  111 Mem: T_SYSMEM .
-
-    $default  reduce using rule 111 (Mem)
-
-
-State 56
-
-  112 Mem: T_FBMEM .
-
-    $default  reduce using rule 112 (Mem)
-
-
-State 57
-
-  113 Mem: T_RDMEM .
+  113 Mem: T_SYSMEM .
 
     $default  reduce using rule 113 (Mem)
 
 
-State 58
+State 56
 
-  114 Mem: T_ZCMEM .
+  114 Mem: T_FBMEM .
 
     $default  reduce using rule 114 (Mem)
 
 
-State 59
+State 57
 
-  115 Mem: T_SOCKMEM .
+  115 Mem: T_RDMEM .
 
     $default  reduce using rule 115 (Mem)
+
+
+State 58
+
+  116 Mem: T_ZCMEM .
+
+    $default  reduce using rule 116 (Mem)
+
+
+State 59
+
+  117 Mem: T_SOCKMEM .
+
+    $default  reduce using rule 117 (Mem)
 
 
 State 60
@@ -1036,7 +1042,7 @@ State 67
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -1076,37 +1082,37 @@ State 69
 
 State 70
 
-  102 TYPE: T_Int .
-
-    $default  reduce using rule 102 (TYPE)
-
-
-State 71
-
-  103 TYPE: T_Bool .
-
-    $default  reduce using rule 103 (TYPE)
-
-
-State 72
-
-  104 TYPE: T_IPoint .
+  104 TYPE: T_Int .
 
     $default  reduce using rule 104 (TYPE)
 
 
-State 73
+State 71
 
-  105 TYPE: T_ISpace .
+  105 TYPE: T_Bool .
 
     $default  reduce using rule 105 (TYPE)
 
 
-State 74
+State 72
 
-  106 TYPE: T_MSpace .
+  106 TYPE: T_IPoint .
 
     $default  reduce using rule 106 (TYPE)
+
+
+State 73
+
+  107 TYPE: T_ISpace .
+
+    $default  reduce using rule 107 (TYPE)
+
+
+State 74
+
+  108 TYPE: T_MSpace .
+
+    $default  reduce using rule 108 (TYPE)
 
 
 State 75
@@ -1135,7 +1141,7 @@ State 77
 
 State 78
 
-  108 ProcLst: ProcLst ',' . Proc
+  110 ProcLst: ProcLst ',' . Proc
 
     T_CPU   shift, and go to state 37
     T_GPU   shift, and go to state 38
@@ -1297,7 +1303,7 @@ State 92
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    69     | '-' Expr .
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
@@ -1326,7 +1332,7 @@ State 93
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    79     | '*' Expr .
@@ -1356,10 +1362,10 @@ State 94
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
-   88 ExprN: Expr . ',' Expr
+   90 ExprN: Expr . ',' Expr
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -1385,7 +1391,7 @@ State 94
 State 95
 
    74 Expr: '(' ExprN . ')'
-   89 ExprN: ExprN . ',' Expr
+   91 ExprN: ExprN . ',' Expr
 
     ','  shift, and go to state 129
     ')'  shift, and go to state 130
@@ -1800,7 +1806,7 @@ State 109
 State 110
 
    67 Expr: Expr '[' . SliceExpr ']'
-   68     | Expr '[' . ExprN_1 ']'
+   68     | Expr '[' . ExprN_Star ']'
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -1823,11 +1829,11 @@ State 110
     '*'            shift, and go to state 146
     '('            shift, and go to state 66
 
-    Expr       go to state 147
-    SliceExpr  go to state 148
-    ExprN_1    go to state 149
-    Mem        go to state 68
-    Proc       go to state 69
+    Expr        go to state 147
+    SliceExpr   go to state 148
+    ExprN_Star  go to state 149
+    Mem         go to state 68
+    Proc        go to state 69
 
 
 State 111
@@ -1851,7 +1857,7 @@ State 111
     T_Identifier   shift, and go to state 62
     T_IntConstant  shift, and go to state 63
     '-'            shift, and go to state 64
-    '*'            shift, and go to state 146
+    '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
     Expr     go to state 150
@@ -1916,15 +1922,15 @@ State 116
 
 State 117
 
-  108 ProcLst: ProcLst ',' Proc .
+  110 ProcLst: ProcLst ',' Proc .
 
-    $default  reduce using rule 108 (ProcLst)
+    $default  reduce using rule 110 (ProcLst)
 
 
 State 118
 
    20 RegionCustom: T_Region Identifier_star Identifier_star Identifier_star MemLst . ';'
-  110 MemLst: MemLst . ',' Mem
+  112 MemLst: MemLst . ',' Mem
 
     ','  shift, and go to state 167
     ';'  shift, and go to state 168
@@ -1932,15 +1938,15 @@ State 118
 
 State 119
 
-  109 MemLst: Mem .
+  111 MemLst: Mem .
 
-    $default  reduce using rule 109 (MemLst)
+    $default  reduce using rule 111 (MemLst)
 
 
 State 120
 
    19 RegionCustom: T_Region Identifier_star Identifier_star Proc MemLst . ';'
-  110 MemLst: MemLst . ',' Mem
+  112 MemLst: MemLst . ',' Mem
 
     ','  shift, and go to state 167
     ';'  shift, and go to state 169
@@ -2054,7 +2060,7 @@ State 126
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    80     | T_Tuple '(' Expr . T_For T_Identifier T_In Expr ')'
@@ -2081,7 +2087,7 @@ State 126
 
 State 127
 
-   88 ExprN: Expr ',' . Expr
+   90 ExprN: Expr ',' . Expr
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -2117,7 +2123,7 @@ State 128
 
 State 129
 
-   89 ExprN: ExprN ',' . Expr
+   91 ExprN: ExprN ',' . Expr
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -2169,7 +2175,7 @@ State 131
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2203,7 +2209,7 @@ State 132
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2237,7 +2243,7 @@ State 133
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2275,7 +2281,7 @@ State 134
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2313,7 +2319,7 @@ State 135
    65     | Expr T_And Expr .
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2353,7 +2359,7 @@ State 136
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2393,7 +2399,7 @@ State 137
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    78     | Expr '?' Expr . ':' Expr
@@ -2436,7 +2442,7 @@ State 138
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2470,7 +2476,7 @@ State 139
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2504,7 +2510,7 @@ State 140
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2536,7 +2542,7 @@ State 141
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2568,7 +2574,7 @@ State 142
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2597,7 +2603,7 @@ State 143
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2626,7 +2632,7 @@ State 144
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -2672,7 +2678,7 @@ State 145
 State 146
 
    79 Expr: '*' . Expr
-   86 ExprN_1: '*' .
+   88 ExprN_Star: '*' .
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -2694,7 +2700,7 @@ State 146
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    $default  reduce using rule 86 (ExprN_1)
+    $default  reduce using rule 88 (ExprN_Star)
 
     Expr  go to state 93
     Mem   go to state 68
@@ -2718,12 +2724,12 @@ State 147
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    81 SliceExpr: Expr . ':' Expr
    83          | Expr . ':'
-   85 ExprN_1: Expr .
+   87 ExprN_Star: Expr .
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -2744,7 +2750,7 @@ State 147
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
 
-    $default  reduce using rule 85 (ExprN_1)
+    $default  reduce using rule 87 (ExprN_Star)
 
 
 State 148
@@ -2756,8 +2762,8 @@ State 148
 
 State 149
 
-   68 Expr: Expr '[' ExprN_1 . ']'
-   87 ExprN_1: ExprN_1 . ',' Expr
+   68 Expr: Expr '[' ExprN_Star . ']'
+   89 ExprN_Star: ExprN_Star . ',' Expr
 
     ','  shift, and go to state 187
     ']'  shift, and go to state 188
@@ -2780,7 +2786,7 @@ State 150
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    85 ExprN_1: Expr .
@@ -2809,94 +2815,94 @@ State 150
 State 151
 
    66 Expr: Expr '(' ExprN_1 . ')'
-   87 ExprN_1: ExprN_1 . ',' Expr
+   86 ExprN_1: ExprN_1 . ',' Expr
 
-    ','  shift, and go to state 187
-    ')'  shift, and go to state 189
+    ','  shift, and go to state 189
+    ')'  shift, and go to state 190
 
 
 State 152
 
-   90 Prop: T_Size .
-
-    $default  reduce using rule 90 (Prop)
-
-
-State 153
-
-   91 Prop: T_Split .
-
-    $default  reduce using rule 91 (Prop)
-
-
-State 154
-
-   92 Prop: T_Merge .
+   92 Prop: T_Size .
 
     $default  reduce using rule 92 (Prop)
 
 
-State 155
+State 153
 
-   93 Prop: T_Swap .
+   93 Prop: T_Split .
 
     $default  reduce using rule 93 (Prop)
 
 
-State 156
+State 154
 
-   94 Prop: T_Slice .
+   94 Prop: T_Merge .
 
     $default  reduce using rule 94 (Prop)
 
 
-State 157
+State 155
 
-   95 Prop: T_Reverse .
+   95 Prop: T_Swap .
 
     $default  reduce using rule 95 (Prop)
 
 
-State 158
+State 156
 
-   96 Prop: T_Balance_split .
+   96 Prop: T_Slice .
 
     $default  reduce using rule 96 (Prop)
 
 
-State 159
+State 157
 
-   97 Prop: T_Auto_split .
+   97 Prop: T_Reverse .
 
     $default  reduce using rule 97 (Prop)
 
 
-State 160
+State 158
 
-   98 Prop: T_Greedy_split .
+   98 Prop: T_Balance_split .
 
     $default  reduce using rule 98 (Prop)
 
 
-State 161
+State 159
 
-   99 Prop: T_Volume .
+   99 Prop: T_Auto_split .
 
     $default  reduce using rule 99 (Prop)
 
 
-State 162
+State 160
 
-  100 Prop: T_Has .
+  100 Prop: T_Greedy_split .
 
     $default  reduce using rule 100 (Prop)
 
 
-State 163
+State 161
 
-  101 Prop: T_Len .
+  101 Prop: T_Volume .
 
     $default  reduce using rule 101 (Prop)
+
+
+State 162
+
+  102 Prop: T_Has .
+
+    $default  reduce using rule 102 (Prop)
+
+
+State 163
+
+  103 Prop: T_Len .
+
+    $default  reduce using rule 103 (Prop)
 
 
 State 164
@@ -2910,27 +2916,27 @@ State 165
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' . Func_Stmts '}'
 
-    T_Return      shift, and go to state 190
+    T_Return      shift, and go to state 191
     T_Print       shift, and go to state 6
     T_Identifier  shift, and go to state 9
 
-    Assign_Stmt  go to state 191
-    Func_Stmts   go to state 192
-    Func_Stmt    go to state 193
-    Return_Stmt  go to state 194
-    Print_Stmt   go to state 195
+    Assign_Stmt  go to state 192
+    Func_Stmts   go to state 193
+    Func_Stmt    go to state 194
+    Return_Stmt  go to state 195
+    Print_Stmt   go to state 196
 
 
 State 166
 
    51 ArgLst_: ArgLst_ ',' TYPE . T_Identifier
 
-    T_Identifier  shift, and go to state 196
+    T_Identifier  shift, and go to state 197
 
 
 State 167
 
-  110 MemLst: MemLst ',' . Mem
+  112 MemLst: MemLst ',' . Mem
 
     T_SYSMEM   shift, and go to state 55
     T_FBMEM    shift, and go to state 56
@@ -2938,7 +2944,7 @@ State 167
     T_ZCMEM    shift, and go to state 58
     T_SOCKMEM  shift, and go to state 59
 
-    Mem  go to state 197
+    Mem  go to state 198
 
 
 State 168
@@ -2999,12 +3005,12 @@ State 175
    33            | Constraints T_Align . T_Eq T_IntConstant
    34            | Constraints T_Align . T_Ne T_IntConstant
 
-    T_Le  shift, and go to state 198
-    T_Ge  shift, and go to state 199
-    T_Eq  shift, and go to state 200
-    T_Ne  shift, and go to state 201
-    '<'   shift, and go to state 202
-    '>'   shift, and go to state 203
+    T_Le  shift, and go to state 199
+    T_Ge  shift, and go to state 200
+    T_Eq  shift, and go to state 201
+    T_Ne  shift, and go to state 202
+    '<'   shift, and go to state 203
+    '>'   shift, and go to state 204
 
 
 State 176
@@ -3039,7 +3045,7 @@ State 178
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -3075,7 +3081,7 @@ State 180
 
    80 Expr: T_Tuple '(' Expr T_For . T_Identifier T_In Expr ')'
 
-    T_Identifier  shift, and go to state 204
+    T_Identifier  shift, and go to state 205
 
 
 State 181
@@ -3095,10 +3101,10 @@ State 181
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
-   88 ExprN: Expr ',' Expr .
+   90 ExprN: Expr ',' Expr .
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -3118,7 +3124,7 @@ State 181
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
 
-    $default  reduce using rule 88 (ExprN)
+    $default  reduce using rule 90 (ExprN)
 
 
 State 182
@@ -3138,10 +3144,10 @@ State 182
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
-   89 ExprN: ExprN ',' Expr .
+   91 ExprN: ExprN ',' Expr .
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -3161,7 +3167,7 @@ State 182
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
 
-    $default  reduce using rule 89 (ExprN)
+    $default  reduce using rule 91 (ExprN)
 
 
 State 183
@@ -3188,7 +3194,7 @@ State 183
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 205
+    Expr  go to state 206
     Mem   go to state 68
     Proc  go to state 69
 
@@ -3210,7 +3216,7 @@ State 184
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    82 SliceExpr: ':' Expr .
@@ -3263,7 +3269,7 @@ State 185
 
     $default  reduce using rule 83 (SliceExpr)
 
-    Expr  go to state 206
+    Expr  go to state 207
     Mem   go to state 68
     Proc  go to state 69
 
@@ -3277,50 +3283,7 @@ State 186
 
 State 187
 
-   87 ExprN_1: ExprN_1 ',' . Expr
-
-    T_Tuple        shift, and go to state 54
-    T_CPU          shift, and go to state 37
-    T_GPU          shift, and go to state 38
-    T_IO           shift, and go to state 39
-    T_PY           shift, and go to state 40
-    T_PROC         shift, and go to state 41
-    T_OMP          shift, and go to state 42
-    T_SYSMEM       shift, and go to state 55
-    T_FBMEM        shift, and go to state 56
-    T_RDMEM        shift, and go to state 57
-    T_ZCMEM        shift, and go to state 58
-    T_SOCKMEM      shift, and go to state 59
-    T_True         shift, and go to state 60
-    T_False        shift, and go to state 61
-    T_Identifier   shift, and go to state 62
-    T_IntConstant  shift, and go to state 63
-    '-'            shift, and go to state 64
-    '*'            shift, and go to state 65
-    '('            shift, and go to state 66
-
-    Expr  go to state 207
-    Mem   go to state 68
-    Proc  go to state 69
-
-
-State 188
-
-   68 Expr: Expr '[' ExprN_1 ']' .
-
-    $default  reduce using rule 68 (Expr)
-
-
-State 189
-
-   66 Expr: Expr '(' ExprN_1 ')' .
-
-    $default  reduce using rule 66 (Expr)
-
-
-State 190
-
-   44 Return_Stmt: T_Return . Expr ';'
+   89 ExprN_Star: ExprN_Star ',' . Expr
 
     T_Tuple        shift, and go to state 54
     T_CPU          shift, and go to state 37
@@ -3347,114 +3310,186 @@ State 190
     Proc  go to state 69
 
 
+State 188
+
+   68 Expr: Expr '[' ExprN_Star ']' .
+
+    $default  reduce using rule 68 (Expr)
+
+
+State 189
+
+   86 ExprN_1: ExprN_1 ',' . Expr
+
+    T_Tuple        shift, and go to state 54
+    T_CPU          shift, and go to state 37
+    T_GPU          shift, and go to state 38
+    T_IO           shift, and go to state 39
+    T_PY           shift, and go to state 40
+    T_PROC         shift, and go to state 41
+    T_OMP          shift, and go to state 42
+    T_SYSMEM       shift, and go to state 55
+    T_FBMEM        shift, and go to state 56
+    T_RDMEM        shift, and go to state 57
+    T_ZCMEM        shift, and go to state 58
+    T_SOCKMEM      shift, and go to state 59
+    T_True         shift, and go to state 60
+    T_False        shift, and go to state 61
+    T_Identifier   shift, and go to state 62
+    T_IntConstant  shift, and go to state 63
+    '-'            shift, and go to state 64
+    '*'            shift, and go to state 65
+    '('            shift, and go to state 66
+
+    Expr  go to state 209
+    Mem   go to state 68
+    Proc  go to state 69
+
+
+State 190
+
+   66 Expr: Expr '(' ExprN_1 ')' .
+
+    $default  reduce using rule 66 (Expr)
+
+
 State 191
+
+   44 Return_Stmt: T_Return . Expr ';'
+
+    T_Tuple        shift, and go to state 54
+    T_CPU          shift, and go to state 37
+    T_GPU          shift, and go to state 38
+    T_IO           shift, and go to state 39
+    T_PY           shift, and go to state 40
+    T_PROC         shift, and go to state 41
+    T_OMP          shift, and go to state 42
+    T_SYSMEM       shift, and go to state 55
+    T_FBMEM        shift, and go to state 56
+    T_RDMEM        shift, and go to state 57
+    T_ZCMEM        shift, and go to state 58
+    T_SOCKMEM      shift, and go to state 59
+    T_True         shift, and go to state 60
+    T_False        shift, and go to state 61
+    T_Identifier   shift, and go to state 62
+    T_IntConstant  shift, and go to state 63
+    '-'            shift, and go to state 64
+    '*'            shift, and go to state 65
+    '('            shift, and go to state 66
+
+    Expr  go to state 210
+    Mem   go to state 68
+    Proc  go to state 69
+
+
+State 192
 
    41 Func_Stmt: Assign_Stmt .
 
     $default  reduce using rule 41 (Func_Stmt)
 
 
-State 192
+State 193
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts . '}'
    40 Func_Stmts: Func_Stmts . Func_Stmt
 
-    T_Return      shift, and go to state 190
+    T_Return      shift, and go to state 191
     T_Print       shift, and go to state 6
     T_Identifier  shift, and go to state 9
-    '}'           shift, and go to state 209
+    '}'           shift, and go to state 211
 
-    Assign_Stmt  go to state 191
-    Func_Stmt    go to state 210
-    Return_Stmt  go to state 194
-    Print_Stmt   go to state 195
+    Assign_Stmt  go to state 192
+    Func_Stmt    go to state 212
+    Return_Stmt  go to state 195
+    Print_Stmt   go to state 196
 
 
-State 193
+State 194
 
    39 Func_Stmts: Func_Stmt .
 
     $default  reduce using rule 39 (Func_Stmts)
 
 
-State 194
+State 195
 
    42 Func_Stmt: Return_Stmt .
 
     $default  reduce using rule 42 (Func_Stmt)
 
 
-State 195
+State 196
 
    43 Func_Stmt: Print_Stmt .
 
     $default  reduce using rule 43 (Func_Stmt)
 
 
-State 196
+State 197
 
    51 ArgLst_: ArgLst_ ',' TYPE T_Identifier .
 
     $default  reduce using rule 51 (ArgLst_)
 
 
-State 197
-
-  110 MemLst: MemLst ',' Mem .
-
-    $default  reduce using rule 110 (MemLst)
-
-
 State 198
 
-   30 Constraints: Constraints T_Align T_Le . T_IntConstant
+  112 MemLst: MemLst ',' Mem .
 
-    T_IntConstant  shift, and go to state 211
+    $default  reduce using rule 112 (MemLst)
 
 
 State 199
 
-   32 Constraints: Constraints T_Align T_Ge . T_IntConstant
-
-    T_IntConstant  shift, and go to state 212
-
-
-State 200
-
-   33 Constraints: Constraints T_Align T_Eq . T_IntConstant
+   30 Constraints: Constraints T_Align T_Le . T_IntConstant
 
     T_IntConstant  shift, and go to state 213
 
 
-State 201
+State 200
 
-   34 Constraints: Constraints T_Align T_Ne . T_IntConstant
+   32 Constraints: Constraints T_Align T_Ge . T_IntConstant
 
     T_IntConstant  shift, and go to state 214
 
 
-State 202
+State 201
 
-   29 Constraints: Constraints T_Align '<' . T_IntConstant
+   33 Constraints: Constraints T_Align T_Eq . T_IntConstant
 
     T_IntConstant  shift, and go to state 215
 
 
-State 203
+State 202
 
-   31 Constraints: Constraints T_Align '>' . T_IntConstant
+   34 Constraints: Constraints T_Align T_Ne . T_IntConstant
 
     T_IntConstant  shift, and go to state 216
 
 
+State 203
+
+   29 Constraints: Constraints T_Align '<' . T_IntConstant
+
+    T_IntConstant  shift, and go to state 217
+
+
 State 204
 
-   80 Expr: T_Tuple '(' Expr T_For T_Identifier . T_In Expr ')'
+   31 Constraints: Constraints T_Align '>' . T_IntConstant
 
-    T_In  shift, and go to state 217
+    T_IntConstant  shift, and go to state 218
 
 
 State 205
+
+   80 Expr: T_Tuple '(' Expr T_For T_Identifier . T_In Expr ')'
+
+    T_In  shift, and go to state 219
+
+
+State 206
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3471,7 +3506,7 @@ State 205
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    78     | Expr '?' Expr ':' Expr .
@@ -3496,7 +3531,7 @@ State 205
     $default  reduce using rule 78 (Expr)
 
 
-State 206
+State 207
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3513,7 +3548,7 @@ State 206
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    81 SliceExpr: Expr ':' Expr .
@@ -3539,7 +3574,7 @@ State 206
     $default  reduce using rule 81 (SliceExpr)
 
 
-State 207
+State 208
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3556,10 +3591,10 @@ State 207
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
-   87 ExprN_1: ExprN_1 ',' Expr .
+   89 ExprN_Star: ExprN_Star ',' Expr .
 
     T_Le   shift, and go to state 96
     T_Ge   shift, and go to state 97
@@ -3579,10 +3614,53 @@ State 207
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
 
-    $default  reduce using rule 87 (ExprN_1)
+    $default  reduce using rule 89 (ExprN_Star)
 
 
-State 208
+State 209
+
+   52 Expr: Expr . '+' Expr
+   53     | Expr . '-' Expr
+   54     | Expr . '*' Expr
+   55     | Expr . '/' Expr
+   56     | Expr . '%' Expr
+   57     | Expr . '>' Expr
+   58     | Expr . '<' Expr
+   60     | Expr . T_Ge Expr
+   61     | Expr . T_Le Expr
+   62     | Expr . T_Eq Expr
+   63     | Expr . T_Ne Expr
+   64     | Expr . T_Or Expr
+   65     | Expr . T_And Expr
+   66     | Expr . '(' ExprN_1 ')'
+   67     | Expr . '[' SliceExpr ']'
+   68     | Expr . '[' ExprN_Star ']'
+   77     | Expr . '.' Prop
+   78     | Expr . '?' Expr ':' Expr
+   86 ExprN_1: ExprN_1 ',' Expr .
+
+    T_Le   shift, and go to state 96
+    T_Ge   shift, and go to state 97
+    T_Eq   shift, and go to state 98
+    T_Ne   shift, and go to state 99
+    T_And  shift, and go to state 100
+    T_Or   shift, and go to state 101
+    '?'    shift, and go to state 102
+    '<'    shift, and go to state 103
+    '>'    shift, and go to state 104
+    '+'    shift, and go to state 105
+    '-'    shift, and go to state 106
+    '*'    shift, and go to state 107
+    '/'    shift, and go to state 108
+    '%'    shift, and go to state 109
+    '['    shift, and go to state 110
+    '('    shift, and go to state 111
+    '.'    shift, and go to state 112
+
+    $default  reduce using rule 86 (ExprN_1)
+
+
+State 210
 
    44 Return_Stmt: T_Return Expr . ';'
    52 Expr: Expr . '+' Expr
@@ -3600,7 +3678,7 @@ State 208
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
 
@@ -3621,66 +3699,66 @@ State 208
     '['    shift, and go to state 110
     '('    shift, and go to state 111
     '.'    shift, and go to state 112
-    ';'    shift, and go to state 218
+    ';'    shift, and go to state 220
 
 
-State 209
+State 211
 
    35 FuncDef: T_Def T_Identifier '(' ArgLst ')' '{' Func_Stmts '}' .
 
     $default  reduce using rule 35 (FuncDef)
 
 
-State 210
+State 212
 
    40 Func_Stmts: Func_Stmts Func_Stmt .
 
     $default  reduce using rule 40 (Func_Stmts)
 
 
-State 211
+State 213
 
    30 Constraints: Constraints T_Align T_Le T_IntConstant .
 
     $default  reduce using rule 30 (Constraints)
 
 
-State 212
+State 214
 
    32 Constraints: Constraints T_Align T_Ge T_IntConstant .
 
     $default  reduce using rule 32 (Constraints)
 
 
-State 213
+State 215
 
    33 Constraints: Constraints T_Align T_Eq T_IntConstant .
 
     $default  reduce using rule 33 (Constraints)
 
 
-State 214
+State 216
 
    34 Constraints: Constraints T_Align T_Ne T_IntConstant .
 
     $default  reduce using rule 34 (Constraints)
 
 
-State 215
+State 217
 
    29 Constraints: Constraints T_Align '<' T_IntConstant .
 
     $default  reduce using rule 29 (Constraints)
 
 
-State 216
+State 218
 
    31 Constraints: Constraints T_Align '>' T_IntConstant .
 
     $default  reduce using rule 31 (Constraints)
 
 
-State 217
+State 219
 
    80 Expr: T_Tuple '(' Expr T_For T_Identifier T_In . Expr ')'
 
@@ -3704,19 +3782,19 @@ State 217
     '*'            shift, and go to state 65
     '('            shift, and go to state 66
 
-    Expr  go to state 219
+    Expr  go to state 221
     Mem   go to state 68
     Proc  go to state 69
 
 
-State 218
+State 220
 
    44 Return_Stmt: T_Return Expr ';' .
 
     $default  reduce using rule 44 (Return_Stmt)
 
 
-State 219
+State 221
 
    52 Expr: Expr . '+' Expr
    53     | Expr . '-' Expr
@@ -3733,7 +3811,7 @@ State 219
    65     | Expr . T_And Expr
    66     | Expr . '(' ExprN_1 ')'
    67     | Expr . '[' SliceExpr ']'
-   68     | Expr . '[' ExprN_1 ']'
+   68     | Expr . '[' ExprN_Star ']'
    77     | Expr . '.' Prop
    78     | Expr . '?' Expr ':' Expr
    80     | T_Tuple '(' Expr T_For T_Identifier T_In Expr . ')'
@@ -3754,11 +3832,11 @@ State 219
     '%'    shift, and go to state 109
     '['    shift, and go to state 110
     '('    shift, and go to state 111
-    ')'    shift, and go to state 220
+    ')'    shift, and go to state 222
     '.'    shift, and go to state 112
 
 
-State 220
+State 222
 
    80 Expr: T_Tuple '(' Expr T_For T_Identifier T_In Expr ')' .
 
