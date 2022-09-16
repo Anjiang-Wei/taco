@@ -436,7 +436,7 @@ Node* FuncInvokeNode::run()
 
       return new MSpace(mspace_node, func_c->api, int_node_1->intval);
     }
-    else if (func_c->api == AUTO_SPLIT)
+    else if (func_c->api == AUTO_SPLIT || func_c->api == GREEDY_SPLIT)
     {
       Node* mspace_node_ = func_c->obj->run();
       assert(mspace_node_->type == MSpaceType);
@@ -621,7 +621,6 @@ IntValNode* TupleIntNode::volume()
 
 Node* ObjectInvokeNode::run()
 {
-  assert(obj->type == IdentifierExprType);
   Node* obj_tbd = obj->run();
   if (obj_tbd->type == TupleExprType)
   {

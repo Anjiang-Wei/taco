@@ -51,6 +51,7 @@ STRING              (\042[^\042\n]*\042)
 "reverse"           { return T_Reverse; }
 "balance_split"     { return T_Balance_split; }
 "auto_split"        { return T_Auto_split; }
+"greedy_split"      { return T_Greedy_split; }
 "volume"            { return T_Volume; }
 "has"               { return T_Has; }
 "len"               { return T_Len; }

@@ -367,32 +367,76 @@ public:
                 {
                     new_result += newdim_preprod[kk] * old_point[i+kk];
                 }
+                result.push_back(new_result);
                 i += (added_dim_num - 1);
             }
         }
         return result;
     }
-    inline static int volume(const std::vector<int>& vec)
+    inline void compute_preprod()
     {
-        int res = 1;
-        for (int i = 0; i < vec.size(); i++)
-            res *= vec[i];
-        return res;
+        newdim_preprod.push_back(1);
+        int prior = 1;
+        for (int i = 0; i < new_dims.size(); i++)
+        {
+            prior = new_dims[i] * prior;
+            newdim_preprod.push_back(prior);
+        }
     }
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
-        // BalSplitMSpace::generate_prime_factor(old_dim[dim], factor_result);
-        // auto factor_it = factor_result.begin();
-        new_dims.resize(input_dim.size(), 1);
-        int launch_domain_volume = volume(input_dim);
-        int node_count = old_dim[dim];
-        if (launch_domain_volume % node_count != 0)
+        new_dims = precise_enumerate(old_dim[dim], input_dim);
+        assert(new_dims.size() == input_dim.size());
+        compute_preprod();
+        std::vector<int> result;
+        for (size_t i = 0; i < old_dim.size(); i++)
         {
-            printf("Launch volume = %d, machine model's dimension size = %d\n", 
-                launch_domain_volume, node_count);
-            printf("CAUTION: this will result in unbalanced workload distribution\n");
+            if ((int) i != dim)
+            {
+                result.push_back(old_dim[i]);
+            }
+            else
+            {
+                for (int j = 0; j < new_dims.size(); j++)
+                {
+                    result.push_back(new_dims[j]);
+                }
+            }
         }
-        int workload_product = launch_domain_volume / node_count;
+        return result;
+    }
+};
+
+class GreedySplitMSpace : public AutoSplitMSpace
+{
+public:
+    GreedySplitMSpace() {}
+    GreedySplitMSpace(int dim_, std::vector<int> input_dim_)
+    {
+        trans_op = GREEDY_SPLIT;
+        dim = dim_; input_dim = input_dim_;
+    }
+    std::vector<int> trans_dim(const std::vector<int>& old_dim)
+    {
+        new_dims = greedy(old_dim[dim], input_dim);
+        assert(new_dims.size() == input_dim.size());
+        compute_preprod();
+        std::vector<int> result;
+        for (size_t i = 0; i < old_dim.size(); i++)
+        {
+            if ((int) i != dim)
+            {
+                result.push_back(old_dim[i]);
+            }
+            else
+            {
+                for (int j = 0; j < new_dims.size(); j++)
+                {
+                    result.push_back(new_dims[j]);
+                }
+            }
+        }
+        return result;     
     }
 };
 
@@ -556,14 +600,18 @@ public:
         prev_machine = old;
         if (api == AUTO_SPLIT)
         {
-            // todo: work on Aug 30 morning!
-            // trans_op = new Auto_SplitMSpace(int1, tupleint2);
+            trans_op = new AutoSplitMSpace(int1, tupleint2);
+        }
+        else if (api == GREEDY_SPLIT)
+        {
+            trans_op = new GreedySplitMSpace(int1, tupleint2);
         }
         else
         {
-            printf("Unsupported API signature, which should be used in auto_split\n");
+            printf("Unsupported API signature, which should be used in auto_split or greedy_split\n");
             assert(false);
         }
+        each_dim = trans_op->trans_dim(old->each_dim);
     }
     MSpace(MSpace* old, APIEnum api, int int1, int int2, int int3)
     {

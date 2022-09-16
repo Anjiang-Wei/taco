@@ -71,8 +71,11 @@ def new_func(IPoint x, ISpace y)
 # def new_func(Task task, IPoint x, ISpace y)
 {
     m4 = Machine(GPU);
-    m5 = m4.balance_split(0, 3);
-    z = m5.balance_split(1, 3);
+    m5 = m4.auto_split(0, y);
+    z = m5.auto_split(3, y);
+    print("-----------m4={}, y={}", m4.size, y);
+    print("---------- m5={}, z={}", m5.size, z.size);
+    print("---------- greedysplit={}", m4.greedy_split(0, y).size);
     # node1 * node2 * 4 GPUs
     # split the third dimension (i.e., processor dimension) as square as possible
     # z0 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
