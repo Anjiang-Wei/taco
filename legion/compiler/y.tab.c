@@ -663,19 +663,19 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   110,   110,   111,   115,   116,   117,   118,   119,   120,
-     121,   122,   123,   127,   128,   132,   133,   137,   141,   145,
-     149,   150,   154,   155,   159,   160,   161,   162,   163,   164,
-     165,   166,   167,   168,   169,   170,   174,   178,   179,   183,
-     187,   188,   192,   193,   194,   198,   202,   206,   207,   211,
-     212,   216,   220,   228,   229,   230,   231,   232,   233,   234,
-     235,   236,   237,   238,   239,   240,   241,   242,   243,   244,
-     245,   246,   248,   249,   250,   251,   252,   253,   254,   255,
-     256,   257,   258,   262,   263,   264,   265,   268,   269,   277,
-     278,   282,   283,   284,   285,   286,   287,   288,   289,   290,
-     291,   292,   293,   298,   299,   300,   301,   302,   306,   307,
-     311,   312,   316,   317,   318,   319,   320,   325,   326,   327,
-     328,   329,   330
+       0,   109,   109,   110,   114,   115,   116,   117,   118,   119,
+     120,   121,   122,   126,   127,   131,   132,   136,   140,   144,
+     148,   149,   153,   154,   158,   159,   160,   161,   162,   163,
+     164,   165,   166,   167,   168,   169,   173,   177,   178,   182,
+     186,   187,   191,   192,   193,   197,   201,   205,   206,   210,
+     211,   215,   219,   227,   228,   229,   230,   231,   232,   233,
+     234,   235,   236,   237,   238,   239,   240,   241,   242,   243,
+     244,   245,   247,   248,   249,   250,   251,   252,   253,   254,
+     255,   256,   257,   261,   262,   263,   264,   267,   268,   271,
+     272,   276,   277,   278,   279,   280,   281,   282,   283,   284,
+     285,   286,   287,   292,   293,   294,   295,   296,   300,   301,
+     305,   306,   310,   311,   312,   313,   314,   319,   320,   321,
+     322,   323,   324
 };
 #endif
 
@@ -1686,301 +1686,301 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 110 "parser.y"
+#line 109 "parser.y"
                         { root = new ProgramNode(); root->stmt_list.push_back((yyvsp[0].stmt)); (yyval.program) = root; }
 #line 1692 "y.tab.c"
     break;
 
   case 3:
-#line 111 "parser.y"
+#line 110 "parser.y"
                         { (yyvsp[-1].program)->stmt_list.push_back((yyvsp[0].stmt)); (yyval.program) = (yyvsp[-1].program); }
 #line 1698 "y.tab.c"
     break;
 
   case 4:
-#line 115 "parser.y"
+#line 114 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].proccustom); }
 #line 1704 "y.tab.c"
     break;
 
   case 5:
-#line 116 "parser.y"
+#line 115 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].regioncustom); }
 #line 1710 "y.tab.c"
     break;
 
   case 6:
-#line 117 "parser.y"
+#line 116 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].layoutcustom); }
 #line 1716 "y.tab.c"
     break;
 
   case 7:
-#line 118 "parser.y"
+#line 117 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].instancelimit); }
 #line 1722 "y.tab.c"
     break;
 
   case 8:
-#line 119 "parser.y"
+#line 118 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].memorycollect); }
 #line 1728 "y.tab.c"
     break;
 
   case 9:
-#line 120 "parser.y"
+#line 119 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].funcdef); }
 #line 1734 "y.tab.c"
     break;
 
   case 10:
-#line 121 "parser.y"
+#line 120 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].indextaskmap); }
 #line 1740 "y.tab.c"
     break;
 
   case 11:
-#line 122 "parser.y"
+#line 121 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].assign); }
 #line 1746 "y.tab.c"
     break;
 
   case 12:
-#line 123 "parser.y"
+#line 122 "parser.y"
                       { (yyval.stmt) = (yyvsp[0].printstmt); }
 #line 1752 "y.tab.c"
     break;
 
   case 13:
-#line 127 "parser.y"
+#line 126 "parser.y"
                     { (yyval.string) = (yyvsp[0].string); }
 #line 1758 "y.tab.c"
     break;
 
   case 14:
-#line 128 "parser.y"
+#line 127 "parser.y"
                     { (yyval.string) = "*"; }
 #line 1764 "y.tab.c"
     break;
 
   case 15:
-#line 132 "parser.y"
+#line 131 "parser.y"
                                      { (yyval.stringlist) = new IdentifierLstNode((yyvsp[-2].string), (yyvsp[0].string)); }
 #line 1770 "y.tab.c"
     break;
 
   case 16:
-#line 133 "parser.y"
+#line 132 "parser.y"
                                      { (yyvsp[-2].stringlist)->append((yyvsp[0].string)); }
 #line 1776 "y.tab.c"
     break;
 
   case 17:
-#line 137 "parser.y"
+#line 136 "parser.y"
                                                    { (yyval.instancelimit) = new InstanceLimitNode((yyvsp[-3].string), (yyvsp[-2].proc), (yyvsp[-1].intVal)); }
 #line 1782 "y.tab.c"
     break;
 
   case 18:
-#line 141 "parser.y"
+#line 140 "parser.y"
                                                   { (yyval.memorycollect) = new MemoryCollectNode((yyvsp[-2].string), (yyvsp[-1].string)); }
 #line 1788 "y.tab.c"
     break;
 
   case 19:
-#line 145 "parser.y"
+#line 144 "parser.y"
                                          { (yyval.proccustom) = new ProcCustomNode((yyvsp[-2].string), (yyvsp[-1].proclst)); }
 #line 1794 "y.tab.c"
     break;
 
   case 20:
-#line 149 "parser.y"
+#line 148 "parser.y"
                                                              { (yyval.regioncustom) = new RegionCustomNode((yyvsp[-4].string), (yyvsp[-3].string), (yyvsp[-2].proc), (yyvsp[-1].memlst)); }
 #line 1800 "y.tab.c"
     break;
 
   case 21:
-#line 150 "parser.y"
+#line 149 "parser.y"
                                                                          { assert(strcmp((yyvsp[-2].string), "*") == 0); (yyval.regioncustom) = new RegionCustomNode((yyvsp[-4].string), (yyvsp[-3].string), new ProcNode(ALLPROC), (yyvsp[-1].memlst)); }
 #line 1806 "y.tab.c"
     break;
 
   case 22:
-#line 154 "parser.y"
+#line 153 "parser.y"
                                                                    { (yyval.layoutcustom) = new LayoutCustomNode((yyvsp[-4].string), (yyvsp[-3].string), (yyvsp[-2].mem), (yyvsp[-1].constraints)); }
 #line 1812 "y.tab.c"
     break;
 
   case 23:
-#line 155 "parser.y"
+#line 154 "parser.y"
                                                                                { assert(strcmp((yyvsp[-2].string), "*") == 0); (yyval.layoutcustom) = new LayoutCustomNode((yyvsp[-4].string), (yyvsp[-3].string), new MemNode(ALLMEM), (yyvsp[-1].constraints)); }
 #line 1818 "y.tab.c"
     break;
 
   case 24:
-#line 159 "parser.y"
+#line 158 "parser.y"
                                             { (yyval.constraints) = new ConstraintsNode(); }
 #line 1824 "y.tab.c"
     break;
 
   case 25:
-#line 160 "parser.y"
+#line 159 "parser.y"
                                             { (yyvsp[-1].constraints)->update("reverse"); (yyval.constraints) = (yyvsp[-1].constraints); }
 #line 1830 "y.tab.c"
     break;
 
   case 26:
-#line 161 "parser.y"
+#line 160 "parser.y"
                                             { (yyvsp[-1].constraints)->update("positive"); (yyval.constraints) = (yyvsp[-1].constraints); }
 #line 1836 "y.tab.c"
     break;
 
   case 27:
-#line 162 "parser.y"
+#line 161 "parser.y"
                                             { (yyvsp[-1].constraints)->update("aos"); (yyval.constraints) = (yyvsp[-1].constraints); }
 #line 1842 "y.tab.c"
     break;
 
   case 28:
-#line 163 "parser.y"
+#line 162 "parser.y"
                                             { (yyvsp[-1].constraints)->update("soa"); (yyval.constraints) = (yyvsp[-1].constraints); }
 #line 1848 "y.tab.c"
     break;
 
   case 29:
-#line 164 "parser.y"
+#line 163 "parser.y"
                                             { (yyvsp[-1].constraints)->update("compact"); (yyval.constraints) = (yyvsp[-1].constraints); }
 #line 1854 "y.tab.c"
     break;
 
   case 30:
-#line 165 "parser.y"
+#line 164 "parser.y"
                                             { (yyvsp[-3].constraints)->update(SMALLER, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1860 "y.tab.c"
     break;
 
   case 31:
-#line 166 "parser.y"
+#line 165 "parser.y"
                                             { (yyvsp[-3].constraints)->update(LE, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1866 "y.tab.c"
     break;
 
   case 32:
-#line 167 "parser.y"
+#line 166 "parser.y"
                                             { (yyvsp[-3].constraints)->update(BIGGER, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1872 "y.tab.c"
     break;
 
   case 33:
-#line 168 "parser.y"
+#line 167 "parser.y"
                                             { (yyvsp[-3].constraints)->update(GE, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1878 "y.tab.c"
     break;
 
   case 34:
-#line 169 "parser.y"
+#line 168 "parser.y"
                                             { (yyvsp[-3].constraints)->update(EQ, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1884 "y.tab.c"
     break;
 
   case 35:
-#line 170 "parser.y"
+#line 169 "parser.y"
                                             { (yyvsp[-3].constraints)->update(NEQ, (yyvsp[0].intVal)); (yyval.constraints) = (yyvsp[-3].constraints); }
 #line 1890 "y.tab.c"
     break;
 
   case 36:
-#line 174 "parser.y"
+#line 173 "parser.y"
                                                          { (yyval.funcdef) = new FuncDefNode((yyvsp[-6].string), (yyvsp[-4].args), (yyvsp[-1].funcstmt)); }
 #line 1896 "y.tab.c"
     break;
 
   case 37:
-#line 178 "parser.y"
+#line 177 "parser.y"
                                                     { (yyval.indextaskmap) = new IndexTaskMapNode((yyvsp[-2].string), (yyvsp[-1].string)); }
 #line 1902 "y.tab.c"
     break;
 
   case 38:
-#line 179 "parser.y"
+#line 178 "parser.y"
                                                     { (yyval.indextaskmap) =  new IndexTaskMapNode((yyvsp[-2].stringlist), (yyvsp[-1].string)); }
 #line 1908 "y.tab.c"
     break;
 
   case 39:
-#line 183 "parser.y"
+#line 182 "parser.y"
                                 { (yyval.assign) = new AssignNode((yyvsp[-3].string), (yyvsp[-1].expr)); }
 #line 1914 "y.tab.c"
     break;
 
   case 40:
-#line 187 "parser.y"
+#line 186 "parser.y"
                             { FuncStmtsNode* fs = new FuncStmtsNode(); fs->stmtlst.push_back((yyvsp[0].stmt)); (yyval.funcstmt) = fs; }
 #line 1920 "y.tab.c"
     break;
 
   case 41:
-#line 188 "parser.y"
+#line 187 "parser.y"
                             { (yyvsp[-1].funcstmt)->stmtlst.push_back((yyvsp[0].stmt)); }
 #line 1926 "y.tab.c"
     break;
 
   case 42:
-#line 192 "parser.y"
+#line 191 "parser.y"
                   { (yyval.stmt) = (yyvsp[0].assign); }
 #line 1932 "y.tab.c"
     break;
 
   case 43:
-#line 193 "parser.y"
+#line 192 "parser.y"
                   { (yyval.stmt) = (yyvsp[0].returnstmt); }
 #line 1938 "y.tab.c"
     break;
 
   case 44:
-#line 194 "parser.y"
+#line 193 "parser.y"
                   { (yyval.stmt) = (yyvsp[0].printstmt); }
 #line 1944 "y.tab.c"
     break;
 
   case 45:
-#line 198 "parser.y"
+#line 197 "parser.y"
                            { (yyval.returnstmt) = new ReturnNode((yyvsp[-1].expr)); }
 #line 1950 "y.tab.c"
     break;
 
   case 46:
-#line 202 "parser.y"
+#line 201 "parser.y"
                                                        { (yyval.printstmt) = new PrintNode((yyvsp[-3].string), (yyvsp[-2].printargs)); }
 #line 1956 "y.tab.c"
     break;
 
   case 47:
-#line 206 "parser.y"
+#line 205 "parser.y"
                                 { (yyval.printargs) = new PrintArgsNode(); }
 #line 1962 "y.tab.c"
     break;
 
   case 48:
-#line 207 "parser.y"
+#line 206 "parser.y"
                                 { (yyvsp[-2].printargs)->printargs.push_back((yyvsp[0].expr)); }
 #line 1968 "y.tab.c"
     break;
 
   case 49:
-#line 211 "parser.y"
+#line 210 "parser.y"
                             { (yyval.args) = new ArgLstNode(); }
 #line 1974 "y.tab.c"
     break;
 
   case 50:
-#line 212 "parser.y"
+#line 211 "parser.y"
                             { (yyval.args) = (yyvsp[0].args); }
 #line 1980 "y.tab.c"
     break;
 
   case 51:
-#line 216 "parser.y"
+#line 215 "parser.y"
                            { ArgNode* a = new ArgNode((yyvsp[-1].argtype), (yyvsp[0].string));
                              ArgLstNode* b = new ArgLstNode(); 
                              b->arg_lst.push_back(a);
@@ -1989,7 +1989,7 @@ yyreduce:
     break;
 
   case 52:
-#line 221 "parser.y"
+#line 220 "parser.y"
                            { ArgNode* c = new ArgNode((yyvsp[-1].argtype), (yyvsp[0].string));
                              (yyvsp[-3].args)->arg_lst.push_back(c);
                              (yyval.args) = (yyvsp[-3].args); }
@@ -1997,421 +1997,421 @@ yyreduce:
     break;
 
   case 53:
-#line 228 "parser.y"
+#line 227 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), PLUS, (yyvsp[0].expr)); }
 #line 2003 "y.tab.c"
     break;
 
   case 54:
-#line 229 "parser.y"
+#line 228 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), MINUS, (yyvsp[0].expr)); }
 #line 2009 "y.tab.c"
     break;
 
   case 55:
-#line 230 "parser.y"
+#line 229 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), MULTIPLY, (yyvsp[0].expr)); }
 #line 2015 "y.tab.c"
     break;
 
   case 56:
-#line 231 "parser.y"
+#line 230 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), DIVIDE, (yyvsp[0].expr)); }
 #line 2021 "y.tab.c"
     break;
 
   case 57:
-#line 232 "parser.y"
+#line 231 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), MOD, (yyvsp[0].expr)); }
 #line 2027 "y.tab.c"
     break;
 
   case 58:
-#line 233 "parser.y"
+#line 232 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), BIGGER, (yyvsp[0].expr)); }
 #line 2033 "y.tab.c"
     break;
 
   case 59:
-#line 234 "parser.y"
+#line 233 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), SMALLER, (yyvsp[0].expr)); }
 #line 2039 "y.tab.c"
     break;
 
   case 60:
-#line 235 "parser.y"
+#line 234 "parser.y"
                             { (yyval.expr) = (yyvsp[-1].expr); }
 #line 2045 "y.tab.c"
     break;
 
   case 61:
-#line 236 "parser.y"
+#line 235 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), GE, (yyvsp[0].expr)); }
 #line 2051 "y.tab.c"
     break;
 
   case 62:
-#line 237 "parser.y"
+#line 236 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), LE, (yyvsp[0].expr)); }
 #line 2057 "y.tab.c"
     break;
 
   case 63:
-#line 238 "parser.y"
+#line 237 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), EQ, (yyvsp[0].expr)); }
 #line 2063 "y.tab.c"
     break;
 
   case 64:
-#line 239 "parser.y"
+#line 238 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), NEQ, (yyvsp[0].expr)); }
 #line 2069 "y.tab.c"
     break;
 
   case 65:
-#line 240 "parser.y"
+#line 239 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), OR, (yyvsp[0].expr)); }
 #line 2075 "y.tab.c"
     break;
 
   case 66:
-#line 241 "parser.y"
+#line 240 "parser.y"
                             { (yyval.expr) = new BinaryExprNode((yyvsp[-2].expr), AND, (yyvsp[0].expr)); }
 #line 2081 "y.tab.c"
     break;
 
   case 67:
-#line 242 "parser.y"
+#line 241 "parser.y"
                             { (yyval.expr) = new FuncInvokeNode((yyvsp[-3].expr), (yyvsp[-1].exprn)); }
 #line 2087 "y.tab.c"
     break;
 
   case 68:
-#line 243 "parser.y"
+#line 242 "parser.y"
                             { (yyval.expr) = new IndexExprNode((yyvsp[-3].expr), (yyvsp[-1].sliceexpr)); }
 #line 2093 "y.tab.c"
     break;
 
   case 69:
-#line 244 "parser.y"
+#line 243 "parser.y"
                             { (yyval.expr) = new IndexExprNode((yyvsp[-3].expr), (yyvsp[-1].exprn)); }
 #line 2099 "y.tab.c"
     break;
 
   case 70:
-#line 245 "parser.y"
+#line 244 "parser.y"
                             { (yyval.expr) = new StarExprNode(); }
 #line 2105 "y.tab.c"
     break;
 
   case 71:
-#line 246 "parser.y"
+#line 245 "parser.y"
                             { (yyval.expr) = new NegativeExprNode((yyvsp[0].expr)); }
 #line 2111 "y.tab.c"
     break;
 
   case 72:
-#line 248 "parser.y"
+#line 247 "parser.y"
                             { (yyval.expr) = new IntValNode((yyvsp[0].intVal)); }
 #line 2117 "y.tab.c"
     break;
 
   case 73:
-#line 249 "parser.y"
+#line 248 "parser.y"
                             { (yyval.expr) = new BoolValNode(true); }
 #line 2123 "y.tab.c"
     break;
 
   case 74:
-#line 250 "parser.y"
+#line 249 "parser.y"
                             { (yyval.expr) = new BoolValNode(false); }
 #line 2129 "y.tab.c"
     break;
 
   case 75:
-#line 251 "parser.y"
+#line 250 "parser.y"
                             { if (!strcmp((yyvsp[0].string), "Machine")) (yyval.expr) = new MSpace(); else (yyval.expr) = new IdentifierExprNode((yyvsp[0].string)); }
 #line 2135 "y.tab.c"
     break;
 
   case 76:
-#line 252 "parser.y"
+#line 251 "parser.y"
                             { (yyval.expr) = (yyvsp[-1].exprn)->Convert2TupleInt(); }
 #line 2141 "y.tab.c"
     break;
 
   case 77:
-#line 253 "parser.y"
+#line 252 "parser.y"
                             { (yyval.expr) = (yyvsp[0].proc); }
 #line 2147 "y.tab.c"
     break;
 
   case 78:
-#line 254 "parser.y"
+#line 253 "parser.y"
                             { (yyval.expr) = (yyvsp[0].mem); }
 #line 2153 "y.tab.c"
     break;
 
   case 79:
-#line 255 "parser.y"
+#line 254 "parser.y"
                             { (yyval.expr) = new ObjectInvokeNode((yyvsp[-2].expr), (yyvsp[0].prop)); }
 #line 2159 "y.tab.c"
     break;
 
   case 80:
-#line 256 "parser.y"
+#line 255 "parser.y"
                                      { (yyval.expr) = new TenaryExprNode((yyvsp[-4].expr), (yyvsp[-2].expr), (yyvsp[0].expr)); }
 #line 2165 "y.tab.c"
     break;
 
   case 81:
-#line 257 "parser.y"
+#line 256 "parser.y"
                             { (yyval.expr) = new UnpackExprNode((yyvsp[0].expr)); }
 #line 2171 "y.tab.c"
     break;
 
   case 82:
-#line 258 "parser.y"
+#line 257 "parser.y"
                                                       { (yyval.expr) = new ForTupleExprNode((yyvsp[-5].expr), (yyvsp[-3].string), (yyvsp[-1].expr)); }
 #line 2177 "y.tab.c"
     break;
 
   case 83:
-#line 262 "parser.y"
+#line 261 "parser.y"
                             { (yyval.sliceexpr) = new SliceExprNode((yyvsp[-2].expr), (yyvsp[0].expr)); }
 #line 2183 "y.tab.c"
     break;
 
   case 84:
-#line 263 "parser.y"
+#line 262 "parser.y"
                             { (yyval.sliceexpr) = new SliceExprNode(NULL, (yyvsp[0].expr)); }
 #line 2189 "y.tab.c"
     break;
 
   case 85:
-#line 264 "parser.y"
+#line 263 "parser.y"
                             { (yyval.sliceexpr) = new SliceExprNode((yyvsp[-1].expr), NULL); }
 #line 2195 "y.tab.c"
     break;
 
   case 86:
-#line 265 "parser.y"
+#line 264 "parser.y"
                             { (yyval.sliceexpr) = new SliceExprNode(NULL, NULL); }
 #line 2201 "y.tab.c"
     break;
 
   case 87:
-#line 268 "parser.y"
+#line 267 "parser.y"
                              { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back((yyvsp[0].expr)); (yyval.exprn) = t; }
 #line 2207 "y.tab.c"
     break;
 
   case 88:
-#line 269 "parser.y"
+#line 268 "parser.y"
                              { (yyvsp[-2].exprn)->exprlst.push_back((yyvsp[0].expr)); (yyval.exprn) = (yyvsp[-2].exprn); }
 #line 2213 "y.tab.c"
     break;
 
   case 89:
-#line 277 "parser.y"
+#line 271 "parser.y"
                             { TupleExprNode* t = new TupleExprNode(); t->exprlst.push_back((yyvsp[-2].expr)); t->exprlst.push_back((yyvsp[0].expr)); (yyval.exprn) = t; }
 #line 2219 "y.tab.c"
     break;
 
   case 90:
-#line 278 "parser.y"
+#line 272 "parser.y"
                             { (yyvsp[-2].exprn)->exprlst.push_back((yyvsp[0].expr)); (yyval.exprn) = (yyvsp[-2].exprn); }
 #line 2225 "y.tab.c"
     break;
 
   case 91:
-#line 282 "parser.y"
+#line 276 "parser.y"
                             { (yyval.prop) = new APINode(SIZE); }
 #line 2231 "y.tab.c"
     break;
 
   case 92:
-#line 283 "parser.y"
+#line 277 "parser.y"
                             { (yyval.prop) = new APINode(SPLIT); }
 #line 2237 "y.tab.c"
     break;
 
   case 93:
-#line 284 "parser.y"
+#line 278 "parser.y"
                             { (yyval.prop) = new APINode(MERGE); }
 #line 2243 "y.tab.c"
     break;
 
   case 94:
-#line 285 "parser.y"
+#line 279 "parser.y"
                             { (yyval.prop) = new APINode(SWAP); }
 #line 2249 "y.tab.c"
     break;
 
   case 95:
-#line 286 "parser.y"
+#line 280 "parser.y"
                             { (yyval.prop) = new APINode(SLICE); }
 #line 2255 "y.tab.c"
     break;
 
   case 96:
-#line 287 "parser.y"
+#line 281 "parser.y"
                             { (yyval.prop) = new APINode(REVERSE); }
 #line 2261 "y.tab.c"
     break;
 
   case 97:
-#line 288 "parser.y"
+#line 282 "parser.y"
                             { (yyval.prop) = new APINode(BALANCE_SPLIT); }
 #line 2267 "y.tab.c"
     break;
 
   case 98:
-#line 289 "parser.y"
+#line 283 "parser.y"
                             { (yyval.prop) = new APINode(AUTO_SPLIT); }
 #line 2273 "y.tab.c"
     break;
 
   case 99:
-#line 290 "parser.y"
+#line 284 "parser.y"
                             { (yyval.prop) = new APINode(GREEDY_SPLIT); }
 #line 2279 "y.tab.c"
     break;
 
   case 100:
-#line 291 "parser.y"
+#line 285 "parser.y"
                             { (yyval.prop) = new APINode(VOLUME); }
 #line 2285 "y.tab.c"
     break;
 
   case 101:
-#line 292 "parser.y"
+#line 286 "parser.y"
                             { (yyval.prop) = new APINode(HAS); }
 #line 2291 "y.tab.c"
     break;
 
   case 102:
-#line 293 "parser.y"
+#line 287 "parser.y"
                             { (yyval.prop) = new APINode(LEN); }
 #line 2297 "y.tab.c"
     break;
 
   case 103:
-#line 298 "parser.y"
+#line 292 "parser.y"
                             { (yyval.argtype) = new ArgTypeNode(INT); }
 #line 2303 "y.tab.c"
     break;
 
   case 104:
-#line 299 "parser.y"
+#line 293 "parser.y"
                             { (yyval.argtype) = new ArgTypeNode(BOOL); }
 #line 2309 "y.tab.c"
     break;
 
   case 105:
-#line 300 "parser.y"
+#line 294 "parser.y"
                             { (yyval.argtype) = new ArgTypeNode(IPOINT); }
 #line 2315 "y.tab.c"
     break;
 
   case 106:
-#line 301 "parser.y"
+#line 295 "parser.y"
                             { (yyval.argtype) = new ArgTypeNode(ISPACE); }
 #line 2321 "y.tab.c"
     break;
 
   case 107:
-#line 302 "parser.y"
+#line 296 "parser.y"
                             { (yyval.argtype) = new ArgTypeNode(MSPACE); }
 #line 2327 "y.tab.c"
     break;
 
   case 108:
-#line 306 "parser.y"
+#line 300 "parser.y"
                             { ProcLstNode* b = new ProcLstNode(); b->proc_type_lst.push_back((yyvsp[0].proc)->proc_type); (yyval.proclst) = b; }
 #line 2333 "y.tab.c"
     break;
 
   case 109:
-#line 307 "parser.y"
+#line 301 "parser.y"
                             { (yyvsp[-2].proclst)->proc_type_lst.push_back((yyvsp[0].proc)->proc_type); (yyval.proclst) = (yyvsp[-2].proclst); }
 #line 2339 "y.tab.c"
     break;
 
   case 110:
-#line 311 "parser.y"
+#line 305 "parser.y"
                             { MemLstNode* m = new MemLstNode(); m->mem_type_lst.push_back((yyvsp[0].mem)->mem_type); (yyval.memlst) = m; }
 #line 2345 "y.tab.c"
     break;
 
   case 111:
-#line 312 "parser.y"
+#line 306 "parser.y"
                             { (yyvsp[-2].memlst)->mem_type_lst.push_back((yyvsp[0].mem)->mem_type); (yyval.memlst) = (yyvsp[-2].memlst); }
 #line 2351 "y.tab.c"
     break;
 
   case 112:
-#line 316 "parser.y"
+#line 310 "parser.y"
                             { (yyval.mem) = new MemNode(SYSMEM); }
 #line 2357 "y.tab.c"
     break;
 
   case 113:
-#line 317 "parser.y"
+#line 311 "parser.y"
                             { (yyval.mem) = new MemNode(FBMEM); }
 #line 2363 "y.tab.c"
     break;
 
   case 114:
-#line 318 "parser.y"
+#line 312 "parser.y"
                             { (yyval.mem) = new MemNode(RDMEM); }
 #line 2369 "y.tab.c"
     break;
 
   case 115:
-#line 319 "parser.y"
+#line 313 "parser.y"
                             { (yyval.mem) = new MemNode(ZCMEM); }
 #line 2375 "y.tab.c"
     break;
 
   case 116:
-#line 320 "parser.y"
+#line 314 "parser.y"
                             { (yyval.mem) = new MemNode(SOCKMEM); }
 #line 2381 "y.tab.c"
     break;
 
   case 117:
-#line 325 "parser.y"
+#line 319 "parser.y"
                             { (yyval.proc) = new ProcNode(CPU); }
 #line 2387 "y.tab.c"
     break;
 
   case 118:
-#line 326 "parser.y"
+#line 320 "parser.y"
                             { (yyval.proc) = new ProcNode(GPU); }
 #line 2393 "y.tab.c"
     break;
 
   case 119:
-#line 327 "parser.y"
+#line 321 "parser.y"
                             { (yyval.proc) = new ProcNode(IO); }
 #line 2399 "y.tab.c"
     break;
 
   case 120:
-#line 328 "parser.y"
+#line 322 "parser.y"
                             { (yyval.proc) = new ProcNode(PY); }
 #line 2405 "y.tab.c"
     break;
 
   case 121:
-#line 329 "parser.y"
+#line 323 "parser.y"
                             { (yyval.proc) = new ProcNode(PROC); }
 #line 2411 "y.tab.c"
     break;
 
   case 122:
-#line 330 "parser.y"
+#line 324 "parser.y"
                             { (yyval.proc) = new ProcNode(OMP); }
 #line 2417 "y.tab.c"
     break;
@@ -2649,7 +2649,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 333 "parser.y"
+#line 327 "parser.y"
 
 
 

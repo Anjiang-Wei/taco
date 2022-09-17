@@ -643,13 +643,20 @@ public:
 
     inline void all_append(std::vector<std::vector<int>>& points, int number, bool range)
     {
-        for (int i = 0; i < points.size(); i++)
+        int points_size = points.size();
+        for (int i = 0; i < points_size; i++)
         {
             if (range)
             {
                 for (int j = 0; j < number; j++)
                 {
-                    points[i].push_back(j);
+                    std::vector<int> new_point = points[i];
+                    new_point.push_back(j);
+                    points.push_back(new_point);
+                    if (j == number - 1) // last iteration
+                    {
+                        points.erase(points.begin() + i);
+                    }
                 }
             }
             else
