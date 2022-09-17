@@ -955,8 +955,19 @@ Node* IndexExprNode::run()
       if (converted->type == TupleIntType)
       {
         TupleIntNode* tuple_int_node = (TupleIntNode*) converted;
-        std::vector<int> result = machine_space->get_node_proc(tuple_int_node->tupleint);
-        return new TupleIntNode(result, machine_space->proc_type);
+        // todo: get_node_proc should return a bool, indicating SetTupleInt or TupleInt
+        // pass vector<int> and vector<vector<int>> into get_node_proc as arguments
+        std::vector<int> result1;
+        std::vector<std::vector<int>> result2;
+        bool is_result1 = machine_space->get_node_proc(tuple_int_node->tupleint, result1, result2);
+        if (is_result1)
+        {
+          return new TupleIntNode(result1, machine_space->proc_type);
+        }
+        else
+        {
+          return new SetTupleIntNode(result2, machine_space->proc_type);
+        }
       }
       else
       {

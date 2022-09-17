@@ -641,6 +641,68 @@ public:
         each_dim = trans_op->trans_dim(old->each_dim);
     }
 
+    inline void all_append(std::vector<std::vector<int>>& points, int number, bool range)
+    {
+        for (int i = 0; i < points.size(); i++)
+        {
+            if (range)
+            {
+                for (int j = 0; j < number; j++)
+                {
+                    points[i].push_back(j);
+                }
+            }
+            else
+            {
+                points[i].push_back(number);
+            }
+        }
+    }
+
+    bool get_node_proc(const std::vector<int>& machine_point,
+                       std::vector<int>& result1, std::vector<std::vector<int>>& result2)
+    {
+        bool is_one_point = true;
+        std::vector<int> one_point;
+        std::vector<std::vector<int>> set_points;
+        for (int i = 0; i < machine_point.size(); i++)
+        {
+            if (machine_point[i] >= 0)
+            {
+                if (is_one_point)
+                {
+                    one_point.push_back(machine_point[i]);
+                }
+                else
+                {
+                    all_append(set_points, machine_point[i], false);
+                }
+            }
+            else
+            {
+                assert(machine_point[i] == -1); // representing *
+                if (is_one_point)
+                {
+                    set_points.push_back(one_point);
+                }
+                is_one_point = false;
+                all_append(set_points, this->each_dim[i], true);
+            }
+        }
+        if (is_one_point)
+        {
+            result1 = get_node_proc(one_point);
+        }
+        else
+        {
+            for (auto each_point: set_points)
+            {
+                result2.push_back(get_node_proc(each_point));
+            }
+        }
+        return is_one_point;
+    }
+    
     std::vector<int> get_node_proc(const std::vector<int>& machine_point)
     {
         MSpace* mspace = this;
