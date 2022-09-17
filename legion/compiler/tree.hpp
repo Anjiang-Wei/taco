@@ -1095,6 +1095,30 @@ public:
 
 class MSpace;
 
+class TaskNode
+{
+public:
+	std::string task_name;
+	TupleIntNode* ipoint;
+	TupleIntNode* ispace;
+	TaskNode* parent;
+	bool index_launch;
+	TaskNode(std::string task, std::vector<int> point, std::vector<int> space, TaskNode* p, bool b)
+	{
+		task_name = task; ipoint = new TupleIntNode(point); ispace = new TupleIntNode(space);
+		parent = p; index_launch = b;
+	}
+	void print()
+	{
+		printf("%s:", task_name.c_str());
+		printf(index_launch ? " is index launch\n" : " not index launch\n");
+		printf("ipoint:"); ipoint->print();
+		printf("ispace:"); ispace->print();
+		printf("parent:%s", parent->task_name.c_str());
+	}
+	TaskNode* run() { return this; }
+};
+
 class Tree2Legion
 {
 public:
