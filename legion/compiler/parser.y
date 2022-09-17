@@ -13,7 +13,7 @@ void yyerror(const char*);
 
 %define parse.error verbose
 
-%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Auto_split T_Greedy_split T_Volume T_Has T_Tuple T_For T_In T_Len
+%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Auto_split T_Greedy_split T_Volume T_Has T_Tuple T_For T_In T_Len T_TaskIPoint T_TaskISpace T_TaskParent T_TaskProcessor
 %token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
@@ -285,6 +285,10 @@ Prop:
 |   T_Volume                { $$ = new APINode(VOLUME); }
 |   T_Has                   { $$ = new APINode(HAS); }
 |   T_Len                   { $$ = new APINode(LEN); }
+|   T_TaskIPoint            { $$ = new APINode(TASKIPOINT); }
+|   T_TaskISpace            { $$ = new APINode(TASKISPACE); }
+|   T_TaskParent            { $$ = new APINode(TASKPARENT); }
+|   T_TaskProcessor         { $$ = new APINode(TASKPROCESSOR); }
 ;
 
 

@@ -134,6 +134,10 @@ enum APIEnum
 	VOLUME,
 	HAS,
 	LEN,
+	TASKIPOINT,
+	TASKISPACE,
+	TASKPARENT,
+	TASKPROCESSOR,
 };
 
 const char* APIName[] =
@@ -150,6 +154,10 @@ const char* APIName[] =
 	"VOLUME",
 	"HAS",
 	"LEN",
+	"TASKIPOINT",
+	"TASKISPACE",
+	"TASKPARENT",
+	"TASKPROCESSOR",
 };
 
 enum NodeType

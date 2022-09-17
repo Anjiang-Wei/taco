@@ -55,6 +55,10 @@ STRING              (\042[^\042\n]*\042)
 "volume"            { return T_Volume; }
 "has"               { return T_Has; }
 "len"               { return T_Len; }
+"ipoint"            { return T_TaskIPoint; }
+"ispace"            { return T_TaskISpace; }
+"parent"            { return T_TaskParent; }
+"processor"         { return T_TaskProcessor; }
 
 "CPU"               { return T_CPU; }
 "GPU"               { return T_GPU; }
