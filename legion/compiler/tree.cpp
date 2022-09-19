@@ -241,7 +241,8 @@ std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int
   }
 
   std::unordered_map<std::string, Node*> func_symbols;
-  TaskNode* task_node = new TaskNode(task, x, point_space);
+  TaskNode* task_node = new TaskNode();
+  task_node->init(task, x, point_space);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   if (local_symbol.size() != 0)
