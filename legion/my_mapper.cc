@@ -649,6 +649,7 @@ void NSMapper::report_profiling(const MapperContext ctx,
   for (auto it = inflight.begin(); it != inflight.end(); it++) {
     is_index_launch = false;
     // adhoc solution: task.get_slice_domain() is not supported on this specific version of Legion
+    // todo: fix this adhoc solution
     if (is_index_launch)
     { // if (it->id == task.get_unique_id()) {
       // if (it->id == std::make_pair(task.get_slice_domain(), task.get_context_index())) { 
@@ -736,6 +737,7 @@ void NSMapper::select_tasks_to_map(const MapperContext ctx,
           // and queue it up on the processor.
           is_index_launch = false;
           // adhoc solution: task->get_slice_domain() is not supported on this specific commit of Legion
+          // todo: fix this problem
           if (is_index_launch)
           {
             // this->backPressureQueue[task->orig_proc].push_back({
@@ -747,12 +749,12 @@ void NSMapper::select_tasks_to_map(const MapperContext ctx,
           }
           else
           {
-            this->backPressureQueue[task->orig_proc].push_back({
-              // .id = Domain::NO_DOMAIN,
-              .id2 = task->get_unique_id(),
-              .event = this->runtime->create_mapper_event(ctx),
-              .schedTime = schedTime,
-            });
+              InFlightTask a;
+              // a.id = Domain::NO_DOMAIN,
+              a.id2 = task->get_unique_id();
+              a.event = this->runtime->create_mapper_event(ctx);
+              a.schedTime = schedTime;
+              this->backPressureQueue[task->orig_proc].push_back(a);
           }
         }
       }
