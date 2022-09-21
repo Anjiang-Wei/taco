@@ -13,7 +13,7 @@ void yyerror(const char*);
 
 %define parse.error verbose
 
-%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Auto_split T_Greedy_split T_Volume T_Has T_Tuple T_For T_In T_Len T_TaskIPoint T_TaskISpace T_TaskParent T_TaskProcessor
+%token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Auto_split T_Greedy_split T_Volume T_Has T_Tuple T_For T_In T_Len T_TaskIPoint T_TaskISpace T_TaskParent T_TaskProcessor T_SingleTaskMap
 %token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
@@ -42,6 +42,7 @@ void yyerror(const char*);
     class AssignNode* assign;
     class ExprNode* expr;
     class IndexTaskMapNode* indextaskmap;
+    class SingleTaskMapNode* singletaskmap;
     class FuncDefNode* funcdef;
     class ArgLstNode* args;
     class TupleExprNode* exprn;
@@ -78,6 +79,7 @@ void yyerror(const char*);
 %type <assign> Assign_Stmt
 %type <expr> Expr
 %type <indextaskmap> IndexTaskMap
+%type <singletaskmap> SingleTaskMap
 %type <funcdef> FuncDef
 %type <args> ArgLst
 %type <args> ArgLst_
@@ -118,6 +120,7 @@ Stmt:
 |   MemoryCollect     { $$ = $1; }
 |   FuncDef           { $$ = $1; }
 |   IndexTaskMap      { $$ = $1; }
+|   SingleTaskMap     { $$ = $1; }
 |   Assign_Stmt       { $$ = $1; }
 |   Print_Stmt        { $$ = $1; }
 ;
@@ -175,8 +178,14 @@ FuncDef:
 
 IndexTaskMap:
     T_IndexTaskMap Identifier_star T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3); }
-|   T_IndexTaskMap Identifier_List T_Identifier ';' { $$ =  new IndexTaskMapNode($2, $3); }
+|   T_IndexTaskMap Identifier_List T_Identifier ';' { $$ = new IndexTaskMapNode($2, $3); }
 ;
+
+SingleTaskMap:
+    T_SingleTaskMap Identifier_star T_Identifier ';' { $$ = new SingleTaskMapNode($2, $3); }
+|   T_SingleTaskMap Identifier_List T_Identifier ';' { $$ = new SingleTaskMapNode($2, $3); }
+;
+
 
 Assign_Stmt:
     T_Identifier '=' Expr ';'   { $$ = new AssignNode($1, $3); }

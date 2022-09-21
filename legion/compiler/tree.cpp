@@ -219,9 +219,16 @@ std::vector<int> TaskNode::get_proc_coordinate_from_Legion()
   }
 }
 
+std::vector<std::vector<int>> Tree2Legion::runsingle(std::string task)
+{
+  // todo: design this interface
+  return {};
+}
+
 std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int> x,
             std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
 {
+  // todo: redesign this interface, we may want to pass the whole Task object in here
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif

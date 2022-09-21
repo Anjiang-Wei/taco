@@ -173,6 +173,7 @@ enum NodeType
 	ArgTypeType,
 	AssignType,
 	IndexTaskMapType,
+	SingleTaskMapType,
 	ArgType,
 	ArgLstType,
 	FuncDefType,
@@ -215,6 +216,7 @@ const char* NodeTypeName[] =
   "ArgTypeType",
   "AssignType",
   "IndexTaskMapType",
+  "SingleTaskMapType",
   "ArgType",
   "ArgLstType",
   "FuncDefType",
@@ -616,6 +618,29 @@ public:
 	Node* run() { return this; }
 	BoolValNode* binary_op(BoolValNode* rt, BinOpEnum op);
 };
+
+
+class SingleTaskMapNode : public StmtNode
+{
+	std::vector<std::string> task_name;
+	std::string func_name;
+public:
+	SingleTaskMapNode(const char* x, const char* y)
+	{
+		type = SingleTaskMapType;
+		task_name.push_back(std::string(x));
+		func_name = std::string(y);
+	}
+	SingleTaskMapNode(IdentifierLstNode* x, const char* y)
+	{
+		type = SingleTaskMapType;
+		task_name = x->idlst;
+		func_name= std::string(y);
+	}
+	void print() { printf("SingleTaskMapNode (%s,...), %s\n", task_name[0].c_str(), func_name.c_str()); }
+	Node* run();
+};
+
 
 class IndexTaskMapNode : public StmtNode
 {
@@ -1195,12 +1220,13 @@ public:
 		}
 		return false;
 	}
-	  
+	
 	void print()
 	{
 		std::cout << "I am invoked!" << std::endl;
 	}
 
+	std::vector<std::vector<int>> runsingle(std::string task);
 	std::vector<std::vector<int>> run(std::string task, std::vector<int> x,
 						 std::vector<int> point_space, Processor::Kind proc_kind);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)

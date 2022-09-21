@@ -35,6 +35,7 @@ STRING              (\042[^\042\n]*\042)
 "InstanceLimit"     { return T_Instance; }
 "CollectMemory"     { return T_Collect; }
 "IndexTaskMap"      { return T_IndexTaskMap; }
+"SingleTaskMap"     { return T_SingleTaskMap; }
 
 "F_order"           { return T_Positive_Dimension; }
 "C_order"           { return T_Reverse_Dimension; }
