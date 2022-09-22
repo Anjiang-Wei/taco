@@ -186,7 +186,10 @@ TupleIntNode* TaskNode::get_point()
   if (index_launch)
     return ipoint;
   else
+  {
+    printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
     return new TupleIntNode(std::vector<int>());
+  }
 }
 
 TupleIntNode* TaskNode::get_space()
@@ -194,28 +197,31 @@ TupleIntNode* TaskNode::get_space()
   if (index_launch)
     return ispace;
   else
-    return new TupleIntNode(std::vector<int>());
+    printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
+  return new TupleIntNode(std::vector<int>());
 }
 
 TaskNode* TaskNode::get_parent()
 {
-  // todo: use Legion Task object to query its parent
+  if (index_launch == false)
+  {
+      // todo: fill this in by quering Legion runtime
+      return new TaskNode("null", {}, {});
+  }
+  else
+      printf("Warning: IndexTask does not support get_parent(), returning NULL\n");
   return NULL;
 }
 
 std::vector<int> TaskNode::get_proc_coordinate_from_Legion()
 {
-  if (coordinate.size() != 0)
   {
-    return coordinate;
+    // todo: compute the node idx and processor idx from the Task object
   }
-  else
-  {
-    // todo: query the Legion runtime, and record the result in coordinate
-  }
+  return {};
 }
 
-std::vector<std::vector<int>> Tree2Legion::runsingle(std::string task)
+std::vector<std::vector<int>> Tree2Legion::runsingle(const Task& legion_task)
 {
   // todo: design this interface
   return {};
@@ -224,7 +230,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(std::string task)
 std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int> x,
             std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
 {
-  // todo: redesign this interface, we may want to pass the whole Task object in here
+  // todo: redesign when necessary, we need Task object for hierarchical index launch
   #ifdef DEBUG_TREE
       std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
   #endif
@@ -244,8 +250,7 @@ std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int
   }
 
   std::unordered_map<std::string, Node*> func_symbols;
-  TaskNode* task_node = new TaskNode();
-  task_node->init(task, x, point_space);
+  TaskNode* task_node = new TaskNode(task, x, point_space);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   if (local_symbol.size() != 0)

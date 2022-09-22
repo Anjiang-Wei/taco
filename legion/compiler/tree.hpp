@@ -1136,40 +1136,42 @@ class MSpace;
 class TaskNode : public Node
 {
 public:
-	std::string task_name;
-	TupleIntNode* ipoint;
-	TupleIntNode* ispace;
-	const TaskNode* parent;
-	bool index_launch;
-	std::vector<int> coordinate;
-	const Task* legion_task_obj;
+    // if true, use task_name, ipoint, ispace; if false, use legion_task_obj
+    bool index_launch;
 
-	// for single task launch, initialize by Legion Task Object
-	TaskNode(const Task* legion_task)
-	{
+    std::string task_name;
+    TupleIntNode* ipoint;
+    TupleIntNode* ispace;
+
+    const Task* legion_task_obj;
+
+    // for single task launch, initialize by Legion Task Object
+    TaskNode(const Task* legion_task)
+    {
+        type = TaskNodeType;
+        index_launch = false;
         legion_task_obj = legion_task;
-	}
-	TaskNode() { type = TaskNodeType; parent = NULL; index_launch = false; }
-	// for index launch, initialize by point and space
-	void init(std::string name, std::vector<int> point, std::vector<int> space)
-	{
-		task_name = name;
-		ipoint = new TupleIntNode(point); ispace = new TupleIntNode(space);
-		index_launch = true;
-	}
-	TupleIntNode* get_point();
-	TupleIntNode* get_space();
-	TaskNode* get_parent();
-	std::vector<int> get_proc_coordinate_from_Legion();
-	void print()
-	{
-		printf("%s:", task_name.c_str());
-		printf(index_launch ? " is index launch\n" : " not index launch\n");
-		printf("ipoint:"); if (ipoint != NULL) ipoint->print();
-		printf("ispace:"); if (ispace != NULL) ispace->print();
-		printf("parent:%s", parent != NULL ? parent->task_name.c_str() : "hasn't queried parent yet");
-	}
-	TaskNode* run() { return this; }
+    }
+    // for index launch, initialize by point and space
+    TaskNode(std::string name, std::vector<int> point, std::vector<int> space)
+    {
+        type = TaskNodeType;
+        index_launch = true;
+        task_name = name;
+        ipoint = new TupleIntNode(point);
+        ispace = new TupleIntNode(space);
+    }
+    TupleIntNode* get_point();
+    TupleIntNode* get_space();
+    TaskNode* get_parent();
+    std::vector<int> get_proc_coordinate_from_Legion();
+    void print()
+    {
+        printf(index_launch ? " is index launch\n" : " not index launch\n");
+        printf("ipoint:"); if (ipoint != NULL) ipoint->print();
+        printf("ispace:"); if (ispace != NULL) ispace->print();
+    }
+    TaskNode* run() { return this; }
 };
 
 class Tree2Legion
@@ -1237,7 +1239,7 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	std::vector<std::vector<int>> runsingle(std::string task);
+	std::vector<std::vector<int>> runsingle(const Task& task);
 	std::vector<std::vector<int>> run(std::string task, std::vector<int> x,
 						 std::vector<int> point_space, Processor::Kind proc_kind);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
