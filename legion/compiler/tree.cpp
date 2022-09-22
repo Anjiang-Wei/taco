@@ -726,8 +726,6 @@ Node* ObjectInvokeNode::run()
     std::cout << NodeTypeName[obj_tbd->type] <<  " does not support volume/size" << std::endl;
     assert(false);
   }
-  // todo: for task object, implement the .ipoint, .ispace, .parent
-  // todo: for task object, implement .processor(m) somewhere else
   if (obj_tbd->type == TupleIntType)
   {
     TupleIntNode* tuple_int = (TupleIntNode*) obj_tbd;
@@ -769,6 +767,22 @@ Node* ObjectInvokeNode::run()
   else if (obj_tbd->type == TaskNodeType)
   {
     // todo: should also support TaskNode: ipoint (get_point), ispace (get_space), parent (get_parent);
+    TaskNode* tasknode = (TaskNode*) obj_tbd;
+    if (api == TASKIPOINT)
+    {
+        return tasknode->get_point();
+    }
+    else if (api == TASKISPACE)
+    {
+        return tasknode->get_space();
+    }
+    else if (api == TASKPARENT)
+    {
+        return tasknode->get_parent();
+    }
+    printf("TaskNode only support ipoint/ispace/parent in ObjectInvokeNode\n");
+    assert(false);
+    return NULL;
   }
   printf("ObjectInvokeNode only supports TupleInt / MSpace / TaskNode\n");
   assert(false);
