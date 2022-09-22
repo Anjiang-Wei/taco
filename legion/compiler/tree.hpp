@@ -440,7 +440,8 @@ public:
 	{
 		Node* simplified = right_node->run();
 		if (!(simplified->type == IntValType || simplified->type == BoolValType ||\
-			simplified->type == MSpaceType || simplified->type == TupleExprType))
+			simplified->type == MSpaceType || simplified->type == TupleExprType ||\
+			simplified->type == TupleIntType || simplified->type == TaskNodeType))
 		{
 			std::cout << "Cannot Assign " << NodeTypeName[simplified->type] << std::endl;
 			assert(false);

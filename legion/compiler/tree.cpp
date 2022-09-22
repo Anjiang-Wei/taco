@@ -721,9 +721,9 @@ Node* ObjectInvokeNode::run()
   {
     obj_tbd = ((TupleExprNode*) obj_tbd)->Convert2TupleInt();
   }
-  if (obj_tbd->type != MSpaceType && obj_tbd->type != TupleIntType)
+  if (obj_tbd->type != MSpaceType && obj_tbd->type != TupleIntType && obj_tbd->type != TaskNodeType)
   {
-    std::cout << NodeTypeName[obj_tbd->type] <<  " does not support volume/size" << std::endl;
+    std::cout << NodeTypeName[obj_tbd->type] <<  " is not supported ObjectInvokeNode" << std::endl;
     assert(false);
   }
   if (obj_tbd->type == TupleIntType)
