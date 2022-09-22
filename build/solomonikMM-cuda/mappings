@@ -71,9 +71,11 @@ m4 = Machine(GPU);
 print("m4 = {}, m4[0,1]={}", m4.size, m4[0,1]);
 print("m4[0,*]={}", m4[0,*]);
 
-def new_func(IPoint x, ISpace y)
-# def new_func(Task task, IPoint x, ISpace y)
+# def new_func(IPoint x, ISpace y)
+def new_func(Task task)
 {
+    x = task.ipoint;
+    y = task.ispace;
     # print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
     m5 = m4.auto_split(0, y);
     z = m5.auto_split(3, y);

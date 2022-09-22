@@ -307,6 +307,7 @@ TYPE:
 |   T_IPoint                { $$ = new ArgTypeNode(IPOINT); }
 |   T_ISpace                { $$ = new ArgTypeNode(ISPACE); }
 |   T_MSpace                { $$ = new ArgTypeNode(MSPACE); }
+|   T_Task                  { $$ = new ArgTypeNode(TASK); }
 ;
 
 ProcLst:

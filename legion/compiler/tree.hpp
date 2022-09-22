@@ -69,6 +69,7 @@ const char* MemoryEnumName[] =
 
 enum ArgTypeEnum
 {
+	TASK,
 	INT,
 	BOOL,
 	IPOINT,
@@ -78,6 +79,7 @@ enum ArgTypeEnum
 
 const char* ArgTypeName[] =
 {
+	"TASK",
 	"INT",
 	"BOOL",
 	"IPOINT",

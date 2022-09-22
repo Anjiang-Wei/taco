@@ -303,6 +303,36 @@ std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int
   return {};
 }
 
+Node* SingleTaskMapNode::run()
+{
+  if (global_symbol.count(func_name) == 0)
+  {
+    printf("SingleTaskMap's function undefined\n");
+    assert(false);
+  }
+  Node* fun_node = global_symbol.at(func_name);
+  if (fun_node->type != FuncDefType)
+  {
+    printf("SingleTaskMap's mapping function is undefined\n");
+    assert(false);
+  }
+  FuncDefNode* func_node_c = (FuncDefNode*) fun_node;
+
+  std::vector<ArgNode*> params = func_node_c->func_args->arg_lst;
+
+  for (int i = 0; i < task_name.size(); i++)
+  {
+    Tree2Legion::task2func.insert({task_name[i], func_node_c});
+  }
+  if (!(params.size() == 1 && (params[0]->argtype == TASK)))
+  {
+    std::cout << "Entry mapping function's must be like func(Task t)" << std::endl;
+    assert(false);
+  }
+  return NULL;
+}
+
+
 Node* IndexTaskMapNode::run()
 {
   if (global_symbol.count(func_name) == 0)
