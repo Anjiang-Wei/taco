@@ -1136,13 +1136,21 @@ class MSpace;
 class TaskNode : public Node
 {
 public:
+	std::string task_name;
 	TupleIntNode* ipoint;
 	TupleIntNode* ispace;
-	std::string task_name;
-	TaskNode* parent;
+	const TaskNode* parent;
 	bool index_launch;
 	std::vector<int> coordinate;
+	const Task* legion_task_obj;
+
+	// for single task launch, initialize by Legion Task Object
+	TaskNode(const Task* legion_task)
+	{
+        legion_task_obj = legion_task;
+	}
 	TaskNode() { type = TaskNodeType; parent = NULL; index_launch = false; }
+	// for index launch, initialize by point and space
 	void init(std::string name, std::vector<int> point, std::vector<int> space)
 	{
 		task_name = name;

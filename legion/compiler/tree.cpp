@@ -199,12 +199,8 @@ TupleIntNode* TaskNode::get_space()
 
 TaskNode* TaskNode::get_parent()
 {
-  if (parent != NULL)
-    return parent;
-  else
-  {
-    // todo: query the Legion runtime, and record the result in parent
-  }
+  // todo: use Legion Task object to query its parent
+  return NULL;
 }
 
 std::vector<int> TaskNode::get_proc_coordinate_from_Legion()

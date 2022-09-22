@@ -72,18 +72,23 @@ print("m4 = {}, m4[0,1]={}", m4.size, m4[0,1]);
 print("m4[0,*]={}", m4[0,*]);
 
 # def new_func(IPoint x, ISpace y)
-def new_func(Task task)
+def single_func(Task task)
 {
-    x = task.ipoint;
-    y = task.ispace;
-    point_test1 = task.processor(m4);
-    point_test2 = task.processor(m5);
-    point_test3 = task.processor(m6);
+    print("in single_func");
+    point_test1 = task.parent.processor(m4);
+    point_test2 = task.parent.processor(m5);
+    point_test3 = task.parent.processor(m6);
     print("point_test1,2,3={}, {}, {}", point_test1, point_test2, point_test3);
     tparent = task.parent;
     # print("parent.ipoint={}", tparent.ipoint);
     # print("parent.ispace={}", tparent.ispace);
-    # print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
+    return (0, 0);
+}
+def new_func(Task task)
+{
+    x = task.ipoint;
+    y = task.ispace;
+   # print("--------testsplice={}, volume={}", m4.slice(1, 0, 1).size, m4.slice(1, 0, 1).volume);
     m5 = m4.auto_split(0, y);
     z = m5.auto_split(3, y);
     # print("-----------m4={}, y={}", m4.size, y);
