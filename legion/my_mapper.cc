@@ -382,17 +382,38 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
                                                        const Task &task,
                                                        std::vector<Processor> &target_procs)
 {
-    std::vector<std::vector<int>> res = tree_result.runsingle(task);
-    printf("runsingle get results back!\n");
-    for (int i = 0; i < res.size(); i++)
+    if (!task.is_index_space)
     {
-        printf("res[%d]:", i);
-        for (int j = 0; j < res[i].size(); j++)
+        std::vector<std::vector<int>> res = tree_result.runsingle(task);
+        printf("runsingle get results back for %s!\n", task.get_task_name());
+        for (int i = 0; i < res.size(); i++)
         {
-            printf("%d,", res[i][j]);
+            printf("res_single[%d]:", i);
+            for (int j = 0; j < res[i].size(); j++)
+            {
+                printf("%d,", res[i][j]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
+    else
+    {
+        // todo: handle this carefully, rename "run" to "runindex"
+        //std::vector<std::vector<int>> res = tree_result.run(task.get_task_name(), {}, {});
+        printf("runindex get results back for %s!\n", task.get_task_name());
+        /*
+        for (int i = 0; i < res.size(); i++)
+        {
+            printf("res_index[%d]:", i);
+            for (int j = 0; j < res[i].size(); j++)
+            {
+                printf("%d,", res[i][j]);
+            }
+            printf("\n");
+        }
+        */
+    }
+
     if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
         // todo: add feature, staylocal
         target_procs.push_back(task.orig_proc);
