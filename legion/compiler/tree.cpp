@@ -488,7 +488,7 @@ Node* FuncInvokeNode::run()
     func_c->set_proc_type(proc_c->proc_type);
     return func_c;
   }
-  // functions for built-in objects (Machine Model)
+  // functions for built-in objects (Machine Model or Task Object)
   else if (func_node->type == ObjectInvokeType)
   {
     ObjectInvokeNode* func_c = (ObjectInvokeNode*) func_node;
@@ -510,7 +510,7 @@ Node* FuncInvokeNode::run()
       assert(mem_node->type == MemType);
       MemNode* memnode = (MemNode*) mem_node;
       MemoryEnum mem = memnode->mem_type;
-      
+
       return new BoolValNode(machine_node->has_mem(int_val, mem));
     }
     else if (func_c->api == REVERSE)
@@ -518,7 +518,7 @@ Node* FuncInvokeNode::run()
       Node* mspace_node_ = func_c->obj->run();
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
-      
+
       assert(args_c->exprlst.size() == 1);
       Node* intnode_1 = args_c->exprlst[0]->run();
       assert(intnode_1->type == IntValType);
@@ -557,7 +557,7 @@ Node* FuncInvokeNode::run()
       Node* mspace_node_ = func_c->obj->run();
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
-      
+
       assert(args_c->exprlst.size() == 2);
       Node* intnode_1 = args_c->exprlst[0]->run();
       Node* intnode_2 = args_c->exprlst[1]->run();
@@ -587,15 +587,28 @@ Node* FuncInvokeNode::run()
 
       return new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval, int_node_3->intval);
     }
+    else if (func_c->api == TASKPROCESSOR)
+    {
+        // point = task.processor(m);
+        // parent_point = task.parent.processor(m);
+        Node* task_node_ = func_c->obj->run();
+        assert(task_node_->type == TaskNodeType);
+        TaskNode* task_node = (TaskNode*) task_node_;
+
+        assert(args_c->exprlst.size() == 1);
+        Node* machine_model_ = args_c->exprlst[0]->run();
+        assert(machine_model_->type == MSpaceType);
+        MSpace* machine_model = (MSpace*) machine_model_;
+
+        std::vector<int> dim2_point = task_node->get_proc_coordinate_from_Legion();
+        std::vector<int> point_in_mspace = machine_model->legion2mspace(dim2_point);
+
+        return new TupleIntNode(point_in_mspace);
+    }
     else
     {
       std::cout << "unsupported func_c->api" << std::endl;
     }
-  }
-  // functions for built-in objects (Task Object)
-  else if (func_node->type == TaskNodeType)
-  {
-    // todo: support task.processor(machine_model), return a point in machine model space
   }
   // user-defined function
   else if (func_node->type == IdentifierExprType)
@@ -766,7 +779,6 @@ Node* ObjectInvokeNode::run()
   }
   else if (obj_tbd->type == TaskNodeType)
   {
-    // todo: should also support TaskNode: ipoint (get_point), ispace (get_space), parent (get_parent);
     TaskNode* tasknode = (TaskNode*) obj_tbd;
     if (api == TASKIPOINT)
     {

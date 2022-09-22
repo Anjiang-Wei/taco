@@ -669,6 +669,7 @@ public:
     bool get_node_proc(const std::vector<int>& machine_point,
                        std::vector<int>& result1, std::vector<std::vector<int>>& result2)
     {
+        // can deal with set of points, e.g., m[0, *]
         bool is_one_point = true;
         std::vector<int> one_point;
         std::vector<std::vector<int>> set_points;
@@ -744,6 +745,13 @@ public:
         }
         return current_point;
     }
+
+    std::vector<int> legion2mspace(const std::vector<int>& dim2_point)
+    {
+        // todo: reverse the traversal of get_node_proc
+        return {};
+    }
+
 };
 
 
