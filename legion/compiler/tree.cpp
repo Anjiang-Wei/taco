@@ -324,7 +324,8 @@ Node* SingleTaskMapNode::run()
   {
     Tree2Legion::task2func.insert({task_name[i], func_node_c});
   }
-  if (!(params.size() == 1 && (params[0]->argtype == TASK)))
+  // function signature check
+  if (!(params.size() == 1 && params[0]->argtype == TASK))
   {
     std::cout << "Entry mapping function's must be like func(Task t)" << std::endl;
     assert(false);
@@ -354,10 +355,10 @@ Node* IndexTaskMapNode::run()
   {
     Tree2Legion::task2func.insert({task_name[i], func_node_c});
   }
-  // IPoint x, ISpace y
-  if (!(params.size() == 2 && params[0]->argtype == IPOINT && params[1]->argtype == ISPACE))
+  // function signature check
+  if (!(params.size() == 1 && params[0]->argtype == TASK))
   {
-    std::cout << "Entry mapping function's input must be (IPoint, ISpace)" << std::endl;
+    std::cout << "Entry mapping function's definition must be like func(Task t)" << std::endl;
     assert(false);
   }
   return NULL;
