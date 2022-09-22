@@ -68,48 +68,49 @@ extern int yydebug;
     T_TaskISpace = 274,
     T_TaskParent = 275,
     T_TaskProcessor = 276,
-    T_Reverse_Dimension = 277,
-    T_Positive_Dimension = 278,
-    T_AOS = 279,
-    T_SOA = 280,
-    T_Compact = 281,
-    T_Align = 282,
-    T_CPU = 283,
-    T_GPU = 284,
-    T_IO = 285,
-    T_PY = 286,
-    T_PROC = 287,
-    T_OMP = 288,
-    T_SYSMEM = 289,
-    T_FBMEM = 290,
-    T_RDMEM = 291,
-    T_ZCMEM = 292,
-    T_SOCKMEM = 293,
-    T_Int = 294,
-    T_Bool = 295,
-    T_IPoint = 296,
-    T_ISpace = 297,
-    T_MSpace = 298,
-    T_Def = 299,
-    T_Return = 300,
-    T_True = 301,
-    T_False = 302,
-    T_Task = 303,
-    T_Region = 304,
-    T_Layout = 305,
-    T_IndexTaskMap = 306,
-    T_Print = 307,
-    T_Instance = 308,
-    T_Collect = 309,
-    T_Le = 310,
-    T_Ge = 311,
-    T_Eq = 312,
-    T_Ne = 313,
-    T_And = 314,
-    T_Or = 315,
-    T_Identifier = 316,
-    T_StringConstant = 317,
-    T_IntConstant = 318
+    T_SingleTaskMap = 277,
+    T_Reverse_Dimension = 278,
+    T_Positive_Dimension = 279,
+    T_AOS = 280,
+    T_SOA = 281,
+    T_Compact = 282,
+    T_Align = 283,
+    T_CPU = 284,
+    T_GPU = 285,
+    T_IO = 286,
+    T_PY = 287,
+    T_PROC = 288,
+    T_OMP = 289,
+    T_SYSMEM = 290,
+    T_FBMEM = 291,
+    T_RDMEM = 292,
+    T_ZCMEM = 293,
+    T_SOCKMEM = 294,
+    T_Int = 295,
+    T_Bool = 296,
+    T_IPoint = 297,
+    T_ISpace = 298,
+    T_MSpace = 299,
+    T_Def = 300,
+    T_Return = 301,
+    T_True = 302,
+    T_False = 303,
+    T_Task = 304,
+    T_Region = 305,
+    T_Layout = 306,
+    T_IndexTaskMap = 307,
+    T_Print = 308,
+    T_Instance = 309,
+    T_Collect = 310,
+    T_Le = 311,
+    T_Ge = 312,
+    T_Eq = 313,
+    T_Ne = 314,
+    T_And = 315,
+    T_Or = 316,
+    T_Identifier = 317,
+    T_StringConstant = 318,
+    T_IntConstant = 319
   };
 #endif
 /* Tokens.  */
@@ -132,48 +133,49 @@ extern int yydebug;
 #define T_TaskISpace 274
 #define T_TaskParent 275
 #define T_TaskProcessor 276
-#define T_Reverse_Dimension 277
-#define T_Positive_Dimension 278
-#define T_AOS 279
-#define T_SOA 280
-#define T_Compact 281
-#define T_Align 282
-#define T_CPU 283
-#define T_GPU 284
-#define T_IO 285
-#define T_PY 286
-#define T_PROC 287
-#define T_OMP 288
-#define T_SYSMEM 289
-#define T_FBMEM 290
-#define T_RDMEM 291
-#define T_ZCMEM 292
-#define T_SOCKMEM 293
-#define T_Int 294
-#define T_Bool 295
-#define T_IPoint 296
-#define T_ISpace 297
-#define T_MSpace 298
-#define T_Def 299
-#define T_Return 300
-#define T_True 301
-#define T_False 302
-#define T_Task 303
-#define T_Region 304
-#define T_Layout 305
-#define T_IndexTaskMap 306
-#define T_Print 307
-#define T_Instance 308
-#define T_Collect 309
-#define T_Le 310
-#define T_Ge 311
-#define T_Eq 312
-#define T_Ne 313
-#define T_And 314
-#define T_Or 315
-#define T_Identifier 316
-#define T_StringConstant 317
-#define T_IntConstant 318
+#define T_SingleTaskMap 277
+#define T_Reverse_Dimension 278
+#define T_Positive_Dimension 279
+#define T_AOS 280
+#define T_SOA 281
+#define T_Compact 282
+#define T_Align 283
+#define T_CPU 284
+#define T_GPU 285
+#define T_IO 286
+#define T_PY 287
+#define T_PROC 288
+#define T_OMP 289
+#define T_SYSMEM 290
+#define T_FBMEM 291
+#define T_RDMEM 292
+#define T_ZCMEM 293
+#define T_SOCKMEM 294
+#define T_Int 295
+#define T_Bool 296
+#define T_IPoint 297
+#define T_ISpace 298
+#define T_MSpace 299
+#define T_Def 300
+#define T_Return 301
+#define T_True 302
+#define T_False 303
+#define T_Task 304
+#define T_Region 305
+#define T_Layout 306
+#define T_IndexTaskMap 307
+#define T_Print 308
+#define T_Instance 309
+#define T_Collect 310
+#define T_Le 311
+#define T_Ge 312
+#define T_Eq 313
+#define T_Ne 314
+#define T_And 315
+#define T_Or 316
+#define T_Identifier 317
+#define T_StringConstant 318
+#define T_IntConstant 319
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -199,6 +201,7 @@ union YYSTYPE
     class AssignNode* assign;
     class ExprNode* expr;
     class IndexTaskMapNode* indextaskmap;
+    class SingleTaskMapNode* singletaskmap;
     class FuncDefNode* funcdef;
     class ArgLstNode* args;
     class TupleExprNode* exprn;
@@ -212,7 +215,7 @@ union YYSTYPE
     class InstanceLimitNode* instancelimit;
     class IdentifierLstNode* stringlist;
 
-#line 216 "y.tab.h"
+#line 219 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
