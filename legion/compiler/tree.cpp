@@ -726,6 +726,8 @@ Node* ObjectInvokeNode::run()
     std::cout << NodeTypeName[obj_tbd->type] <<  " does not support volume/size" << std::endl;
     assert(false);
   }
+  // todo: for task object, implement the .ipoint, .ispace, .parent
+  // todo: for task object, implement .processor(m) somewhere else
   if (obj_tbd->type == TupleIntType)
   {
     TupleIntNode* tuple_int = (TupleIntNode*) obj_tbd;
