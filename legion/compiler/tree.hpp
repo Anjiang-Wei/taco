@@ -1143,14 +1143,14 @@ public:
     TupleIntNode* ipoint;
     TupleIntNode* ispace;
 
-    const Task* legion_task_obj;
+    const Task* task_obj;
 
     // for single task launch, initialize by Legion Task Object
     TaskNode(const Task* legion_task)
     {
         type = TaskNodeType;
         index_launch = false;
-        legion_task_obj = legion_task;
+        task_obj = legion_task;
     }
     // for index launch, initialize by point and space
     TaskNode(std::string name, std::vector<int> point, std::vector<int> space)

@@ -185,31 +185,25 @@ TupleIntNode* TaskNode::get_point()
 {
   if (index_launch)
     return ipoint;
-  else
-  {
-    printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
-    return new TupleIntNode(std::vector<int>());
-  }
+  printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
+  return new TupleIntNode(std::vector<int>());
 }
 
 TupleIntNode* TaskNode::get_space()
 {
   if (index_launch)
     return ispace;
-  else
-    printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
+  printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
   return new TupleIntNode(std::vector<int>());
 }
 
 TaskNode* TaskNode::get_parent()
 {
-  if (index_launch == false)
+  if (index_launch == false && task_obj->has_parent_task())
   {
-      // todo: fill this in by quering Legion runtime
-      return new TaskNode("null", {}, {});
+      return new TaskNode(task_obj->get_parent_task());
   }
-  else
-      printf("Warning: IndexTask does not support get_parent(), returning NULL\n");
+  printf("Warning: IndexTask or current task does not support get_parent(), returning NULL\n");
   return NULL;
 }
 
