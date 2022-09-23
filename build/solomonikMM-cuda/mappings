@@ -16,7 +16,7 @@ m5 = m4.balance_split(0, 2); # node1 * node2 * 4 GPUs
 # split the third dimension (i.e., processor dimension) as square as possible
 m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
 
-# m7 = m4.merge(0, 1);
+m7 = m4.merge(0, 1);
 
 def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
 {
@@ -28,9 +28,11 @@ def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
     return x[dim1] % z.size[dim2];
 }
 
-def block1d(IPoint x, ISpace y, MSpace z)
+def block1d(Task task)
 {
-    return block_primitive(x, y, z, 0, 0);
+    x = task.ipoint;
+    y = task.ispace;
+    return m7[block_primitive(x, y, m7, 0, 0)];
 }
 
 def blockcyclic(IPoint x, ISpace y, MSpace z)
@@ -42,11 +44,13 @@ def blockcyclic(IPoint x, ISpace y, MSpace z)
     return (a, b, c, d);
 }
 
-def block2d(IPoint x, ISpace y, MSpace z)
+def block2d(Task task)
 {
-    a = block_primitive(x, y, z, 0, 0);
-    b = block_primitive(x, y, z, 1, 1);
-    return (a, b);
+    x = task.ipoint;
+    y = task.ispace;
+    a = block_primitive(x, y, m4, 0, 0);
+    b = block_primitive(x, y, m4, 1, 1);
+    return m4[a, b];
 }
 
 # 2nodes: rpoc=2 c=2 
@@ -111,7 +115,7 @@ def new_func(Task task)
 }
 
 IndexTaskMap task_5 new_func; # m6 blockcyclic; # task_5: (rpoc, rpoc, c)
-# IndexTaskMap task_1 m4 block2d; # task_1, task_2, task_3: (rpoc, rpoc, 1)
-# IndexTaskMap task_2 m4 block2d; # task_{1,2,3} has PLACEMENT_SHARD tag... magic
-# IndexTaskMap task_3 m4 block2d;
-# IndexTaskMap init_cublas m7 block1d;
+IndexTaskMap task_1 block2d; # task_1, task_2, task_3: (rpoc, rpoc, 1)
+IndexTaskMap task_2 block2d; # task_{1,2,3} has PLACEMENT_SHARD tag... magic
+IndexTaskMap task_3 block2d;
+IndexTaskMap init_cublas block1d;

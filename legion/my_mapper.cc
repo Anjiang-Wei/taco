@@ -382,6 +382,9 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
                                                        const Task &task,
                                                        std::vector<Processor> &target_procs)
 {
+    if (tree_result.should_fall_back(task.get_task_name()) == false)
+    {
+
     if (!task.is_index_space)
     {
         std::vector<std::vector<int>> res = tree_result.runsingle(task);
@@ -410,6 +413,7 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
             }
             printf("\n");
         }
+    }
     }
 
     if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {

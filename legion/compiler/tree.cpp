@@ -229,12 +229,35 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task& legion_task)
 
 std::vector<std::vector<int>> Tree2Legion::runindex(const Task& task)
 {
-    // todo: implement this, to invoke the other runindex()
+    std::string taskname = task.get_task_name();
+    DomainPoint point = task.index_point;
+    Domain full_space = task.index_domain;
+    switch (point.get_dim())
+    {
+#define DIMFUNC(DIM) \
+        case DIM: \
+          { \
+            const DomainT<DIM,coord_t> is = full_space; \
+            const Point<DIM,coord_t> p1 = point; \
+            std::vector<int> index_point, launch_space; \
+            for (int i = 0; i < DIM; i++) \
+            { \
+              index_point.push_back(p1[i]); \
+              launch_space.push_back(is.bounds.hi[i] - is.bounds.lo[i] + 1); \
+            } \
+            return Tree2Legion::runindex(taskname, index_point, launch_space); \
+          }
+        LEGION_FOREACH_N(DIMFUNC)
+#undef DIMFUNC
+        default:
+          assert(false);
+    }
+    assert(false);
     return {};
 }
 
-std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, std::vector<int> x,
-            std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
+std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std::vector<int>& x,
+            const std::vector<int>& point_space, Processor::Kind proc_kind)
 {
   // todo: redesign when necessary, we need Task object for hierarchical index launch
   #ifdef DEBUG_TREE
