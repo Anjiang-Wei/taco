@@ -1239,8 +1239,8 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	std::vector<std::vector<int>> runsingle(const Task& task);
-    std::vector<std::vector<int>> runindex(const Task& task);
+	std::vector<std::vector<int>> runsingle(const Task* task);
+    std::vector<std::vector<int>> runindex(const Task* task);
 	std::vector<std::vector<int>> runindex(std::string task, const std::vector<int>& x,
 						 const std::vector<int>& point_space, Processor::Kind proc_kind = Processor::NO_KIND);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)

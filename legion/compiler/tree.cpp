@@ -218,20 +218,92 @@ std::vector<int> TaskNode::get_proc_coordinate_from_Legion()
   {
     // todo: compute the node idx and processor idx from the Task object
   }
+  return std::vector<int>{0,0};
+}
+
+std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task)
+{
+  std::string task_name = task->get_task_name();
+  Processor::Kind proc_kind = task->target_proc.kind();
+  #ifdef DEBUG_TREE
+      std::cout << "in Tree2Legion::runsingle" << vec2str(x) << std::endl;
+  #endif
+  FuncDefNode* func_node;
+  if (task2func.count(task_name) > 0)
+  {
+    func_node = task2func.at(task_name);
+  }
+  else if (task2func.count("*") > 0)
+  {
+    func_node = task2func.at("*");
+  }
+  else
+  {
+    std::cout << "Fail in Tree2Legion::run when searching task names" << std::endl;
+    assert(false);
+  }
+
+  std::unordered_map<std::string, Node*> func_symbols;
+  TaskNode* task_node = new TaskNode(task);
+  func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
+
+  if (local_symbol.size() != 0)
+  {
+    std::cout << "local_symbol.size() != 0 inside Tree2Legion::run" << std::endl;
+    assert(false);
+  }
+  local_symbol.push(func_symbols);
+  Node* res = func_node->invoked();
+  local_symbol.pop();
+
+  delete task_node;
+
+  if (res->type == TupleIntType)
+  {
+    TupleIntNode* res2 = (TupleIntNode*) res;
+    if (proc_kind != Processor::NO_KIND)
+    {
+      if (MyProc2LegionProc(res2->final_proc) != proc_kind)
+      {
+        printf("%s is actually mapped to %s, but machine model is for %s", 
+                task_name.c_str(),
+                processor_kind_to_string(proc_kind).c_str(),
+                ProcessorEnumName[res2->final_proc]);
+        assert(false);
+      }
+    }
+    return std::vector<std::vector<int>>({res2->tupleint});
+  }
+  else if (res->type == SetTupleIntType)
+  {
+    SetTupleIntNode* res2 = (SetTupleIntNode*) res;
+    if (proc_kind != Processor::NO_KIND)
+    {
+      if (MyProc2LegionProc(res2->final_proc) != proc_kind)
+      {
+        printf("%s is actually mapped to %s, but machine model is for %s", 
+                task_name.c_str(),
+                processor_kind_to_string(proc_kind).c_str(),
+                ProcessorEnumName[res2->final_proc]);
+        assert(false);
+      }
+    }
+    return res2->tupletupleint;
+  }
+  else
+  {
+    printf("Must return TupleIntType or SetTupleIntType after invoking mapping function\n");
+    assert(false);
+  }
   return {};
 }
 
-std::vector<std::vector<int>> Tree2Legion::runsingle(const Task& legion_task)
+std::vector<std::vector<int>> Tree2Legion::runindex(const Task* task)
 {
-  // todo: design this interface
-  return {};
-}
-
-std::vector<std::vector<int>> Tree2Legion::runindex(const Task& task)
-{
-    std::string taskname = task.get_task_name();
-    DomainPoint point = task.index_point;
-    Domain full_space = task.index_domain;
+    std::string taskname = task->get_task_name();
+    DomainPoint point = task->index_point;
+    Domain full_space = task->index_domain;
+    Processor::Kind proc_kind = task->target_proc.kind();
     switch (point.get_dim())
     {
 #define DIMFUNC(DIM) \
@@ -245,7 +317,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(const Task& task)
               index_point.push_back(p1[i]); \
               launch_space.push_back(is.bounds.hi[i] - is.bounds.lo[i] + 1); \
             } \
-            return Tree2Legion::runindex(taskname, index_point, launch_space); \
+            return Tree2Legion::runindex(taskname, index_point, launch_space, proc_kind); \
           }
         LEGION_FOREACH_N(DIMFUNC)
 #undef DIMFUNC
@@ -261,7 +333,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
 {
   // todo: redesign when necessary, we need Task object for hierarchical index launch
   #ifdef DEBUG_TREE
-      std::cout << "in Tree2Legion::run " << vec2str(x) << std::endl;
+      std::cout << "in Tree2Legion::runindex " << vec2str(x) << std::endl;
   #endif
   FuncDefNode* func_node;
   if (task2func.count(task) > 0)

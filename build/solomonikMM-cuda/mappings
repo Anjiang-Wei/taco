@@ -113,7 +113,7 @@ def new_func(Task task)
     # print("machine_test={}", m4.size * m4.size);
     return z[*upper, *lower];
 }
-
+SingleTaskMap task_4 single_func;
 IndexTaskMap task_5 new_func; # m6 blockcyclic; # task_5: (rpoc, rpoc, c)
 IndexTaskMap task_1 block2d; # task_1, task_2, task_3: (rpoc, rpoc, 1)
 IndexTaskMap task_2 block2d; # task_{1,2,3} has PLACEMENT_SHARD tag... magic

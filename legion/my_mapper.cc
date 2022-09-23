@@ -387,7 +387,7 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
 
     if (!task.is_index_space)
     {
-        std::vector<std::vector<int>> res = tree_result.runsingle(task);
+        std::vector<std::vector<int>> res = tree_result.runsingle(&task);
         printf("runsingle get results back for %s!\n", task.get_task_name());
         for (int i = 0; i < res.size(); i++)
         {
@@ -402,7 +402,7 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
     else
     {
         // todo: handle this carefully
-        std::vector<std::vector<int>> res = tree_result.runindex(task);
+        std::vector<std::vector<int>> res = tree_result.runindex(&task);
         printf("runindex get results back for %s!\n", task.get_task_name());
         for (int i = 0; i < res.size(); i++)
         {
