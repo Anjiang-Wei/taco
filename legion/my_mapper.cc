@@ -398,10 +398,9 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
     }
     else
     {
-        // todo: handle this carefully, rename "run" to "runindex"
-        //std::vector<std::vector<int>> res = tree_result.run(task.get_task_name(), {}, {});
+        // todo: handle this carefully
+        std::vector<std::vector<int>> res = tree_result.runindex(task);
         printf("runindex get results back for %s!\n", task.get_task_name());
-        /*
         for (int i = 0; i < res.size(); i++)
         {
             printf("res_index[%d]:", i);
@@ -411,7 +410,6 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
             }
             printf("\n");
         }
-        */
     }
 
     if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
@@ -899,7 +897,7 @@ template<int DIM>
         log_mapper.debug() << point[i] << " ,";
       }
       size_t slice_res = 
-        (size_t) tree_result.run(taskname, index_point, index_launch_space,targets[0].kind())[0][1];
+        (size_t) tree_result.runindex(taskname, index_point, index_launch_space,targets[0].kind())[0][1];
       log_mapper.debug("--> %ld", slice_res);
       if (slice_res >= targets.size())
       {
@@ -1158,8 +1156,8 @@ namespace Legion {
             { \
               log_mapper.debug("%lld, ", point[i]); \
             } \
-            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.run(taskname, index_point, launch_space)[0][0]); \
-            return NSMapper::tree_result.run(taskname, index_point, launch_space)[0][0]; \
+            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.runindex(taskname, index_point, launch_space)[0][0]); \
+            return NSMapper::tree_result.runindex(taskname, index_point, launch_space)[0][0]; \
           }
         LEGION_FOREACH_N(DIMFUNC)
 #undef DIMFUNC

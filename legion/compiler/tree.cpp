@@ -227,7 +227,13 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task& legion_task)
   return {};
 }
 
-std::vector<std::vector<int>> Tree2Legion::run(std::string task, std::vector<int> x,
+std::vector<std::vector<int>> Tree2Legion::runindex(const Task& task)
+{
+    // todo: implement this, to invoke the other runindex()
+    return {};
+}
+
+std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, std::vector<int> x,
             std::vector<int> point_space, Processor::Kind proc_kind = Processor::NO_KIND)
 {
   // todo: redesign when necessary, we need Task object for hierarchical index launch

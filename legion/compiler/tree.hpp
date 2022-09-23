@@ -1240,7 +1240,8 @@ public:
 	}
 
 	std::vector<std::vector<int>> runsingle(const Task& task);
-	std::vector<std::vector<int>> run(std::string task, std::vector<int> x,
+    std::vector<std::vector<int>> runindex(const Task& task);
+	std::vector<std::vector<int>> runindex(std::string task, std::vector<int> x,
 						 std::vector<int> point_space, Processor::Kind proc_kind);
 	std::vector<Memory::Kind> query_memory_policy(std::string task_name, std::string region_name, Processor::Kind proc_kind)
 	{
