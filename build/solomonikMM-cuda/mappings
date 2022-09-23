@@ -86,7 +86,7 @@ def single_func(Task task)
     tparent = task.parent;
     # print("parent.ipoint={}", tparent.ipoint);
     # print("parent.ispace={}", tparent.ispace);
-    return (0, 0);
+    return m4[0, 0];
 }
 def new_func(Task task)
 {
