@@ -252,8 +252,7 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
 
 int NSMapper::get_proc_idx(const Processor proc) const
 {
-    // todo: to fill this out
-    int proc_idx;
+    int proc_idx = 0;
     switch (proc.kind())
     {
         case Processor::LOC_PROC:
@@ -267,6 +266,30 @@ int NSMapper::get_proc_idx(const Processor proc) const
             proc_idx = std::find(this->local_gpus.begin(), this->local_gpus.end(), proc) - this->local_gpus.begin();
             assert(proc_idx < this->local_gpus.size()); // it must find
             break;
+        }
+        case Processor::IO_PROC:
+        {
+            proc_idx = std::find(this->local_ios.begin(), this->local_ios.end(), proc) - this->local_ios.begin();
+            break;
+        }
+        case Processor::PY_PROC:
+        {
+            proc_idx = std::find(this->local_pys.begin(), this->local_pys.end(), proc) - this->local_pys.begin();
+            break;
+        }
+        case Processor::PROC_SET:
+        {
+            proc_idx = std::find(this->local_procsets.begin(), this->local_procsets.end(), proc) - this->local_procsets.begin();
+            break;
+        }
+        case Processor::OMP_PROC:
+        {
+            proc_idx = std::find(this->local_omps.begin(), this->local_omps.end(), proc) - this->local_omps.begin();
+            break;
+        }
+        default:
+        {
+          assert(false);
         }
     }
     return proc_idx;

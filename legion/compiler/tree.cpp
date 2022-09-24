@@ -213,49 +213,9 @@ std::vector<int> TaskNode::get_proc_coordinate_from_Legion()
     Processor proc = task_obj->current_proc;
     int node_idx = proc.address_space();
     int proc_idx = mapper->get_proc_idx(proc);
-    /*
-    switch (proc.kind())
-    {
-        case Processor::LOC_PROC:
-        {
-            proc_idx = std::find(mapper->local_cpus.begin(), mapper->local_cpus.end(), proc);
-            assert(proc_idx < mapper->local_cpus.size()); // it must find
-            break;
-        }
-        case Processor::TOC_PROC:
-        {
-            proc_idx = std::find(mapper->local_gpus.begin(), mapper->local_gpus.end(), proc);
-            assert(proc_idx < mapper->local_gpus.size()); // it must find
-            break;
-        }
-    case Processor::IO_PROC:
-    {
-      result = !local_ios.empty() ? local_ios.front() : local_cpus.front();
-      break;
-    }
-    case Processor::PY_PROC:
-    {
-      result = !local_pys.empty() ? local_pys.front() : local_cpus.front();
-      break;
-    }
-    case Processor::PROC_SET:
-    {
-      result = !local_procsets.empty() ? local_procsets.front() : local_cpus.front();
-      break;
-    }
-    case Processor::OMP_PROC:
-    {
-      result = !local_omps.empty() ? local_omps.front() : local_cpus.front();
-      break;
-    }
-        default:
-        {
-         assert(false);
-        }
-    }*/
-    printf("node_idx = %d, proc_idx = %d\n", node_idx, proc_idx);
     return std::vector<int>{node_idx, proc_idx};
   }
+  printf("Warning: index launch task does not support getting node index or processor index for now\n");
   return std::vector<int>{0,0};
 }
 
