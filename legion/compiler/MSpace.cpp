@@ -436,8 +436,10 @@ public:
         trans_op = AUTO_SPLIT;
         dim = dim_; input_dim = input_dim_;
     }
+
     std::vector<int> trans(const std::vector<int>& old_point)
     {
+        // turning old_point back to a point in original machine model via merging by newdim_preprod[]
         std::vector<int> result;
         for (size_t i = 0; i < old_point.size(); i++)
         {
@@ -459,6 +461,30 @@ public:
         }
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        // split the old_point[dim] into new_dims[]
+        std::vector<int> result;
+        for (size_t i = 0; i < old_point.size(); i++)
+        {
+            if ((int) i != dim)
+            {
+                result.push_back(old_point[i]);
+            }
+            else
+            {
+                int point_i = old_point[i];
+                for (int kk = 0; kk < new_dims.size(); kk++)
+                {
+                   result.push_back(point_i % new_dims[kk]);
+                   point_i = point_i / new_dims[kk];
+                }
+            }
+        }
+        return result;
+    }
+
     inline void compute_preprod()
     {
         newdim_preprod.push_back(1);
@@ -471,6 +497,7 @@ public:
     }
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
+        // replace old_dim[dim] with new_dims[]
         new_dims = precise_enumerate(old_dim[dim], input_dim);
         assert(new_dims.size() == input_dim.size());
         compute_preprod();
@@ -522,7 +549,7 @@ public:
                 }
             }
         }
-        return result;     
+        return result;
     }
 };
 
