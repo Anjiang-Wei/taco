@@ -8,7 +8,6 @@
 using namespace Legion;
 using namespace Legion::Mapping;
 
-class NSMapper;
 Processor::Kind MyProc2LegionProc(ProcessorEnum);
 Memory::Kind MyMem2LegionMem(MemoryEnum);
 
@@ -201,7 +200,7 @@ TaskNode* TaskNode::get_parent()
 {
   if (index_launch == false && task_obj->has_parent_task())
   {
-      return new TaskNode(task_obj->get_parent_task());
+      return new TaskNode(task_obj->get_parent_task(), mapper); // should share the same mapper
   }
   printf("Warning: IndexTask or current task does not support get_parent(), returning NULL\n");
   return NULL;
@@ -209,13 +208,58 @@ TaskNode* TaskNode::get_parent()
 
 std::vector<int> TaskNode::get_proc_coordinate_from_Legion()
 {
+  if (index_launch == false)
   {
-    // todo: compute the node idx and processor idx from the Task object
+    Processor proc = task_obj->current_proc;
+    int node_idx = proc.address_space();
+    int proc_idx = mapper->get_proc_idx(proc);
+    /*
+    switch (proc.kind())
+    {
+        case Processor::LOC_PROC:
+        {
+            proc_idx = std::find(mapper->local_cpus.begin(), mapper->local_cpus.end(), proc);
+            assert(proc_idx < mapper->local_cpus.size()); // it must find
+            break;
+        }
+        case Processor::TOC_PROC:
+        {
+            proc_idx = std::find(mapper->local_gpus.begin(), mapper->local_gpus.end(), proc);
+            assert(proc_idx < mapper->local_gpus.size()); // it must find
+            break;
+        }
+    case Processor::IO_PROC:
+    {
+      result = !local_ios.empty() ? local_ios.front() : local_cpus.front();
+      break;
+    }
+    case Processor::PY_PROC:
+    {
+      result = !local_pys.empty() ? local_pys.front() : local_cpus.front();
+      break;
+    }
+    case Processor::PROC_SET:
+    {
+      result = !local_procsets.empty() ? local_procsets.front() : local_cpus.front();
+      break;
+    }
+    case Processor::OMP_PROC:
+    {
+      result = !local_omps.empty() ? local_omps.front() : local_cpus.front();
+      break;
+    }
+        default:
+        {
+         assert(false);
+        }
+    }*/
+    printf("node_idx = %d, proc_idx = %d\n", node_idx, proc_idx);
+    return std::vector<int>{node_idx, proc_idx};
   }
   return std::vector<int>{0,0};
 }
 
-std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task)
+std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSMapper* mapper)
 {
   std::string task_name = task->get_task_name();
   Processor::Kind proc_kind = task->target_proc.kind();
@@ -238,7 +282,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task)
   }
 
   std::unordered_map<std::string, Node*> func_symbols;
-  TaskNode* task_node = new TaskNode(task);
+  TaskNode* task_node = new TaskNode(task, mapper);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   if (local_symbol.size() != 0)

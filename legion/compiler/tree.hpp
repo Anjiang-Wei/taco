@@ -1132,11 +1132,12 @@ public:
 };
 
 class MSpace;
+class NSMapper;
 
 class TaskNode : public Node
 {
 public:
-    // if true, use task_name, ipoint, ispace; if false, use legion_task_obj
+    // if true, use task_name, ipoint, ispace; if false, use task_obj and mapper
     bool index_launch;
 
     std::string task_name;
@@ -1144,13 +1145,15 @@ public:
     TupleIntNode* ispace;
 
     const Task* task_obj;
+    const NSMapper* mapper;
 
     // for single task launch, initialize by Legion Task Object
-    TaskNode(const Task* legion_task)
+    TaskNode(const Task* legion_task, const NSMapper* legion_mapper)
     {
         type = TaskNodeType;
         index_launch = false;
         task_obj = legion_task;
+        mapper = legion_mapper;
     }
     // for index launch, initialize by point and space
     TaskNode(std::string name, std::vector<int> point, std::vector<int> space)
@@ -1239,7 +1242,7 @@ public:
 		std::cout << "I am invoked!" << std::endl;
 	}
 
-	std::vector<std::vector<int>> runsingle(const Task* task);
+	std::vector<std::vector<int>> runsingle(const Task* task, const NSMapper* mapper);
     std::vector<std::vector<int>> runindex(const Task* task);
 	std::vector<std::vector<int>> runindex(std::string task, const std::vector<int>& x,
 						 const std::vector<int>& point_space, Processor::Kind proc_kind = Processor::NO_KIND);

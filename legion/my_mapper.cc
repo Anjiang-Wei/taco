@@ -138,6 +138,7 @@ public:
   void select_tasks_to_map(const Legion::Mapping::MapperContext ctx,
                            const SelectMappingInput& input,
                                  SelectMappingOutput& output) override;
+  int get_proc_idx(const Processor proc) const;
 
 protected:
   void map_task_post_function(const MapperContext   &ctx,
@@ -174,6 +175,8 @@ public:
   static Tree2Legion tree_result;
   static std::unordered_map<std::string, ShardingID> task2sid;
 };
+
+
 
 Tree2Legion NSMapper::tree_result;
 std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
@@ -245,6 +248,28 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
   log_mapper.debug("Policy file: %s", policy_file.c_str());
   tree_result = Tree2Legion(policy_file);
   // tree_result.print();
+}
+
+int NSMapper::get_proc_idx(const Processor proc) const
+{
+    // todo: to fill this out
+    int proc_idx;
+    switch (proc.kind())
+    {
+        case Processor::LOC_PROC:
+        {
+            proc_idx = std::find(this->local_cpus.begin(), this->local_cpus.end(), proc) - this->local_cpus.begin();
+            assert(proc_idx < this->local_cpus.size()); // it must find
+            break;
+        }
+        case Processor::TOC_PROC:
+        {
+            proc_idx = std::find(this->local_gpus.begin(), this->local_gpus.end(), proc) - this->local_gpus.begin();
+            assert(proc_idx < this->local_gpus.size()); // it must find
+            break;
+        }
+    }
+    return proc_idx;
 }
 
 Processor NSMapper::select_initial_processor_by_kind(const Task &task, Processor::Kind kind)
@@ -387,7 +412,7 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
 
     if (!task.is_index_space)
     {
-        std::vector<std::vector<int>> res = tree_result.runsingle(&task);
+        std::vector<std::vector<int>> res = tree_result.runsingle(&task, this);
         printf("runsingle get results back for %s!\n", task.get_task_name());
         for (int i = 0; i < res.size(); i++)
         {
@@ -1311,3 +1336,5 @@ legion_equality_kind_t myop2legion(BinOpEnum myop)
   assert(false);
   return LEGION_EQ_EK;
 }
+
+#include "compiler/tree.cpp"
