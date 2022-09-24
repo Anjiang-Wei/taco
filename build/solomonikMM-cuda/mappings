@@ -14,7 +14,7 @@ m4 = Machine(GPU); # nodes * 4
 # split the first dimension (i.e., nodes dimension) in as square as possible
 m5 = m4.balance_split(0, 2); # node1 * node2 * 4 GPUs
 # split the third dimension (i.e., processor dimension) as square as possible
-m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
+m6 = m5.auto_split(2, (1, 1)); # node1 * node2 * 2 * 2
 
 m7 = m4.merge(0, 1);
 
