@@ -219,6 +219,7 @@ public:
         dim1 = dim1_;
         dim2 = dim2_;
     }
+
     std::vector<int> trans(const std::vector<int>& old_point)
     {
         std::vector<int> result(old_point);
@@ -227,6 +228,16 @@ public:
         result[dim2] = x;
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        std::vector<int> result(old_point);
+        size_t x = result[dim1];
+        result[dim1] = result[dim2];
+        result[dim2] = x;
+        return result;
+    }
+
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
         std::vector<int> result(old_dim);
@@ -250,6 +261,7 @@ public:
         low = low_;
         high = high_;
     }
+
     std::vector<int> trans(const std::vector<int>& old_point)
     {
         std::vector<int> result(old_point);
@@ -257,6 +269,20 @@ public:
         result[dim] = result[dim] + low;
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        std::vector<int> result(old_point);
+        if (old_point[dim] < low)
+        {
+            printf("old_point[%d]=%d < %d, not existing in the machine model using SliceMSpace\n",
+                                        dim, old_point[dim], low);
+            assert(false);
+        }
+        result[dim] = result[dim] - low;
+        return result;
+    }
+
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
         std::vector<int> result(old_dim);
@@ -276,12 +302,21 @@ public:
         trans_op = REVERSE;
         dim = dim_;
     }
+
     std::vector<int> trans(const std::vector<int>& old_point)
     {
         std::vector<int> result(old_point);
         result[dim] = dim_volume - 1 - result[dim];
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        std::vector<int> result(old_point);
+        result[dim] = dim_volume - 1 - result[dim];
+        return result;
+    }
+
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
         dim_volume = old_dim[dim];
