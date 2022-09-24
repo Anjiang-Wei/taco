@@ -70,6 +70,7 @@ public:
     }
     std::vector<int> trans(const std::vector<int>& old_point)
     {
+        // shrink the dimension of point, closer to original machine model
         std::vector<int> result;
         for (int i = 0; i < split_dim; i++)
         {
@@ -83,8 +84,27 @@ public:
         }
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        // add 1 dimension to split the point
+        std::vector<int> result;
+        for (int i = 0; i < split_dim; i++)
+        {
+            result.push_back(old_point[i]);
+        }
+        result.push_back(old_point[split_dim] % split_factor);
+        result.push_back(old_point[split_dim] / split_factor);
+        for (int i = split_dim + 1; i < (int) old_point.size(); i++)
+        {
+            result.push_back(old_point[i]);
+        }
+        return result;
+    }
+
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
+        // the new machine model has 1 more dim
         std::vector<int> result;
         for (int i = 0; i < split_dim; i++)
         {
@@ -115,8 +135,10 @@ public:
         dim1 = dim1_;
         dim2 = dim2_;
     }
+
     std::vector<int> trans(const std::vector<int>& old_point)
     {
+        // turn the point back to original machine model via splitting old_point[dim1] by dim2_volume
         std::vector<int> result;
         for (size_t i = 0; i < old_point.size(); i++)
         {
@@ -137,8 +159,33 @@ public:
         }
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        // merge the old_point[dim1] and old_point[dim2] dimension into dim1
+        std::vector<int> result;
+        for (size_t i = 0; i < old_point.size(); i++)
+        {
+            if ((int) i == dim1)
+            {
+                result.push_back(old_point[dim1] * dim2_volume + old_point[dim2]);
+            }
+            else if ((int) i == dim2)
+            {
+               continue;
+            }
+            else
+            {
+                result.push_back(old_point[i]);
+            }
+        }
+        assert(result.size() == old_point.size() - 1);
+        return result;
+    }
+
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
+        // merge dim1 and dim2 into dim1
         std::vector<int> result;
         for (size_t i = 0; i < old_dim.size(); i++)
         {
