@@ -13,9 +13,10 @@
 #include <string>
 #include <string.h>
 #include <unordered_map>
+#include <stack>
 #include <assert.h>
 #include <algorithm>
-#include <functional> 
+#include <functional>
 #include <cctype>
 #include <locale>
 
@@ -44,6 +45,12 @@ public:
     virtual std::vector<int> trans(const std::vector<int>&)
     {
         std::cout << "trans method TBD:" << APIName[this->trans_op] << std::endl;
+        assert(false);
+        return std::vector<int>{};
+    }
+    virtual std::vector<int> trans_forward(const std::vector<int>&)
+    {
+        printf("trans_forward method TBD: %s\n", APIName[this->trans_op]);
         assert(false);
         return std::vector<int>{};
     }
@@ -748,8 +755,37 @@ public:
 
     std::vector<int> legion2mspace(const std::vector<int>& dim2_point)
     {
-        // todo: reverse the traversal of get_node_proc
-        return {};
+        // assert(dim2_point.size() == 2); // always true
+        #ifdef DEBUG_MSPACE
+            std::cout << "start legion2mspace: " << vec2str(dim2_point) << std::endl;
+        #endif
+        MSpace* mspace = this;
+        std::vector<int> current_point = dim2_point;
+        std::stack<MSpaceOp*> opstack;
+        while (mspace->prev_machine != NULL)
+        {
+            opstack.push(mspace->trans_op);
+            mspace = mspace->prev_machine;
+        }
+        while (!opstack.empty())
+        {
+            MSpaceOp* op = opstack.top();
+            current_point = op->trans_forward(current_point);
+            #ifdef DEBUG_MSPACE
+               std::cout << vec2str(current_point) << ", ";
+            #endif
+            opstack.pop();
+        }
+        assert(this->each_dim.size() == current_point.size());
+        for (int i = 0; i < current_point.size(); i++)
+        {
+            if (current_point[i] >= this->each_dim[i])
+            {
+                printf("%d >= %d in legion2mspace: index out of bound!\n");
+                assert(false);
+            }
+        }
+        return current_point;
     }
 
 };
