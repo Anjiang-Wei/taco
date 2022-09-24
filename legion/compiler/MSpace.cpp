@@ -309,6 +309,7 @@ public:
     }
     std::vector<int> trans(const std::vector<int>& old_point)
     {
+        // back to a point in original machine model via merging by factor of new_dims[]
         std::vector<int> result;
         for (size_t i = 0; i < old_point.size(); i++)
         {
@@ -338,6 +339,36 @@ public:
         }
         return result;
     }
+
+    std::vector<int> trans_forward(const std::vector<int>& old_point)
+    {
+        // add added_dim_num (new_dims[]) dimension to split the old_point[dim]
+        std::vector<int> result;
+        for (size_t i = 0; i < old_point.size(); i++)
+        {
+            if ((int) i != dim)
+            {
+                result.push_back(old_point[i]);
+            }
+            else
+            {
+                if (added_dim_num == 2)
+                {
+                    result.push_back(old_point[i] % new_dims[0]);
+                    result.push_back(old_point[i] / new_dims[0]);
+                }
+                else if (added_dim_num == 3)
+                {
+                    result.push_back(old_point[i] % new_dims[0]);
+                    result.push_back((old_point[i] / new_dims[0]) % new_dims[1]);
+                    result.push_back((old_point[i] / new_dims[0]) / new_dims[1]);
+                }
+            }
+        }
+        return result;
+    }
+
+
     static void generate_prime_factor(int big_number, std::vector<int>& factors)
     {
         auto generate_factors = [&](int factor)
@@ -358,6 +389,7 @@ public:
     }
     std::vector<int> trans_dim(const std::vector<int>& old_dim)
     {
+        // replace old_dim[dim] with new_dims
         generate_prime_factor(old_dim[dim], factor_result);
         auto factor_it = factor_result.begin();
         new_dims.resize(added_dim_num, 1);
