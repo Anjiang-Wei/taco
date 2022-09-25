@@ -75,42 +75,43 @@ extern int yydebug;
     T_SOA = 281,
     T_Compact = 282,
     T_Align = 283,
-    T_CPU = 284,
-    T_GPU = 285,
-    T_IO = 286,
-    T_PY = 287,
-    T_PROC = 288,
-    T_OMP = 289,
-    T_SYSMEM = 290,
-    T_FBMEM = 291,
-    T_RDMEM = 292,
-    T_ZCMEM = 293,
-    T_SOCKMEM = 294,
-    T_Int = 295,
-    T_Bool = 296,
-    T_IPoint = 297,
-    T_ISpace = 298,
-    T_MSpace = 299,
-    T_Def = 300,
-    T_Return = 301,
-    T_True = 302,
-    T_False = 303,
-    T_Task = 304,
-    T_Region = 305,
-    T_Layout = 306,
-    T_IndexTaskMap = 307,
-    T_Print = 308,
-    T_Instance = 309,
-    T_Collect = 310,
-    T_Le = 311,
-    T_Ge = 312,
-    T_Eq = 313,
-    T_Ne = 314,
-    T_And = 315,
-    T_Or = 316,
-    T_Identifier = 317,
-    T_StringConstant = 318,
-    T_IntConstant = 319
+    T_Exact = 284,
+    T_CPU = 285,
+    T_GPU = 286,
+    T_IO = 287,
+    T_PY = 288,
+    T_PROC = 289,
+    T_OMP = 290,
+    T_SYSMEM = 291,
+    T_FBMEM = 292,
+    T_RDMEM = 293,
+    T_ZCMEM = 294,
+    T_SOCKMEM = 295,
+    T_Int = 296,
+    T_Bool = 297,
+    T_IPoint = 298,
+    T_ISpace = 299,
+    T_MSpace = 300,
+    T_Def = 301,
+    T_Return = 302,
+    T_True = 303,
+    T_False = 304,
+    T_Task = 305,
+    T_Region = 306,
+    T_Layout = 307,
+    T_IndexTaskMap = 308,
+    T_Print = 309,
+    T_Instance = 310,
+    T_Collect = 311,
+    T_Le = 312,
+    T_Ge = 313,
+    T_Eq = 314,
+    T_Ne = 315,
+    T_And = 316,
+    T_Or = 317,
+    T_Identifier = 318,
+    T_StringConstant = 319,
+    T_IntConstant = 320
   };
 #endif
 /* Tokens.  */
@@ -140,42 +141,43 @@ extern int yydebug;
 #define T_SOA 281
 #define T_Compact 282
 #define T_Align 283
-#define T_CPU 284
-#define T_GPU 285
-#define T_IO 286
-#define T_PY 287
-#define T_PROC 288
-#define T_OMP 289
-#define T_SYSMEM 290
-#define T_FBMEM 291
-#define T_RDMEM 292
-#define T_ZCMEM 293
-#define T_SOCKMEM 294
-#define T_Int 295
-#define T_Bool 296
-#define T_IPoint 297
-#define T_ISpace 298
-#define T_MSpace 299
-#define T_Def 300
-#define T_Return 301
-#define T_True 302
-#define T_False 303
-#define T_Task 304
-#define T_Region 305
-#define T_Layout 306
-#define T_IndexTaskMap 307
-#define T_Print 308
-#define T_Instance 309
-#define T_Collect 310
-#define T_Le 311
-#define T_Ge 312
-#define T_Eq 313
-#define T_Ne 314
-#define T_And 315
-#define T_Or 316
-#define T_Identifier 317
-#define T_StringConstant 318
-#define T_IntConstant 319
+#define T_Exact 284
+#define T_CPU 285
+#define T_GPU 286
+#define T_IO 287
+#define T_PY 288
+#define T_PROC 289
+#define T_OMP 290
+#define T_SYSMEM 291
+#define T_FBMEM 292
+#define T_RDMEM 293
+#define T_ZCMEM 294
+#define T_SOCKMEM 295
+#define T_Int 296
+#define T_Bool 297
+#define T_IPoint 298
+#define T_ISpace 299
+#define T_MSpace 300
+#define T_Def 301
+#define T_Return 302
+#define T_True 303
+#define T_False 304
+#define T_Task 305
+#define T_Region 306
+#define T_Layout 307
+#define T_IndexTaskMap 308
+#define T_Print 309
+#define T_Instance 310
+#define T_Collect 311
+#define T_Le 312
+#define T_Ge 313
+#define T_Eq 314
+#define T_Ne 315
+#define T_And 316
+#define T_Or 317
+#define T_Identifier 318
+#define T_StringConstant 319
+#define T_IntConstant 320
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -215,7 +217,7 @@ union YYSTYPE
     class InstanceLimitNode* instancelimit;
     class IdentifierLstNode* stringlist;
 
-#line 219 "y.tab.h"
+#line 221 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
