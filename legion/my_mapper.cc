@@ -139,6 +139,7 @@ public:
                            const SelectMappingInput& input,
                                  SelectMappingOutput& output) override;
   int get_proc_idx(const Processor proc) const;
+  Processor idx_to_proc(int proc_idx, const Processor::Kind proc_kind) const;
 
 protected:
   void map_task_post_function(const MapperContext   &ctx,
@@ -248,6 +249,49 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
   log_mapper.debug("Policy file: %s", policy_file.c_str());
   tree_result = Tree2Legion(policy_file);
   // tree_result.print();
+}
+
+inline Processor NSMapper::idx_to_proc(int proc_idx, const Processor::Kind proc_kind) const
+{
+    switch (proc_kind)
+    {
+        case Processor::LOC_PROC:
+        {
+            assert(proc_idx < this->local_cpus.size());
+            return this->local_cpus[proc_idx];
+        }
+        case Processor::TOC_PROC:
+        {
+            assert(proc_idx < this->local_gpus.size());
+            return this->local_gpus[proc_idx];
+        }
+        case Processor::IO_PROC:
+        {
+            assert(proc_idx < this->local_ios.size());
+            return this->local_ios[proc_idx];
+        }
+        case Processor::PY_PROC:
+        {
+            assert(proc_idx < this->local_pys.size());
+            return this->local_pys[proc_idx];
+        }
+        case Processor::PROC_SET:
+        {
+            assert(proc_idx < this->local_procsets.size());
+            return this->local_procsets[proc_idx];
+        }
+        case Processor::OMP_PROC:
+        {
+            assert(proc_idx < this->local_omps.size());
+            return this->local_omps[proc_idx];
+        }
+        default:
+        {
+          assert(false);
+        }
+    }
+    assert(false);
+    return this->local_cpus[0];
 }
 
 int NSMapper::get_proc_idx(const Processor proc) const
@@ -432,42 +476,49 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
 {
     if (tree_result.should_fall_back(task.get_task_name()) == false)
     {
-
-    if (!task.is_index_space)
-    {
-        std::vector<std::vector<int>> res = tree_result.runsingle(&task, this);
-        printf("runsingle get results back for %s!\n", task.get_task_name());
+        std::vector<std::vector<int>> res;
+        if (!task.is_index_space)
+        {
+            res = tree_result.runsingle(&task, this);
+            printf("runsingle get results back for %s!\n", task.get_task_name());
+            for (int i = 0; i < res.size(); i++)
+            {
+                printf("res_single[%d]:", i);
+                for (int j = 0; j < res[i].size(); j++)
+                {
+                    printf("%d,", res[i][j]);
+                }
+                printf("\n");
+            }
+        }
+        else
+        {
+            res = tree_result.runindex(&task);
+            printf("runindex get results back for %s!\n", task.get_task_name());
+            for (int i = 0; i < res.size(); i++)
+            {
+                printf("res_index[%d]:", i);
+                for (int j = 0; j < res[i].size(); j++)
+                {
+                    printf("%d,", res[i][j]);
+                }
+                printf("\n");
+            }
+        }
+        int node_idx = res[0][0];
+        assert(task.target_proc.address_space() == node_idx);
         for (int i = 0; i < res.size(); i++)
         {
-            printf("res_single[%d]:", i);
-            for (int j = 0; j < res[i].size(); j++)
-            {
-                printf("%d,", res[i][j]);
-            }
-            printf("\n");
+            assert(res[i][0] == node_idx); // must be on the same node
+            target_procs.push_back(idx_to_proc(res[i][1], task.target_proc.kind()));
         }
     }
+
+    // if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
+       // target_procs.push_back(task.orig_proc);
+    // }
     else
     {
-        // todo: handle this carefully
-        std::vector<std::vector<int>> res = tree_result.runindex(&task);
-        printf("runindex get results back for %s!\n", task.get_task_name());
-        for (int i = 0; i < res.size(); i++)
-        {
-            printf("res_index[%d]:", i);
-            for (int j = 0; j < res[i].size(); j++)
-            {
-                printf("%d,", res[i][j]);
-            }
-            printf("\n");
-        }
-    }
-    }
-
-    if (!task.is_index_space && task.target_proc.kind() == task.orig_proc.kind()) {
-        // todo: add feature, staylocal
-        target_procs.push_back(task.orig_proc);
-    } else {
         target_procs.push_back(task.target_proc);
     }
 }
