@@ -142,6 +142,46 @@ Node* RegionCustomNode::run()
   return NULL;
 }
 
+void ConstraintsNode::update(const char* x)
+{
+    if (!strcmp(x, "reverse"))
+    {
+        reverse = true;
+    }
+    else if (!strcmp(x, "positive"))
+    {
+        reverse = false;
+    }
+    else if (!strcmp(x, "aos"))
+    {
+        aos = true;
+    }
+    else if (!strcmp(x, "soa"))
+    {
+        aos = false;
+    }
+    else if (!strcmp(x, "compact"))
+    {
+        compact = true;
+    }
+    else if (!strcmp(x, "exact"))
+    {
+        exact = true;
+    }
+    else
+    {
+        std::cout << "unsupported update in ConstraintsNode" << std::endl;
+        assert(false);
+    }
+}
+
+void ConstraintsNode::update(BinOpEnum x, int y)
+{
+    align = true;
+    align_op = x;
+    align_int = y;
+}
+
 Node* LayoutCustomNode::run()
 {
   std::pair<std::string, std::string> key = std::make_pair(task_name, region_name);

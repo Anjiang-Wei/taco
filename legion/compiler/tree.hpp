@@ -1030,6 +1030,7 @@ public:
 	bool reverse;
 	bool aos;
 	bool compact;
+    bool exact;
 	bool align;
 	BinOpEnum align_op;
 	int align_int;
@@ -1038,45 +1039,14 @@ public:
 		reverse = false;
 		aos = true;
 		compact = false;
+        exact = false;
 		align = false;
 		align_op = PLUS;
 		align_int = 0;
 	}
-	void update(const char* x)
-	{
-		if (!strcmp(x, "reverse"))
-		{
-			reverse = true;
-		}
-		else if (!strcmp(x, "positive"))
-		{
-			reverse = false;
-		}
-		else if (!strcmp(x, "aos"))
-		{
-			aos = true;
-		}
-		else if (!strcmp(x, "soa"))
-		{
-			aos = false;
-		}
-		else if (!strcmp(x, "compact"))
-		{
-			compact = true;
-		}
-		else
-		{
-			std::cout << "unsupported update in ConstraintsNode" << std::endl;
-			assert(false);
-		}
-	}
+	void update(const char* x);
+	void update(BinOpEnum x, int y);
 	void print() { std::cout << "ConstraintsNode" << std::endl; }
-	void update(BinOpEnum x, int y)
-	{
-		align = true;
-		align_op = x;
-		align_int = y;
-	}
 	Node* run() { return NULL; }
 };
 

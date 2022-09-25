@@ -14,7 +14,7 @@ void yyerror(const char*);
 %define parse.error verbose
 
 %token T_Size T_Split T_Merge T_Swap T_Slice T_Reverse T_Balance_split T_Auto_split T_Greedy_split T_Volume T_Has T_Tuple T_For T_In T_Len T_TaskIPoint T_TaskISpace T_TaskParent T_TaskProcessor T_SingleTaskMap
-%token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align
+%token T_Reverse_Dimension T_Positive_Dimension T_AOS T_SOA T_Compact T_Align T_Exact
 %token T_CPU T_GPU T_IO T_PY T_PROC T_OMP
 %token T_SYSMEM T_FBMEM T_RDMEM T_ZCMEM T_SOCKMEM
 %token T_Int T_Bool T_IPoint T_ISpace T_MSpace T_Def T_Return T_True T_False
@@ -164,6 +164,7 @@ Constraints:
 |   Constraints T_AOS                       { $1->update("aos"); $$ = $1; }
 |   Constraints T_SOA                       { $1->update("soa"); $$ = $1; }
 |   Constraints T_Compact                   { $1->update("compact"); $$ = $1; }
+|   Constraints T_Exact                     { $1->update("exact"); $$ = $1; }
 |   Constraints T_Align '<' T_IntConstant   { $1->update(SMALLER, $4); $$ = $1; }
 |   Constraints T_Align T_Le T_IntConstant  { $1->update(LE, $4); $$ = $1; }
 |   Constraints T_Align '>' T_IntConstant   { $1->update(BIGGER, $4); $$ = $1; }

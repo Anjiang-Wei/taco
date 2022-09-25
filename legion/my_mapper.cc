@@ -1356,26 +1356,37 @@ void NSMapper::custom_policy_select_constraints(const Task &task,
         myop2legion(dsl_constraint.align_op), dsl_constraint.align_int));
     }
   }
-  // If the instance is supposed to be sparse, tell Legion we want it that way.
-  // Unfortunately because we are adjusting the SpecializedConstraint, we have to
-  // fully override the default mapper because there appears to be some undefined
-  // behavior when two specialized constraints are added.
 
+  // Exact Region Constraint
+  bool special_exact = dsl_constraint.exact;
+  /*
+     SpecializedConstraint(SpecializedKind kind = LEGION_AFFINE_SPECIALIZE
+                           ReductionOpID redop = 0,
+                           bool no_access = false,
+                           bool exact = false
+  */
   if (dsl_constraint.compact)
   {
+    // sparse instance; we use SpecializedConstraint, which unfortunately has to override the default mapper
     log_mapper.debug() << "dsl_constraint.compact = true";
     assert(req.privilege != LEGION_REDUCE);
-    constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE));
-  } else if (req.privilege == LEGION_REDUCE) {
+    constraints.add_constraint(SpecializedConstraint(LEGION_COMPACT_SPECIALIZE, 0, false,
+                                                     special_exact));
+  }
+  else if (req.privilege == LEGION_REDUCE)
+  {
     // Make reduction fold instances.
-    constraints.add_constraint(SpecializedConstraint(
-                        LEGION_AFFINE_REDUCTION_SPECIALIZE, req.redop))
-      .add_constraint(MemoryConstraint(target_memory.kind()));
-  } else {
+    constraints.add_constraint(SpecializedConstraint(LEGION_AFFINE_REDUCTION_SPECIALIZE, req.redop, false,
+                                                     special_exact))
+               .add_constraint(MemoryConstraint(target_memory.kind()));
+  }
+  else
+  {
     // Our base default mapper will try to make instances of containing
     // all fields (in any order) to encourage
     // maximum re-use by any tasks which use subsets of the fields
-    constraints.add_constraint(SpecializedConstraint())
+    constraints.add_constraint(SpecializedConstraint(LEGION_AFFINE_SPECIALIZE, 0, false,
+                                                     special_exact))
                .add_constraint(MemoryConstraint(target_memory.kind()));
     if (constraints.field_constraint.field_set.size() == 0)
     {

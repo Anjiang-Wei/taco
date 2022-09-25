@@ -43,6 +43,7 @@ STRING              (\042[^\042\n]*\042)
 "SOA"               { return T_SOA; }
 "Compact"           { return T_Compact; }
 "Align"             { return T_Align; }
+"Exact"             { return T_Exact; }
 
 "size"              { return T_Size; }
 "split"             { return T_Split; }
