@@ -421,6 +421,7 @@ bool NSMapper::validate_processor_mapping(MapperContext ctx, const Task &task, P
 
 Processor NSMapper::default_policy_select_initial_processor(MapperContext ctx, const Task &task)
 {
+  // todo: add support for selecting another node designated by DSL policy
   {
     auto finder = cached_task_policies.find(task.task_id);
     if (finder != cached_task_policies.end())
