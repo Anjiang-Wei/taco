@@ -970,7 +970,7 @@ public:
 	Node* run()
 	{
 		Node* res = expr->run();
-		assert(res->type == TupleExprType);
+		assert(res->type == TupleExprType || res->type == TupleIntType || res->type == SetTupleIntType);
 		return new UnpackExprNode((ExprNode*) res);
 	}
 };
@@ -1016,6 +1016,7 @@ public:
 	{
 		Node* result = ret_expr->run();
 		assert(result->type == TupleExprType || result->type == TupleIntType || \
+            result->type == SetTupleIntType || \
 			result->type == IntValType || result->type == BoolValType);
 		// std::cout << "return Node executed" << std::endl;
 		// result->print();

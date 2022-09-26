@@ -4,7 +4,7 @@ Region * * * SOCKMEM,SYSMEM;
 Region * * GPU FBMEM,ZCMEM;
 
 # Layout taskname regionname memory AOS F_order;
-Layout * * * SOA C_order; # Exact; # Align==128 Compact
+Layout * * * SOA C_order; # Exact Align==128 Compact
 
 # InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
 
@@ -86,7 +86,8 @@ def single_func(Task task)
     tparent = task.parent;
     # print("parent.ipoint={}", tparent.ipoint);
     # print("parent.ispace={}", tparent.ispace);
-    return m4[0, 0];
+    # return m4[point_test1[0], *];
+    return m4[*point_test1];
 }
 def new_func(Task task)
 {
@@ -112,6 +113,7 @@ def new_func(Task task)
     # print("slicetest={}", z[:-1] + z[1:]);
     # print("machine_test={}", m4.size * m4.size);
     return z[*upper, *lower];
+    # return m4[0, *];
 }
 SingleTaskMap task_4 single_func;
 IndexTaskMap task_5 new_func; # m6 blockcyclic; # task_5: (rpoc, rpoc, c)
