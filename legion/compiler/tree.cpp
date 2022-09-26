@@ -528,7 +528,7 @@ Node* FuncDefNode::invoked()
 // {
 //   /*
 //   ExprNode* func_node;
-// 	TupleExprNode* args_node; // std::vector<Node*> exprlst;
+//  TupleExprNode* args_node; // std::vector<Node*> exprlst;
 //   */
 //   bool exclamation = false;
 //   int num_element = 0;
@@ -1165,7 +1165,7 @@ Node* TupleExprNode::at(IntValNode* x)
 
 Node* IndexExprNode::run()
 {
-	Node* index_ = index->run();
+    Node* index_ = index->run();
   Node* tuple_ = tuple->run();
   if (index_->type == TupleExprType)
   {
@@ -1345,16 +1345,16 @@ ExprNode* TupleExprNode::Convert2TupleInt(bool allow_star)
 
 void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x)
 {
-	if (local_symbol.size() == 0)
-	{
-		local_symbol.push(x);
-	}
-	else
-	{
-		std::unordered_map<std::string, Node*> current_top = local_symbol.top();
-		x.insert(current_top.begin(), current_top.end());
-		local_symbol.push(x);
-	}
+    if (local_symbol.size() == 0)
+    {
+        local_symbol.push(x);
+    }
+    else
+    {
+        std::unordered_map<std::string, Node*> current_top = local_symbol.top();
+        x.insert(current_top.begin(), current_top.end());
+        local_symbol.push(x);
+    }
 }
 
 Node* ForTupleExprNode::run()

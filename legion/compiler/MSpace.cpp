@@ -35,8 +35,8 @@ class MSpaceOp
 public:
     APIEnum trans_op;
     virtual ~MSpaceOp() {}
-	virtual void print() {};
-	virtual std::vector<int> trans_dim(const std::vector<int>&) 
+    virtual void print() {};
+    virtual std::vector<int> trans_dim(const std::vector<int>&) 
     {
         std::cout << "trans_dim method TBD:" << APIName[this->trans_op] << std::endl;
         assert(false);
