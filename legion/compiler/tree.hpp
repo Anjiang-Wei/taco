@@ -276,7 +276,7 @@ public:
 	}
 };
 
-class StmtNode: public Node
+class StmtNode : public Node
 {
 public:
 	StmtNode() { type = StmtType; }
@@ -699,7 +699,7 @@ public:
 	}
 };
 
-class FuncDefNode: public StmtNode
+class FuncDefNode : public StmtNode
 {
 public:
 	std::string func_name;
