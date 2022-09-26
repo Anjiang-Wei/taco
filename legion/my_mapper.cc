@@ -480,30 +480,10 @@ void NSMapper::default_policy_select_target_processors(MapperContext ctx,
         if (!task.is_index_space)
         {
             res = tree_result.runsingle(&task, this);
-            printf("runsingle get results back for %s!\n", task.get_task_name());
-            for (int i = 0; i < res.size(); i++)
-            {
-                printf("res_single[%d]:", i);
-                for (int j = 0; j < res[i].size(); j++)
-                {
-                    printf("%d,", res[i][j]);
-                }
-                printf("\n");
-            }
         }
         else
         {
             res = tree_result.runindex(&task);
-            printf("runindex get results back for %s!\n", task.get_task_name());
-            for (int i = 0; i < res.size(); i++)
-            {
-                printf("res_index[%d]:", i);
-                for (int j = 0; j < res[i].size(); j++)
-                {
-                    printf("%d,", res[i][j]);
-                }
-                printf("\n");
-            }
         }
         int node_idx = res[0][0];
         assert(task.target_proc.address_space() == node_idx);
