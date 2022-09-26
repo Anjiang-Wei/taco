@@ -281,8 +281,8 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
     assert(false);
   }
 
-  std::unordered_map<std::string, Node*> func_symbols;
-  TaskNode* task_node = new TaskNode(task, mapper);
+  std::unordered_map<std::string, std::shared_ptr<Node>> func_symbols;
+  std::shared_ptr<TaskNode> task_node = std::make_shared<TaskNode>(task, mapper);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   if (local_symbol.size() != 0)
@@ -294,7 +294,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
   Node* res = func_node->invoked();
   local_symbol.pop();
 
-  delete task_node;
+  // delete task_node;
 
   if (res->type == TupleIntType)
   {
