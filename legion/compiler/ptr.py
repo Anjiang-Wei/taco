@@ -3,7 +3,7 @@ import sys
 def replace(lines, pre, post):
     res = []
     for line in lines:
-        res.append(line.replace(pre, post))
+        res.append(line.replace(" "+pre, " "+post).replace("<"+pre, "<"+post))
     return res
 
 def detect_files(fname_list):
