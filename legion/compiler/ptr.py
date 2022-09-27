@@ -9,7 +9,7 @@ def replace(lines, pre, post):
         if line.startswith(pre):
             res.append(line.replace(pre, post))
             continue
-        res.append(line.replace(" "+pre, " "+post).replace("<"+pre, "<"+post))
+        res.append(line.replace(" "+pre, " "+post).replace("<"+pre, "<"+post).replace("("+pre, "("+post))
     return res
 
 def detect_files(fname_list):
