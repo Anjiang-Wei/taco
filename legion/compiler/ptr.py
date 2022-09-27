@@ -4,7 +4,7 @@ def replace(lines, pre, post):
     res = []
     for line in lines:
         if "return this;" in line:
-            res.append(line.replace("return this;", "return shared_from_this();"))
+            res.append(line.replace("return this;", "return get_ptr();"))
             continue
         if line.startswith(pre):
             res.append(line.replace(pre, post))
@@ -22,7 +22,7 @@ def detect_files(fname_list):
 
 def detect(lines):
     # [...]MSpace*, [...]Node*
-    res = []
+    res = ["MSpaceOp", "Node"]
     init = ["MSpace", "Node"]
     for line in lines:
         if "class" in line:
@@ -33,7 +33,8 @@ def detect(lines):
                         word = word.strip()
                         word = word.strip(";") # avoid class MSpace;
                         word = word.strip(":") # avoid MSpace1: MSpaceBase
-                        res.append(word)
+                        if "shared" not in word:
+                            res.append(word)
     return list(set(res))
 
 
