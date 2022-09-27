@@ -305,7 +305,7 @@ public:
 };
 
 ProgramNode* root;
-std::unordered_map<std::string, std::shared_ptr<Node>> global_symbol;
+std::unordered_map<std::string, Node*> global_symbol;
 std::stack<std::unordered_map<std::string, std::shared_ptr<Node>>> local_symbol;
 void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x);
 
