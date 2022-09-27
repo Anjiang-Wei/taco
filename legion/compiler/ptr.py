@@ -3,6 +3,12 @@ import sys
 def replace(lines, pre, post):
     res = []
     for line in lines:
+        if "return this;" in line:
+            res.append(line.replace("return this;", "return std::enable_shared_from_this();"))
+            continue
+        if line.startswith(pre):
+            res.append(line.replace(pre, post))
+            continue
         res.append(line.replace(" "+pre, " "+post).replace("<"+pre, "<"+post))
     return res
 
