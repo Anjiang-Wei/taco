@@ -249,7 +249,7 @@ const char* NodeTypeName[] =
   "TaskNodeType",
 };
 
-class Node : public std::enable_shared_from_this<Node>
+class Node //: public std::enable_shared_from_this<Node>
 {
 public:
     NodeType type;
@@ -260,10 +260,11 @@ public:
         std::cout << "Run method TBD:" << NodeTypeName[this->type] << std::endl;
         return NULL;
     }
+    /*
     virtual std::shared_ptr<Node> getptr()
     {
         return shared_from_this();
-    }
+    }*/
 };
 
 class ExprNode : public Node
@@ -306,8 +307,10 @@ public:
 
 ProgramNode* root;
 std::unordered_map<std::string, Node*> global_symbol;
-std::stack<std::unordered_map<std::string, std::shared_ptr<Node>>> local_symbol;
+std::stack<std::unordered_map<std::string, Node*>> local_symbol;
+std::stack<std::vector<Node*>> local_temps;
 void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x);
+void local_temps_pop(); // free all the nodes in local_temps
 
 
 class FuncStmtsNode : public Node

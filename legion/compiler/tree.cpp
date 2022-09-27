@@ -1,5 +1,6 @@
 #include "tree.hpp"
 #include "MSpace.cpp"
+#include <cstdio>
 #include <iostream>
 #include <algorithm>
 
@@ -225,7 +226,9 @@ TupleIntNode* TaskNode::get_point()
   if (index_launch)
     return ipoint;
   printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
-  return new TupleIntNode(std::vector<int>());
+  TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
+  local_temps.top().push_back(tmpnode);
+  return tmpnode;
 }
 
 TupleIntNode* TaskNode::get_space()
@@ -233,14 +236,18 @@ TupleIntNode* TaskNode::get_space()
   if (index_launch)
     return ispace;
   printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
-  return new TupleIntNode(std::vector<int>());
+  TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
+  local_temps.top().push_back(tmpnode);
+  return tmpnode;
 }
 
 TaskNode* TaskNode::get_parent()
 {
   if (index_launch == false && task_obj->has_parent_task())
   {
-      return new TaskNode(task_obj->get_parent_task(), mapper); // should share the same mapper
+      TaskNode* tmpnode = new TaskNode(task_obj->get_parent_task(), mapper); // should share the same mapper
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
   }
   printf("Warning: IndexTask or current task does not support get_parent(), returning NULL\n");
   return NULL;
@@ -281,20 +288,22 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
     assert(false);
   }
 
-  std::unordered_map<std::string, std::shared_ptr<Node>> func_symbols;
-  std::shared_ptr<TaskNode> task_node = std::make_shared<TaskNode>(task, mapper);
+  std::unordered_map<std::string, Node*> func_symbols;
+  TaskNode* task_node = new TaskNode(task, mapper);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   if (local_symbol.size() != 0)
   {
-    std::cout << "local_symbol.size() != 0 inside Tree2Legion::run" << std::endl;
+    std::cout << "local_symbol.size() != 0 inside Tree2Legion::runsingle" << std::endl;
     assert(false);
   }
   local_symbol.push(func_symbols);
+  local_temps.push(std::vector<Node*>());
   Node* res = func_node->invoked();
+  local_temps_pop();
   local_symbol.pop();
 
-  // delete task_node;
+  delete task_node;
 
   if (res->type == TupleIntType)
   {
@@ -398,7 +407,9 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
     assert(false);
   }
   local_symbol.push(func_symbols);
+  local_temps.push(std::vector<Node*>());
   Node* res = func_node->invoked();
+  local_temps_pop();
   local_symbol.pop();
 
   delete task_node;
@@ -612,6 +623,17 @@ Node* FuncDefNode::invoked()
 //   return new TupleExprNode(tuple_res);
 // }
 
+void local_temps_pop() // free all the nodes in local_temps
+{
+    assert(local_temps.empty() == false);
+    std::vector<Node*> top_vec = local_temps.top();
+    for (auto& obj: top_vec)
+    {
+        delete obj;
+    }
+    local_temps.pop();
+}
+
 
 Node* FuncInvokeNode::run()
 {
@@ -651,7 +673,9 @@ Node* FuncInvokeNode::run()
       MemNode* memnode = (MemNode*) mem_node;
       MemoryEnum mem = memnode->mem_type;
 
-      return new BoolValNode(machine_node->has_mem(int_val, mem));
+      BoolValNode* tmpnode = new BoolValNode(machine_node->has_mem(int_val, mem));
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
     }
     else if (func_c->api == REVERSE)
     {
@@ -664,7 +688,9 @@ Node* FuncInvokeNode::run()
       assert(intnode_1->type == IntValType);
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
 
-      return new MSpace(mspace_node, func_c->api, int_node_1->intval);
+      MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval);
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
     }
     else if (func_c->api == AUTO_SPLIT || func_c->api == GREEDY_SPLIT)
     {
@@ -689,7 +715,9 @@ Node* FuncInvokeNode::run()
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
       TupleIntNode* node_2 = (TupleIntNode*) tuple_int_node_2;
 
-      return new MSpace(mspace_node, func_c->api, int_node_1->intval, node_2->tupleint);
+      MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, node_2->tupleint);
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
     }
     else if (func_c->api == SPLIT || func_c->api == SWAP || \
             func_c->api == MERGE || func_c->api == BALANCE_SPLIT)
@@ -706,7 +734,9 @@ Node* FuncInvokeNode::run()
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
       IntValNode* int_node_2 = (IntValNode*) intnode_2;
 
-      return new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval);
+      MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval);
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
     }
     else if (func_c->api == SLICE)
     {
@@ -725,7 +755,9 @@ Node* FuncInvokeNode::run()
       IntValNode* int_node_2 = (IntValNode*) intnode_2;
       IntValNode* int_node_3 = (IntValNode*) intnode_3;
 
-      return new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval, int_node_3->intval);
+      MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval, int_node_3->intval);
+      local_temps.top().push_back(tmpnode);
+      return tmpnode;
     }
     else if (func_c->api == TASKPROCESSOR)
     {
@@ -743,7 +775,9 @@ Node* FuncInvokeNode::run()
         std::vector<int> dim2_point = task_node->get_proc_coordinate_from_Legion();
         std::vector<int> point_in_mspace = machine_model->legion2mspace(dim2_point);
 
-        return new TupleIntNode(point_in_mspace);
+        TupleIntNode* tmpnode = new TupleIntNode(point_in_mspace);
+        local_temps.top().push_back(tmpnode);
+        return tmpnode;
     }
     else
     {
@@ -790,7 +824,9 @@ Node* FuncInvokeNode::run()
       func_symbols.insert({params[i]->argname, feed_in});
     }
     local_symbol.push(func_symbols);
+    local_temps.push(std::vector<Node*>());
     Node* res = func_def->invoked();
+    local_temps_pop();
     local_symbol.pop();
     return res;
   }
@@ -1426,6 +1462,7 @@ Tree2Legion::Tree2Legion(std::string filename)
     std::cout << "Mapping policy file does not exist" << std::endl;
     assert(false);
   }
+  local_temps.push(std::vector<Node*>());
   yyparse();
   // std::cout << root->stmt_list.size() << std::endl;
   // root->print();
