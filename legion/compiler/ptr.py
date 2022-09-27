@@ -4,7 +4,7 @@ def replace(lines, pre, post):
     res = []
     for line in lines:
         if "return this;" in line:
-            res.append(line.replace("return this;", "return get_ptr();"))
+            res.append(line.replace("return this;", "return getptr();"))
             continue
         if line.startswith(pre):
             res.append(line.replace(pre, post))
