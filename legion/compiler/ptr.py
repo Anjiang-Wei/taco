@@ -18,9 +18,10 @@ def replace(lines, pre, post):
 def detect_files(fname_list):
     res = []
     for f in fname_list:
-        with open(f, "r") as fin:
-            lines = fin.readlines()
-            res += detect(lines)
+        if f != "parser.y":
+            with open(f, "r") as fin:
+                lines = fin.readlines()
+                res += detect(lines)
     return sorted(list(set(res)))
 
 def detect(lines):
