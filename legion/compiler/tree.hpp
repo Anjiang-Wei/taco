@@ -545,7 +545,7 @@ public:
     {
         printf("%d", intval);
     }
-    IntValNode* run()
+    Node* run()
     {
         return this;
     }
@@ -576,7 +576,7 @@ public:
             }
         }
     }
-    TupleIntNode* run() { return this; }
+    Node* run() { return this; }
     TupleIntNode* negate();
     TupleIntNode* slice(int a, int b);
     TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op);
@@ -610,7 +610,7 @@ public:
             printf("\n");
         }
     }
-    SetTupleIntNode* run() { return this; }
+    Node* run() { return this; }
 };
 
 class BoolValNode : public ExprNode
@@ -772,7 +772,7 @@ class StarExprNode : public ExprNode
 public:
     StarExprNode() { type = StarExprType; }
     void print() { printf("*"); }
-    StarExprNode* run() { return this; }
+    Node* run() { return this; }
 };
 
 class SliceExprNode : public ExprNode
@@ -1150,7 +1150,7 @@ public:
         printf("ipoint:"); if (ipoint != NULL) ipoint->print();
         printf("ispace:"); if (ispace != NULL) ispace->print();
     }
-    TaskNode* run() { return this; }
+    Node* run() { return this; }
 };
 
 class Tree2Legion
