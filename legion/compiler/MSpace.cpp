@@ -30,7 +30,7 @@ std::string vec2str(std::vector<int> my_vector)
 }
 
 
-class MSpaceOp
+class MSpaceOp : public std::enable_shared_from_this<MSpaceOp>
 {
 public:
     APIEnum trans_op;
@@ -53,6 +53,10 @@ public:
         printf("trans_forward method TBD: %s\n", APIName[this->trans_op]);
         assert(false);
         return std::vector<int>{};
+    }
+    virtual std::shared_ptr<MSpaceOp> getptr()
+    {
+        return shared_from_this();
     }
 };
 

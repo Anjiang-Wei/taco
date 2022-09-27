@@ -249,7 +249,7 @@ const char* NodeTypeName[] =
   "TaskNodeType",
 };
 
-class Node
+class Node : public std::enable_shared_from_this<Node>
 {
 public:
     NodeType type;
@@ -259,7 +259,11 @@ public:
     {
         std::cout << "Run method TBD:" << NodeTypeName[this->type] << std::endl;
         return NULL;
-    };
+    }
+    virtual std::shared_ptr<Node> getptr()
+    {
+        return shared_from_this();
+    }
 };
 
 class ExprNode : public Node
