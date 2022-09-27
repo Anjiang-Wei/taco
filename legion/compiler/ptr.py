@@ -6,6 +6,9 @@ def replace(lines, pre, post):
         if "return this;" in line:
             res.append(line.replace("return this;", "return getptr();"))
             continue
+        if "{func_name, this}" in line: # fix a special case in funcdefnode
+            res.append(line.replace("{func_name, this}", "{func_name, getptr()}"))
+            continue
         if line.startswith(pre):
             res.append(line.replace(pre, post))
             continue
