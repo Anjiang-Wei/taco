@@ -603,6 +603,14 @@ public:
     MSpaceOp* trans_op;
     MSpace* prev_machine;
     std::vector<Processor> local_procs;
+    ~MSpace()
+    {
+        if (trans_op != NULL)
+        {
+            delete trans_op;
+        }
+        // deleting prev_machine already handled by tree.cpp
+    }
 
     MSpace()
     {
