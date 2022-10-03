@@ -18,30 +18,30 @@ def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
     return x[dim1] % z.size[dim2];
 }
 
-m4 = Machine(GPU); # nodes * processors
-m7 = m4.merge(0, 1);
+m_2d = Machine(GPU); # nodes * processors
+m_1d = m_2d.merge(0, 1);
 
 def single_func(Task task) {
-    return m4[*task.parent.processor(m4)]; # same point as parent
+    return m_2d[*task.parent.processor(m_2d)]; # same point as parent
 }
 
 def block1d(Task task) {
-    return m7[block_primitive(task.ipoint, task.ispace, m7, 0, 0)];
+    return m_1d[block_primitive(task.ipoint, task.ispace, m_1d, 0, 0)];
 }
 
 def block2d(Task task) {
-    indices = tuple(block_primitive(task.ipoint, task.ispace, m4, i, i) for i in (0, 1));
-    # m4 = m4.swap(0, 1);
-    return m4[*indices];
+    shard_dim = block_primitive(task.ipoint, task.ispace, m_2d, 0, 0);
+    slice_dim = cyclic_primitive(task.ipoint, task.ispace, m_2d, 1, 1);
+    return m_2d[shard_dim, slice_dim];
 }
 
 def new_func(Task task) {
-    m5 = m4.auto_split(0, task.ispace); # split the original 0 dim into 0,1,2 dim
-    # m5 = m5.swap(0, 2); # swap works for node=4, but not node=2
-    z = m5.auto_split(3, task.ispace); # split the original 1 (now 3) dim into 3,4,5 dim
-    upper = tuple(block_primitive(task.ipoint, task.ispace, z, i, i) for i in (0,1,2));
-    lower = tuple(cyclic_primitive(task.ipoint, task.ispace, z, i, i + 3) for i in (0,1,2));
-    return z[*upper, *lower];
+    m_4d = m_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1,2 dim
+    # subspace: task.ispace / m_4d[:-1]
+    m_6d = m_4d.auto_split(3, task.ispace / m_4d[:-1]); # split the processor (previosly 1, now 3) dim into 3,4,5 dim w.r.t subspace
+    upper = tuple(block_primitive(task.ipoint, task.ispace, m_6d, i, i) for i in (0,1,2));
+    lower = tuple(cyclic_primitive(task.ipoint, task.ispace, m_6d, i, i + 3) for i in (0,1,2));
+    return m_6d[*upper, *lower];
 }
 
 # 2nodes: rpoc=2 c=2 

@@ -442,7 +442,7 @@ public:
             (*min_it) *= factor;
             original_size /= factor;
         }
-        std::sort(new_dims.begin(), new_dims.end());
+        std::sort(new_dims.begin(), new_dims.end(), std::greater<int>());
         std::vector<int> result;
         for (size_t i = 0; i < old_dim.size(); i++)
         {

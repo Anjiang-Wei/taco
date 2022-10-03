@@ -13,6 +13,7 @@
 #include <math.h>
 
 void printvec(const std::vector<int>& my_vector);
+void order_optimize(const std::vector<int>& launch_domain, std::vector<int>& result);
 
 // Helper function: factorize a number (big_number) into sorted prime factors (factors_result)
 void generate_prime_factor(int big_number, std::vector<int>& factors_result)
@@ -299,6 +300,54 @@ int C(int n, int k)
     return ans;
 }
 
+// sort in a way that vec[dim0] >= vec[dim1]
+inline void order_2dim(std::vector<int>& vec, int dim0, int dim1)
+{
+    if (vec[dim0] >= vec[dim1])
+        return;
+    int x = vec[dim0];
+    vec[dim0] = vec[dim1];
+    vec[dim1] = x;
+}
+
+// for same number in launch_domain, bigger number in result appears first
+inline void order_optimize(const std::vector<int>& launch_domain, std::vector<int>& result)
+{
+    if (launch_domain.size() == 2 && launch_domain[0] == launch_domain[1])
+    {
+        order_2dim(result, 0, 1);
+        return;
+    }
+    if (launch_domain.size() == 3)
+    {
+        int d0 = launch_domain[0];
+        int d1 = launch_domain[1];
+        int d2 = launch_domain[2];
+        if (d0 != d1 && d0 != d2 && d1 != d2)
+            return;
+        if (d0 == d1 && d0 == d2)
+        {
+            std::sort(result.begin(), result.end(), std::greater<int>());
+            return;
+        }
+        if (d0 == d1)
+        {
+            order_2dim(result, 0, 1); // lower dimensions' results are bigger
+            return;
+        }
+        if (d0 == d2)
+        {
+            order_2dim(result, 0, 2);
+            return;
+        }
+        if (d1 == d2)
+        {
+            order_2dim(result, 1, 2);
+            return;
+        }
+    }
+}
+
 std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_precise_enumerate;
 
 std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_domain)
@@ -356,6 +405,7 @@ std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_do
             result = o_vec;
         }
     }
+    order_optimize(launch_domain, result);
     if (cache_precise_enumerate.count(number) == 0)
     {
         std::map<std::vector<int>, std::vector<int>> empty;
