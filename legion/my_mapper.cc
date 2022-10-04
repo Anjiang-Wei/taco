@@ -549,10 +549,18 @@ Memory NSMapper::query_best_memory_for_proc(const Processor& proc, const Memory:
     return cached_affinity_proc2mem.at({proc, mem_target_kind});
   }
   Machine::MemoryQuery visible_memories(machine);
-  visible_memories.local_address_space()
-                  .only_kind(mem_target_kind)
-                  .best_affinity_to(proc)
-                  ;
+  // visible_memories.local_address_space()
+  visible_memories.same_address_space_as(proc)
+                  .only_kind(mem_target_kind);
+  if (mem_target_kind == Memory::SOCKET_MEM || mem_target_kind == Memory::GPU_FB_MEM)
+  {
+      visible_memories.best_affinity_to(proc);
+  }
+  else
+  // else if (mem_target_kind == Memory::Z_COPY_MEM)
+  {
+      visible_memories.has_affinity_to(proc);
+  }
   if (visible_memories.count() > 0)
   {
     Memory result = visible_memories.first();
