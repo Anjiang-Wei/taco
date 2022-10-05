@@ -6,8 +6,6 @@ Region * * GPU FBMEM,ZCMEM;
 
 # Other supported Memory: RDMEM
 
-# Task taco_validate parent_task_procesor; # We don't know how to deal with this yet
-
 # Layout taskname regionname memory AOS F_order;
 Layout * * * SOA C_order; # Align==128 Compact
 
@@ -16,62 +14,45 @@ Layout * * * SOA C_order; # Align==128 Compact
 
 CollectMemory task_5 *; # controlled by command line in TacoMapper
 
-m1 = Machine(OMP); # nodes * OMP
-m2 = m1.balance_split(0, 2); # node1 * node2 * OMP
-m3 = m2.balance_split(2, 2); # node1 * node2 * OMP1 * OMP2
-m3_ = m3.swap(0, 1);
-m3__ = m3_.swap(2, 3);
-
-m4 = Machine(GPU); # nodes * 4GPUs
-# split the first dimension (i.e., nodes dimension) in as square as possible
-m5 = m4.balance_split(0, 2); # node1 * node2 * 4 GPUs
-# split the third dimension (i.e., processor dimension) as square as possible
-m6 = m5.balance_split(2, 2); # node1 * node2 * 2 * 2
-m6_ = m6.swap(0, 1);
-m6__ = m6_.swap(2, 3);
-
-m7 = m4.merge(0, 1);
-
-def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
-{
-    a = x[dim1];
-    b = z.size[dim2];
-    c = y.size[dim1];
-    d = a * b / c;
-    return d;
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
+    return x[dim1] * z.size[dim2] / y.size[dim1];
 }
 
-def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
-{
-    a = x[dim1];
-    b = z.size[dim2];
-    c = y.size[dim1];
-    d = a % b;
-    return d;
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
+    return x[dim1] % z.size[dim2];
 }
 
-def block1d(IPoint x, ISpace y, MSpace z)
-{
-    # x, y, z are all 1-dim
-    return block_primitive(x, y, z, 0, 0);
+m_2d = Machine(GPU); # nodes * processors
+m_1d = m_2d.merge(0, 1);
+
+def auto2d(Task task) {
+    m_3d = m_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1 dim
+    # subspace: task.ispace / m_3d[:-1]
+    m_4d = m_3d.auto_split(2, task.ispace / m_3d[:-1]); # split the processor (previosly 1, now 2) dim into 2,3 dim w.r.t subspace
+    upper = tuple(block_primitive(task.ipoint, task.ispace, m_4d, i, i) for i in (0,1));
+    lower = tuple(cyclic_primitive(task.ipoint, task.ispace, m_4d, i, i + 2) for i in (0,1));
+    return m_4d[*upper, *lower];
 }
 
-def blockcyclic(IPoint x, ISpace y, MSpace z)
-{
-    # MSpace z (machine space) has 4 dimensions
-    # IPoint x (index launch point), ISpace y (index launch space) has 2 dimensions
-    # Both sharding and slicing are "block" 
-    a = block_primitive(x, y, z, 0, 0);
-    b = block_primitive(x, y, z, 1, 1);
-    c = cyclic_primitive(x, y, z, 0, 2);
-    d = cyclic_primitive(x, y, z, 1, 3);
-    return (a, b, c, d);
+def block1d(Task task) {
+    return m_1d[block_primitive(task.ipoint, task.ispace, m_1d, 0, 0)];
+}
+
+m_omp_2d = Machine(OMP);
+
+def auto2d_omp(Task task) {
+    m_3d = m_omp_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1 dim
+    # subspace: task.ispace / m_3d[:-1]
+    m_4d = m_3d.auto_split(2, task.ispace / m_3d[:-1]); # split the processor (previosly 1, now 2) dim into 2,3 dim w.r.t subspace
+    upper = tuple(block_primitive(task.ipoint, task.ispace, m_4d, i, i) for i in (0,1));
+    lower = tuple(cyclic_primitive(task.ipoint, task.ispace, m_4d, i, i + 2) for i in (0,1));
+    return m_4d[*upper, *lower];
 }
 
 # task_5: UNTRACK_VALID_REGIONS, BACKPRESSURE_TASK, always (2, 2) only for slicing, no sharding;
 # 4nodes: gridX, gridY = 2, 2
-IndexTaskMap * m6__ blockcyclic; # task_1, task_2, task_3: (gridX * 2, gridY * 2)
-IndexTaskMap init_cublas m7 block1d;
-IndexTaskMap task_7 m3__ blockcyclic; # task_7: (gridX, gridY)
+IndexTaskMap * auto2d; # task_1, task_2, task_3: (gridX * 2, gridY * 2)
+IndexTaskMap init_cublas block1d;
+IndexTaskMap task_7 auto2d_omp; # task_7: (gridX, gridY)
 # if only turn this on, and comment out all the above IndexTaskMap, then ~1.5X faster! Don't understand why yet.
 # IndexTaskMap taco_fill m6 blockcyclic;
