@@ -35,7 +35,7 @@ def blockcyclic2d(Task task) {
     return m_2d[shard_dim, slice_dim];
 }
 
-def blockcyclic6d(Task task) {
+def auto6d(Task task) {
     m_4d = m_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1,2 dim
     # subspace: task.ispace / m_4d[:-1]
     m_6d = m_4d.auto_split(3, task.ispace / m_4d[:-1]); # split the processor (previosly 1, now 3) dim into 3,4,5 dim w.r.t subspace
@@ -50,6 +50,6 @@ def blockcyclic6d(Task task) {
 # 16nodes: rpoc=8 c=1
 
 SingleTaskMap task_4 same_point;
-IndexTaskMap task_5 blockcyclic6d; # task_5 launch space: (rpoc, rpoc, c)
+IndexTaskMap task_5 auto6d; # task_5 launch space: (rpoc, rpoc, c)
 IndexTaskMap task_1,task_2, task_3 blockcyclic2d; # task_1, task_2, task_3: (rpoc, rpoc, 1), has PLACE_SHARD tag
 IndexTaskMap init_cublas block1d;
