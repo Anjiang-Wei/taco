@@ -21,9 +21,8 @@ def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
 m_2d = Machine(GPU); # nodes * processors
 
 def auto3d_zero(Task task) {
-    m_4d = m_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1,2 dim
-    # subspace: task.ispace / m_4d[:-1]
-    upper = tuple(block_primitive(task.ipoint, task.ispace, m_4d, i, i) for i in (0,1,2));
+    m_4d = m_2d.auto_split(0, task.ispace);
+    upper = tuple(block_primitive(task.ipoint, task.ispace, m_4d, i, i) for i in (0, 1, 2));
     return m_4d[*upper, 0];
 }
 
