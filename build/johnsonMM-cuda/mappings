@@ -10,38 +10,28 @@ Layout * * * SOA C_order; # Align==128 Compact
 
 CollectMemory task_4 *;
 
-m4 = Machine(GPU); # nodes * 4
-m5 = m4.balance_split(0, 2); # node1 * node2 * 4
-m5_ = m5.swap(0, 1);
-
-def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
-{
+def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
     return x[dim1] * z.size[dim2] / y.size[dim1];
 }
 
-def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2)
-{
+def cyclic_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
     return x[dim1] % z.size[dim2];
 }
 
-def block_zero(IPoint x, ISpace y, MSpace z)
-{
-    a = block_primitive(x, y, z, 0, 0);
-    b = 0;
-    return (a, b);
+m_2d = Machine(GPU); # nodes * processors
+
+def auto3d_zero(Task task) {
+    m_4d = m_2d.auto_split(0, task.ispace); # split the original 0 dim into 0,1,2 dim
+    # subspace: task.ispace / m_4d[:-1]
+    upper = tuple(block_primitive(task.ipoint, task.ispace, m_4d, i, i) for i in (0,1,2));
+    return m_4d[*upper, 0];
 }
 
-def block_block_zero(IPoint x, ISpace y, MSpace z)
-{
-    a = block_primitive(x, y, z, 0, 0);
-    b = block_primitive(x, y, z, 1, 1);
-    c = 0;
-    return (a, b, c);
+def block_zero(Task task) {
+    shard_dim = block_primitive(task.ipoint, task.ispace, m_2d, 0, 0);
+    return m_2d[shard_dim, 0];
 }
 
-# node4: -gdim 4
-IndexTaskMap task_1 m4 block_zero; # ispace: grid * grid * 1, PLACEMENT_SHARD
-IndexTaskMap task_2 m4 block_zero; # ispace: grid * 1 * grid, PLACEMENT_SHARD
-IndexTaskMap task_3 m4 block_zero; # ispace : 1 * grid * grid, PLACEMENT_SHARD
-IndexTaskMap task_4 m5_ block_block_zero; # ispace: grid * grid * grid, UNTRACK_VALID_REGIONS
-IndexTaskMap init_cublas m4 block_zero;
+# node4: -gdim 4; task_1 (grid, grid, 1); task_2 (grid, 1, grid); task_3 (1, grid, grid)
+IndexTaskMap task_1,task_2,task_3,init_cublas block_zero;
+IndexTaskMap task_4 auto3d_zero; # (grid, grid, grid), UNTRACK_VALID_REGIONS
