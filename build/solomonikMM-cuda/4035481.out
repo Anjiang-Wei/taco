@@ -1,0 +1,84 @@
+Num nodes: 4
+Job id: 4035481
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 800 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1
+Warning: Overriding spectrum-mpi/rolling-release (module loaded must exactly match)
+Warning: Using      spectrum-mpi/2020.08.19 to match app's MPI
+Please tell John Gyllenhaal (gyllen@llnl.gov, 4-5485) if this MPI env fix doesn't work
+mlx5: lassen411: got completion with error:
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000001 00000000 00000000 00000000
+00000000 00005604 0803c660 02c2c8d2
+*** ERROR (proc 0): snd status=4(local protection error) vendor_err=0x56 qp_num=0x3c660 hca=mlx5_1 op=PUT_ZEROCP(RDMA_WRITE) dest=(proc:1, qpi:0)
+*** FATAL ERROR (proc 0): in gasnetc_snd_reap() at ld/embed-gasnet/source/ibv-conduit/gasnet_core_sndrcv.c:979: aborting on reap of failed send
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 0): SIGABRT(6)
+WARNING: ODP shutdown in signal context
+mlx5: lassen421: got completion with error:
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000001 00000000 00000000 00000000
+00000000 00005604 08003222 02eff7d3
+*** ERROR (proc 2): snd status=4(local protection error) vendor_err=0x56 qp_num=0x3222 hca=mlx5_0 op=PUT_ZEROCP(RDMA_WRITE) dest=(proc:1, qpi:2)
+*** FATAL ERROR (proc 2): in gasnetc_snd_reap() at ld/embed-gasnet/source/ibv-conduit/gasnet_core_sndrcv.c:979: aborting on reap of failed send
+NOTICE: Before reporting bugs, run with GASNET_BACKTRACE=1 in the environment to generate a backtrace. 
+NOTICE: We recommend linking the debug version of GASNet to assist you in resolving this application issue.
+*** Caught a fatal signal (proc 2): SIGABRT(6)
+WARNING: ODP shutdown in signal context
+ERROR:  One or more process (first noticed rank 2) terminated with signal 6
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@lassen710>
+Subject: Job 4035481: <run> in cluster <lassen> Exited
+
+Job <run> was submitted from host <lassen708> by user <wei8> in cluster <lassen> at Sun Oct  9 21:15:12 2022
+Job was executed on host(s) <1*lassen710>, in queue <pbatch>, as user <wei8> in cluster <lassen> at Sun Oct  9 21:15:15 2022
+                            <40*lassen411>
+                            <40*lassen744>
+                            <40*lassen415>
+                            <40*lassen421>
+</g/g92/wei8> was used as the home directory.
+</g/g92/wei8/taco/build/solomonikMM-cuda> was used as the working directory.
+Started at Sun Oct  9 21:15:15 2022
+Terminated at Sun Oct  9 21:16:16 2022
+Results reported at Sun Oct  9 21:16:16 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash -eu
+#BSUB -J run
+## BSUB -q pdebug
+#BSUB -W 20
+
+numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
+
+echo Num nodes: $numnodes
+echo Job id: $LSB_JOBID
+
+cmd="jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 800 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1"
+echo $cmd
+$cmd
+
+------------------------------------------------------------
+
+Exited with exit code 134.
+
+Resource usage summary:
+
+    CPU time :                                   0.22 sec.
+    Max Memory :                                 59 MB
+    Average Memory :                             54.71 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1425 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   61 sec.
+    Turnaround time :                            64 sec.
+
+The output (if any) is above this job summary.
+
