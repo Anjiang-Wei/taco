@@ -299,6 +299,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
   }
   local_symbol.push(func_symbols);
   // local_temps.top().push(std::vector<Node*>());
+  // todo: stateless
   Node* res = func_node->invoked();
   // local_temps.top()_pop();
   local_symbol.pop();
@@ -412,6 +413,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
   }
   local_symbol.push(func_symbols);
   // local_temps.top().push(std::vector<Node*>());
+  // todo: stateless
   Node* res = func_node->invoked();
   // local_temps.top()_pop();
   local_symbol.pop();
@@ -835,6 +837,7 @@ Node* FuncInvokeNode::run()
     }
     local_symbol.push(func_symbols);
     // local_temps.top().push(std::vector<Node*>());
+    // todo: stateless
     Node* res = func_def->invoked();
     // local_temps.pop();
     local_symbol.pop();
@@ -1444,6 +1447,7 @@ ExprNode* TupleExprNode::Convert2TupleInt(bool allow_star)
   return tmpnode;
 }
 
+// todo : remove this to be stateless
 void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x)
 {
     if (local_symbol.size() == 0)
@@ -1470,6 +1474,7 @@ Node* ForTupleExprNode::run()
     {
       Node* feed_in = range_->exprlst[i];
       variable_binding[identifier] = feed_in; // insert or overwrite
+      //todo: stateless
       push_local_symbol_with_top_merge(variable_binding);
       Node* res = expr->run();
       local_symbol.pop();
@@ -1487,6 +1492,7 @@ Node* ForTupleExprNode::run()
       Node* feed_in = new IntValNode(range_->tupleint[i]);
       local_temps.top().push_back(feed_in);
       variable_binding[identifier] = feed_in; // insert or overwrite
+      // todo: stateless
       push_local_symbol_with_top_merge(variable_binding);
       Node* res = expr->run();
       local_symbol.pop();

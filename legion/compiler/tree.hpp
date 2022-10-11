@@ -307,8 +307,10 @@ public:
 
 ProgramNode* root;
 std::unordered_map<std::string, Node*> global_symbol;
+// todo: no local_symbol
 std::stack<std::unordered_map<std::string, Node*>> local_symbol;
 std::stack<std::vector<Node*>> local_temps;
+// todo: remove this
 void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x);
 void local_temps_pop(); // free all the nodes in local_temps.top()
 
@@ -454,6 +456,7 @@ public:
             std::cout << "Cannot Assign " << NodeTypeName[simplified->type] << std::endl;
             assert(false);
         }
+        // todo: pass in and modify env instead 
         if (local_symbol.size() >= 1)
         {
             local_symbol.top().insert({var_name, simplified});
@@ -520,6 +523,7 @@ public:
     {
         printf("IdentifierExprNode %s\n", name.c_str());
     }
+    // todo: implement Node* run(env)
     Node* run()
     {
         if (local_symbol.size() > 0)
