@@ -648,7 +648,7 @@ public:
     {
         printf("Processor %s: %s\n", ProcessorEnumName[proc_type], vec2str(each_dim).c_str());
     }
-    Node* run()
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
     {
         return this;
     }
