@@ -1,0 +1,15 @@
+#!/bin/bash -eu
+#BSUB -J run
+## BSUB -q pdebug
+#BSUB -W 5
+
+numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
+
+echo Num nodes: $numnodes
+echo Job id: $LSB_JOBID
+
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 40000 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -level mapper=debug -logfile mapper44_taco%.log
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 40000 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -level mapper=debug -level nsmapper=debug -dslmapper -mapping mappings -logfile mapper44_dsl%.log
+
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 40000 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 4 ../bin/solomonikMM-cuda -n 40000 -rpoc 4 -c 1 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -dslmapper -mapping mappings
