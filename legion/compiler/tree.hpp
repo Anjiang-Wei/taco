@@ -255,7 +255,7 @@ public:
     NodeType type;
     virtual ~Node() {}
     virtual void print() {};
-    virtual Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) 
+    virtual Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) 
     {
         std::cout << "Run method TBD:" << NodeTypeName[this->type] << std::endl;
         return NULL;
@@ -274,7 +274,7 @@ public:
     ExprNode() {}
     virtual ~ExprNode() {};
     virtual void print() = 0;
-    virtual Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    virtual Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         std::cout << "Run method TBD" << NodeTypeName[this->type] << std::endl;
         return NULL;
@@ -295,11 +295,11 @@ public:
 
     ProgramNode() { type = ProgramType; }
     void print();
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         for (size_t i = 0; i < stmt_list.size(); i++)
         {
-            stmt_list[i]->run(local_symbol);
+            stmt_list[i]->run(local_symbol, local_temps);
         }
         return NULL;
     }
@@ -307,11 +307,9 @@ public:
 
 ProgramNode* root;
 std::unordered_map<std::string, Node*> global_symbol;
-std::vector<Node*> local_temps;
-// todo: remove this
 void push_local_symbol_with_top_merge(std::stack<std::unordered_map<std::string, Node*>>& local_symbol,
                                       std::unordered_map<std::string, Node*> x);
-void local_temps_pop(); // free all the nodes in local_temps
+void local_temps_pop(std::vector<Node*>& local_temps); // free all the nodes in local_temps
 
 
 class FuncStmtsNode : public Node
@@ -351,7 +349,7 @@ public:
 
     ProcNode(ProcessorEnum x) { type = ProcType; proc_type = x;}
     void print() { printf("ProcNode: %s\n", ProcessorEnumName[proc_type]); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
 };
 
 class MemNode : public ExprNode
@@ -361,7 +359,7 @@ public:
 
     MemNode(MemoryEnum x) { type = MemType; mem_type = x; }
     void print() { printf("MemNode: %s\n", MemoryEnumName[mem_type]); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
 };
 
 class ProcLstNode : public Node
@@ -395,7 +393,7 @@ public:
         proc_types = y->proc_type_lst;
     }
     void print() { printf("ProcCustomNode %s %s\n", taskname.c_str(), ProcessorEnumName[proc_types[0]]); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class RegionCustomNode : public StmtNode
@@ -420,7 +418,7 @@ public:
             taskname.c_str(), region_name.c_str(), ProcessorEnumName[processor_type],
             MemoryEnumName[mem_types[0]]);
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 
@@ -445,9 +443,9 @@ public:
         printf("AssignNode: %s\n", var_name.c_str());
         right_node->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
-        Node* simplified = right_node->run(local_symbol);
+        Node* simplified = right_node->run(local_symbol, local_temps);
         if (!(simplified->type == IntValType || simplified->type == BoolValType ||\
             simplified->type == MSpaceType || simplified->type == TupleExprType ||\
             simplified->type == TupleIntType || simplified->type == TaskNodeType))
@@ -489,7 +487,7 @@ public:
         printf("right\n"); right->print();
         printf("---------\n");
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class IdentifierLstNode : public Node
@@ -523,13 +521,13 @@ public:
         printf("IdentifierExprNode %s\n", name.c_str());
     }
     // todo: implement Node* run(env)
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         if (local_symbol.size() > 0)
         {
             if (local_symbol.top().count(name) > 0)
             {
-                return local_symbol.top().at(name)->run(local_symbol);
+                return local_symbol.top().at(name)->run(local_symbol, local_temps);
             }
         }
         if (global_symbol.count(name) == 0)
@@ -537,7 +535,7 @@ public:
             std::cout << name << " not found" << std::endl;
             assert(false);
         }
-        return global_symbol.at(name)->run(local_symbol);
+        return global_symbol.at(name)->run(local_symbol, local_temps);
     }
 };
 
@@ -551,17 +549,17 @@ public:
     {
         printf("%d", intval);
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         return this;
     }
-    IntValNode* negate()
+    IntValNode* negate(std::vector<Node*>& local_temps)
     {
         IntValNode* tmpnode = new IntValNode(-intval);
         local_temps.push_back(tmpnode);
         return tmpnode;
     }
-    Node* binary_op(IntValNode* rt, BinOpEnum op);
+    Node* binary_op(IntValNode* rt, BinOpEnum op, std::vector<Node*>& local_temps);
 };
 
 class TupleIntNode : public ExprNode
@@ -584,14 +582,14 @@ public:
             }
         }
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
-    TupleIntNode* negate();
-    TupleIntNode* slice(int a, int b);
-    TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op);
-    IntValNode* at(int x);
-    IntValNode* at(IntValNode* x);
-    IntValNode* volume();
-    IntValNode* len();
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
+    TupleIntNode* negate(std::vector<Node*>& local_temps);
+    TupleIntNode* slice(int a, int b, std::vector<Node*>& local_temps);
+    TupleIntNode* binary_op(TupleIntNode* rt, BinOpEnum op, std::vector<Node*>& local_temps);
+    IntValNode* at(int x, std::vector<Node*>& local_temps);
+    IntValNode* at(IntValNode* x, std::vector<Node*>& local_temps);
+    IntValNode* volume(std::vector<Node*>& local_temps);
+    IntValNode* len(std::vector<Node*>& local_temps);
 };
 
 class SetTupleIntNode : public ExprNode
@@ -618,7 +616,7 @@ public:
             printf("\n");
         }
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
 };
 
 class BoolValNode : public ExprNode
@@ -631,8 +629,8 @@ public:
     {
         printf("BoolValNode: %s\n", boolval ? "true" : "false");
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
-    BoolValNode* binary_op(BoolValNode* rt, BinOpEnum op);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
+    BoolValNode* binary_op(BoolValNode* rt, BinOpEnum op, std::vector<Node*>& local_temps);
 };
 
 
@@ -654,7 +652,7 @@ public:
         func_name= std::string(y);
     }
     void print() { printf("SingleTaskMapNode (%s,...), %s\n", task_name[0].c_str(), func_name.c_str()); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 
@@ -677,7 +675,7 @@ public:
         func_name= std::string(y);
     }
     void print() { printf("IndexTaskMapNode (%s,...), %s\n", task_name[0].c_str(), func_name.c_str()); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class ArgNode : public Node
@@ -730,12 +728,12 @@ public:
         func_args->print();
         func_stmts->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         global_symbol.insert({func_name, this});
         return this;
     }
-    Node* invoked(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* invoked(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 
@@ -765,13 +763,18 @@ public:
             }
         }
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
-    ExprNode* Convert2TupleInt(bool allow_star=false); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
-    TupleExprNode* negate();
-    TupleExprNode* slice(int a, int b);
-    TupleExprNode* binary_op(TupleExprNode* right_op, BinOpEnum op);
-    Node* at(int x);
-    Node* at(IntValNode* x);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
+    ExprNode* Convert2TupleInt() // for parser.y
+    {
+        std::vector<Node*> no_effect;
+        return this->Convert2TupleInt(no_effect);
+    }
+    ExprNode* Convert2TupleInt(std::vector<Node*>& local_temps, bool allow_star=false); // if all nodes in exprlst are IntValNode(IntValType), then can be converted
+    TupleExprNode* negate(std::vector<Node*>& local_temps);
+    TupleExprNode* slice(int a, int b, std::vector<Node*>& local_temps);
+    TupleExprNode* binary_op(TupleExprNode* right_op, BinOpEnum op, std::vector<Node*>& local_temps);
+    Node* at(int x, std::vector<Node*>& local_temps);
+    Node* at(IntValNode* x, std::vector<Node*>& local_temps);
     IntValNode* one_int_only();
 };
 
@@ -780,7 +783,7 @@ class StarExprNode : public ExprNode
 public:
     StarExprNode() { type = StarExprType; }
     void print() { printf("*"); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
 };
 
 class SliceExprNode : public ExprNode
@@ -800,7 +803,7 @@ public:
         left->print();
         right->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
         return this;
     }
@@ -830,7 +833,7 @@ public:
         std::cout << identifier << std::endl;
         range->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class FuncInvokeNode : public ExprNode
@@ -851,7 +854,7 @@ public:
         args_node->print();
     }
     // Node* broadcast(); // deal with !()
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class ObjectInvokeNode : public ExprNode
@@ -871,7 +874,7 @@ public:
         obj->print();
         printf("%s\n", APIName[api]);
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class IndexExprNode : public ExprNode
@@ -897,7 +900,7 @@ public:
         tuple->print();
         index->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class NegativeExprNode : public ExprNode
@@ -914,7 +917,7 @@ public:
         printf("NegativeExprNode\n");
         neg->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 /*
@@ -953,18 +956,18 @@ public:
         true_exp->print();
         false_expr->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
-        Node* simplified_node = bool_exp->run(local_symbol);
+        Node* simplified_node = bool_exp->run(local_symbol, local_temps);
         assert(simplified_node->type == BoolValType);
         BoolValNode* bool_node = (BoolValNode*) simplified_node;
         if (bool_node->boolval)
         {
-            return true_exp->run(local_symbol);
+            return true_exp->run(local_symbol, local_temps);
         }
         else
         {
-            return false_expr->run(local_symbol);
+            return false_expr->run(local_symbol, local_temps);
         }
     }
 };
@@ -980,9 +983,9 @@ public:
         printf("UnpackExprNode\n");
         expr->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
-        Node* res = expr->run(local_symbol);
+        Node* res = expr->run(local_symbol, local_temps);
         assert(res->type == TupleExprType || res->type == TupleIntType || res->type == SetTupleIntType);
         UnpackExprNode* tmpnode = new UnpackExprNode((ExprNode*) res);
         local_temps.push_back(tmpnode);
@@ -1010,7 +1013,7 @@ public:
         format_string = std::string(x);
         printargs = y->printargs;
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
     void print()
     {
         printf("PrintNode\n");
@@ -1027,9 +1030,9 @@ public:
         ret_expr = x;
     }
     void print() { printf("ReturnNode\n"); ret_expr->print(); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
-        Node* result = ret_expr->run(local_symbol);
+        Node* result = ret_expr->run(local_symbol, local_temps);
         assert(result->type == TupleExprType || result->type == TupleIntType || \
             result->type == SetTupleIntType || \
             result->type == IntValType || result->type == BoolValType);
@@ -1063,7 +1066,7 @@ public:
     void update(const char* x);
     void update(BinOpEnum x, int y);
     void print() { std::cout << "ConstraintsNode" << std::endl; }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return NULL; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return NULL; }
 };
 
 class LayoutCustomNode : public StmtNode
@@ -1082,7 +1085,7 @@ public:
         constraint = x3;
     }
     void print() { printf("LayoutCustomNode\n"); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class MemoryCollectNode : public StmtNode
@@ -1097,7 +1100,7 @@ public:
         region_name = std::string(x1);
     }
     void print() { printf("MemoryCollectNode %s %s", task_name.c_str(), region_name.c_str()); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class InstanceLimitNode : public StmtNode
@@ -1114,7 +1117,7 @@ public:
         num = num_;
     }
     void print() { printf("InstanceLimitNode\n"); }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol);
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
 };
 
 class MSpace;
@@ -1142,7 +1145,7 @@ public:
         mapper = legion_mapper;
     }
     // for index launch, initialize by point and space
-    TaskNode(std::string name, std::vector<int> point, std::vector<int> space)
+    TaskNode(std::string name, std::vector<int> point, std::vector<int> space, std::vector<Node*>& local_temps)
     {
         type = TaskNodeType;
         index_launch = true;
@@ -1154,7 +1157,7 @@ public:
     }
     TupleIntNode* get_point();
     TupleIntNode* get_space();
-    TaskNode* get_parent();
+    TaskNode* get_parent(std::vector<Node*>& local_temps);
     std::vector<int> get_proc_coordinate_from_Legion();
     void print()
     {
@@ -1162,7 +1165,7 @@ public:
         printf("ipoint:"); if (ipoint != NULL) ipoint->print();
         printf("ispace:"); if (ispace != NULL) ispace->print();
     }
-    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol) { return this; }
+    Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps) { return this; }
 };
 
 class Tree2Legion

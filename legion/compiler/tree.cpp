@@ -119,14 +119,14 @@ std::vector<Memory::Kind> MyMem2LegionMemList(std::vector<MemoryEnum> myprocs)
   return res;
 }
 
-Node* ProcCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* ProcCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::vector<Processor::Kind> res = MyProc2LegionProcList(this->proc_types);
   Tree2Legion::task_policies.insert({taskname, res});
   return NULL;
 }
 
-Node* RegionCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* RegionCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::pair<std::string, std::string> key = std::make_pair(taskname, region_name);
   Processor::Kind proc = MyProc2LegionProc(this->processor_type);
@@ -183,7 +183,7 @@ void ConstraintsNode::update(BinOpEnum x, int y)
     align_int = y;
 }
 
-Node* LayoutCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* LayoutCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::pair<std::string, std::string> key = std::make_pair(task_name, region_name);
   Memory::Kind mem = MyMem2LegionMem(mem_type);
@@ -199,7 +199,7 @@ Node* LayoutCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
   return NULL;
 }
 
-Node* InstanceLimitNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* InstanceLimitNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   Processor::Kind proc_kind = MyProc2LegionProc(proc_type);
   if (Tree2Legion::task2limit.count(task_name) > 0)
@@ -215,7 +215,7 @@ Node* InstanceLimitNode::run(std::stack<std::unordered_map<std::string, Node*>>&
   return NULL;
 }
 
-Node* MemoryCollectNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* MemoryCollectNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   Tree2Legion::memory_collect.insert({task_name, region_name});
   return NULL;
@@ -225,23 +225,25 @@ TupleIntNode* TaskNode::get_point()
 {
   if (index_launch)
     return ipoint;
-  printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
-  TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
-  local_temps.push_back(tmpnode);
-  return tmpnode;
+  printf("Warning: currently SingleTask does not support get_point(), failure\n");
+  assert(false);
+  // TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
+  // local_temps.push_back(tmpnode);
+  // return tmpnode;
 }
 
 TupleIntNode* TaskNode::get_space()
 {
   if (index_launch)
     return ispace;
-  printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
-  TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
-  local_temps.push_back(tmpnode);
-  return tmpnode;
+  printf("Warning: currently SingleTask does not support get_space(), failure\n");
+  assert(false);
+  // TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
+  // local_temps.push_back(tmpnode);
+  // return tmpnode;
 }
 
-TaskNode* TaskNode::get_parent()
+TaskNode* TaskNode::get_parent(std::vector<Node*>& local_temps)
 {
   if (index_launch == false && task_obj->has_parent_task())
   {
@@ -293,16 +295,11 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
   std::stack<std::unordered_map<std::string, Node*>> local_symbol;
-  if (local_symbol.size() != 0)
-  {
-    std::cout << "local_symbol.size() != 0 inside Tree2Legion::runsingle" << std::endl;
-    assert(false);
-  }
+  std::vector<Node*> local_temps;
   local_symbol.push(func_symbols);
   // local_temps.push(std::vector<Node*>());
   // todo: stateless
-  Node* res = func_node->invoked(local_symbol);
-  // local_temps_pop();
+  Node* res = func_node->invoked(local_symbol, local_temps);
   local_symbol.pop();
 
   delete task_node;
@@ -322,7 +319,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
       }
     }
     auto res = std::vector<std::vector<int>>({res2->tupleint});
-    local_temps_pop();
+    local_temps_pop(local_temps);
     return res;
   }
   else if (res->type == SetTupleIntType)
@@ -340,7 +337,7 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
       }
     }
     auto res = res2->tupletupleint;
-    local_temps_pop();
+    local_temps_pop(local_temps);
     return res;
   }
   else
@@ -403,21 +400,17 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
     assert(false);
   }
 
+  std::stack<std::unordered_map<std::string, Node*>> local_symbol;
+  std::vector<Node*> local_temps;
+
   std::unordered_map<std::string, Node*> func_symbols;
-  TaskNode* task_node = new TaskNode(task, x, point_space);
+  TaskNode* task_node = new TaskNode(task, x, point_space, local_temps);
   func_symbols.insert({func_node->func_args->arg_lst[0]->argname, task_node});
 
-  std::stack<std::unordered_map<std::string, Node*>> local_symbol;
-  if (local_symbol.size() != 0)
-  {
-    std::cout << "local_symbol.size() != 0 inside Tree2Legion::run" << std::endl;
-    assert(false);
-  }
   local_symbol.push(func_symbols);
   // local_temps.push(std::vector<Node*>());
   // todo: stateless
-  Node* res = func_node->invoked(local_symbol);
-  // local_temps_pop();
+  Node* res = func_node->invoked(local_symbol, local_temps);
   local_symbol.pop();
 
   delete task_node;
@@ -437,7 +430,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
       }
     }
     auto res = std::vector<std::vector<int>>({res2->tupleint});
-    local_temps_pop();
+    local_temps_pop(local_temps);
     return res;
   }
   else if (res->type == SetTupleIntType)
@@ -455,7 +448,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
       }
     }
     auto res = res2->tupletupleint;
-    local_temps_pop();
+    local_temps_pop(local_temps);
     return res;
   }
   else
@@ -466,7 +459,7 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
   return {};
 }
 
-Node* SingleTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* SingleTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   if (global_symbol.count(func_name) == 0)
   {
@@ -497,7 +490,7 @@ Node* SingleTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>&
 }
 
 
-Node* IndexTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* IndexTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   if (global_symbol.count(func_name) == 0)
   {
@@ -527,19 +520,19 @@ Node* IndexTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
   return NULL;
 }
 
-Node* FuncDefNode::invoked(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* FuncDefNode::invoked(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   // iterate over all statements in func_stmts
   for (size_t i = 0; i < func_stmts->stmtlst.size(); i++)
   {
     if (func_stmts->stmtlst[i]->type != ReturnType)
     {
-      func_stmts->stmtlst[i]->run(local_symbol);
+      func_stmts->stmtlst[i]->run(local_symbol, local_temps);
     }
     else
     {
       // std::cout << "return detected" << std::endl;
-      return func_stmts->stmtlst[i]->run(local_symbol);
+      return func_stmts->stmtlst[i]->run(local_symbol, local_temps);
     }
   }
   std::cout << "Error: function without return" << std::endl;
@@ -547,110 +540,18 @@ Node* FuncDefNode::invoked(std::stack<std::unordered_map<std::string, Node*>>& l
 }
 
 
-// Node* FuncInvokeNode::broadcast()
-// {
-//   /*
-//   ExprNode* func_node;
-//  TupleExprNode* args_node; // std::vector<Node*> exprlst;
-//   */
-//   bool exclamation = false;
-//   int num_element = 0;
-//   // first, we check whether there is broadcast needed
-//   for (int i = 0; i < exprlst.size(); i++)
-//   {
-//     if (exprlst[i]->type == ExclamationType)
-//     {
-//       ExclamationNode* exclam_node = (ExclamationNode*) exprlst[i];
-//       int num_element_;
-//       // exclam_node has: ExprNode* expr;
-//       // expr can be either TupleIntNode, std::vector<int> tupleint;
-//       // or TupleExprNode, std::vector<Node*> exprlst; (recursive case)
-//       if (exclam_node->expr->type == TupleIntType)
-//       {
-//         TupleIntNode* tuple_int_node = (TupleIntNode*) exclam_node->expr;
-//         num_element_ = tuple_int_node->tupleint.size();
-//       }
-//       else if (exclam_node->expr->type == TupleExprType)
-//       {
-//         TupleExprNode* tuple_expr_node = (TupleExprNode*) exclam_node->expr;
-//         num_element_ = tuple_expr_node->exprlst.size();
-//       }
-//       else
-//       {
-//         std::cout << "Unsupported type after '!'" << std::endl;
-//         assert(false);
-//       }
-//       if (exclamation)
-//       {
-//         if (num_element != num_element_)
-//         {
-//           std::cout << "Number of elements of '!' should be the same" << std::endl;
-//           assert(false);
-//         }
-//       }
-//       else
-//       {
-//         exclamation = true;
-//         num_element = num_element_;
-//       }
-//     }
-//   }
-//   if (exclamation == false)
-//   {
-//     return this;
-//   }
-//   // Turn func_(a, !(1, 2, 3), !(x, y, z)) 
-//   // into (func_(a, 1, x), func_(a, 2, y), func_(a, 3, z))
-//   std::vector<FuncInvokeNode*> tuple_res;
-//   for (int k = 0; k < num_element; k++)
-//   {
-//     std::vector<Node*> func_args;
-//     for (int i = 0; i < exprlst.size(); i++)
-//     {
-//       if (exprlst[i]->type == ExclamationType)
-//       {
-//         ExclamationNode* exclam_node = (ExclamationNode*) exprlst[i];
-//         if (exclam_node->expr->type == TupleIntType)
-//         {
-//           TupleIntNode* tuple_int_node = (TupleIntNode*) exclam_node->expr;
-//           // convert it to IntValNode
-//           num_element_ = tuple_int_node->tupleint.size();
-//         }
-//         else if (exclam_node->expr->type == TupleExprType)
-//         {
-//           TupleExprNode* tuple_expr_node = (TupleExprNode*) exclam_node->expr;
-//           num_element_ = tuple_expr_node->exprlst.size();
-//         }
-//         else
-//         {
-//           std::cout << "Unsupported type after '!'" << std::endl;
-//           assert(false);
-//         }
-//       }
-//     }
-//     TupleExprNode* func_args_node = new TupleExprNode(func_args);
-//     FuncInvokeNode* func_invoke_node = new FuncInvokeNode(this->func_node, func_args_node);
-//     tuple_res.push_back(func_invoke_node);
-//   }
-//   return new TupleExprNode(tuple_res);
-// }
-
-// todo: why doesn't this work???
-void local_temps_pop() // free all the nodes in local_temps
+void local_temps_pop(std::vector<Node*>& local_temps) // free all the nodes in local_temps
 {
-  // for (auto& obj: local_temps)
-  // {
-  //   if (obj != NULL)
-  //     delete obj;
-  //   obj = NULL;
-  // }
-  // local_temps.pop();
+  for (auto& obj: local_temps)
+  {
+    delete obj;
+  }
 }
 
 
-Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
-  Node* args = args_node->run(local_symbol);
+  Node* args = args_node->run(local_symbol, local_temps);
   assert(args->type == TupleExprType);
   TupleExprNode* args_c = (TupleExprNode*) args;
   // Machine model initialization
@@ -672,16 +573,16 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       // m[0].has(GPU)
       assert(func_c->obj->type == IndexExprType);
       IndexExprNode* index_node = (IndexExprNode*) func_c->obj;
-      Node* mspace_node = index_node->tuple->run(local_symbol); // get the MSpace node from the Identifier node's run()
+      Node* mspace_node = index_node->tuple->run(local_symbol, local_temps); // get the MSpace node from the Identifier node's run()
       assert(mspace_node->type == MSpaceType);
       MSpace* machine_node = (MSpace*) mspace_node;
 
-      Node* int_node = index_node->index->run(local_symbol);
+      Node* int_node = index_node->index->run(local_symbol, local_temps);
       assert(int_node->type == IntValType);
       int int_val = ((IntValNode*) int_node)->intval;
 
       assert(args_c->exprlst.size() == 1);
-      Node* mem_node = args_c->exprlst[0]->run(local_symbol);
+      Node* mem_node = args_c->exprlst[0]->run(local_symbol, local_temps);
       assert(mem_node->type == MemType);
       MemNode* memnode = (MemNode*) mem_node;
       MemoryEnum mem = memnode->mem_type;
@@ -692,12 +593,12 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     }
     else if (func_c->api == REVERSE)
     {
-      Node* mspace_node_ = func_c->obj->run(local_symbol);
+      Node* mspace_node_ = func_c->obj->run(local_symbol, local_temps);
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
 
       assert(args_c->exprlst.size() == 1);
-      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol);
+      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol, local_temps);
       assert(intnode_1->type == IntValType);
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
 
@@ -707,16 +608,16 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     }
     else if (func_c->api == AUTO_SPLIT || func_c->api == GREEDY_SPLIT)
     {
-      Node* mspace_node_ = func_c->obj->run(local_symbol);
+      Node* mspace_node_ = func_c->obj->run(local_symbol, local_temps);
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
 
       assert(args_c->exprlst.size() == 2);
-      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol);
-      Node* tuple_int_node_2 = args_c->exprlst[1]->run(local_symbol);
+      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol, local_temps);
+      Node* tuple_int_node_2 = args_c->exprlst[1]->run(local_symbol, local_temps);
       if (tuple_int_node_2->type == TupleExprType)
       {
-        tuple_int_node_2 = ((TupleExprNode*) tuple_int_node_2)->Convert2TupleInt();
+        tuple_int_node_2 = ((TupleExprNode*) tuple_int_node_2)->Convert2TupleInt(local_temps);
       }
       assert(intnode_1->type == IntValType);
       if (tuple_int_node_2->type != TupleIntType)
@@ -735,13 +636,13 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     else if (func_c->api == SPLIT || func_c->api == SWAP || \
             func_c->api == MERGE || func_c->api == BALANCE_SPLIT)
     {
-      Node* mspace_node_ = func_c->obj->run(local_symbol);
+      Node* mspace_node_ = func_c->obj->run(local_symbol, local_temps);
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
 
       assert(args_c->exprlst.size() == 2);
-      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol);
-      Node* intnode_2 = args_c->exprlst[1]->run(local_symbol);
+      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol, local_temps);
+      Node* intnode_2 = args_c->exprlst[1]->run(local_symbol, local_temps);
       assert(intnode_1->type == IntValType);
       assert(intnode_2->type == IntValType);
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
@@ -753,14 +654,14 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     }
     else if (func_c->api == SLICE)
     {
-      Node* mspace_node_ = func_c->obj->run(local_symbol);
+      Node* mspace_node_ = func_c->obj->run(local_symbol, local_temps);
       assert(mspace_node_->type == MSpaceType);
       MSpace* mspace_node = (MSpace*) mspace_node_;
       
       assert(args_c->exprlst.size() == 3);
-      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol);
-      Node* intnode_2 = args_c->exprlst[1]->run(local_symbol);
-      Node* intnode_3 = args_c->exprlst[2]->run(local_symbol);
+      Node* intnode_1 = args_c->exprlst[0]->run(local_symbol, local_temps);
+      Node* intnode_2 = args_c->exprlst[1]->run(local_symbol, local_temps);
+      Node* intnode_3 = args_c->exprlst[2]->run(local_symbol, local_temps);
       assert(intnode_1->type == IntValType);
       assert(intnode_2->type == IntValType);
       assert(intnode_3->type == IntValType);
@@ -776,12 +677,12 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     {
         // point = task.processor(m);
         // parent_point = task.parent.processor(m);
-        Node* task_node_ = func_c->obj->run(local_symbol);
+        Node* task_node_ = func_c->obj->run(local_symbol, local_temps);
         assert(task_node_->type == TaskNodeType);
         TaskNode* task_node = (TaskNode*) task_node_;
 
         assert(args_c->exprlst.size() == 1);
-        Node* machine_model_ = args_c->exprlst[0]->run(local_symbol);
+        Node* machine_model_ = args_c->exprlst[0]->run(local_symbol, local_temps);
         assert(machine_model_->type == MSpaceType);
         MSpace* machine_model = (MSpace*) machine_model_;
 
@@ -800,7 +701,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
   // user-defined function
   else if (func_node->type == IdentifierExprType)
   {
-    Node* func_node_ = func_node->run(local_symbol);
+    Node* func_node_ = func_node->run(local_symbol, local_temps);
     assert(func_node_->type == FuncDefType);
     FuncDefNode* func_def = (FuncDefNode*) func_node_;
     std::vector<ArgNode*> params = func_def->func_args->arg_lst;
@@ -813,7 +714,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     }
     for (size_t i = 0; i < args_c->exprlst.size(); i++)
     {
-      Node* feed_in = args_c->exprlst[i]->run(local_symbol);
+      Node* feed_in = args_c->exprlst[i]->run(local_symbol, local_temps);
       switch (params[i]->argtype)
       {
         case INT:
@@ -839,7 +740,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     local_symbol.push(func_symbols);
     // local_temps.push(std::vector<Node*>());
     // todo: stateless
-    Node* res = func_def->invoked(local_symbol);
+    Node* res = func_def->invoked(local_symbol, local_temps);
     // local_temps.pop();
     local_symbol.pop();
     return res;
@@ -853,17 +754,17 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
   return NULL;
 }
 
-Node* BinaryExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* BinaryExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
-  Node* simplified_left = left->run(local_symbol);
-  Node* simplified_right = right->run(local_symbol);
+  Node* simplified_left = left->run(local_symbol, local_temps);
+  Node* simplified_right = right->run(local_symbol, local_temps);
   if (simplified_left->type == TupleExprType)
   {
-    simplified_left = ((TupleExprNode*) simplified_left)->Convert2TupleInt();
+    simplified_left = ((TupleExprNode*) simplified_left)->Convert2TupleInt(local_temps);
   }
   if (simplified_right->type == TupleExprType)
   {
-    simplified_right = ((TupleExprNode*) simplified_right)->Convert2TupleInt();
+    simplified_right = ((TupleExprNode*) simplified_right)->Convert2TupleInt(local_temps);
   }
   if (simplified_left->type != simplified_right->type)
   {
@@ -876,25 +777,25 @@ Node* BinaryExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
   {
     BoolValNode* lt = (BoolValNode*) simplified_left;
     BoolValNode* rt = (BoolValNode*) simplified_right;
-    return lt->binary_op(rt, op);
+    return lt->binary_op(rt, op, local_temps);
   }
   else if (simplified_left->type == IntValType)
   {
     IntValNode* lt = (IntValNode*) simplified_left;
     IntValNode* rt = (IntValNode*) simplified_right;
-    return lt->binary_op(rt, op);
+    return lt->binary_op(rt, op, local_temps);
   }
   else if (simplified_left->type == TupleExprType)
   {
     TupleExprNode* lt = (TupleExprNode*) simplified_left;
     TupleExprNode* rt = (TupleExprNode*) simplified_right;
-    return lt->binary_op(rt, op);
+    return lt->binary_op(rt, op, local_temps);
   }
   else if (simplified_left->type == TupleIntType)
   {
     TupleIntNode* lt = (TupleIntNode*) simplified_left;
     TupleIntNode* rt = (TupleIntNode*) simplified_right;
-    return lt->binary_op(rt, op);
+    return lt->binary_op(rt, op, local_temps);
   }
   printf("Unsupported operator type in BinaryExprNode\n");
   assert(false);
@@ -902,14 +803,14 @@ Node* BinaryExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
 }
 
 
-IntValNode* TupleIntNode::len()
+IntValNode* TupleIntNode::len(std::vector<Node*>& local_temps)
 {
   IntValNode* tmpnode = new IntValNode(tupleint.size());
   local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
-IntValNode* TupleIntNode::volume()
+IntValNode* TupleIntNode::volume(std::vector<Node*>& local_temps)
 {
   int res = 1;
   for (size_t i = 0; i < tupleint.size(); i++)
@@ -921,12 +822,12 @@ IntValNode* TupleIntNode::volume()
   return tmpnode;
 }
 
-Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
-  Node* obj_tbd = obj->run(local_symbol);
+  Node* obj_tbd = obj->run(local_symbol, local_temps);
   if (obj_tbd->type == TupleExprType)
   {
-    obj_tbd = ((TupleExprNode*) obj_tbd)->Convert2TupleInt();
+    obj_tbd = ((TupleExprNode*) obj_tbd)->Convert2TupleInt(local_temps);
   }
   if (obj_tbd->type != MSpaceType && obj_tbd->type != TupleIntType && obj_tbd->type != TaskNodeType)
   {
@@ -938,7 +839,7 @@ Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
     TupleIntNode* tuple_int = (TupleIntNode*) obj_tbd;
     if (api == VOLUME)
     {
-      return tuple_int->volume();
+      return tuple_int->volume(local_temps);
     }
     else if (api == SIZE)
     {
@@ -946,7 +847,7 @@ Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
     }
     else if (api == LEN)
     {
-      return tuple_int->len();
+      return tuple_int->len(local_temps);
     }
     printf("TupleInt only support volume/size/len\n");
     assert(false);
@@ -990,7 +891,7 @@ Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
     }
     else if (api == TASKPARENT)
     {
-        return tasknode->get_parent();
+        return tasknode->get_parent(local_temps);
     }
     printf("TaskNode only support ipoint/ispace/parent in ObjectInvokeNode\n");
     assert(false);
@@ -1001,7 +902,7 @@ Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
   return NULL;
 }
 
-Node* IntValNode::binary_op(IntValNode* rt, BinOpEnum op)
+Node* IntValNode::binary_op(IntValNode* rt, BinOpEnum op, std::vector<Node*>& local_temps)
 {
     Node* tmpnode = NULL;
     switch (op)
@@ -1047,7 +948,7 @@ Node* IntValNode::binary_op(IntValNode* rt, BinOpEnum op)
   return tmpnode;
 }
 
-TupleExprNode* TupleExprNode::binary_op(TupleExprNode* right_op, BinOpEnum op)
+TupleExprNode* TupleExprNode::binary_op(TupleExprNode* right_op, BinOpEnum op, std::vector<Node*>& local_temps)
 {
   // self as left_op
   if (exprlst.size() != right_op->exprlst.size())
@@ -1065,14 +966,14 @@ TupleExprNode* TupleExprNode::binary_op(TupleExprNode* right_op, BinOpEnum op)
     }
     IntValNode* int_node_left = (IntValNode*) exprlst[i];
     IntValNode* int_node_right = (IntValNode*) (right_op->exprlst[i]);
-    res.push_back(int_node_left->binary_op(int_node_right, op));
+    res.push_back(int_node_left->binary_op(int_node_right, op, local_temps));
   }
   TupleExprNode* tmpnode = new TupleExprNode(res);
   local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
-TupleIntNode* TupleIntNode::binary_op(TupleIntNode* rt, BinOpEnum op)
+TupleIntNode* TupleIntNode::binary_op(TupleIntNode* rt, BinOpEnum op, std::vector<Node*>& local_temps)
 {
   // self as left_op
   std::vector<int> res;
@@ -1107,7 +1008,7 @@ TupleIntNode* TupleIntNode::binary_op(TupleIntNode* rt, BinOpEnum op)
   return tmpnode;
 }
 
-BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op)
+BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op, std::vector<Node*>& local_temps)
 {
   BoolValNode* tmpnode = NULL;
   switch(op)
@@ -1132,7 +1033,7 @@ BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op)
   return tmpnode;
 }
 
-TupleIntNode* TupleIntNode::slice(int a, int b)
+TupleIntNode* TupleIntNode::slice(int a, int b, std::vector<Node*>& local_temps)
 {
   if (b >= tupleint.size() && b >= 0)
   {
@@ -1151,7 +1052,7 @@ TupleIntNode* TupleIntNode::slice(int a, int b)
   return tmpnode;
 }
 
-TupleExprNode* TupleExprNode::slice(int a, int b)
+TupleExprNode* TupleExprNode::slice(int a, int b, std::vector<Node*>& local_temps)
 {
   if (b >= exprlst.size() && b >= 0)
   {
@@ -1170,7 +1071,7 @@ TupleExprNode* TupleExprNode::slice(int a, int b)
   return tmpnode;
 }
 
-TupleExprNode* TupleExprNode::negate()
+TupleExprNode* TupleExprNode::negate(std::vector<Node*>& local_temps)
 {
   std::vector<Node*> res;
   for (int i = 0; i < exprlst.size(); i++)
@@ -1181,7 +1082,7 @@ TupleExprNode* TupleExprNode::negate()
       assert(false);
     }
     IntValNode* int_node = (IntValNode*) exprlst[i];
-    res.push_back(int_node->negate());
+    res.push_back(int_node->negate(local_temps));
   }
   TupleExprNode* tmpnode = new TupleExprNode(res);
   local_temps.push_back(tmpnode);
@@ -1189,19 +1090,19 @@ TupleExprNode* TupleExprNode::negate()
 }
 
 
-Node* NegativeExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* NegativeExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   if (neg->type == IntValType)
   {
-    return ((IntValNode*)neg)->negate();
+    return ((IntValNode*)neg)->negate(local_temps);
   }
   else if (neg->type == TupleExprType)
   {
-    return ((TupleExprNode*)neg)->negate();
+    return ((TupleExprNode*)neg)->negate(local_temps);
   }
   else if (neg->type == TupleIntType)
   {
-    return ((TupleIntNode*)neg)->negate();
+    return ((TupleIntNode*)neg)->negate(local_temps);
   }
   else
   {
@@ -1210,7 +1111,7 @@ Node* NegativeExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
   return NULL;
 }
 
-TupleIntNode* TupleIntNode::negate()
+TupleIntNode* TupleIntNode::negate(std::vector<Node*>& local_temps)
 {
   std::vector<int> res;
   for (int i = 0; i < tupleint.size(); i++)
@@ -1222,7 +1123,7 @@ TupleIntNode* TupleIntNode::negate()
   return tmpnode;
 }
 
-IntValNode* TupleIntNode::at(int x)
+IntValNode* TupleIntNode::at(int x, std::vector<Node*>& local_temps)
 {
   if (x < tupleint.size())
   {
@@ -1235,12 +1136,12 @@ IntValNode* TupleIntNode::at(int x)
   return NULL;
 }
 
-IntValNode* TupleIntNode::at(IntValNode* x)
+IntValNode* TupleIntNode::at(IntValNode* x, std::vector<Node*>& local_temps)
 {
-  return this->at(x->intval);
+  return this->at(x->intval, local_temps);
 }
 
-Node* TupleExprNode::at(int x)
+Node* TupleExprNode::at(int x, std::vector<Node*>& local_temps)
 {
   if (x < exprlst.size())
   {
@@ -1251,15 +1152,15 @@ Node* TupleExprNode::at(int x)
   return NULL;
 }
 
-Node* TupleExprNode::at(IntValNode* x)
+Node* TupleExprNode::at(IntValNode* x, std::vector<Node*>& local_temps)
 {
-  return this->at(x->intval);
+  return this->at(x->intval, local_temps);
 }
 
-Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
-    Node* index_ = index->run(local_symbol);
-  Node* tuple_ = tuple->run(local_symbol);
+    Node* index_ = index->run(local_symbol, local_temps);
+  Node* tuple_ = tuple->run(local_symbol, local_temps);
   if (index_->type == TupleExprType)
   {
     TupleExprNode* index_node = (TupleExprNode*) index_;
@@ -1269,12 +1170,12 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
       if (tuple_->type == TupleIntType)
       {
         TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
-        return tuple_int->at(int_node);
+        return tuple_int->at(int_node, local_temps);
       }
       else if (tuple_->type == TupleExprType)
       {
         TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
-        return tuple_expr->at(int_node);
+        return tuple_expr->at(int_node, local_temps);
       }
       else if (tuple_->type == MSpaceType) // dynamic machine model
       {
@@ -1297,7 +1198,7 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
     // index_node is a tuple of expression, dynamic machine model
     {
       MSpace* machine_space = (MSpace*) tuple_;
-      Node* converted = index_node->Convert2TupleInt(true);
+      Node* converted = index_node->Convert2TupleInt(local_temps, true);
       if (converted->type == TupleIntType)
       {
         TupleIntNode* tuple_int_node = (TupleIntNode*) converted;
@@ -1333,8 +1234,8 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
   else if (index_->type == SliceExprType)
   {
     SliceExprNode* slice_node = (SliceExprNode*) index_;
-    Node* left = slice_node->left == NULL ? NULL : slice_node->left->run(local_symbol);
-    Node* right = slice_node->right == NULL ? NULL : slice_node->right->run(local_symbol);
+    Node* left = slice_node->left == NULL ? NULL : slice_node->left->run(local_symbol, local_temps);
+    Node* right = slice_node->right == NULL ? NULL : slice_node->right->run(local_symbol, local_temps);
     if ( (!(left == NULL || left->type == IntValType)) 
          || (!(right == NULL || right->type == IntValType)) )
     {
@@ -1346,19 +1247,19 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
     if (tuple_->type == TupleIntType)
     {
       TupleIntNode* tuple_int = (TupleIntNode*) tuple_;
-      return tuple_int->slice(left_int, right_int);
+      return tuple_int->slice(left_int, right_int, local_temps);
     }
     else if (tuple_->type == TupleExprType)
     {
       TupleExprNode* tuple_expr = (TupleExprNode*) tuple_;
-      return tuple_expr->slice(left_int, right_int);
+      return tuple_expr->slice(left_int, right_int, local_temps);
     }
     else if (tuple_->type == MSpaceType) // slicing a machine will return TupleInt 
     {
       MSpace* machine = (MSpace*) tuple_;
       TupleIntNode* tmpnode = new TupleIntNode(machine->get_size());
       local_temps.push_back(tmpnode);
-      return tmpnode->slice(left_int, right_int);
+      return tmpnode->slice(left_int, right_int, local_temps);
     }
     else
     {
@@ -1380,13 +1281,13 @@ IntValNode* TupleExprNode::one_int_only()
   return NULL;
 }
 
-Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   TupleExprNode* res = new TupleExprNode();
   local_temps.push_back(res);
   for (size_t i = 0; i < exprlst.size(); i++)
   {
-    Node* simplified = exprlst[i]->run(local_symbol);
+    Node* simplified = exprlst[i]->run(local_symbol, local_temps);
     if (simplified->type == UnpackExprType)
     {
       UnpackExprNode* unpack_node = (UnpackExprNode*) simplified;
@@ -1396,7 +1297,7 @@ Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
         TupleExprNode* tuple_node = (TupleExprNode*) unpack_node->expr;
         for (size_t i = 0; i < tuple_node->exprlst.size(); i++)
         {
-          res->exprlst.push_back(tuple_node->exprlst[i]->run(local_symbol));
+          res->exprlst.push_back(tuple_node->exprlst[i]->run(local_symbol, local_temps));
         }
       }
       else if (unpack_node->expr->type == TupleIntType)
@@ -1423,7 +1324,7 @@ Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
   return res;
 }
 
-ExprNode* TupleExprNode::Convert2TupleInt(bool allow_star)
+ExprNode* TupleExprNode::Convert2TupleInt(std::vector<Node*>& local_temps, bool allow_star)
 {
   // if all nodes in std::vector<Node*> exprlst; are IntValNode(IntValType), then can be converted to TupleIntNode
   std::vector<int> tuple_int;
@@ -1464,7 +1365,7 @@ void push_local_symbol_with_top_merge(std::stack<std::unordered_map<std::string,
     }
 }
 
-Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::vector<Node*> result;
   std::unordered_map<std::string, Node*> variable_binding;
@@ -1478,7 +1379,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
       variable_binding[identifier] = feed_in; // insert or overwrite
       //todo: stateless
       push_local_symbol_with_top_merge(local_symbol, variable_binding);
-      Node* res = expr->run(local_symbol);
+      Node* res = expr->run(local_symbol, local_temps);
       local_symbol.pop();
       result.push_back(res);
     }
@@ -1496,7 +1397,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
       variable_binding[identifier] = feed_in; // insert or overwrite
       // todo: stateless
       push_local_symbol_with_top_merge(local_symbol, variable_binding);
-      Node* res = expr->run(local_symbol);
+      Node* res = expr->run(local_symbol, local_temps);
       local_symbol.pop();
       result.push_back(res);
     }
@@ -1506,7 +1407,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
   }
 }
 
-Node* PrintNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
+Node* PrintNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::string s = format_string;
   std::string delimiter = "{}";
@@ -1522,7 +1423,7 @@ Node* PrintNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_s
       std::cout << "Not enough arguments for print()" << std::endl; 
       assert(false);
     }
-    printargs[i]->run(local_symbol)->print();
+    printargs[i]->run(local_symbol, local_temps)->print();
     s.erase(0, pos + delimiter.length());
     i++;
   }
@@ -1544,6 +1445,7 @@ Tree2Legion::Tree2Legion(std::string filename)
   yyparse();
   // std::cout << root->stmt_list.size() << std::endl;
   // root->print();
-  std::stack<std::unordered_map<std::string, Node*>> local_symbol_no_effect;
-  root->run(local_symbol_no_effect);
+  std::stack<std::unordered_map<std::string, Node*>> local_symbol_no_free;
+  std::vector<Node*> local_temps_no_free;
+  root->run(local_symbol_no_free, local_temps_no_free);
 }
