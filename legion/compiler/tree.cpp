@@ -227,7 +227,7 @@ TupleIntNode* TaskNode::get_point()
     return ipoint;
   printf("Warning: currently SingleTask does not support get_point(), returning null vector\n");
   TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -237,7 +237,7 @@ TupleIntNode* TaskNode::get_space()
     return ispace;
   printf("Warning: currently SingleTask does not support get_space(), returning null vector\n");
   TupleIntNode* tmpnode = new TupleIntNode(std::vector<int>());
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -246,7 +246,7 @@ TaskNode* TaskNode::get_parent()
   if (index_launch == false && task_obj->has_parent_task())
   {
       TaskNode* tmpnode = new TaskNode(task_obj->get_parent_task(), mapper); // should share the same mapper
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
   }
   printf("Warning: IndexTask or current task does not support get_parent(), returning NULL\n");
@@ -299,10 +299,10 @@ std::vector<std::vector<int>> Tree2Legion::runsingle(const Task* task, const NSM
     assert(false);
   }
   local_symbol.push(func_symbols);
-  // local_temps.top().push(std::vector<Node*>());
+  // local_temps.push(std::vector<Node*>());
   // todo: stateless
   Node* res = func_node->invoked(local_symbol);
-  // local_temps.top()_pop();
+  // local_temps_pop();
   local_symbol.pop();
 
   delete task_node;
@@ -414,10 +414,10 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
     assert(false);
   }
   local_symbol.push(func_symbols);
-  // local_temps.top().push(std::vector<Node*>());
+  // local_temps.push(std::vector<Node*>());
   // todo: stateless
   Node* res = func_node->invoked(local_symbol);
-  // local_temps.top()_pop();
+  // local_temps_pop();
   local_symbol.pop();
 
   delete task_node;
@@ -635,17 +635,16 @@ Node* FuncDefNode::invoked(std::stack<std::unordered_map<std::string, Node*>>& l
 //   return new TupleExprNode(tuple_res);
 // }
 
-void local_temps_pop() // free all the nodes in local_temps.top()
+// todo: why doesn't this work???
+void local_temps_pop() // free all the nodes in local_temps
 {
-    // assert(local_temps.top().empty() == false);
-    while (local_temps.size() > 1) // size == 1 is for the tree itself
-    {
-        for (auto& obj: local_temps.top())
-        {
-            delete obj;
-        }
-        local_temps.pop();
-    }
+  // for (auto& obj: local_temps)
+  // {
+  //   if (obj != NULL)
+  //     delete obj;
+  //   obj = NULL;
+  // }
+  // local_temps.pop();
 }
 
 
@@ -688,7 +687,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       MemoryEnum mem = memnode->mem_type;
 
       BoolValNode* tmpnode = new BoolValNode(machine_node->has_mem(int_val, mem));
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (func_c->api == REVERSE)
@@ -703,7 +702,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       IntValNode* int_node_1 = (IntValNode*) intnode_1;
 
       MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval);
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (func_c->api == AUTO_SPLIT || func_c->api == GREEDY_SPLIT)
@@ -730,7 +729,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       TupleIntNode* node_2 = (TupleIntNode*) tuple_int_node_2;
 
       MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, node_2->tupleint);
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (func_c->api == SPLIT || func_c->api == SWAP || \
@@ -749,7 +748,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       IntValNode* int_node_2 = (IntValNode*) intnode_2;
 
       MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval);
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (func_c->api == SLICE)
@@ -770,7 +769,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       IntValNode* int_node_3 = (IntValNode*) intnode_3;
 
       MSpace* tmpnode = new MSpace(mspace_node, func_c->api, int_node_1->intval, int_node_2->intval, int_node_3->intval);
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (func_c->api == TASKPROCESSOR)
@@ -790,7 +789,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
         std::vector<int> point_in_mspace = machine_model->legion2mspace(dim2_point);
 
         TupleIntNode* tmpnode = new TupleIntNode(point_in_mspace);
-        local_temps.top().push_back(tmpnode);
+        local_temps.push_back(tmpnode);
         return tmpnode;
     }
     else
@@ -814,7 +813,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
     }
     for (size_t i = 0; i < args_c->exprlst.size(); i++)
     {
-      Node* feed_in = args_c->exprlst[i];
+      Node* feed_in = args_c->exprlst[i]->run(local_symbol);
       switch (params[i]->argtype)
       {
         case INT:
@@ -838,7 +837,7 @@ Node* FuncInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
       func_symbols.insert({params[i]->argname, feed_in});
     }
     local_symbol.push(func_symbols);
-    // local_temps.top().push(std::vector<Node*>());
+    // local_temps.push(std::vector<Node*>());
     // todo: stateless
     Node* res = func_def->invoked(local_symbol);
     // local_temps.pop();
@@ -906,7 +905,7 @@ Node* BinaryExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& lo
 IntValNode* TupleIntNode::len()
 {
   IntValNode* tmpnode = new IntValNode(tupleint.size());
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -918,7 +917,7 @@ IntValNode* TupleIntNode::volume()
     res *= tupleint[i];
   }
   IntValNode* tmpnode = new IntValNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -959,19 +958,19 @@ Node* ObjectInvokeNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
     if (api == VOLUME)
     {
       IntValNode* tmpnode = new IntValNode(machine_->get_volume());
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (api == SIZE)
     {
       TupleIntNode* tmpnode = new TupleIntNode(machine_->get_size());
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     else if (api == LEN)
     {
       IntValNode* tmpnode = new IntValNode(machine_->get_size().size());
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode;
     }
     printf("MSpace only support Volume/Size/LEN in ObjectInvokeNode\n");
@@ -1044,7 +1043,7 @@ Node* IntValNode::binary_op(IntValNode* rt, BinOpEnum op)
       printf("Unsupported binary operator for Integer\n");
       assert(false);
   }
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1069,7 +1068,7 @@ TupleExprNode* TupleExprNode::binary_op(TupleExprNode* right_op, BinOpEnum op)
     res.push_back(int_node_left->binary_op(int_node_right, op));
   }
   TupleExprNode* tmpnode = new TupleExprNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1104,7 +1103,7 @@ TupleIntNode* TupleIntNode::binary_op(TupleIntNode* rt, BinOpEnum op)
     res.push_back(new_res);
   }
   TupleIntNode* tmpnode = new TupleIntNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1129,7 +1128,7 @@ BoolValNode* BoolValNode::binary_op(BoolValNode* rt, BinOpEnum op)
     printf("Unsupported binary operator for Boolean variable\n");
     assert(false);
   }
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1148,7 +1147,7 @@ TupleIntNode* TupleIntNode::slice(int a, int b)
     res.push_back(tupleint[i]);
   }
   TupleIntNode* tmpnode = new TupleIntNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1167,7 +1166,7 @@ TupleExprNode* TupleExprNode::slice(int a, int b)
     res.push_back(exprlst[i]);
   }
   TupleExprNode* tmpnode = new TupleExprNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1185,7 +1184,7 @@ TupleExprNode* TupleExprNode::negate()
     res.push_back(int_node->negate());
   }
   TupleExprNode* tmpnode = new TupleExprNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1219,7 +1218,7 @@ TupleIntNode* TupleIntNode::negate()
     res.push_back(-tupleint[i]);
   }
   TupleIntNode* tmpnode = new TupleIntNode(res);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1228,7 +1227,7 @@ IntValNode* TupleIntNode::at(int x)
   if (x < tupleint.size())
   {
     IntValNode* tmpnode = new IntValNode(this->tupleint[x >= 0 ? x : tupleint.size() + x]);
-    local_temps.top().push_back(tmpnode);
+    local_temps.push_back(tmpnode);
     return tmpnode;
   }
   printf("Index out of bound for TupleIntNode\n");
@@ -1283,7 +1282,7 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
         TupleIntNode* tmpnode = new TupleIntNode(
                                       mspace->get_node_proc(std::vector<int>{int_node->intval}),
                                       mspace->proc_type);
-        local_temps.top().push_back(tmpnode);
+        local_temps.push_back(tmpnode);
         return tmpnode;
       }
       else
@@ -1316,7 +1315,7 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
         {
           tmpnode = new SetTupleIntNode(result2, machine_space->proc_type);
         }
-        local_temps.top().push_back(tmpnode);
+        local_temps.push_back(tmpnode);
         return tmpnode;
       }
       else
@@ -1358,7 +1357,7 @@ Node* IndexExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
     {
       MSpace* machine = (MSpace*) tuple_;
       TupleIntNode* tmpnode = new TupleIntNode(machine->get_size());
-      local_temps.top().push_back(tmpnode);
+      local_temps.push_back(tmpnode);
       return tmpnode->slice(left_int, right_int);
     }
     else
@@ -1384,7 +1383,7 @@ IntValNode* TupleExprNode::one_int_only()
 Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol)
 {
   TupleExprNode* res = new TupleExprNode();
-  local_temps.top().push_back(res);
+  local_temps.push_back(res);
   for (size_t i = 0; i < exprlst.size(); i++)
   {
     Node* simplified = exprlst[i]->run(local_symbol);
@@ -1406,7 +1405,7 @@ Node* TupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& loc
         for (size_t i = 0; i < tuple_int_node->tupleint.size(); i++)
         {
           IntValNode* tmpnode = new IntValNode(tuple_int_node->tupleint[i]);
-          local_temps.top().push_back(tmpnode);
+          local_temps.push_back(tmpnode);
           res->exprlst.push_back(tmpnode);
         }
       }
@@ -1445,7 +1444,7 @@ ExprNode* TupleExprNode::Convert2TupleInt(bool allow_star)
     }
   }
   TupleIntNode* tmpnode = new TupleIntNode(tuple_int);
-  local_temps.top().push_back(tmpnode);
+  local_temps.push_back(tmpnode);
   return tmpnode;
 }
 
@@ -1484,7 +1483,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
       result.push_back(res);
     }
     TupleExprNode* tmpnode = new TupleExprNode(result);
-    local_temps.top().push_back(tmpnode);
+    local_temps.push_back(tmpnode);
     return tmpnode;
   }
   else // TupleIntType
@@ -1493,7 +1492,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
     for (size_t i = 0; i < range_->tupleint.size(); i++)
     {
       Node* feed_in = new IntValNode(range_->tupleint[i]);
-      local_temps.top().push_back(feed_in);
+      local_temps.push_back(feed_in);
       variable_binding[identifier] = feed_in; // insert or overwrite
       // todo: stateless
       push_local_symbol_with_top_merge(local_symbol, variable_binding);
@@ -1502,7 +1501,7 @@ Node* ForTupleExprNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
       result.push_back(res);
     }
     TupleExprNode* tmpnode = new TupleExprNode(result);
-    local_temps.top().push_back(tmpnode);
+    local_temps.push_back(tmpnode);
     return tmpnode;
   }
 }
@@ -1541,7 +1540,7 @@ Tree2Legion::Tree2Legion(std::string filename)
     std::cout << "Mapping policy file does not exist" << std::endl;
     assert(false);
   }
-  local_temps.push(std::vector<Node*>());
+  // local_temps.push(std::vector<Node*>());
   yyparse();
   // std::cout << root->stmt_list.size() << std::endl;
   // root->print();

@@ -307,10 +307,11 @@ public:
 
 ProgramNode* root;
 std::unordered_map<std::string, Node*> global_symbol;
-std::stack<std::vector<Node*>> local_temps;
+std::vector<Node*> local_temps;
 // todo: remove this
-void push_local_symbol_with_top_merge(std::unordered_map<std::string, Node*> x);
-void local_temps_pop(); // free all the nodes in local_temps.top()
+void push_local_symbol_with_top_merge(std::stack<std::unordered_map<std::string, Node*>>& local_symbol,
+                                      std::unordered_map<std::string, Node*> x);
+void local_temps_pop(); // free all the nodes in local_temps
 
 
 class FuncStmtsNode : public Node
@@ -528,7 +529,7 @@ public:
         {
             if (local_symbol.top().count(name) > 0)
             {
-                return local_symbol.top().at(name);
+                return local_symbol.top().at(name)->run(local_symbol);
             }
         }
         if (global_symbol.count(name) == 0)
@@ -536,7 +537,7 @@ public:
             std::cout << name << " not found" << std::endl;
             assert(false);
         }
-        return global_symbol.at(name);
+        return global_symbol.at(name)->run(local_symbol);
     }
 };
 
@@ -557,7 +558,7 @@ public:
     IntValNode* negate()
     {
         IntValNode* tmpnode = new IntValNode(-intval);
-        local_temps.top().push_back(tmpnode);
+        local_temps.push_back(tmpnode);
         return tmpnode;
     }
     Node* binary_op(IntValNode* rt, BinOpEnum op);
@@ -984,7 +985,7 @@ public:
         Node* res = expr->run(local_symbol);
         assert(res->type == TupleExprType || res->type == TupleIntType || res->type == SetTupleIntType);
         UnpackExprNode* tmpnode = new UnpackExprNode((ExprNode*) res);
-        local_temps.top().push_back(tmpnode);
+        local_temps.push_back(tmpnode);
         return tmpnode;
     }
 };
@@ -1148,8 +1149,8 @@ public:
         task_name = name;
         ipoint = new TupleIntNode(point);
         ispace = new TupleIntNode(space);
-        local_temps.top().push_back(ipoint);
-        local_temps.top().push_back(ispace);
+        local_temps.push_back(ipoint);
+        local_temps.push_back(ispace);
     }
     TupleIntNode* get_point();
     TupleIntNode* get_space();
