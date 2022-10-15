@@ -1,8 +1,18 @@
 #include "myalgorithm.h"
 
-int main()
+void test()
 {
-    std::vector<std::vector<int>> results;
+    int number = 2;
+    std::vector<int> launch_domain = {1, 1, 1};
+    auto res = precise_enumerate(number, launch_domain);
+    auto res2 = greedy(number, launch_domain);
+    printvec(res);
+    printvec(res2);
+}
+
+void summary_test()
+{
+        std::vector<std::vector<int>> results;
     int improve_cnt = 0;
     float improve_perc_total = 0.0;
     float best_improve_perc = 0.0;
@@ -46,5 +56,10 @@ int main()
         best improve perc = %lf, coming from %d and (%d, %d)\n", 
         improve_cnt, total_cnt, improve_cnt * 1.0 / total_cnt, improve_perc_total / improve_cnt,
         best_improve_perc, best_node_cnt, best_dx, best_dy);
+}
+
+int main()
+{
+    test();
     return 0;
 }

@@ -13,7 +13,9 @@
 #include <math.h>
 
 void printvec(const std::vector<int>& my_vector);
-void order_optimize(const std::vector<int>& launch_domain, std::vector<int>& result);
+std::vector<int> order_optimize(int number, const std::vector<int>& launch_domain, 
+                                const std::vector<std::vector<int>>& all_results);
+std::vector<int> greedy(const int number, const std::vector<int>& launch_domain);
 
 // Helper function: factorize a number (big_number) into sorted prime factors (factors_result)
 void generate_prime_factor(int big_number, std::vector<int>& factors_result)
@@ -300,51 +302,28 @@ int C(int n, int k)
     return ans;
 }
 
-// sort in a way that vec[dim0] >= vec[dim1]
-inline void order_2dim(std::vector<int>& vec, int dim0, int dim1)
-{
-    if (vec[dim0] >= vec[dim1])
-        return;
-    int x = vec[dim0];
-    vec[dim0] = vec[dim1];
-    vec[dim1] = x;
-}
+// // sort in a way that vec[dim0] >= vec[dim1]
+// inline void order_2dim(std::vector<int>& vec, int dim0, int dim1)
+// {
+//     if (vec[dim0] >= vec[dim1])
+//         return;
+//     int x = vec[dim0];
+//     vec[dim0] = vec[dim1];
+//     vec[dim1] = x;
+// }
 
-// for same number in launch_domain, bigger number in result appears first
-inline void order_optimize(const std::vector<int>& launch_domain, std::vector<int>& result)
+// all_results have the same overhead, if greedy() returns one result of all_results, use it
+std::vector<int> order_optimize(int number, const std::vector<int>& launch_domain, 
+                                const std::vector<std::vector<int>>& all_results)
 {
-    if (launch_domain.size() == 2 && launch_domain[0] == launch_domain[1])
+    std::vector<int> greedy_result = greedy(number, launch_domain);
+    if (std::find(all_results.begin(), all_results.end(), greedy_result) != all_results.end())
     {
-        order_2dim(result, 0, 1);
-        return;
+        return greedy_result;
     }
-    if (launch_domain.size() == 3)
+    else
     {
-        int d0 = launch_domain[0];
-        int d1 = launch_domain[1];
-        int d2 = launch_domain[2];
-        if (d0 != d1 && d0 != d2 && d1 != d2)
-            return;
-        if (d0 == d1 && d0 == d2)
-        {
-            std::sort(result.begin(), result.end(), std::greater<int>());
-            return;
-        }
-        if (d0 == d1)
-        {
-            order_2dim(result, 0, 1); // lower dimensions' results are bigger
-            return;
-        }
-        if (d0 == d2)
-        {
-            order_2dim(result, 0, 2);
-            return;
-        }
-        if (d1 == d2)
-        {
-            order_2dim(result, 1, 2);
-            return;
-        }
+        return all_results[0];
     }
 }
 
@@ -394,18 +373,25 @@ std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_do
     cartesian_product(unique_prime, prime_placement, std::vector<int>(result), choices);
     assert(choices.size() == total_choices);
 
+    std::vector<std::vector<int>> all_results;
+
     float minimal = INT32_MAX;
     for (const auto& o_vec : choices)
     {
         std::vector<float> o_over_L = divide(o_vec, launch_domain);
         float cur = std::accumulate(o_over_L.begin(), o_over_L.end(), 0.0);
-        if (cur < minimal)
+        if (fabs(cur - minimal) < 1e-6) // same overhead
+        {
+            all_results.push_back(o_vec);
+        }
+        else if (cur < minimal) // better result comes
         {
             minimal = cur;
-            result = o_vec;
+            all_results.clear();
+            all_results.push_back(o_vec);
         }
     }
-    order_optimize(launch_domain, result);
+    result = order_optimize(number, launch_domain, all_results);
     if (cache_precise_enumerate.count(number) == 0)
     {
         std::map<std::vector<int>, std::vector<int>> empty;
