@@ -1163,9 +1163,9 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
       backpressure = (mapper->tree_result.task2limit.size() > 0);
     }
 #ifdef USE_LOGGING_MAPPER
-    runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), *it);
+    runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), (backpressure ? (Processor::NO_PROC) : (*it)));
 #else
-    runtime->replace_default_mapper(mapper, *it);
+    runtime->replace_default_mapper(mapper, (backpressure ? (Processor::NO_PROC) : (*it)));
 #endif
     if (backpressure)
     {
