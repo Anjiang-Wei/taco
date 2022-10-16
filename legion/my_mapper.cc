@@ -49,8 +49,9 @@ namespace Legion {
     class UserShardingFunctor : public ShardingFunctor {
     private:
       std::string taskname;
+      Tree2Legion tree;
     public:
-      UserShardingFunctor(std::string mode);
+      UserShardingFunctor(std::string takename_, const Tree2Legion& tree_);
       UserShardingFunctor(const UserShardingFunctor &rhs);
       virtual ~UserShardingFunctor(void);
     public:
@@ -71,7 +72,7 @@ public:
 public:
   static std::string get_policy_file();
   void parse_policy_file(const std::string &policy_file);
-  static void register_user_sharding_functors(Runtime *runtime);
+  void register_user_sharding_functors(Runtime *runtime, bool first);
 private:
   Processor select_initial_processor_by_kind(const Task &task, Processor::Kind kind);
   bool validate_processor_mapping(MapperContext ctx, const Task &task, Processor proc, bool strict=true);
@@ -153,9 +154,9 @@ protected:
                           const std::vector<Processor> &local_procs,
                           const std::vector<Processor> &remote_procs,
                           const SliceTaskInput &input,
-                               SliceTaskOutput &output) const;
+                               SliceTaskOutput &output);
   template<int DIM>
-  static void custom_decompose_points(
+  void custom_decompose_points(
                           std::vector<int> &index_launch_space,
                           const DomainT<DIM,coord_t> &point_space,
                           const std::vector<Processor> &targets,
@@ -173,14 +174,14 @@ private:
   std::map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
 
 public:
-  static Tree2Legion tree_result;
-  static std::unordered_map<std::string, ShardingID> task2sid;
+  Tree2Legion tree_result;
+  std::unordered_map<std::string, ShardingID> task2sid;
 };
 
 
 
-Tree2Legion NSMapper::tree_result;
-std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
+// Tree2Legion NSMapper::tree_result;
+// std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
 
 std::string NSMapper::get_policy_file()
 {
@@ -232,12 +233,15 @@ std::string memory_kind_to_string(Memory::Kind kind)
   }
 }
 
-void NSMapper::register_user_sharding_functors(Runtime *runtime)
+void NSMapper::register_user_sharding_functors(Runtime *runtime, bool first)
 {
   int i = 1;
   for (auto v: tree_result.task2func)
   {
-    runtime->register_sharding_functor(i, new Legion::Internal::UserShardingFunctor(v.first));
+    if (first)
+    {
+      runtime->register_sharding_functor(i, new Legion::Internal::UserShardingFunctor(v.first, tree_result));
+    }
     task2sid.insert({v.first, i});
     log_mapper.debug("%s inserted", v.first.c_str());
     i += 1;
@@ -800,7 +804,7 @@ void NSMapper::report_profiling(const MapperContext ctx,
 void NSMapper::select_tasks_to_map(const MapperContext ctx,
                                       const SelectMappingInput& input,
                                            SelectMappingOutput& output) {
-  if (NSMapper::tree_result.task2limit.size() == 0)
+  if (this->tree_result.task2limit.size() == 0)
   {
     DefaultMapper::select_tasks_to_map(ctx, input, output);
   }
@@ -899,7 +903,7 @@ void NSMapper::select_tasks_to_map(const MapperContext ctx,
 Mapper::MapperSyncModel NSMapper::get_mapper_sync_model() const {
   // If we're going to attempt to backpressure tasks, then we need to use
   // a sync model with high gaurantees.
-  if (NSMapper::tree_result.task2limit.size() > 0) {
+  if (this->tree_result.task2limit.size() > 0) {
     return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
   }
   // Otherwise, we can do whatever the default mapper is doing.
@@ -961,7 +965,7 @@ void NSMapper::select_task_options(const MapperContext    ctx,
 }
 
 template<int DIM>
-/*static*/ void NSMapper::custom_decompose_points(
+  void NSMapper::custom_decompose_points(
                         std::vector<int> &index_launch_space,
                         const DomainT<DIM,coord_t> &point_space,
                         const std::vector<Processor> &targets,
@@ -1019,7 +1023,7 @@ void NSMapper::custom_slice_task(const Task &task,
                                 const std::vector<Processor> &local,
                                 const std::vector<Processor> &remote,
                                 const SliceTaskInput& input,
-                                      SliceTaskOutput &output) const
+                                      SliceTaskOutput &output)
   //--------------------------------------------------------------------------
 {
   // The two-level decomposition doesn't work so for now do a
@@ -1159,8 +1163,12 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
     NSMapper* mapper = new NSMapper(runtime->get_mapper_runtime(), machine, *it, "ns_mapper");
     if (it == local_procs.begin())
     {
-      NSMapper::register_user_sharding_functors(runtime);
+      mapper->register_user_sharding_functors(runtime, true);
       backpressure = (mapper->tree_result.task2limit.size() > 0);
+    }
+    else
+    {
+      mapper->register_user_sharding_functors(runtime, false);
     }
 #ifdef USE_LOGGING_MAPPER
     runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), (backpressure ? (Processor::NO_PROC) : (*it)));
@@ -1186,8 +1194,8 @@ namespace Legion {
     /////////////////////////////////////////////////////////////
 
     //--------------------------------------------------------------------------
-    UserShardingFunctor::UserShardingFunctor(std::string mode)
-      : ShardingFunctor(), taskname(mode)
+    UserShardingFunctor::UserShardingFunctor(std::string takename_, const Tree2Legion& tree_)
+      : ShardingFunctor(), taskname(takename_), tree(tree_)
     //--------------------------------------------------------------------------
     {
     }
@@ -1247,8 +1255,8 @@ namespace Legion {
             { \
               log_mapper.debug("%lld, ", point[i]); \
             } \
-            log_mapper.debug(" --> node %d\n", (int) NSMapper::tree_result.runindex(taskname, index_point, launch_space)[0][0]); \
-            return NSMapper::tree_result.runindex(taskname, index_point, launch_space)[0][0]; \
+            log_mapper.debug(" --> node %d\n", (int) tree.runindex(taskname, index_point, launch_space)[0][0]); \
+            return tree.runindex(taskname, index_point, launch_space)[0][0]; \
           }
         LEGION_FOREACH_N(DIMFUNC)
 #undef DIMFUNC
