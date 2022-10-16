@@ -67,12 +67,12 @@ namespace Legion {
 class NSMapper : public DefaultMapper
 {
 public:
-  NSMapper(MapperRuntime *rt, Machine machine, Processor local, const char *mapper_name);
+  NSMapper(MapperRuntime *rt, Machine machine, Processor local, const char *mapper_name, bool first);
 
 public:
   static std::string get_policy_file();
-  void parse_policy_file(const std::string &policy_file);
-  void register_user_sharding_functors(Runtime *runtime, bool first);
+  static void parse_policy_file(const std::string &policy_file);
+  static void register_user_sharding_functors(Runtime *runtime);
 private:
   Processor select_initial_processor_by_kind(const Task &task, Processor::Kind kind);
   bool validate_processor_mapping(MapperContext ctx, const Task &task, Processor proc, bool strict=true);
@@ -174,14 +174,12 @@ private:
   std::map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
 
 public:
-  Tree2Legion tree_result;
-  std::unordered_map<std::string, ShardingID> task2sid;
+  static Tree2Legion tree_result;
+  static std::unordered_map<std::string, ShardingID> task2sid;
 };
 
-
-
-// Tree2Legion NSMapper::tree_result;
-// std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
+Tree2Legion NSMapper::tree_result;
+std::unordered_map<std::string, ShardingID> NSMapper::task2sid;
 
 std::string NSMapper::get_policy_file()
 {
@@ -233,15 +231,12 @@ std::string memory_kind_to_string(Memory::Kind kind)
   }
 }
 
-void NSMapper::register_user_sharding_functors(Runtime *runtime, bool first)
+void NSMapper::register_user_sharding_functors(Runtime *runtime)
 {
   int i = 1;
   for (auto v: tree_result.task2func)
   {
-    if (first)
-    {
-      runtime->register_sharding_functor(i, new Legion::Internal::UserShardingFunctor(v.first, tree_result));
-    }
+    runtime->register_sharding_functor(i, new Legion::Internal::UserShardingFunctor(v.first, tree_result));
     task2sid.insert({v.first, i});
     log_mapper.debug("%s inserted", v.first.c_str());
     i += 1;
@@ -1146,11 +1141,14 @@ void NSMapper::slice_task(const MapperContext      ctx,
   }
 }
 
-NSMapper::NSMapper(MapperRuntime *rt, Machine machine, Processor local, const char *mapper_name)
+NSMapper::NSMapper(MapperRuntime *rt, Machine machine, Processor local, const char *mapper_name, bool first)
   : DefaultMapper(rt, machine, local, mapper_name)
 {
-  std::string policy_file = get_policy_file();
-  parse_policy_file(policy_file);
+  if (first)
+  {
+    std::string policy_file = get_policy_file();
+    parse_policy_file(policy_file);
+  }
 }
 
 static void create_mappers(Machine machine, Runtime *runtime, const std::set<Processor> &local_procs)
@@ -1160,15 +1158,16 @@ static void create_mappers(Machine machine, Runtime *runtime, const std::set<Pro
   for (std::set<Processor>::const_iterator it = local_procs.begin();
         it != local_procs.end(); it++)
   {
-    NSMapper* mapper = new NSMapper(runtime->get_mapper_runtime(), machine, *it, "ns_mapper");
+    NSMapper* mapper = NULL;
     if (it == local_procs.begin())
     {
-      mapper->register_user_sharding_functors(runtime, true);
+      mapper = new NSMapper(runtime->get_mapper_runtime(), machine, *it, "ns_mapper", true);
+      mapper->register_user_sharding_functors(runtime);
       backpressure = (mapper->tree_result.task2limit.size() > 0);
     }
     else
     {
-      mapper->register_user_sharding_functors(runtime, false);
+      mapper = new NSMapper(runtime->get_mapper_runtime(), machine, *it, "ns_mapper", false);
     }
 #ifdef USE_LOGGING_MAPPER
     runtime->replace_default_mapper(new Mapping::LoggingWrapper(mapper), (backpressure ? (Processor::NO_PROC) : (*it)));

@@ -48,19 +48,19 @@ void generate_prime_factor(int big_number, std::vector<int>& factors_result)
         factors_result.push_back(big_number);
 }
 
-std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_greedy;
+// std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_greedy;
 
 // DefaultMapper's algorithm
 std::vector<int> greedy(const int number, const std::vector<int>& launch_domain)
 {
-    if (cache_greedy.count(number) > 0)
-    {
-        auto value = cache_greedy.at(number);
-        if (value.count(launch_domain) > 0)
-        {
-            return value.at(launch_domain);
-        }
-    }
+    // if (cache_greedy.count(number) > 0)
+    // {
+    //     auto value = cache_greedy.at(number);
+    //     if (value.count(launch_domain) > 0)
+    //     {
+    //         return value.at(launch_domain);
+    //     }
+    // }
     int dim = launch_domain.size();
     std::vector<int> result;
     result.resize(dim, 1);
@@ -86,12 +86,12 @@ std::vector<int> greedy(const int number, const std::vector<int>& launch_domain)
         result[next_dim] *= next_prime;
         domain_vec[next_dim] /= next_prime;
     }
-    if (cache_greedy.count(number) == 0)
-    {
-        std::map<std::vector<int>, std::vector<int>> empty;
-        cache_greedy.insert({number, empty});
-    }
-    cache_greedy.at(number).insert({launch_domain, result});
+    // if (cache_greedy.count(number) == 0)
+    // {
+    //     std::map<std::vector<int>, std::vector<int>> empty;
+    //     cache_greedy.insert({number, empty});
+    // }
+    // cache_greedy.at(number).insert({launch_domain, result});
     return result;
 }
 
@@ -327,7 +327,7 @@ std::vector<int> order_optimize(int number, const std::vector<int>& launch_domai
     }
 }
 
-std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_precise_enumerate;
+// std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_precise_enumerate;
 
 std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_domain)
 {
