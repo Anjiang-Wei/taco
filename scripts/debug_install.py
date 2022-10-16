@@ -121,9 +121,12 @@ with pushd(args.deps_install_dir):
         cmakeDefs = {
             "BUILD_SHARED_LIBS": True,
             "CMAKE_CXX_FLAGS": "--std=c++11",
-            "CMAKE_BUILD_TYPE": "Release",
+            "CMAKE_BUILD_TYPE": "Debug",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
             "Legion_USE_HDF5": True,
+            "Legion_SPY": True, # below 3 specificially added for debugging
+            "Legion_BOUNDS_CHECKS": True,
+            "Legion_PRIVILEGE_CHECKS": True,
         }
         if args.openmp:
             cmakeDefs["Legion_USE_OpenMP"] = True
@@ -148,7 +151,7 @@ os.makedirs(args.distal_build_dir, exist_ok=True)
 with pushd(args.distal_build_dir):
     cmakeDefs = {
         "BLA_VENDOR": "OpenBLAS",
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
         "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
     }
