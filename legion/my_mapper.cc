@@ -247,7 +247,7 @@ void NSMapper::parse_policy_file(const std::string &policy_file)
 {
   log_mapper.debug("Policy file: %s", policy_file.c_str());
   tree_result = Tree2Legion(policy_file);
-  // tree_result.print();
+  tree_result.print();
 }
 
 inline Processor NSMapper::idx_to_proc(int proc_idx, const Processor::Kind proc_kind) const
