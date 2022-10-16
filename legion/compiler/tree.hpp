@@ -460,6 +460,13 @@ public:
         }
         else
         {
+            if (global_symbol.count(var_name) > 0)
+            {
+                printf("AssignNode multiple %s cause conflicts in global_symbol!\n", var_name.c_str());
+                assert(false);
+            }
+            assert(local_symbol.size() == 0);
+            // only hit this line when building the AST
             global_symbol.insert({var_name, simplified});
         }
         // printf("AssignNode: %s inserted\n", var_name.c_str());
@@ -730,7 +737,12 @@ public:
     }
     Node* run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
     {
-        global_symbol.insert({func_name, this});
+        if (global_symbol.count(func_name) == 0)
+        {
+            assert(local_symbol.size() == 0);
+            // only hit this line when building the AST
+            global_symbol.insert({func_name, this});
+        }
         return this;
     }
     Node* invoked(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps);
