@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# python3 scripts/install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
+# python3 scripts/install_lassen.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
 
 import argparse
 from contextlib import contextmanager
@@ -76,7 +76,8 @@ with pushd(args.deps_install_dir):
     # HDF5.
     if not os.path.exists("hdf5-1.10.1"):
         wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
-        run("tar", "-xf", "hdf5-1.10.1.tar.gz")
+        run("mkdir", "hdf5-1.10.1")
+        run("tar", "-xf", "hdf5-1.10.1.tar.gz", "-C", "hdf5-1.10.1", "--strip-components", "1")
     with pushd("hdf5-1.10.1"):
         run("./configure", "--prefix", makeInstallPath, "--enable-thread-safe", "--disable-hl")
         run("make", "-j{}".format(args.threads))
@@ -134,6 +135,8 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_NETWORKS"] = "gasnetex"
             cmakeDefs["Legion_EMBED_GASNet"] = True
             cmakeDefs["GASNet_CONDUIT"] = args.conduit
+            cmakeDefs["Legion_EMBED_GASNet_GITREF"] = "045601071ecf5e7ca35accaeb6b8a9d302a8386f"
+            # cmakeDefs["Legion_EMBED_GASNet_VERSION"] = "2021.3.0"
 
         cmake(os.path.join(distalRoot, "legion", "legion"), cmakeDefs, env={
             "HDF5_ROOT": makeInstallPath,
