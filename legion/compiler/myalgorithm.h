@@ -331,14 +331,14 @@ std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_prec
 
 std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_domain)
 {
-    if (cache_precise_enumerate.count(number) > 0)
-    {
-        auto value = cache_precise_enumerate.at(number);
-        if (value.count(launch_domain) > 0)
-        {
-            return value.at(launch_domain);
-        }
-    }
+    // if (cache_precise_enumerate.count(number) > 0)
+    // {
+    //     auto value = cache_precise_enumerate.at(number);
+    //     if (value.count(launch_domain) > 0)
+    //     {
+    //         return value.at(launch_domain);
+    //     }
+    // }
     // number can be regarded as #nodes
     int dim = launch_domain.size();
     std::vector<int> result;
@@ -392,12 +392,12 @@ std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_do
         }
     }
     result = order_optimize(number, launch_domain, all_results);
-    if (cache_precise_enumerate.count(number) == 0)
-    {
-        std::map<std::vector<int>, std::vector<int>> empty;
-        cache_precise_enumerate.insert({number, empty});
-    }
-    cache_precise_enumerate.at(number).insert({launch_domain, result});
+    // if (cache_precise_enumerate.count(number) == 0)
+    // {
+    //     std::map<std::vector<int>, std::vector<int>> empty;
+    //     cache_precise_enumerate.insert({number, empty});
+    // }
+    // cache_precise_enumerate.at(number).insert({launch_domain, result});
     return result;
 }
 
