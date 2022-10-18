@@ -36,6 +36,7 @@ endif()
 # On Lassen, we need to target -sm_70.
 if (DEFINED ENV{LLNL_COMPUTE_NODES})
   set(CUDA_NVCC_FLAGS -gencode arch=compute_70,code=sm_70)
+  message(STATUS "SETTING CUDANVCC TO SM70 FOR LLNL")
 else()
   set(CUDA_NVCC_FLAGS -gencode arch=compute_60,code=sm_60)
 endif()
