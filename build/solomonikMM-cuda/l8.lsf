@@ -8,7 +8,7 @@ numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
 echo Num nodes: $numnodes
 echo Job id: $LSB_JOBID
 
-
+module load cuda/11.1.0
 jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -level mapper=debug -logfile mapper84_taco%.log
 jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -level mapper=debug -level nsmapper=debug -dslmapper -mapping mappings_bp -logfile mapper84_dsl%.log
 
