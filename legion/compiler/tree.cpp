@@ -122,12 +122,16 @@ std::vector<Memory::Kind> MyMem2LegionMemList(std::vector<MemoryEnum> myprocs)
 Node* ProcCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
   std::vector<Processor::Kind> res = MyProc2LegionProcList(this->proc_types);
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   Tree2Legion::task_policies.insert({taskname, res});
   return NULL;
 }
 
 Node* RegionCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   std::pair<std::string, std::string> key = std::make_pair(taskname, region_name);
   Processor::Kind proc = MyProc2LegionProc(this->processor_type);
   std::vector<Memory::Kind> mem = MyMem2LegionMemList(this->mem_types);
@@ -185,6 +189,8 @@ void ConstraintsNode::update(BinOpEnum x, int y)
 
 Node* LayoutCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   std::pair<std::string, std::string> key = std::make_pair(task_name, region_name);
   Memory::Kind mem = MyMem2LegionMem(mem_type);
   if (Tree2Legion::layout_constraints.count(key) > 0)
@@ -201,6 +207,8 @@ Node* LayoutCustomNode::run(std::stack<std::unordered_map<std::string, Node*>>& 
 
 Node* InstanceLimitNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   Processor::Kind proc_kind = MyProc2LegionProc(proc_type);
   if (Tree2Legion::task2limit.count(task_name) > 0)
   {
@@ -217,6 +225,8 @@ Node* InstanceLimitNode::run(std::stack<std::unordered_map<std::string, Node*>>&
 
 Node* MemoryCollectNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   Tree2Legion::memory_collect.insert({task_name, region_name});
   return NULL;
 }
@@ -461,6 +471,8 @@ std::vector<std::vector<int>> Tree2Legion::runindex(std::string task, const std:
 
 Node* SingleTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   if (global_symbol.count(func_name) == 0)
   {
     printf("SingleTaskMap's function undefined\n");
@@ -492,6 +504,8 @@ Node* SingleTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>&
 
 Node* IndexTaskMapNode::run(std::stack<std::unordered_map<std::string, Node*>>& local_symbol, std::vector<Node*>& local_temps)
 {
+  assert(local_symbol.size() == 0);
+  // only hit this line when building the AST
   if (global_symbol.count(func_name) == 0)
   {
     printf("IndexTaskMap's function undefined\n");
@@ -1355,7 +1369,8 @@ void push_local_symbol_with_top_merge(std::stack<std::unordered_map<std::string,
 {
     if (local_symbol.size() == 0)
     {
-        local_symbol.push(x);
+      printf("For expr should only happen during function invocation!\n");
+      assert(false);
     }
     else
     {
