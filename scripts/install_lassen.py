@@ -129,6 +129,7 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_USE_OpenMP"] = True
         if args.cuda:
             cmakeDefs["Legion_USE_CUDA"] = True
+            cmakeDefs["Legion_CUDA_ARCH"] = "70"
         if args.dim is not None:
             cmakeDefs["Legion_MAX_DIM"] = args.dim
         if args.multi_node:
@@ -156,6 +157,7 @@ with pushd(args.distal_build_dir):
         cmakeDefs["OPENMP"] = True
     env = {
         "HDF5_ROOT": makeInstallPath,
+        "LLNL_COMPUTE_NODES": "1",
     }
     if args.tblis:
         env["TBLIS_ROOT"] = makeInstallPath
