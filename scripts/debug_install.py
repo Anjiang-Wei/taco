@@ -133,6 +133,7 @@ with pushd(args.deps_install_dir):
         if args.cuda:
             cmakeDefs["Legion_USE_CUDA"] = True
             cmakeDefs["Legion_CUDA_ARCH"] = "70"
+            cmakeDefs["Legion_HIJACK_CUDART"] = "OFF"
         if args.dim is not None:
             cmakeDefs["Legion_MAX_DIM"] = args.dim
         if args.multi_node:
