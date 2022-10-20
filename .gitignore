@@ -1,4 +1,12 @@
-build/
+*.log
+*.out
+build/CTestTestfile.cmake
+build/apps/
+build/include/
+build/legion/
+build/src/
+build/test/
+build/tools/
 bin/
 lib/
 *__pycache__*
