@@ -899,7 +899,6 @@ void NSMapper::select_tasks_to_map(const MapperContext ctx,
 Mapper::MapperSyncModel NSMapper::get_mapper_sync_model() const {
   // If we're going to attempt to backpressure tasks, then we need to use
   // a sync model with high gaurantees.
-  return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
   if (this->tree_result.task2limit.size() > 0) {
     return SERIALIZED_NON_REENTRANT_MAPPER_MODEL;
   }
