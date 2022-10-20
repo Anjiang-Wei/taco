@@ -119,7 +119,7 @@ with pushd(args.deps_install_dir):
         # I gave this an attempt but had to give up due to weird behavior when integrating the
         # shared library with the configured RPATH into DISTAL.
         cmakeDefs = {
-            "BUILD_SHARED_LIBS": True,
+            "BUILD_SHARED_LIBS": False,
             "CMAKE_CXX_FLAGS": "--std=c++11",
             "CMAKE_BUILD_TYPE": "Debug",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
