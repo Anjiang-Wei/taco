@@ -39,7 +39,7 @@ def find_file_line(fname, target_lines):
     assert(len(res) >= 1)
     return res
 
-def filter_keyword(lines, start_kw, continue_kw_lst):
+def filter_keyword(lines, start_kw, continue_kw_lst, fname=""):
     res = {} # header -> [sentences]
     def judge_kw(one_line):
         for item in continue_kw_lst:
@@ -58,22 +58,26 @@ def filter_keyword(lines, start_kw, continue_kw_lst):
                     break
             if key in res.keys():
                 if value != res[key]:
-                    print(f"{key}'s results are different across runs!")
+                    print(f"{key}'s results are different across runs in {fname}! Abnormal in line {i}")
+                    print(value)
+                    print("---versus----")
+                    print(res[key])
+                    print("---enddiff---")
                 if fail_first:
                     assert(value == res[key]) # it should always be the same
             else:
                 res[key] = value
     return res
 
-def filter_sharding(lines):
+def filter_sharding(lines, fname=""):
     start_kw = "SELECT_SHARDING_FUNCTOR for"
     continue_kw = ["<-"]
-    return filter_keyword(lines, start_kw, continue_kw)
+    return filter_keyword(lines, start_kw, continue_kw, fname)
 
-def filter_slicing(lines):
+def filter_slicing(lines, fname=""):
     start_kw = "SLICE_TASK for"
     continue_kw = ["->", "INPUT:", "OUTPUT:"]
-    return filter_keyword(lines, start_kw, continue_kw)
+    return filter_keyword(lines, start_kw, continue_kw, fname)
 
 def print_shardslice_diff(map1, map2):
     for k in map1.keys():
@@ -223,15 +227,15 @@ if __name__ == "__main__":
     print("l2:", sys.argv[2])
     f1_line = readlines(sys.argv[1])
     f2_line = readlines(sys.argv[2])
-    f1_sharding = filter_sharding(f1_line)
-    f2_sharding = filter_sharding(f2_line)
+    f1_sharding = filter_sharding(f1_line, sys.argv[1])
+    f2_sharding = filter_sharding(f2_line, sys.argv[2])
     print_shardslice_diff(f1_sharding, f2_sharding)
     if f1_sharding == f2_sharding:
         print("pass sharding check:", len(f1_sharding))
     else:
         print("fail sharding check:", len(f1_sharding))
-    f1_slicing = filter_slicing(f1_line)
-    f2_slicing = filter_slicing(f2_line)
+    f1_slicing = filter_slicing(f1_line, sys.argv[1])
+    f2_slicing = filter_slicing(f2_line, sys.argv[2])
     print_shardslice_diff(f1_slicing, f2_slicing)
     if f1_slicing == f2_slicing:
         print("pass slicing check:", len(f1_slicing))
