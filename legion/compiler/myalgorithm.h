@@ -11,6 +11,7 @@
 #include <functional>
 #include <numeric>
 #include <math.h>
+#include <mutex>
 
 void printvec(const std::vector<int>& my_vector);
 std::vector<int> order_optimize(int number, const std::vector<int>& launch_domain, 
@@ -48,19 +49,21 @@ void generate_prime_factor(int big_number, std::vector<int>& factors_result)
         factors_result.push_back(big_number);
 }
 
-// std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_greedy;
+std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_greedy;
+std::mutex greedy_mu;
 
 // DefaultMapper's algorithm
 std::vector<int> greedy(const int number, const std::vector<int>& launch_domain)
 {
-    // if (cache_greedy.count(number) > 0)
-    // {
-    //     auto value = cache_greedy.at(number);
-    //     if (value.count(launch_domain) > 0)
-    //     {
-    //         return value.at(launch_domain);
-    //     }
-    // }
+    std::lock_guard<std::mutex> guard(greedy_mu);
+    if (cache_greedy.count(number) > 0)
+    {
+        auto value = cache_greedy.at(number);
+        if (value.count(launch_domain) > 0)
+        {
+            return value.at(launch_domain);
+        }
+    }
     int dim = launch_domain.size();
     std::vector<int> result;
     result.resize(dim, 1);
@@ -86,12 +89,12 @@ std::vector<int> greedy(const int number, const std::vector<int>& launch_domain)
         result[next_dim] *= next_prime;
         domain_vec[next_dim] /= next_prime;
     }
-    // if (cache_greedy.count(number) == 0)
-    // {
-    //     std::map<std::vector<int>, std::vector<int>> empty;
-    //     cache_greedy.insert({number, empty});
-    // }
-    // cache_greedy.at(number).insert({launch_domain, result});
+    if (cache_greedy.count(number) == 0)
+    {
+        std::map<std::vector<int>, std::vector<int>> empty;
+        cache_greedy.insert({number, empty});
+    }
+    cache_greedy.at(number).insert({launch_domain, result});
     return result;
 }
 
@@ -327,18 +330,20 @@ std::vector<int> order_optimize(int number, const std::vector<int>& launch_domai
     }
 }
 
-// std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_precise_enumerate;
+std::unordered_map<int, std::map<std::vector<int>, std::vector<int>>> cache_precise_enumerate;
+std::mutex precise_mu;
 
 std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_domain)
 {
-    // if (cache_precise_enumerate.count(number) > 0)
-    // {
-    //     auto value = cache_precise_enumerate.at(number);
-    //     if (value.count(launch_domain) > 0)
-    //     {
-    //         return value.at(launch_domain);
-    //     }
-    // }
+    std::lock_guard<std::mutex> guard(precise_mu);
+    if (cache_precise_enumerate.count(number) > 0)
+    {
+        auto value = cache_precise_enumerate.at(number);
+        if (value.count(launch_domain) > 0)
+        {
+            return value.at(launch_domain);
+        }
+    }
     // number can be regarded as #nodes
     int dim = launch_domain.size();
     std::vector<int> result;
@@ -392,12 +397,12 @@ std::vector<int> precise_enumerate(int number, const std::vector<int>& launch_do
         }
     }
     result = order_optimize(number, launch_domain, all_results);
-    // if (cache_precise_enumerate.count(number) == 0)
-    // {
-    //     std::map<std::vector<int>, std::vector<int>> empty;
-    //     cache_precise_enumerate.insert({number, empty});
-    // }
-    // cache_precise_enumerate.at(number).insert({launch_domain, result});
+    if (cache_precise_enumerate.count(number) == 0)
+    {
+        std::map<std::vector<int>, std::vector<int>> empty;
+        cache_precise_enumerate.insert({number, empty});
+    }
+    cache_precise_enumerate.at(number).insert({launch_domain, result});
     return result;
 }
 
