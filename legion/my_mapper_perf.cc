@@ -612,7 +612,7 @@ void NSMapper::map_task(const MapperContext      ctx,
   VariantInfo chosen = default_find_preferred_variant(task, ctx,
                     true/*needs tight bound*/, true/*cache*/, target_proc_kind);
   output.chosen_variant = chosen.variant;
-  output.task_priority = 0; //default_policy_select_task_priority(ctx, task);
+  output.task_priority = 0; // default_policy_select_task_priority(ctx, task);
   output.postmap_task = false;
 
   // if (chosen.is_inner)
@@ -624,8 +624,12 @@ void NSMapper::map_task(const MapperContext      ctx,
   //   map_task_post_function(ctx, task, task_name, target_proc_kind, output);
   //   return;
   // }
-
+  auto start = std::chrono::high_resolution_clock::now();
   default_policy_select_target_processors(ctx, task, output.target_procs);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> diff = end - start;
+  log_mapper.debug() << "timing,select_target_processors," << diff.count();
+
   Processor target_processor = output.target_procs[0];
   log_mapper.debug("%s map_task for selecting memory will use %s as processor", 
     task_name.c_str(), processor_kind_to_string(target_processor.kind()).c_str());
@@ -649,6 +653,8 @@ void NSMapper::map_task(const MapperContext      ctx,
     Memory target_memory = Memory::NO_MEMORY;
     std::string region_name;
     LayoutConstraintSet layout_constraints;
+
+    start = std::chrono::high_resolution_clock::now();
 
     auto cache_key = std::make_pair(task.task_id, idx);
     auto finder = cached_region_policies.find(cache_key);
@@ -692,6 +698,10 @@ void NSMapper::map_task(const MapperContext      ctx,
       }
     }
 
+    end = std::chrono::high_resolution_clock::now();
+    diff = end - start;
+    log_mapper.debug() << "timing,find_memories," << diff.count();
+
     if (!found_policy)
     {
       log_mapper.debug(
@@ -706,6 +716,8 @@ void NSMapper::map_task(const MapperContext      ctx,
     // I only need to create one instance
     // std::vector<Processor>                      target_procs
     // chosen_instances is still one
+
+    start = std::chrono::high_resolution_clock::now();
 
     std::set<FieldID> missing_fields = req.privilege_fields;
     if (req.privilege == LEGION_REDUCE)
@@ -730,8 +742,16 @@ void NSMapper::map_task(const MapperContext      ctx,
         }
       }
       output.chosen_instances[idx] = valid_instances_reduce;
+
+      end = std::chrono::high_resolution_clock::now();
+      diff = end - start;
+      log_mapper.debug() << "timing,missing_fields," << diff.count();
+
       continue;
     }
+
+    start = std::chrono::high_resolution_clock::now();
+    
     size_t footprint;
     PhysicalInstance valid_instance;
     if (!default_make_instance(ctx, target_memory, layout_constraints, 
@@ -742,8 +762,15 @@ void NSMapper::map_task(const MapperContext      ctx,
               target_processor, target_memory, footprint);
     }
     output.chosen_instances[idx].push_back(valid_instance);
+    end = std::chrono::high_resolution_clock::now();
+    diff = end - start;
+    log_mapper.debug() << "timing,non_missing_default_make_instance," << diff.count();
   }
+  start = std::chrono::high_resolution_clock::now();
   map_task_post_function(ctx, task, task_name, target_proc_kind, output);
+  end = std::chrono::high_resolution_clock::now();
+  diff = end - start;
+  log_mapper.debug() << "timing,map_task_post_function," << diff.count();
 }
 
 void NSMapper::report_profiling(const MapperContext ctx,
