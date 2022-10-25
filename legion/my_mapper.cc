@@ -132,6 +132,11 @@ public:
                                         Legion::LayoutConstraintSet &constraints,
                                         const Legion::Memory &target_memory,
                                         const Legion::RegionRequirement &req);
+  void dsl_default_remove_cached_task(MapperContext ctx,
+                                      VariantID chosen_variant,
+                                      unsigned long long task_hash,
+                                      const std::pair<TaskID,Processor> &cache_key,
+                                      const std::vector<std::vector<PhysicalInstance> > &post_filter);
   MapperSyncModel get_mapper_sync_model() const override;
   void report_profiling(const Legion::Mapping::MapperContext ctx,
                         const Legion::Task& task,
@@ -173,6 +178,8 @@ private:
   std::unordered_map<std::pair<TaskID, uint32_t>, std::string, HashFn2> cached_region_names;
   std::unordered_map<std::pair<TaskID, uint32_t>, LayoutConstraintSet, HashFn2> cached_region_layout;
   std::map<std::pair<Legion::Processor, Memory::Kind>, Legion::Memory> cached_affinity_proc2mem;
+
+  std::map<std::pair<TaskID,Processor>, std::list<CachedTaskMapping>>  dsl_cached_task_mappings;
 
 public:
   static Tree2Legion tree_result;
@@ -601,6 +608,82 @@ void NSMapper::map_task_post_function(const MapperContext   &ctx,
   return;
 }
 
+void NSMapper::dsl_default_remove_cached_task(MapperContext ctx,
+        VariantID chosen_variant, unsigned long long task_hash,
+        const std::pair<TaskID,Processor> &cache_key,
+        const std::vector<std::vector<PhysicalInstance> > &post_filter)
+    //--------------------------------------------------------------------------
+{
+  std::map<std::pair<TaskID,Processor>,
+            std::list<CachedTaskMapping> >::iterator
+              finder = dsl_cached_task_mappings.find(cache_key);
+  if (finder != dsl_cached_task_mappings.end())
+  {
+    // Keep a list of instances for which we need to downgrade
+    // their garbage collection priorities since we are no
+    // longer caching the results
+    std::deque<PhysicalInstance> to_downgrade;
+    for (std::list<CachedTaskMapping>::iterator it =
+          finder->second.begin(); it != finder->second.end(); it++)
+    {
+      if ((it->variant == chosen_variant) &&
+          (it->task_hash == task_hash))
+      {
+        // Record all the instances for which we will need to
+        // down grade their garbage collection priority
+        for (unsigned idx1 = 0; (idx1 < it->mapping.size()) &&
+              (idx1 < post_filter.size()); idx1++)
+        {
+          if (!it->mapping[idx1].empty())
+          {
+            if (!post_filter[idx1].empty()) {
+              // Still all the same
+              if (post_filter[idx1].size() == it->mapping[idx1].size())
+                continue;
+              // See which ones are no longer in our set
+              for (unsigned idx2 = 0;
+                    idx2 < it->mapping[idx1].size(); idx2++)
+              {
+                PhysicalInstance current = it->mapping[idx1][idx2];
+                bool still_valid = false;
+                for (unsigned idx3 = 0;
+                      idx3 < post_filter[idx1].size(); idx3++)
+                {
+                  if (current == post_filter[idx1][idx3])
+                  {
+                    still_valid = true;
+                    break;
+                  }
+                }
+                if (!still_valid)
+                  to_downgrade.push_back(current);
+              }
+            } else {
+              // if the chosen instances are empty, record them all
+              to_downgrade.insert(to_downgrade.end(),
+                  it->mapping[idx1].begin(), it->mapping[idx1].end());
+            }
+          }
+        }
+        finder->second.erase(it);
+        break;
+      }
+    }
+    if (finder->second.empty())
+      dsl_cached_task_mappings.erase(finder);
+    if (!to_downgrade.empty())
+    {
+      for (std::deque<PhysicalInstance>::const_iterator it =
+            to_downgrade.begin(); it != to_downgrade.end(); it++)
+      {
+        if (it->is_external_instance())
+          continue;
+        runtime->set_garbage_collection_priority(ctx, *it, 0/*priority*/);
+      }
+    }
+  }
+}
+
 void NSMapper::map_task(const MapperContext      ctx,
                         const Task&              task,
                         const MapTaskInput&      input,
@@ -632,6 +715,55 @@ void NSMapper::map_task(const MapperContext      ctx,
 
   // const TaskLayoutConstraintSet &layout_constraints =
   //   runtime->find_task_layout_constraints(ctx, task.task_id, output.chosen_variant);
+
+  // caching mechanism modified from default_mapper.cc
+
+  // First, let's see if we've cached a result of this task mapping
+  const unsigned long long task_hash = compute_task_hash(task);
+  std::pair<TaskID,Processor> cache_key(task.task_id, target_processor);
+  std::map<std::pair<TaskID,Processor>,
+            std::list<CachedTaskMapping> >::const_iterator
+    finder = dsl_cached_task_mappings.find(cache_key);
+  // This flag says whether we need to recheck the field constraints,
+  // possibly because a new field was allocated in a region, so our old
+  // cached physical instance(s) is(are) no longer valid
+  // bool needs_field_constraint_check = false;
+  if (finder != dsl_cached_task_mappings.end())
+  {
+    bool found = false;
+    // Iterate through and see if we can find one with our variant and hash
+    for (std::list<CachedTaskMapping>::const_iterator it =
+          finder->second.begin(); it != finder->second.end(); it++)
+    {
+      if ((it->variant == output.chosen_variant) &&
+          (it->task_hash == task_hash))
+      {
+        // Have to copy it before we do the external call which
+        // might invalidate our iterator
+        output.chosen_instances = it->mapping;
+        output.output_targets = it->output_targets;
+        output.output_constraints = it->output_constraints;
+        found = true;
+        break;
+      }
+    }
+    if (found)
+    {
+      // See if we can acquire these instances still
+      if (runtime->acquire_and_filter_instances(ctx,
+                                                  output.chosen_instances))
+        return;
+      // We need to check the constraints here because we had a
+      // prior mapping and it failed, which may be the result
+      // of a change in the allocated fields of a field space
+      // needs_field_constraint_check = true;
+      // If some of them were deleted, go back and remove this entry
+      // Have to renew our iterators since they might have been
+      // invalidated during the 'acquire_and_filter_instances' call
+      dsl_default_remove_cached_task(ctx, output.chosen_variant,
+                    task_hash, cache_key, output.chosen_instances);
+    }
+  }
 
   for (uint32_t idx = 0; idx < task.regions.size(); ++idx)
   {
@@ -743,6 +875,19 @@ void NSMapper::map_task(const MapperContext      ctx,
     }
     output.chosen_instances[idx].push_back(valid_instance);
   }
+
+  {
+    // Now that we are done, let's cache the result so we can use it later
+    std::list<CachedTaskMapping> &map_list = dsl_cached_task_mappings[cache_key];
+    map_list.push_back(CachedTaskMapping());
+    CachedTaskMapping &cached_result = map_list.back();
+    cached_result.task_hash = task_hash;
+    cached_result.variant = output.chosen_variant;
+    cached_result.mapping = output.chosen_instances;
+    // cached_result.output_targets = output.output_targets;
+    // cached_result.output_constraints = output.output_constraints;
+  }
+
   map_task_post_function(ctx, task, task_name, target_proc_kind, output);
 }
 
