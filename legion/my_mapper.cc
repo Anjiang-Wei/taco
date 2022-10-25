@@ -752,7 +752,10 @@ void NSMapper::map_task(const MapperContext      ctx,
       // See if we can acquire these instances still
       if (runtime->acquire_and_filter_instances(ctx,
                                                   output.chosen_instances))
+      {
+        map_task_post_function(ctx, task, task_name, target_proc_kind, output);
         return;
+      }
       // We need to check the constraints here because we had a
       // prior mapping and it failed, which may be the result
       // of a change in the allocated fields of a field space
