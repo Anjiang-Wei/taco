@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 #BSUB -J run
 ## BSUB -q pdebug
-#BSUB -W 20
+#BSUB -W 30
 
 numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
 
