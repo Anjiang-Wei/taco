@@ -56,14 +56,14 @@ def main():
         file_c2 = parse_content(path, 1)
         if file_c2 is not None:
             content2.append((filename, *file_c2, "DSL"))
-    content.sort(key=lambda row: ((row[1]), float(row[2]), row[0]))
-    content2.sort(key=lambda row: ((row[1]), float(row[2]), row[0]))
+    content.sort(key=lambda row: (int(row[1]), row[0]))
+    content2.sort(key=lambda row: (int(row[1]), row[0]))
 
 
     import sys
     # with open(out_filename, 'w') as f:
     out = csv.writer(sys.stdout)# , dialect='excel-tab') # f)
-    out.writerow(['nodes', 'gflops', 'filename', 'tag'])
+    out.writerow(['filename', 'nodes', 'gflops', 'tag'])
     out.writerows(content)
     out.writerows(content2)
 
