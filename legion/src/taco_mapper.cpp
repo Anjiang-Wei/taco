@@ -4,7 +4,7 @@
 using namespace Legion;
 using namespace Legion::Mapping;
 
-#define TACO_USE_LOGGING_MAPPER
+// #define TACO_USE_LOGGING_MAPPER
 
 const char* TACOMapperName = "TACOMapper";
 
@@ -12,28 +12,39 @@ void register_taco_mapper(Machine machine, Runtime *runtime, const std::set<Proc
   // If we're supposed to backpressure task executions, then we need to only
   // have a single mapper per node. Otherwise, we can use a mapper per processor.
   bool backpressure = false;
+  bool use_logging_wrapper = false;
   auto args = Legion::Runtime::get_input_args();
   for (int i = 1; i < args.argc; i++) {
     if (strcmp(args.argv[i], "-tm:enable_backpressure") == 0) {
       backpressure = true;
-      break;
+    }
+    if (strcmp(args.argv[i], "-wrapper") == 0) {
+      use_logging_wrapper = true;
     }
   }
 
   if (backpressure) {
     auto proc = *local_procs.begin();
-#ifdef TACO_USE_LOGGING_MAPPER
-    runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName)), Processor::NO_PROC);
-#else
-    runtime->replace_default_mapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName), Processor::NO_PROC);
-#endif
-  } else {
+    if (use_logging_wrapper)
+    {
+      runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName)), Processor::NO_PROC);
+    }
+    else
+    {
+      runtime->replace_default_mapper(new TACOMapper(runtime->get_mapper_runtime(), machine, proc, TACOMapperName), Processor::NO_PROC);
+    }
+  }
+  else
+  {
     for (auto it : local_procs) {
-#ifdef TACO_USE_LOGGING_MAPPER
-      runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, it, TACOMapperName)), it);
-#else
-      runtime->replace_default_mapper(new TACOMapper(runtime->get_mapper_runtime(), machine, it, TACOMapperName), it);
-#endif
+      if (use_logging_wrapper)
+      {
+        runtime->replace_default_mapper(new Mapping::LoggingWrapper(new TACOMapper(runtime->get_mapper_runtime(), machine, it, TACOMapperName)), it);
+      }
+      else
+      {
+        runtime->replace_default_mapper(new TACOMapper(runtime->get_mapper_runtime(), machine, it, TACOMapperName), it);
+      }
     }
   }
 }
