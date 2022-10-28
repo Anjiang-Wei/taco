@@ -135,7 +135,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   tacoValidate<valType>(ctx, runtime, A, aPart, valType(n * n));
 }
 
-#include "../my_mapper.cc"
+#include "../dsl_mapper.cc"
 
 #define TACO_MAIN2(FillType) \
   int main(int argc, char **argv) { \

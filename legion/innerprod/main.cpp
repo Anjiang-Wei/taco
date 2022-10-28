@@ -76,7 +76,7 @@ void top_level_task(const Task* task, const std::vector<PhysicalRegion>& regions
   LEGION_PRINT_ONCE(runtime, ctx, stdout, "On %ld nodes achieved GB/s BW per node: %lf.\n", nodes, bw / double(nodes));
 }
 
-#include "../my_mapper.cc"
+#include "../dsl_mapper.cc"
 
 #define TACO_MAIN2(FillType) \
   int main(int argc, char **argv) { \
