@@ -34,7 +34,7 @@ def main():
         filename = os.path.basename(path)
         taco_perf, dsl_perf = parse_content(path)
         # 0:filename, 1:nodes, 2:taco_gflops, 3:dsl_gflops
-        res = [filename, -999, -999, -999] # -999 represents error state
+        res = [filename, "Error", "Error", "Error"] # -999 represents error state
         if taco_perf is not None:
             res[1] = int(taco_perf[0]) # node count
             res[2] = float(taco_perf[1]) # gflops
@@ -42,12 +42,13 @@ def main():
             if res[1] == int(dsl_perf[0]): # node count mismatch
                 res[3] = float(dsl_perf[1]) # gflops
             else:
-                print(f"Error in {filename}")
+                print(f"Node count mismatch in {filename}")
         content.append(res)
-    content.sort(key=lambda row: (row[1], row[0]))
+    content.sort(key=lambda row: row[0]) # sort by filename
 
     import sys
     # with open(out_filename, 'w') as f:
+    print("================================")
     out = csv.writer(sys.stdout)# , dialect='excel-tab') # f)
     out.writerow(['filename', 'nodes', 'taco_gflops', 'dsl_gflops'])
     out.writerows(content)
