@@ -1,0 +1,17 @@
+#!/bin/bash
+
+numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
+numgpus=4
+
+echo Num nodes: $numnodes
+echo Job id: $LSB_JOBID
+
+module load gcc/7.3.1
+module load cmake/3.14.5
+module load cuda/11.7.0
+# --onlytaco --onlydsl
+# --backtrace --wrapper --prof
+
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench johnson-gpu --wrapper --backtrace
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench johnson-gpu --prof
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench johnson-gpu
