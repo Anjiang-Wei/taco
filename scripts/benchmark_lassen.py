@@ -695,6 +695,7 @@ def main():
     parser.add_argument("--gpus", type=int, help="number of GPUs for GPU benchmarks", default=4)
     parser.add_argument("--backtrace", default=False, action="store_true")
     parser.add_argument("--wrapper", default=False, action="store_true")
+    parser.add_argument("--prof", default=False, action="store_true")
     parser.add_argument("--onlytaco", default=False, action="store_true")
     parser.add_argument("--onlydsl", default=False, action="store_true")
     args = parser.parse_args()
@@ -771,11 +772,13 @@ def main():
         assert(False)
     dsl_cmd = ["-dslmapper", "-mapping", "mappings"]
     for p in args.procs:
-        wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"taco_{p}_{args.gpus}%.log"]
-        wrapper_dsl_cmd =  ["-wrapper", "-level", "mapper=debug", "-level", "nsmapper=debug", "-logfile", f"dsl_{p}_{args.gpus}%.log"]
+        wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"tacowrapper_{p}_{args.gpus}_%.log"]
+        wrapper_dsl_cmd =  ["-wrapper", "-level", "mapper=debug", "-level", "nsmapper=debug", "-logfile", f"dslwrapper_{p}_{args.gpus}_%.log"]
+        prof_taco_cmd = ["-lg:prof", "1", "-lg:prof_logfile", f"tacoprof_{p}_{args.gpus}_%.gz"]
+        prof_dsl_cmd = ["-lg:prof", "1", "-lg:prof_logfile", f"dslprof_{p}_{args.gpus}_%.gz"]
         cmd = bench.getCommand(p)
-        taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else [])
-        dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) 
+        taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
+        dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.onlytaco:
             executeCmd(taco_variant, args.backtrace)
         elif args.onlydsl:
