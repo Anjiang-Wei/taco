@@ -19,7 +19,10 @@ def parse_content(path):
             if match is not None:
                 res.append(match.groups())
     print(f"{path} has {len(res)} matches")
-    if len(res) < 2:
+    if len(res) == 0:
+        print(f"{path} error, assuming both fail")
+        return None, None
+    elif len(res) == 1:
         print(f"{path} error, assuming DSL fails")
         return res[-1], None
     return res[-2], res[-1]
