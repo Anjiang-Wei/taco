@@ -6,9 +6,9 @@ Region * * GPU FBMEM,ZCMEM;
 # Layout taskname regionname memory AOS F_order;
 Layout * * * SOA C_order Exact; # Align==128 Compact
 
-# InstanceLimit task_1 OMP 10; # controlled by command line in TacoMapper
+InstanceLimit task_4 GPU 1; # controlled by command line in TacoMapper
 
-CollectMemory * *;
+CollectMemory task_4 *;
 
 def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
     return x[dim1] * z.size[dim2] / y.size[dim1];
