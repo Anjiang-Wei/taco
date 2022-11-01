@@ -9,6 +9,6 @@ echo Job id: $LSB_JOBID
 # --onlytaco --onlydsl
 # --backtrace --wrapper --prof
 
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --onlytaco --wrapper --backtrace
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --wrapper --backtrace
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --prof
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu
