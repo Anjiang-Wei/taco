@@ -34,7 +34,7 @@ def main():
         filename = os.path.basename(path)
         taco_perf, dsl_perf = parse_content(path)
         # 0:filename, 1:nodes, 2:taco_gflops, 3:dsl_gflops
-        res = [filename, "Error", "Error", "Error"]
+        res = [filename, -999, -999, -999] # -999 represents error state
         if taco_perf is not None:
             res[1] = int(taco_perf[0]) # node count
             res[2] = float(taco_perf[1]) # gflops
