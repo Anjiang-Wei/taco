@@ -12,7 +12,7 @@ Layout * * * SOA C_order; # Align==128 Compact
 InstanceLimit task_5 GPU 1; # controlled by command line in TacoMapper
 InstanceLimit task_7 GPU 1; # controlled by command line in TacoMapper
 
-CollectMemory task_4 *; # controlled by command line in TacoMapper
+CollectMemory task_5 *; # controlled by command line in TacoMapper
 
 def block_primitive(IPoint x, ISpace y, MSpace z, int dim1, int dim2) {
     return x[dim1] * z.size[dim2] / y.size[dim1];
