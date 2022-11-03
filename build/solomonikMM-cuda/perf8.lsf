@@ -10,6 +10,6 @@ echo Job id: $LSB_JOBID
 
 module load cuda/11.7.0
 
-jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -lg:prof 1 -lg:prof_logfile taco_prof_%.gz
-jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -dslmapper -mapping mappings_bp -lg:prof 1 -lg:prof_logfile dsl_prof_%.gz
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -lg:prof 8 -lg:prof_logfile solomonik_taco_prof_%.gz
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/solomonikMM-cuda -n 56568 -rpoc 4 -c 2 -rpoc3 4 -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -dslmapper -mapping mappings_bp -lg:prof 8 -lg:prof_logfile solomonik_dsl_prof_%.gz
 
