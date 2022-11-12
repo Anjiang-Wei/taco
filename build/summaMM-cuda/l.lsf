@@ -12,6 +12,8 @@ module load cuda/11.7.0
 # --onlytaco --onlydsl
 # --backtrace --wrapper --prof
 
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --wrapper --backtrace
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --prof
+if (( $numnodes < 16 )); then
+    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --wrapper --backtrace
+    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --prof
+fi
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu
