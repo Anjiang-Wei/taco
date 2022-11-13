@@ -781,8 +781,8 @@ def main():
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if obcount_fix:
-            taco_variant = taco_variant + ["-gex:obcount", str(128 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
-            dsl_variant = dsl_variant + ["-gex:obcount", str(128 * p)] # let's try 128 * nodes for Lassen
+            taco_variant = taco_variant + ["-gex:obcount", str(256 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
+            dsl_variant = dsl_variant + ["-gex:obcount", str(256 * p)]
         if args.onlytaco:
             executeCmd(taco_variant, args.backtrace)
         elif args.onlydsl:
