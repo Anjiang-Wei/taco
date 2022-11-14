@@ -694,6 +694,7 @@ def main():
     parser.add_argument("--size", type=int, help="initial size for benchmarks")
     parser.add_argument("--gpus", type=int, help="number of GPUs for GPU benchmarks", default=4)
     parser.add_argument("--backtrace", default=False, action="store_true")
+    parser.add_argument("--inorder", default=False, action="store_true")
     parser.add_argument("--wrapper", default=False, action="store_true")
     parser.add_argument("--prof", default=False, action="store_true")
     parser.add_argument("--onlytaco", default=False, action="store_true")
@@ -780,6 +781,12 @@ def main():
         cmd = bench.getCommand(p)
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
+        if args.backtrace:
+            taco_variant = taco_variant + ["-ll:force_kthreads"]
+            dsl_variant = dsl_variant + ["-ll:force_kthreads"]
+        if args.inorder:
+            taco_variant = taco_variant + ["-lg:inorder"]
+            dsl_variant = dsl_variant + ["-lg:inorder"]
         if obcount_fix:
             taco_variant = taco_variant + ["-gex:obcount", str(256 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
             dsl_variant = dsl_variant + ["-gex:obcount", str(256 * p)]
