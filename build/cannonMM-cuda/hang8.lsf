@@ -1,0 +1,15 @@
+#!/bin/bash
+
+numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
+numgpus=4
+
+echo Num nodes: $numnodes
+echo Job id: $LSB_JOBID
+
+module load gcc/7.3.1
+module load cmake/3.14.5
+module load cuda/11.7.0
+
+# python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench cannon-gpu --onlytaco
+
+jsrun -b none -c ALL_CPUS -g ALL_GPUS -r 1 -n 8 ../bin/cannonMM-cuda -n 56568 -gx 4 -gy 2 -dm:exact_region -tm:untrack_valid_regions -ll:ocpu 1 -ll:othr 10 -ll:csize 150000 -ll:util 4 -dm:replicate 1 -ll:gpu 4 -ll:fsize 15000 -ll:bgwork 12 -ll:bgnumapin 1 -tm:enable_backpressure -tm:backpressure_max_in_flight 1 -ll:defalloc 0 -gex:obcount 2048
