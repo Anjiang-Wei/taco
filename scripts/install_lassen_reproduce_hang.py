@@ -121,7 +121,7 @@ with pushd(args.deps_install_dir):
         cmakeDefs = {
             "BUILD_SHARED_LIBS": True,
             "CMAKE_CXX_FLAGS": "--std=c++11",
-            "CMAKE_BUILD_TYPE": "Release",
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
             "Legion_USE_HDF5": True,
         }
