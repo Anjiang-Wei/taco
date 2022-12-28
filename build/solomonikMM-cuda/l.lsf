@@ -10,10 +10,10 @@ module load gcc/7.3.1
 module load cmake/3.14.5
 module load cuda/11.7.0
 # --onlytaco --onlydsl
-# --backtrace --wrapper --prof
+# --backtrace --wrapper --prof --inorder
 
 if (( $numnodes < 16 )); then
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --wrapper --backtrace
-    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --prof
+    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --prof --inorder
 fi
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu
