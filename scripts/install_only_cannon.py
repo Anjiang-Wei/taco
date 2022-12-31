@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # python3 scripts/install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
-# cd build; cmake -DTACO_CUDA_LIBS=/usr/local/cuda-11.1/lib64 ..
+# cd build; cmake -DTACO_CUDA_LIBS=/usr/local/cuda-11.1/lib64 -DCMAKE_BUILD_TYPE=Debug ..
 
 import argparse
 from contextlib import contextmanager
