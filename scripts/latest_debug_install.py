@@ -141,7 +141,7 @@ with pushd(args.deps_install_dir):
             cmakeDefs["Legion_NETWORKS"] = "gasnetex"
             cmakeDefs["Legion_EMBED_GASNet"] = True
             cmakeDefs["GASNet_CONDUIT"] = args.conduit
-            cmakeDefs["Legion_EMBED_GASNet_GITREF"] = "199b9887badddb00a84ff70744590bd28a0084fc"
+            cmakeDefs["Legion_EMBED_GASNet_GITREF"] = "f9d1a06553f4f8a230a339c1e321a62825de3fd7"
             # cmakeDefs["Legion_EMBED_GASNet_VERSION"] = "2022.3.0"
 
         cmake(os.path.join(distalRoot, "legion", "legion"), cmakeDefs, env={
