@@ -699,6 +699,7 @@ def main():
     parser.add_argument("--prof", default=False, action="store_true")
     parser.add_argument("--onlytaco", default=False, action="store_true")
     parser.add_argument("--onlydsl", default=False, action="store_true")
+    parser.add_argument("--tightsource", default=False, action="store_true")
     args = parser.parse_args()
 
     size = args.size
@@ -771,7 +772,9 @@ def main():
         bench = AdaptBench(size, args.gpus, False)
     else:
         assert(False)
-    dsl_cmd = ["-dslmapper", "-mapping", "mappings"]
+    dsl_cmd = ["-dslmapper", "-mapping", "mappings", "-tm:select_source_by_bandwidth"] # use defaultmapper's select_source
+    if args.tightsource: # HTR mapper's select_source
+        dsl_cmd = ["-dslmapper", "-mapping", "mappings"]
     obcount_fix = True
     for p in args.procs:
         wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"tacowrapper_{p}_{args.gpus}_%.log"]
@@ -788,8 +791,8 @@ def main():
             taco_variant = taco_variant + ["-lg:inorder"]
             dsl_variant = dsl_variant + ["-lg:inorder"]
         if obcount_fix:
-            taco_variant = taco_variant + ["-gex:obcount", str(256 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
-            dsl_variant = dsl_variant + ["-gex:obcount", str(256 * p)]
+            taco_variant = taco_variant + ["-gex:obcount", str(12 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
+            dsl_variant = dsl_variant + ["-gex:obcount", str(12 * p)]
         if args.onlytaco:
             executeCmd(taco_variant, args.backtrace)
         elif args.onlydsl:
