@@ -3,7 +3,15 @@
 # git submodule init; git submodule update;
 # cd legion/legion; git checkout control_replication && git pull origin control_replication
 # The current commit for taco experiment on Lassen: 821c183089c6d253094dc6838bc8b93f12fccf3b
+'''
+module load gcc/7.3.1
+module load cmake/3.14.5
+module load cuda/11.7.0
+'''
 # python3 scripts/latest_release_install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
+# If complaining about the GPU arch version incompatibility, the following might help on Lassen
+# cmake -DTACO_CUDA_LIBS=/usr/tce/packages/cuda/cuda-11.7.0/lib64 -DCMAKE_BUILD_TYPE=Release ..
+# But the final solution may be to rerun the whole script from scratch after deleting build/ and deps-install/
 
 import argparse
 from contextlib import contextmanager
