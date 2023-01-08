@@ -790,7 +790,7 @@ def main():
         if args.inorder:
             taco_variant = taco_variant + ["-lg:inorder"]
             dsl_variant = dsl_variant + ["-lg:inorder"]
-        if obcount_fix:
+        if obcount_fix and p >= 8:
             taco_variant = taco_variant + ["-gex:obcount", str(32 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
             dsl_variant = dsl_variant + ["-gex:obcount", str(32 * p)]
         if args.onlytaco:
