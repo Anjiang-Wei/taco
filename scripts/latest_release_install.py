@@ -10,7 +10,7 @@ module load cuda/11.7.0
 '''
 # python3 scripts/latest_release_install.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
 # If complaining about the GPU arch version incompatibility, the following might help on Lassen
-# cmake -DTACO_CUDA_LIBS=/usr/tce/packages/cuda/cuda-11.7.0/lib64 -DCMAKE_BUILD_TYPE=Release ..
+# LLNL_COMPUTE_NODES=1 cmake -DTACO_CUDA_LIBS=/usr/tce/packages/cuda/cuda-11.7.0/lib64 -DCMAKE_BUILD_TYPE=Release ..
 # But the final solution may be to rerun the whole script from scratch after deleting build/ and deps-install/
 
 import argparse
