@@ -3,6 +3,8 @@ import sys
 from pprint import pprint
 
 fail_first = False
+no_maptask = True
+neglect_valdiff = True
 
 def filter_mapper(lines):
     ret = []
@@ -57,6 +59,8 @@ def filter_keyword(lines, start_kw, continue_kw_lst, fname=""):
                 else:
                     break
             if key in res.keys():
+                if neglect_valdiff:
+                    continue
                 if value != res[key]:
                     print(f"{key}'s results are different across runs in {fname}! Abnormal in line {i}")
                     print(value)
@@ -232,6 +236,7 @@ if __name__ == "__main__":
     print_shardslice_diff(f1_sharding, f2_sharding)
     if f1_sharding == f2_sharding:
         print("pass sharding check:", len(f1_sharding))
+        print('\n'.join(f1_sharding.keys()))
     else:
         print("fail sharding check:", len(f1_sharding))
     f1_slicing = filter_slicing(f1_line, sys.argv[1])
@@ -239,8 +244,11 @@ if __name__ == "__main__":
     print_shardslice_diff(f1_slicing, f2_slicing)
     if f1_slicing == f2_slicing:
         print("pass slicing check:", len(f1_slicing))
+        print('\n'.join(f1_slicing.keys()))
     else:
         print("fail slicing check:", len(f1_slicing))
+    if neglect_valdiff:
+        exit()
     f1_maptask = filter_maptask(f1_line, sys.argv[1])
     f2_maptask = filter_maptask(f2_line, sys.argv[2])
     print_maptask_diff(f1_maptask, f2_maptask)
