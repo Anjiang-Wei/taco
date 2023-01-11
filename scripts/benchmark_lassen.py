@@ -785,8 +785,8 @@ def main():
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.backtrace:
-            taco_variant = taco_variant + ["-ll:force_kthreads"]
-            dsl_variant = dsl_variant + ["-ll:force_kthreads"]
+            taco_variant = taco_variant + ["-ll:force_kthreads -lg:safe_mapper"]
+            dsl_variant = dsl_variant + ["-ll:force_kthreads -lg:safe_mapper"]
         if args.inorder:
             taco_variant = taco_variant + ["-lg:inorder"]
             dsl_variant = dsl_variant + ["-lg:inorder"]
