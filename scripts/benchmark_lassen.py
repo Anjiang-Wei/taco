@@ -700,6 +700,7 @@ def main():
     parser.add_argument("--onlytaco", default=False, action="store_true")
     parser.add_argument("--onlydsl", default=False, action="store_true")
     parser.add_argument("--tightsource", default=False, action="store_true")
+    parser.add_argument("--oneutil", default=False, action="store_true")
     args = parser.parse_args()
 
     size = args.size
@@ -782,6 +783,11 @@ def main():
         prof_taco_cmd = ["-lg:prof", f"{p}", "-lg:prof_logfile", f"tacoprof_{args.bench}_{p}_{args.gpus}_%.gz"]
         prof_dsl_cmd = ["-lg:prof", f"{p}", "-lg:prof_logfile", f"dslprof_{args.bench}_{p}_{args.gpus}_%.gz"]
         cmd = bench.getCommand(p)
+        if args.oneutil or args.wrapper: # if turned on wrapper, then also use 1 util to avoid writer conflict
+            # replace ['-ll:util', '4'] with ['-ll:util', '1']
+            for i in range(len(cmd)):
+                if cmd[i] == '-ll:util':
+                    cmd[i+1] = '1'
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.backtrace:
