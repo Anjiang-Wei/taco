@@ -12,7 +12,7 @@ module load cuda/11.7.0
 # --onlytaco --onlydsl
 # --backtrace --wrapper --prof --inorder
 
-if (( $numnodes < 16 )); then
+if (( $numnodes < 32 )); then
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench pumma-gpu --wrapper --backtrace
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench pumma-gpu --prof --inorder
 fi
