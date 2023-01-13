@@ -776,7 +776,6 @@ def main():
     dsl_cmd = ["-dslmapper", "-mapping", "mappings", "-tm:select_source_by_bandwidth"] # use defaultmapper's select_source
     if args.tightsource: # HTR mapper's select_source
         dsl_cmd = ["-dslmapper", "-mapping", "mappings"]
-    obcount_fix = True
     for p in args.procs:
         wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"tacowrapper_{p}_{args.gpus}_%.log"]
         wrapper_dsl_cmd =  ["-wrapper", "-level", "mapper=debug", "-level", "nsmapper=debug", "-logfile", f"dslwrapper_{p}_{args.gpus}_%.log"]
@@ -788,6 +787,9 @@ def main():
             for i in range(len(cmd)):
                 if cmd[i] == '-ll:util':
                     cmd[i+1] = '1'
+        obcount_fix = False
+        if "-tm:enable_backpressure" in cmd:
+            obcount_fix = True
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.backtrace:
@@ -796,7 +798,7 @@ def main():
         if args.inorder:
             taco_variant = taco_variant + ["-lg:inorder"]
             dsl_variant = dsl_variant + ["-lg:inorder"]
-        if obcount_fix and p >= 8:
+        if obcount_fix:
             taco_variant = taco_variant + ["-gex:obcount", str(32 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
             dsl_variant = dsl_variant + ["-gex:obcount", str(32 * p)]
         if args.onlytaco:
