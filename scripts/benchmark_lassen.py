@@ -33,7 +33,7 @@ def lgGPUArgs(gpus):
       '-ll:bgnumapin', '1',
     ]
 
-def lgGPUMultShardsArgs(gpus):
+def lgGPUMultShardsArgs_ori(gpus):
     return [
       '-ll:cpu', '4',
       '-ll:csize', '150000',
@@ -46,6 +46,28 @@ def lgGPUMultShardsArgs(gpus):
       '-tm:multiple_shards_per_node',
     ]
 
+def lgGPUMultShardsArgs(gpus):
+    return [
+      '-ll:cpu', '1',
+      '-ll:csize', '150000',
+      '-ll:util', '1',
+      '-dm:replicate', '1',
+      '-ll:gpu', '1',
+      '-ll:fsize', '15000',
+      '-ll:bgwork', '3',
+      '-ll:bgnumapin', '1',
+    #   '-tm:multiple_shards_per_node',
+    ]
+
+def lassenHeader_multirank(procs):
+    return [
+        'jsrun',
+        '-b', 'rs',
+        '-c', '10', # assuming 40 CPU cores, https://hpc.llnl.gov/hardware/compute-platforms/lassen
+        '-g', '1',
+        '-r', '4',
+        '-n', str(4 * procs),
+    ]
 
 def lassenHeader(procs):
     return [
@@ -282,7 +304,7 @@ class JohnsonGPUBench(DMMBench):
         psize = self.problemSize(procs)
         assert(self.gpus * procs in self.dims)
         gdim = self.dims[self.gpus * procs]
-        return lassenHeader(procs) + \
+        return lassenHeader_multirank(procs) + \
                ['../bin/johnsonMM-cuda', '-n', str(psize), '-gdim', str(gdim), '-tm:untrack_valid_regions'] + \
                lgGPUMultShardsArgs(self.gpus)
 
@@ -345,7 +367,7 @@ class LgCOSMAGPUBench(LgCOSMABench):
         # Treat each GPU as a processor.
         assert(self.gpus * procs in self.decomp)
         decomp = self.decomp[self.gpus * procs]
-        return lassenHeader(procs) + \
+        return lassenHeader_multirank(procs) + \
                ['../bin/cosma-cuda', '-n', psize, '-gx', str(decomp[0]), '-gy', str(decomp[1]), '-gz', str(decomp[2]), '-tm:untrack_valid_regions'] + \
                lgGPUMultShardsArgs(self.gpus)
 
