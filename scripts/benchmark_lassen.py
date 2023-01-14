@@ -49,7 +49,7 @@ def lgGPUMultShardsArgs_ori(gpus):
 def lgGPUMultShardsArgs(gpus):
     return [
       '-ll:cpu', '1',
-      '-ll:csize', '150000',
+      '-ll:csize', '37500',
       '-ll:util', '1',
       '-dm:replicate', '1',
       '-ll:gpu', '1',
