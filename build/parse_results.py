@@ -28,19 +28,24 @@ def parse_content(path):
     return res[-2], res[-1]
 
 def main():
+    import sys
+    rank_per_node = 1
+    if len(sys.argv) == 2:
+        rank_per_node = int(sys.argv[1])
+        assert rank_per_node == 4, "Lassen should run 4 ranks per node for Johnson and Cosma"
     paths = glob.glob('*.out')
     content = []
     for path in paths:
         filename = os.path.basename(path)
         taco_perf, dsl_perf = parse_content(path)
         # 0:filename, 1:nodes, 2:taco_gflops, 3:dsl_gflops
-        res = [filename, "Error", "Error", "Error"] # -999 represents error state
+        res = [filename, "Error", "Error", "Error"] # "Error" represents error state
         if taco_perf is not None:
-            res[1] = int(taco_perf[0]) # node count
-            res[2] = float(taco_perf[1]) # gflops
+            res[1] = int(taco_perf[0]) // rank_per_node # node count
+            res[2] = float(taco_perf[1]) * rank_per_node # gflops
         if dsl_perf is not None:
-            if res[1] == int(dsl_perf[0]): # node count mismatch
-                res[3] = float(dsl_perf[1]) # gflops
+            if res[1] == int(dsl_perf[0]) // rank_per_node: # node count should match
+                res[3] = float(dsl_perf[1]) * rank_per_node # gflops
             else:
                 print(f"Node count mismatch in {filename}")
         content.append(res)
