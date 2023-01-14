@@ -648,7 +648,7 @@ class AdaptBench:
 def executeCmd(cmd, backtrace):
     backtraceStr = "LEGION_BACKTRACE=1 "
     cmdStr = (backtraceStr if backtrace else "") + " ".join(cmd)
-    print("Executing command: {}".format(cmdStr))
+    print("Executing command: {}".format(cmdStr), flush=True)
     try:
         if backtrace:
             my_env = os.environ.copy()
@@ -656,10 +656,10 @@ def executeCmd(cmd, backtrace):
             result = subprocess.run(cmd, capture_output=True, env=my_env)
         else:
             result = subprocess.run(cmd, capture_output=True)
-        print(result.stdout.decode())
-        print(result.stderr.decode())
+        print(result.stdout.decode(), flush=True)
+        print(result.stderr.decode(), flush=True)
     except Exception as e:
-        print("Failed with exception: {}".format(str(e)))
+        print("Failed with exception: {}".format(str(e)), flush=True)
 
 def main():
     # Default problem sizes.
