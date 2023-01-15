@@ -1,0 +1,600 @@
+GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-120.el7
+Copyright (C) 2013 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "ppc64le-redhat-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Attaching to process 176277
+Reading symbols from /g/g92/wei8/release_exp/taco/build/bin/cannonMM-cuda...(no debugging symbols found)...done.
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/libpami_cudahook.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/libpami_cudahook.so
+Reading symbols from /lib64/libpthread.so.0...Reading symbols from /usr/lib/debug/usr/lib64/libpthread-2.17.so.debug...done.
+done.
+[New LWP 178417]
+[New LWP 178240]
+[New LWP 177431]
+[New LWP 176604]
+[New LWP 176602]
+[New LWP 176601]
+[New LWP 176600]
+[New LWP 176599]
+[New LWP 176598]
+[New LWP 176597]
+[New LWP 176596]
+[New LWP 176595]
+[New LWP 176594]
+[New LWP 176593]
+[New LWP 176592]
+[New LWP 176591]
+[New LWP 176590]
+[New LWP 176589]
+[New LWP 176588]
+[New LWP 176587]
+[New LWP 176586]
+[New LWP 176585]
+[New LWP 176584]
+[New LWP 176583]
+[New LWP 176582]
+[New LWP 176581]
+[New LWP 176580]
+[New LWP 176579]
+[New LWP 176578]
+[New LWP 176577]
+[New LWP 176576]
+[New LWP 176431]
+[New LWP 176429]
+[New LWP 176421]
+[New LWP 176420]
+[New LWP 176418]
+[New LWP 176291]
+[New LWP 176283]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+Loaded symbols for /lib64/libpthread.so.0
+Reading symbols from /lib64/libdl.so.2...Reading symbols from /usr/lib/debug/usr/lib64/libdl-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/libdl.so.2
+Reading symbols from /lib64/librt.so.1...Reading symbols from /usr/lib/debug/usr/lib64/librt-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/librt.so.1
+Reading symbols from /lib64/libcublas.so.10...(no debugging symbols found)...done.
+Loaded symbols for /lib64/libcublas.so.10
+Reading symbols from /g/g92/wei8/release_exp/taco/legion/../deps-install/make-install/lib/libhdf5.so.101...(no debugging symbols found)...done.
+Loaded symbols for /g/g92/wei8/release_exp/taco/legion/../deps-install/make-install/lib/libhdf5.so.101
+Reading symbols from /lib64/libz.so.1...Reading symbols from /lib64/libz.so.1...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libz.so.1
+Reading symbols from /lib64/libm.so.6...Reading symbols from /usr/lib/debug/usr/lib64/libm-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/libm.so.6
+Reading symbols from /g/g92/wei8/release_exp/taco/deps-install/cmake-install/lib64/liblegion.so.1...done.
+Loaded symbols for /g/g92/wei8/release_exp/taco/deps-install/cmake-install/lib64/liblegion.so.1
+Reading symbols from /g/g92/wei8/release_exp/taco/deps-install/cmake-install/lib64/librealm.so.1...done.
+Loaded symbols for /g/g92/wei8/release_exp/taco/deps-install/cmake-install/lib64/librealm.so.1
+Reading symbols from /lib64/libibverbs.so.1...Reading symbols from /lib64/libibverbs.so.1...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libibverbs.so.1
+Reading symbols from /lib64/libhwloc.so.5...Reading symbols from /lib64/libhwloc.so.5...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libhwloc.so.5
+Reading symbols from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1...Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmpiprofilesupport.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmpiprofilesupport.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmpi_ibm.so.3...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmpi_ibm.so.3
+Reading symbols from /lib64/libstdc++.so.6...(no debugging symbols found)...done.
+Loaded symbols for /lib64/libstdc++.so.6
+Reading symbols from /lib64/libgomp.so.1...(no debugging symbols found)...done.
+Loaded symbols for /lib64/libgomp.so.1
+Reading symbols from /lib64/libgcc_s.so.1...(no debugging symbols found)...done.
+Loaded symbols for /lib64/libgcc_s.so.1
+Reading symbols from /lib64/libc.so.6...Reading symbols from /usr/lib/debug/usr/lib64/libc-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/libc.so.6
+Reading symbols from /lib64/ld64.so.2...Reading symbols from /usr/lib/debug/usr/lib64/ld-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/ld64.so.2
+Reading symbols from /lib64/libcublasLt.so.10...(no debugging symbols found)...done.
+Loaded symbols for /lib64/libcublasLt.so.10
+Reading symbols from /lib64/libnl-route-3.so.200...Reading symbols from /lib64/libnl-route-3.so.200...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libnl-route-3.so.200
+Reading symbols from /lib64/libnl-3.so.200...Reading symbols from /lib64/libnl-3.so.200...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libnl-3.so.200
+Reading symbols from /lib64/libnuma.so.1...Reading symbols from /lib64/libnuma.so.1...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libnuma.so.1
+Reading symbols from /lib64/libltdl.so.7...Reading symbols from /lib64/libltdl.so.7...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libltdl.so.7
+Reading symbols from /lib64/libutil.so.1...Reading symbols from /usr/lib/debug/usr/lib64/libutil-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/libutil.so.1
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libhwloc_ompi.so.15...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libhwloc_ompi.so.15
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libevent-2.1.so.6...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libevent-2.1.so.6
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libevent_pthreads-2.1.so.6...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libevent_pthreads-2.1.so.6
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-rte.so.3...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-rte.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-pal.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-pal.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_shmem_mmap.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_shmem_mmap.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_reachable_weighted.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_reachable_weighted.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_schizo_jsm.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_schizo_jsm.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_ess_pmi.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_ess_pmi.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_pmix_ext3x.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_pmix_ext3x.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libpmix.so.2...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libpmix.so.2
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v12.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v12.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v20.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v20.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v21.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v21.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v3.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_bfrops_v3.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_ptl_tcp.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_ptl_tcp.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_psec_native.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_psec_native.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_gds_ds21.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_gds_ds21.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_dstore.so.1...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_dstore.so.1
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_gds_hash.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_gds_hash.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_pshmem_mmap.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_pshmem_mmap.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_preg_native.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_preg_native.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_default.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_default.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_stdfd.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_stdfd.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_syslog.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pmix/mca_plog_syslog.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_state_app.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_state_app.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_errmgr_default_app.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_errmgr_default_app.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_oob_tcp.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_oob_tcp.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rml_oob.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rml_oob.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_grpcomm_direct.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_grpcomm_direct.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_allocator_basic.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_allocator_basic.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_allocator_bucket.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_allocator_bucket.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_gpusm.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_gpusm.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_cuda.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_cuda.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_grdma.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_grdma.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_rgpusm.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_rcache_rgpusm.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_mpool_hugepage.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_mpool_hugepage.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_btl_self.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_btl_self.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_pml_pami.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_pml_pami.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pami_port/libpami.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pami_port/libpami.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_pami.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_pami.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_pamiopal.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_pamiopal.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_patcher_overwrite.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_patcher_overwrite.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_basic.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_basic.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_cuda.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_cuda.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_ibm.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_ibm.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pami_port/libcollectives.so.3...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/pami_port/libcollectives.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_inter.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_inter.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_libnbc.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_libnbc.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_self.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_self.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_sm.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_sm.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_sm.so.3...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libmca_common_sm.so.3
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_sync.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_sync.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_tuned.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_coll_tuned.so
+Reading symbols from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_osc_pami.so...(no debugging symbols found)...done.
+Loaded symbols for /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/container/../lib/spectrum_mpi/mca_osc_pami.so
+Reading symbols from /lib64/libmlx5-rdmav2.so...Reading symbols from /lib64/libmlx5-rdmav2.so...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libmlx5-rdmav2.so
+Reading symbols from /lib64/libmlx4-rdmav2.so...Reading symbols from /lib64/libmlx4-rdmav2.so...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/libmlx4-rdmav2.so
+Reading symbols from /lib64/librxe-rdmav2.so...Reading symbols from /lib64/librxe-rdmav2.so...(no debugging symbols found)...done.
+(no debugging symbols found)...done.
+Loaded symbols for /lib64/librxe-rdmav2.so
+Reading symbols from /lib64/libnss_files.so.2...Reading symbols from /usr/lib/debug/usr/lib64/libnss_files-2.17.so.debug...done.
+done.
+Loaded symbols for /lib64/libnss_files.so.2
+syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+29		PSEUDO_RET
+
+Thread 39 (Thread 0x20000ad4eaf0 (LWP 176283)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62a068 in poll_dispatch (base=0x102529a0, tv=0x20000ad4e070) at poll.c:171
+#2  0x000020000a61c180 in event_base_loop (base=0x102529a0, flags=<optimized out>) at event.c:1947
+#3  0x000020000a7f0fec in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-pal.so.3
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000ad4eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 38 (Thread 0x20000b5feaf0 (LWP 176291)):
+#0  0x00002000086e8aa8 in epoll_wait () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62b18c in epoll_dispatch (base=0x102a70f0, tv=<optimized out>) at epoll.c:462
+#2  0x000020000a61c180 in event_base_loop (base=0x102a70f0, flags=<optimized out>) at event.c:1947
+#3  0x000020000ae61cac in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libpmix.so.2
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000b5feaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 37 (Thread 0x20002aa6eaf0 (LWP 176418)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002aa6eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 36 (Thread 0x20002ae7eaf0 (LWP 176420)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002ae7eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 35 (Thread 0x20002b40eaf0 (LWP 176421)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002b40eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 34 (Thread 0x20002b99eaf0 (LWP 176429)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002b99eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 33 (Thread 0x20002bf2eaf0 (LWP 176431)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002bf2eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 32 (Thread 0x20002c2cf8b0 (LWP 176576)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1463ee50) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002c2cf8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 31 (Thread 0x20002c4ff8b0 (LWP 176577)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1460bf80) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002c4ff8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 30 (Thread 0x20002c72f8b0 (LWP 176578)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14608020) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002c72f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 29 (Thread 0x20002c85f8b0 (LWP 176579)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c860350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143d1f50) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14415c30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c85f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 28 (Thread 0x20002c98f8b0 (LWP 176580)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c990350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x144199e0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14419ab0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c98f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 27 (Thread 0x20002cabf8b0 (LWP 176581)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cac0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14415b00) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14415b70) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cabf8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 26 (Thread 0x20002cbef8b0 (LWP 176582)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cbf0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x1441d880) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1441d950) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cbef8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 25 (Thread 0x20002cd1f8b0 (LWP 176583)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cd20350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14617d40) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143da090) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cd1f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 24 (Thread 0x20002ce4f8b0 (LWP 176584)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002ce50350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14438ef0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14438fc0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002ce4f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 23 (Thread 0x20002cf7f8b0 (LWP 176585)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cf80350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x1443cde0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1443ceb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cf7f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 22 (Thread 0x20002d0af8b0 (LWP 176586)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002d0b0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14470140) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14458720) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002d0af8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 21 (Thread 0x20002d1df8b0 (LWP 176587)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002d1e0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x1445c520) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1445c5f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002d1df8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 20 (Thread 0x20002d30f8b0 (LWP 176588)):
+#0  __kernel_clock_gettime () at arch/powerpc/kernel/vdso64/gettimeofday.S:69
+#1  0x000020000870772c in __GI___clock_gettime (clock_id=<optimized out>, tp=<optimized out>) at ../sysdeps/unix/clock_gettime.c:115
+#2  0x00002000061028c0 in Realm::Clock::native_time_slower () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/timers.cc:61
+#3  0x0000200005f3eb1c in native_time () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/timers.inl:84
+#4  current_time_in_nanoseconds (absolute=true) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/timers.inl:66
+#5  Realm::BackgroundWorkManager::Worker::do_work (this=0x20002d30eb58, max_time_in_ns=-1, interrupt_flag=0x0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:627
+#6  0x0000200005f3f3f0 in Realm::BackgroundWorkThread::main_loop (this=0x144701b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:125
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14470280) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002d30f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 19 (Thread 0x20002d43f8b0 (LWP 176589)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002d440350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14474020) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x144740f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002d43f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 18 (Thread 0x20002d56f8b0 (LWP 176590)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002d570350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x144b8d30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x144217f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002d56f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 17 (Thread 0x20002d79f8b0 (LWP 176591)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145d0e90) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d79f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 16 (Thread 0x20002d9cf8b0 (LWP 176592)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145f4600) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d9cf8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 15 (Thread 0x20002dbff8b0 (LWP 176593)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145f06d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002dbff8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 14 (Thread 0x20002de2f8b0 (LWP 176594)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145ec770) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002de2f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 13 (Thread 0x20002e05f8b0 (LWP 176595)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145e8810) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e05f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 12 (Thread 0x20002e28f8b0 (LWP 176596)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145d4df0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e28f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 11 (Thread 0x20002e2df8b0 (LWP 176597)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e2e0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143f19a0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143f1810, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143f1810) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 10 (Thread 0x20002e32f8b0 (LWP 176598)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e330350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143cdf60, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143cddd0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143cddd0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 9 (Thread 0x20002e37f8b0 (LWP 176599)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e380350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143ca080, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143c9ef0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143c9ef0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 8 (Thread 0x20002e3cf8b0 (LWP 176600)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e3d0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143ae820, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143ae690, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143ae690) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 7 (Thread 0x20002e41f8b0 (LWP 176601)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e420350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1463ae20, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1463ac90, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1463ac90) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 6 (Thread 0x20002e46f8b0 (LWP 176602)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e470350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x14656680, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x146564f0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x146564f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000605496c in Realm::UserThread::uthread_entry () at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:1355
+#7  0x000020000861388c in makecontext () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/makecontext.S:137
+#8  0x0000000000000000 in ?? ()
+
+Thread 5 (Thread 0x20002e8cf8b0 (LWP 176604)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e8d0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1465a5e0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1465a450, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1465a450) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1465a450) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14bef890) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002e8cf8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 4 (Thread 0x20002ef5f8b0 (LWP 177431)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002ef60350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x144f3c00, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x144f3a70, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x144f3a70) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x144f3a70) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203508002b50) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002ef5f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 3 (Thread 0x20002eaff8b0 (LWP 178240)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002eb00350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143c20c0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143c1f30, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143c1f30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x143c1f30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x2034f8ce4ca0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002eaff8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 2 (Thread 0x20002e69f8b0 (LWP 178417)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e6a0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x145bd1e0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x145bd050, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x145bd050) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x145bd050) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x20350c00cee0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002e69f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 1 (Thread 0x20000a8a0000 (LWP 176277)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20000a8a0aa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x00002000060ff338 in wait (this=0x20000a8a0aa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::UnfairCondVar::wait (this=0x101e8290) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:1017
+#4  0x0000200006015528 in Realm::RuntimeImpl::wait_for_shutdown (this=0x101e8160) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:2277
+#5  0x00002000060190ac in Realm::Runtime::wait_for_shutdown (this=0x7fffffffa258) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:640
+#6  0x00002000053eeeb0 in Legion::Internal::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, supply_default_mapper=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/runtime.cc:29464
+#7  0x0000200005079408 in Legion::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, default_mapper=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/legion.cc:7618
+#8  0x000000001002ff70 in main ()
+Detaching from program: /g/g92/wei8/release_exp/taco/build/bin/cannonMM-cuda, process 176277
+[Inferior 1 (process 176277) detached]
