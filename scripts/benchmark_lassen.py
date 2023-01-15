@@ -810,9 +810,7 @@ def main():
             for i in range(len(cmd)):
                 if cmd[i] == '-ll:util':
                     cmd[i+1] = '1'
-        obcount_fix = True
-        # if "-tm:enable_backpressure" in cmd:
-        #     obcount_fix = True
+        obcount_fix = p >= 8
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.backtrace:
@@ -829,8 +827,12 @@ def main():
             taco_variant = taco_variant + ["-lg:inorder"]
             dsl_variant = dsl_variant + ["-lg:inorder"]
         if obcount_fix:
-            taco_variant = taco_variant + ["-gex:obcount", str(48 * p)] # (4 + 2 * gpus/node) * nodes = 12 * nodes [fails for 8-node]
-            dsl_variant = dsl_variant + ["-gex:obcount", str(48 * p)]
+            # Sean:  (4 + 2 * gpus/node) * nodes = 12 * nodes [but fails for 8-node]
+            obcount_number = 48 * p
+            if "-tm:enable_backpressure" in cmd: # if using backpressure, at least 2048 is needed
+                obcount_number = max(obcount_number, 2048)
+            taco_variant = taco_variant + ["-gex:obcount", str(obcount_number)]
+            dsl_variant = dsl_variant + ["-gex:obcount", str(obcount_number)]
         if args.onlytaco:
             executeCmd(taco_variant, args.backtrace)
         elif args.onlydsl:
