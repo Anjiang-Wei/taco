@@ -42,7 +42,7 @@ def init_all_gpus(Task task) {
 # task_1 (gx, gy, 1)
 # task_2 (gx, 1, gz)
 # task_3 (1, gy, gz)
-IndexTaskMap task_1,task_2,task_3 block_zero;
+IndexTaskMap task_1,task_2,task_3 placement_shard;
 # task_4 (gx, gy, gz), UNTRACK_VALID_REGIONS
 IndexTaskMap task_4 autoblock;
 # init_cublas 1-dim launch for ALL GPUs
