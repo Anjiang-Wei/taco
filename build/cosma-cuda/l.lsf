@@ -14,6 +14,6 @@ module load cuda/11.7.0
 
 if (( $numnodes < 32 )); then
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench lgcosma-gpu --wrapper --inorder --backtrace
-    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench lgcosma-gpu --prof
+    # python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench lgcosma-gpu --prof
 fi
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench lgcosma-gpu
