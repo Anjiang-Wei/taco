@@ -25,11 +25,12 @@ def autoblock(Task task) {
 }
 
 def placement_shard(Task task) {
+    rank_size = m_2d.size[0];
     m_5d = m_2d.auto_split(0, (1, 1, 1)); # evenly split
-    gx = m_5d.size[0];
+    gx = m_5d.size[2];
     gy = m_5d.size[1];
-    gz = m_5d.size[2];
-    print("gx={}, gy={}, gz={}", gx, gy, gz);
+    gz = m_5d.size[0];
+    # print("gx={}, gy={}, gz={}", gx, gy, gz);
     linearize = task.ipoint[0] + task.ipoint[1] * gx + task.ipoint[2] * gx * gy;
     return m_2d[linearize % rank_size, 0];
 }
