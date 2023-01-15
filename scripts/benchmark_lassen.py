@@ -810,9 +810,9 @@ def main():
             for i in range(len(cmd)):
                 if cmd[i] == '-ll:util':
                     cmd[i+1] = '1'
-        obcount_fix = False
-        if "-tm:enable_backpressure" in cmd:
-            obcount_fix = True
+        obcount_fix = True
+        # if "-tm:enable_backpressure" in cmd:
+        #     obcount_fix = True
         taco_variant = cmd + (wrapper_taco_cmd if args.wrapper else []) + (prof_taco_cmd if args.prof else [])
         dsl_variant = cmd + dsl_cmd + (wrapper_dsl_cmd if args.wrapper else []) + (prof_dsl_cmd if args.prof else [])
         if args.backtrace:
