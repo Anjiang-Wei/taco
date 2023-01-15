@@ -54,7 +54,7 @@ def lgGPUMultShardsArgs(gpus):
       '-dm:replicate', '1',
       '-ll:gpu', '1',
       '-ll:fsize', '15000',
-      '-ll:bgwork', '3',
+      '-ll:bgwork', '2', # try to avoid unsatisfied reservation
       '-ll:bgnumapin', '1',
     #   '-tm:multiple_shards_per_node',
     ]
@@ -818,6 +818,10 @@ def main():
         if args.backtrace:
             taco_variant = taco_variant + ["-ll:force_kthreads"]
             dsl_variant = dsl_variant + ["-ll:force_kthreads"]
+            if args.bench == "johnson-gpu" or args.bench == "lgcosma-gpu":
+                # Multi-rank per node
+                taco_variant = taco_variant + ["-ll:show_rsrv"]
+                dsl_variant = dsl_variant + ["-ll:show_rsrv"]
         if args.safe:
             taco_variant = taco_variant + ["-lg:safe_mapper"]
             dsl_variant = dsl_variant + ["-lg:safe_mapper"]
