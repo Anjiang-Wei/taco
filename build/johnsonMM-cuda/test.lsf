@@ -1,0 +1,13 @@
+#!/bin/bash
+
+numnodes=$(( ($LSB_DJOB_NUMPROC - 1) / 40))
+numgpus=4
+
+echo Num nodes: $numnodes
+echo Job id: $LSB_JOBID
+
+module load gcc/7.3.1
+module load cmake/3.14.5
+module load cuda/11.7.0
+
+jsrun -b rs -c 10 -g 1 -r 4 -n 4 ../bin/johnsonMM-cuda -n 20000 -gdim 2 -tm:untrack_valid_regions -ll:cpu 1 -ll:csize 37500 -ll:util 1 -dm:replicate 1 -ll:gpu 1 -ll:fsize 15000 -ll:bgwork 2 -ll:bgnumapin 1 -ll:show_rsrv
