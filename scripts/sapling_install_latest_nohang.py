@@ -12,6 +12,8 @@
 module load cuda/11.7
 '''
 # python3 scripts/sapling_install_latest_nohang.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
+# git checkout build
+# git checkout legion/cannonMM/
 # If complaining about the GPU arch version incompatibility, the following might help on Sapling
 # unset LLNL_COMPUTE_NODES
 # cmake -DTACO_CUDA_LIBS=/usr/local/cuda-11.7/lib64 -DCMAKE_BUILD_TYPE=Release ..

@@ -10,6 +10,8 @@ module load cmake/3.14.5
 module load cuda/11.7.0
 '''
 # python3 scripts/lassen_install_latest_nohang.py --openmp --sockets 2 --cuda --dim 3 --multi-node --threads 20 --no-tblis
+# git checkout build
+# git checkout legion/cannonMM/
 # If complaining about the GPU arch version incompatibility, the following might help on Lassen
 # LLNL_COMPUTE_NODES=1 cmake -DTACO_CUDA_LIBS=/usr/tce/packages/cuda/cuda-11.7.0/lib64 -DCMAKE_BUILD_TYPE=Release ..
 # But the final solution may be to rerun the whole script from scratch after deleting build/ and deps-install/
