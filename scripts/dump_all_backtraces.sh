@@ -2,6 +2,8 @@
 
 set -x
 
+# bash scripts/dump_all_backtraces.sh build/cannonMM-cuda/XXXXXXX.out hanglog
+
 root_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 job="$1"
