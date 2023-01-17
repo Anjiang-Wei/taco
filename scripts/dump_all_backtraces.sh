@@ -14,6 +14,7 @@ if command -v bjobs &> /dev/null
 then
     # hosts="$(bjobs -o exec_host $job | tail -n -1 | tr ':' '\n' | sort -u | tr '\n' ' ')"
     hosts="$(grep "All hosts" ${job} | tr ' ' '\n' | tail -n +4 | sort -u | tr '\n' ' ')"
+    echo $hosts
 else
     hosts="$(sacct --json -j $job | jq -r '.jobs[0]|.steps[1]|.nodes|.list|@sh' | tr -d \')"
 
@@ -25,6 +26,6 @@ for host in $hosts; do
     fi
     let i++
 done
-
+echo "Trying to dump for ${i} nodes"
 wait
 
