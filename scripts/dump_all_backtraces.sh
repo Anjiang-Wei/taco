@@ -2,7 +2,7 @@
 
 set -x
 
-# bash scripts/dump_all_backtraces.sh build/cannonMM-cuda/XXXXXXX.out hanglog
+# bash scripts/dump_all_backtraces.sh build/cannonMM-cuda/XXXXXXX.out /g/g92/wei8/release_exp/taco/hanglog
 
 root_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
