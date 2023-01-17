@@ -1,0 +1,29 @@
++ ssh lassen630 bash /g/g92/wei8/release_exp/taco/scripts/dump_node_backtraces.sh /g/g92/wei8/release_exp/taco/hanglog
++ for host in '$hosts'
++ [[ 6 == 0 ]]
++ let i++
++ ssh lassen635 bash /g/g92/wei8/release_exp/taco/scripts/dump_node_backtraces.sh /g/g92/wei8/release_exp/taco/hanglog
++ for host in '$hosts'
++ [[ 7 == 0 ]]
++ let i++
++ ssh lassen746 bash /g/g92/wei8/release_exp/taco/scripts/dump_node_backtraces.sh /g/g92/wei8/release_exp/taco/hanglog
++ echo 'Trying to dump for 8 nodes'
+Trying to dump for 8 nodes
++ wait
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Missing separate debuginfo for /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+Try: yum --enablerepo='*debug*' install /usr/lib/debug/.build-id/92/c091bbbb79d013123ed8fc76c19fdeb9a18632.debug
+Python Exception <class 'gdb.error'> There is no member or method named _M_value_field.: 
+Python Exception <class 'gdb.error'> There is no member or method named _M_value_field.: 
+Python Exception <class 'gdb.error'> There is no member or method named _M_value_field.:
