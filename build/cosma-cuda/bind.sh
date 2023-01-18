@@ -1,0 +1,1 @@
+../johnsonMM-cuda/bind.sh
