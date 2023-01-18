@@ -821,10 +821,10 @@ def main():
         if args.backtrace:
             taco_variant = taco_variant + ["-ll:force_kthreads"]
             dsl_variant = dsl_variant + ["-ll:force_kthreads"]
-            if args.bench == "johnson-gpu" or args.bench == "lgcosma-gpu":
-                # Multi-rank per node
-                taco_variant = taco_variant + ["-ll:show_rsrv"]
-                dsl_variant = dsl_variant + ["-ll:show_rsrv"]
+            # if args.bench == "johnson-gpu" or args.bench == "lgcosma-gpu":
+            #     # Multi-rank per node
+            #     taco_variant = taco_variant + ["-ll:show_rsrv"]
+            #     dsl_variant = dsl_variant + ["-ll:show_rsrv"]
         if args.safe:
             taco_variant = taco_variant + ["-lg:safe_mapper"]
             dsl_variant = dsl_variant + ["-lg:safe_mapper"]
