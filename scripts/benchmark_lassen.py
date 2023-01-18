@@ -59,14 +59,19 @@ def lgGPUMultShardsArgs(gpus):
     #   '-tm:multiple_shards_per_node',
     ]
 
+# jsrun -b none -c ALL_CPUS -g ALL_GPUS -a 4 -n 1 ./bind.sh --cpus 8-47/48-87/96-135/136-175 --gpus 0/1/2/3 --
 def lassenHeader_multirank(procs):
     return [
         'jsrun',
-        '-b', 'rs',
-        '-c', '10', # assuming 40 CPU cores, https://hpc.llnl.gov/hardware/compute-platforms/lassen
-        '-g', '1',
-        '-r', '4',
-        '-n', str(4 * procs),
+        '-b', 'none',
+        '-c', 'ALL_CPUS',
+        '-g', 'ALL_GPUS',
+        '-a', '4',
+        '-n', str(procs),
+        './bind.sh',
+        '--cpus', '8-47/48-87/96-135/136-175', # on compute node, run: numactl -s
+        '--gpus', '0/1/2/3',
+        '--',
     ]
 
 def lassenHeader(procs):
