@@ -26,7 +26,7 @@ fi
 
 for host in $hosts; do
     ssh $host bash "$root_dir/dump_node_backtraces.sh" "$binary" "$scratch_dir" &
-    if [[ $(( i % 200 )) == 0 ]]; then
+    if [[ $(( i % 10 )) == 0 ]]; then
         wait
     fi
     let i++
