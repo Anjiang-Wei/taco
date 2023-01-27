@@ -1,0 +1,444 @@
+[New LWP 60841]
+[New LWP 60836]
+[New LWP 60834]
+[New LWP 60833]
+[New LWP 59619]
+[New LWP 58803]
+[New LWP 58767]
+[New LWP 58326]
+[New LWP 58322]
+[New LWP 58321]
+[New LWP 58319]
+[New LWP 58318]
+[New LWP 58313]
+[New LWP 58312]
+[New LWP 58311]
+[New LWP 58310]
+[New LWP 58309]
+[New LWP 58308]
+[New LWP 58307]
+[New LWP 58306]
+[New LWP 58305]
+[New LWP 58304]
+[New LWP 58303]
+[New LWP 58302]
+[New LWP 58301]
+[New LWP 58300]
+[New LWP 58299]
+[New LWP 58298]
+[New LWP 58297]
+[New LWP 58296]
+[New LWP 58295]
+[New LWP 58294]
+[New LWP 58293]
+[New LWP 58148]
+[New LWP 58146]
+[New LWP 58145]
+[New LWP 58144]
+[New LWP 58142]
+[New LWP 58105]
+[New LWP 58104]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+29		PSEUDO_RET
+
+Thread 41 (Thread 0x20000ad4eaf0 (LWP 58104)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62a068 in poll_dispatch (base=0x10252990, tv=0x20000ad4e070) at poll.c:171
+#2  0x000020000a61c180 in event_base_loop (base=0x10252990, flags=<optimized out>) at event.c:1947
+#3  0x000020000a7f0fec in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-pal.so.3
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000ad4eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 40 (Thread 0x20000b5feaf0 (LWP 58105)):
+#0  0x00002000086e8aa8 in epoll_wait () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62b18c in epoll_dispatch (base=0x102a70e0, tv=<optimized out>) at epoll.c:462
+#2  0x000020000a61c180 in event_base_loop (base=0x102a70e0, flags=<optimized out>) at event.c:1947
+#3  0x000020000ae61cac in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libpmix.so.2
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000b5feaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 39 (Thread 0x20002aa6eaf0 (LWP 58142)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002aa6eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 38 (Thread 0x20002ae7eaf0 (LWP 58144)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002ae7eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 37 (Thread 0x20002b40eaf0 (LWP 58145)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002b40eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 36 (Thread 0x20002b99eaf0 (LWP 58146)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002b99eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 35 (Thread 0x20002bf2eaf0 (LWP 58148)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002bf2eaf0) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 34 (Thread 0x20002c2cf8b0 (LWP 58293)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145e7e10) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002c2cf8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 33 (Thread 0x20002c3ff8b0 (LWP 58294)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c400350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143ae010) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143f1cf0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c3ff8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 32 (Thread 0x20002c52f8b0 (LWP 58295)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c530350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143f5aa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143f5b70) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c52f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 31 (Thread 0x20002c65f8b0 (LWP 58296)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c660350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143f1bc0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143f1c30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c65f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 30 (Thread 0x20002c78f8b0 (LWP 58297)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c790350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143f9940) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143f9a10) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c78f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 29 (Thread 0x20002c8bf8b0 (LWP 58298)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c8c0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14414fb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14415080) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c8bf8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 28 (Thread 0x20002c9ef8b0 (LWP 58299)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002c9f0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x14418ea0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14418f70) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002c9ef8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 27 (Thread 0x20002cb2f8b0 (LWP 58300)):
+#0  0x00002000060ce790 in fetch_or (__m=std::memory_order_acq_rel, __i=1, this=0x101e9528) at /usr/tce/packages/gcc/gcc-7.3.1/rh/usr/include/c++/7/bits/atomic_base.h:544
+#1  fetch_or_acqrel (to_or=1, this=0x101e9528) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/atomics.inl:258
+#2  trylock (this=0x101e9528) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:183
+#3  Realm::GASNetEXPoller::do_work (this=0x101e94f0, work_until=...) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/gasnetex/gasnetex_internal.cc:2809
+#4  0x0000200005f3eafc in Realm::BackgroundWorkManager::Worker::do_work (this=0x20002cb2eb58, max_time_in_ns=-1, interrupt_flag=0x0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:621
+#5  0x0000200005f3f3f0 in Realm::BackgroundWorkThread::main_loop (this=0x1444c200) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:125
+#6  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x144347e0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#7  0x00002000000f8cd4 in start_thread (arg=0x20002cb2f8b0) at pthread_create.c:309
+#8  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 26 (Thread 0x20002cc5f8b0 (LWP 58301)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cc60350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x144385e0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x144386b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cc5f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 25 (Thread 0x20002cd8f8b0 (LWP 58302)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cd90350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x1444c270) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x1444c340) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cd8f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 24 (Thread 0x20002cebf8b0 (LWP 58303)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cec0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x144500d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x144501a0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cebf8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 23 (Thread 0x20002cfef8b0 (LWP 58304)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002cff0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x144541e0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143fd8b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002cfef8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 22 (Thread 0x20002d21f8b0 (LWP 58305)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145c85d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d21f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 21 (Thread 0x20002d44f8b0 (LWP 58306)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145c8940) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d44f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 20 (Thread 0x20002d67f8b0 (LWP 58307)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145c48d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d67f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 19 (Thread 0x20002d8af8b0 (LWP 58308)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145e8150) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d8af8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 18 (Thread 0x20002dadf8b0 (LWP 58309)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145e8260) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002dadf8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 17 (Thread 0x20002dd0f8b0 (LWP 58310)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145d0490) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002dd0f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 16 (Thread 0x20002df3f8b0 (LWP 58311)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145d07d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002df3f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 15 (Thread 0x20002e16f8b0 (LWP 58312)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060ace6c in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x145d08e0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e16f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 14 (Thread 0x20002e29f8b0 (LWP 58313)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e2a0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200005f3f8c4 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::BackgroundWorkThread::main_loop (this=0x143ba100) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#4  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x143b9fb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#5  0x00002000000f8cd4 in start_thread (arg=0x20002e29f8b0) at pthread_create.c:309
+#6  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 13 (Thread 0x20002ed8f8b0 (LWP 58318)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002ed90350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x14616ee0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x14616d50, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x14616d50) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x14616d50) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x146af4c0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002ed8f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 12 (Thread 0x20002efbf8b0 (LWP 58319)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002efc0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x00002000060ff848 in wait (this=0x20002efc0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::FIFOCondVar::wait (this=0x20002efba3a0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#4  0x0000200006046f28 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x146325b0, switch_to=0x20356c0013d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#5  0x000020000604861c in Realm::ThreadedTaskScheduler::thread_blocking (this=0x146325b0, thread=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:908
+#6  0x0000200005f59ec8 in Realm::Thread::wait_for_condition<Realm::EventTriggeredCondition> (cond=..., poisoned=@0x20002efbacb8: false) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.inl:218
+#7  0x0000200005f48158 in Realm::Event::wait_faultaware (this=0x20002efbbdd0, poisoned=@0x20002efbacb8: false) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/event_impl.cc:254
+#8  0x0000200005f483cc in Realm::Event::wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/event_impl.cc:206
+#9  0x000000001005f71c in Legion::Internal::LgEvent::wait() const ()
+#10 0x00002000053852cc in Legion::Internal::ReplFutureMapImpl::wait_all_results (this=0x20356c00e910, silence_warnings=<optimized out>, warning_string=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/runtime.cc:4429
+#11 0x0000200005069778 in Legion::FutureMap::wait_all_results (this=<optimized out>, silence_warnings=<optimized out>, warning_string=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/legion.cc:2609
+#12 0x00000000100a1fe8 in computeLegion(Legion::Internal::TaskContext*, Legion::Runtime*, Legion::LogicalRegion, Legion::LogicalRegion, Legion::LogicalRegion, Legion::LogicalPartition, Legion::LogicalPartition, Legion::LogicalPartition, int, int) ()
+#13 0x00000000100314b0 in std::_Function_handler<void (), top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*)::{lambda()#1}>::_M_invoke(std::_Any_data const&) ()
+#14 0x0000000010090538 in benchmark(Legion::Internal::TaskContext*, Legion::Runtime*, std::vector<unsigned long, std::allocator<unsigned long> >&, std::function<void ()>) ()
+#15 0x0000000010043630 in top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*) ()
+#16 0x000000001006feb4 in void Legion::LegionTaskWrapper::legion_task_wrapper<&(top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*))>(void const*, unsigned long, void const*, unsigned long, Realm::Processor) ()
+#17 0x0000200005ff11d0 in Realm::LocalTaskProcessor::execute_task (this=0x14386b30, func_id=<optimized out>, task_args=...) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/proc_impl.cc:1135
+#18 0x0000200006047178 in Realm::Task::execute_on_processor (this=0x20355407c7f0, p=...) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:302
+#19 0x0000200006047424 in Realm::KernelThreadTaskScheduler::execute_task (this=<optimized out>, task=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1366
+#20 0x000020000604a874 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1105
+#21 0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#22 0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x146afaa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#23 0x00002000000f8cd4 in start_thread (arg=0x20002efbf8b0) at pthread_create.c:309
+#24 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 11 (Thread 0x20002f41f8b0 (LWP 58321)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002f420350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1462a780, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1462a5f0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1462a5f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1462a5f0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x146afed0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002f41f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 10 (Thread 0x20002f64f8b0 (LWP 58322)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002f650350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x144cfcc0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x144cfb30, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x144cfb30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x144cfb30) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x14900cb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002f64f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 9 (Thread 0x20002e4cf8b0 (LWP 58326)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e4d0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x14632740, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x146325b0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x20356c0013d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002e4cf8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 8 (Thread 0x20257fd3f8b0 (LWP 58767)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20257fd40350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x00002000060ff848 in wait (this=0x20257fd40350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::FIFOCondVar::wait (this=0x20257fd3eaf0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#4  0x0000200006046f28 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x146325b0, switch_to=0x20356c0013d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#5  0x000020000604ab50 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x146325b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203554085210) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20257fd3f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 7 (Thread 0x20002faaf8b0 (LWP 58803)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002fab0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1439e180, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1439dff0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1439dff0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1439dff0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203572a632d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002faaf8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 6 (Thread 0x2035a8adf8b0 (LWP 59619)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x2035a8ae0350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x14595340, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x145951b0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x145951b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x145951b0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203594cbad20) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x2035a8adf8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 5 (Thread 0x2035a8d0f8b0 (LWP 60833)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x2035a8d10350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1438a8e0, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1438a750, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1438a750) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1438a750) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x2035b0245210) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x2035a8d0f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 4 (Thread 0x20002e6ff8b0 (LWP 60834)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002e700350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143cda60, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143cd8d0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143cd8d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x143cd8d0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203588235160) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002e6ff8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 3 (Thread 0x20002f87f8b0 (LWP 60836)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20002f880350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143aa020, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143a9e90, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143a9e90) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x143a9e90) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x20358826ff40) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20002f87f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 2 (Thread 0x20257ff6f8b0 (LWP 60841)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20257ff70350) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x0000200006043644 in wait (this=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x143a6140, old_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#4  0x0000200006043758 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x143a5fb0, old_work_counter=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#5  0x000020000604ad58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x143a5fb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#6  0x000020000604b08c in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x143a5fb0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#7  0x000020000604e2e4 in Realm::KernelThread::pthread_entry (data=0x203594fadc10) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#8  0x00002000000f8cd4 in start_thread (arg=0x20257ff6f8b0) at pthread_create.c:309
+#9  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 1 (Thread 0x20000a8a0000 (LWP 58091)):
+#0  syscall () at ../sysdeps/unix/sysv/linux/powerpc/syscall.S:29
+#1  0x00002000060fdbb0 in Realm::Doorbell::wait_slow (this=0x20000a8a0aa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:316
+#2  0x00002000060ff338 in wait (this=0x20000a8a0aa0) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#3  Realm::UnfairCondVar::wait (this=0x101e8290) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/mutex.cc:1017
+#4  0x0000200006015528 in Realm::RuntimeImpl::wait_for_shutdown (this=0x101e8160) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:2277
+#5  0x00002000060190ac in Realm::Runtime::wait_for_shutdown (this=0x7fffffffa808) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:640
+#6  0x00002000053eeeb0 in Legion::Internal::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, supply_default_mapper=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/runtime.cc:29464
+#7  0x0000200005079408 in Legion::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, default_mapper=<optimized out>) at /g/g92/wei8/release_exp/taco/legion/legion/runtime/legion/legion.cc:7618
+#8  0x000000001002ff70 in main ()
+[Inferior 1 (process 58091) detached]
