@@ -2,13 +2,15 @@
 
 set -x
 
-# bash scripts/dump_all_backtraces.sh build/cannonMM-cuda/XXXXXXX.out /g/g92/wei8/release_exp/taco/hanglog
+#                                     $path_to_jobfile                $binary_name  $output_dir
+# bash scripts/dump_all_backtraces.sh build/cannonMM-cuda/XXXXXXX.out cannonMM-cuda /g/g92/wei8/release_exp/taco/hanglog
 
 root_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 job="$1"
+binary="$2"
 # job is the path to the job file (*.out)
-scratch_dir="$2"
+scratch_dir="$3"
 mkdir -p "$scratch_dir"
 
 i=0
@@ -22,7 +24,7 @@ else
 
 fi
 for host in $hosts; do
-    ssh $host bash "$root_dir/dump_node_backtraces.sh" "$scratch_dir" &
+    ssh $host bash "$root_dir/dump_node_backtraces.sh" "$binary" "$scratch_dir" &
     if [[ $(( i % 200 )) == 0 ]]; then
         wait
     fi
