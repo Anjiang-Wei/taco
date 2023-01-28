@@ -1,0 +1,27 @@
+[New LWP 147703]
+[New LWP 147702]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x0000200000656df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+81	T_PSEUDO (SYSCALL_SYMBOL, SYSCALL_NAME, SYSCALL_NARGS)
+
+Thread 3 (Thread 0x2000037bf1b0 (LWP 147702)):
+#0  recvmsg () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/socket.S:113
+#1  0x00002000008be7a4 in FillReceiveBuffer (aEP=0x1008b630, cmd=CSM_CMD_UNDEFINED, partial=0) at /home/ppsbld/workspace/PUBLIC_CAST_V1.7.x_ppc64LE_RH7.5_ProdBuild/csmnet/src/C/csm_network_local.c:982
+#2  0x00002000008beca8 in csm_net_unix_RecvMain (aEP=0x1008b630, aBlocking=1, cmd=CSM_CMD_UNDEFINED, aReturnCtrlData=1) at /home/ppsbld/workspace/PUBLIC_CAST_V1.7.x_ppc64LE_RH7.5_ProdBuild/csmnet/src/C/csm_network_local.c:1127
+#3  0x00002000008bf8f4 in thread_callback_loop (aIn=0x10088eb0) at /home/ppsbld/workspace/PUBLIC_CAST_V1.7.x_ppc64LE_RH7.5_ProdBuild/csmnet/src/C/csm_network_local.c:1419
+#4  0x00002000004a8cd4 in start_thread (arg=0x2000037bf1b0) at pthread_create.c:309
+#5  0x0000200000667f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 2 (Thread 0x200003e4f1b0 (LWP 147703)):
+#0  0x0000200000668aa8 in epoll_wait () at ../sysdeps/unix/syscall-template.S:81
+#1  0x00002000003bb18c in epoll_dispatch (base=0x100db0a0, tv=<optimized out>) at epoll.c:462
+#2  0x00002000003ac180 in event_base_loop (base=0x100db0a0, flags=<optimized out>) at event.c:1947
+#3  0x0000200000261cac in progress_engine () from /opt/ibm/spectrum_mpi/jsm_pmix/../lib/libpmix.so.2
+#4  0x00002000004a8cd4 in start_thread (arg=0x200003e4f1b0) at pthread_create.c:309
+#5  0x0000200000667f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 1 (Thread 0x200000047940 (LWP 147676)):
+#0  0x0000200000656df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000000010005e04 in main ()
+[Inferior 1 (process 147676) detached]
