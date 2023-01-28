@@ -1,0 +1,541 @@
+[New LWP 93671]
+[New LWP 93670]
+[New LWP 93658]
+[New LWP 93657]
+[New LWP 93649]
+[New LWP 93648]
+[New LWP 93644]
+[New LWP 93643]
+[New LWP 93642]
+[New LWP 93641]
+[New LWP 93519]
+[New LWP 93513]
+[New LWP 89531]
+[New LWP 89460]
+[New LWP 89150]
+[New LWP 89143]
+[New LWP 89142]
+[New LWP 89137]
+[New LWP 89136]
+[New LWP 89135]
+[New LWP 89134]
+[New LWP 89133]
+[New LWP 89132]
+[New LWP 89131]
+[New LWP 89130]
+[New LWP 89129]
+[New LWP 89128]
+[New LWP 89127]
+[New LWP 89126]
+[New LWP 89125]
+[New LWP 89124]
+[New LWP 89123]
+[New LWP 89122]
+[New LWP 89121]
+[New LWP 89120]
+[New LWP 89119]
+[New LWP 89118]
+[New LWP 89117]
+[New LWP 88845]
+[New LWP 88844]
+[New LWP 88842]
+[New LWP 88839]
+[New LWP 88834]
+[New LWP 88818]
+[New LWP 88817]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00002000000fe92c in __pthread_cond_wait (cond=0x20000a8a0b10, mutex=0x20000a8a0ac8) at pthread_cond_wait.c:153
+153	      lll_futex_wait (&cond->__data.__futex, futex_val, pshared);
+
+Thread 46 (Thread 0x20000ad4ea60 (LWP 88817)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62a068 in poll_dispatch (base=0x102529f0, tv=0x20000ad4dfe0) at poll.c:171
+#2  0x000020000a61c180 in event_base_loop (base=0x102529f0, flags=<optimized out>) at event.c:1947
+#3  0x000020000a7f0fec in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libopen-pal.so.3
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000ad4ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 45 (Thread 0x20000b5fea60 (LWP 88818)):
+#0  0x00002000086e8aa8 in epoll_wait () at ../sysdeps/unix/syscall-template.S:81
+#1  0x000020000a62b18c in epoll_dispatch (base=0x102a7160, tv=<optimized out>) at epoll.c:462
+#2  0x000020000a61c180 in event_base_loop (base=0x102a7160, flags=<optimized out>) at event.c:1947
+#3  0x000020000ae61cac in progress_engine () from /usr/tce/packages/spectrum-mpi/ibm/spectrum-mpi-2020.08.19/lib/libpmix.so.2
+#4  0x00002000000f8cd4 in start_thread (arg=0x20000b5fea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 44 (Thread 0x20002786ea60 (LWP 88834)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002786ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 43 (Thread 0x200027c7ea60 (LWP 88839)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x200027c7ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 42 (Thread 0x20002c40ea60 (LWP 88842)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002c40ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 41 (Thread 0x20002c81ea60 (LWP 88844)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002c81ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 40 (Thread 0x20002cd2ea60 (LWP 88845)):
+#0  0x00002000086d6df8 in poll () at ../sysdeps/unix/syscall-template.S:81
+#1  0x0000200006e50ff0 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#2  0x0000200006f15bf4 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#3  0x0000200006e49c24 in ?? () from /usr/tce/packages/cuda/cuda-11.7.0/lib64/libcuda.so.1
+#4  0x00002000000f8cd4 in start_thread (arg=0x20002cd2ea60) at pthread_create.c:309
+#5  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 39 (Thread 0x20002cfcf8b0 (LWP 89117)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002cfd03c0, mutex=0x20002cfd0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002cfd0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13e2b4c0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x140bb5b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002cfcf8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 38 (Thread 0x20002d0ff8b0 (LWP 89118)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002d1003c0, mutex=0x20002d100378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002d100350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13e76270) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e72170) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002d0ff8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 37 (Thread 0x20002d22f8b0 (LWP 89119)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002d2303c0, mutex=0x20002d230378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002d230350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13e2f2b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e2b110) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002d22f8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 36 (Thread 0x20002d45f8b0 (LWP 89120)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x140d2fd0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d45f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 35 (Thread 0x20002d68f8b0 (LWP 89121)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e89b20) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d68f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 34 (Thread 0x20002d8bf8b0 (LWP 89122)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e660e0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002d8bf8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 33 (Thread 0x20002daef8b0 (LWP 89123)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e62230) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002daef8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 32 (Thread 0x20002dd1f8b0 (LWP 89124)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e469d0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002dd1f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 31 (Thread 0x20002df4f8b0 (LWP 89125)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e42af0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002df4f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 30 (Thread 0x20002e07f8b0 (LWP 89126)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002e0803c0, mutex=0x20002e080378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002e080350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13eb9880) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13fce230) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002e07f8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 29 (Thread 0x20002e1af8b0 (LWP 89127)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002e1b03c0, mutex=0x20002e1b0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002e1b0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13ebd6e0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13fce120) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002e1af8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 28 (Thread 0x20002e2df8b0 (LWP 89128)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002e2e03c0, mutex=0x20002e2e0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002e2e0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x13ebd7b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e2ef70) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002e2df8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 27 (Thread 0x20002e50f8b0 (LWP 89129)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e69fa0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e50f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 26 (Thread 0x20002e73f8b0 (LWP 89130)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13e8da00) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e73f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 25 (Thread 0x20002e96f8b0 (LWP 89131)):
+#0  sched_yield () at ../sysdeps/unix/syscall-template.S:82
+#1  0x00002000060aceac in Realm::ThreadPool::worker_entry (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/openmp/openmp_threadpool.cc:385
+#2  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13eadcb0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#3  0x00002000000f8cd4 in start_thread (arg=0x20002e96f8b0) at pthread_create.c:309
+#4  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 24 (Thread 0x20002ea9f8b0 (LWP 89132)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002eaa03c0, mutex=0x20002eaa0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002eaa0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x140b7af0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x140b38b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002ea9f8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 23 (Thread 0x20002ebcf8b0 (LWP 89133)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002ebd03c0, mutex=0x20002ebd0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002ebd0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x140abf40) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13fce010) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002ebcf8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 22 (Thread 0x20002ecff8b0 (LWP 89134)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002ed003c0, mutex=0x20002ed00378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002ed00350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x140a8160) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x13fd2060) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002ecff8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 21 (Thread 0x20002ee2f8b0 (LWP 89135)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002ee303c0, mutex=0x20002ee30378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002ee30350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x140abf70) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x140a7dd0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002ee2f8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 20 (Thread 0x20002ef5f8b0 (LWP 89136)):
+#0  0x00002000000ff5d4 in pthread_spin_lock (lock=0x10dedcb8) at ../nptl/sysdeps/powerpc/pthread_spin_lock.c:26
+#1  0x0000200014b3c128 in mlx5_poll_cq_1 () from /lib64/libmlx5-rdmav2.so
+#2  0x00002000066549f8 in gasnetc_poll_rcv_hca () from /g/g92/wei8/debug_exp/taco/deps-install/cmake-install/lib64/librealm.so.1
+Backtrace stopped: frame did not save the PC
+
+Thread 19 (Thread 0x20002f08f8b0 (LWP 89137)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002f0903c0, mutex=0x20002f090378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002f090350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200005f3f904 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::BackgroundWorkThread::main_loop (this=0x140afe20) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/bgwork.cc:166
+#5  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x140abbf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#6  0x00002000000f8cd4 in start_thread (arg=0x20002f08f8b0) at pthread_create.c:309
+#7  0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 18 (Thread 0x20002fb7f8b0 (LWP 89142)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002fb803c0, mutex=0x20002fb80378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002fb80350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x13ed4dd0, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x13ed4c40, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13ed4c40) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13ed4c40) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x14e3b590) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20002fb7f8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 17 (Thread 0x20002fdaf8b0 (LWP 89143)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002fdb03c0, mutex=0x20002fdb0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002fdb0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20002fdb0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20002fdaa3a0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13eb5700, switch_to=0x2034e80013d0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604865c in Realm::ThreadedTaskScheduler::thread_blocking (this=0x13eb5700, thread=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:908
+#7  0x0000200005f59f08 in Realm::Thread::wait_for_condition<Realm::EventTriggeredCondition> (cond=..., poisoned=@0x20002fdaacb8: false) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.inl:218
+#8  0x0000200005f48198 in Realm::Event::wait_faultaware (this=0x20002fdabdd0, poisoned=@0x20002fdaacb8: false) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/event_impl.cc:254
+#9  0x0000200005f4840c in Realm::Event::wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/event_impl.cc:206
+#10 0x000000001005f3bc in Legion::Internal::LgEvent::wait() const ()
+#11 0x00002000053852cc in Legion::Internal::ReplFutureMapImpl::wait_all_results (this=0x2034e8022600, silence_warnings=<optimized out>, warning_string=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/legion/runtime.cc:4429
+#12 0x0000200005069778 in Legion::FutureMap::wait_all_results (this=<optimized out>, silence_warnings=<optimized out>, warning_string=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/legion/legion.cc:2609
+#13 0x00000000100a1748 in computeLegion(Legion::Internal::TaskContext*, Legion::Runtime*, Legion::LogicalRegion, Legion::LogicalRegion, Legion::LogicalRegion, Legion::LogicalPartition, Legion::LogicalPartition, Legion::LogicalPartition, int, int) ()
+#14 0x00000000100311d0 in std::_Function_handler<void (), top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*)::{lambda()#1}>::_M_invoke(std::_Any_data const&) ()
+#15 0x000000001008fc98 in benchmark(Legion::Internal::TaskContext*, Legion::Runtime*, std::vector<unsigned long, std::allocator<unsigned long> >&, std::function<void ()>) ()
+#16 0x0000000010043570 in top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*) ()
+#17 0x000000001006f754 in void Legion::LegionTaskWrapper::legion_task_wrapper<&(top_level_task(Legion::Task const*, std::vector<Legion::PhysicalRegion, std::allocator<Legion::PhysicalRegion> > const&, Legion::Internal::TaskContext*, Legion::Runtime*))>(void const*, unsigned long, void const*, unsigned long, Realm::Processor) ()
+#18 0x0000200005ff1210 in Realm::LocalTaskProcessor::execute_task (this=0x13ed0d60, func_id=<optimized out>, task_args=...) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/proc_impl.cc:1135
+#19 0x00002000060471b8 in Realm::Task::execute_on_processor (this=0x2034d4008dd0, p=...) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:302
+#20 0x0000200006047464 in Realm::KernelThreadTaskScheduler::execute_task (this=<optimized out>, task=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1366
+#21 0x000020000604a8b4 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13eb5700) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1105
+#22 0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13eb5700) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#23 0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x14e3bb70) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#24 0x00002000000f8cd4 in start_thread (arg=0x20002fdaf8b0) at pthread_create.c:309
+#25 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 16 (Thread 0x20002f94f8b0 (LWP 89150)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002f9503c0, mutex=0x20002f950378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002f950350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x13eb5890, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x13eb5700, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13eb5700) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13eb5700) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x2034e80013d0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20002f94f8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 15 (Thread 0x20005cadf8b0 (LWP 89460)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005cae03c0, mutex=0x20005cae0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005cae0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x13f2cb20, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x13f2c990, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f2c990) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f2c990) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x2034f2aa5880) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005cadf8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 14 (Thread 0x20002f71f8b0 (LWP 89531)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002f7203c0, mutex=0x20002f720378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002f720350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x13eec650, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x13eec4c0, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13eec4c0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13eec4c0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20354001e040) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20002f71f8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 13 (Thread 0x20005c67f8b0 (LWP 93513)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005c6803c0, mutex=0x20005c680378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005c680350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1403d740, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1403d5b0, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1403d5b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1403d5b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x2035440266b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005c67f8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 12 (Thread 0x20005e2ef8b0 (LWP 93519)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005e2f03c0, mutex=0x20005e2f0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005e2f0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x0000200006043684 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::ThreadedTaskScheduler::WorkCounter::wait_for_work (this=0x1408c640, old_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:664
+#5  0x0000200006043798 in Realm::ThreadedTaskScheduler::wait_for_work (this=0x1408c4b0, old_work_counter=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1239
+#6  0x000020000604ad98 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x1408c4b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1205
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x1408c4b0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20354c04cce0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005e2ef8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 11 (Thread 0x20002f2bf8b0 (LWP 93641)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002f2c03c0, mutex=0x20002f2c0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002f2c0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff244 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOMutex::lock_slow (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:839
+#5  0x00002000060427c8 in lock (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:220
+#6  AutoLock (mutex=..., this=<synthetic pointer>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:329
+#7  Realm::TaskQueue::get_best_task (queues=std::vector of length 2, capacity 2 = {...}, task_priority=@0x20002f2beb80: -2147483647) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:470
+#8  0x000020000604aa58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f0bec0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1068
+#9  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f0bec0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#10 0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x203524d04610) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#11 0x00002000000f8cd4 in start_thread (arg=0x20002f2bf8b0) at pthread_create.c:309
+#12 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 10 (Thread 0x20005c8af8b0 (LWP 93642)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005c8b03c0, mutex=0x20005c8b0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005c8b0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20005c8b0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20005c8aeaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13f07fe0, switch_to=0x20352c010ba0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20351806fde0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005c8af8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 9 (Thread 0x20005da2f8b0 (LWP 93643)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005da303c0, mutex=0x20005da30378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005da30350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff244 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOMutex::lock_slow (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:839
+#5  0x00002000060427c8 in lock (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:220
+#6  AutoLock (mutex=..., this=<synthetic pointer>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:329
+#7  Realm::TaskQueue::get_best_task (queues=std::vector of length 2, capacity 2 = {...}, task_priority=@0x20005da2eb80: -2147483647) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:470
+#8  0x000020000604aa58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f13c80) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1068
+#9  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f13c80) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#10 0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x2034ee0568d0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#11 0x00002000000f8cd4 in start_thread (arg=0x20005da2f8b0) at pthread_create.c:309
+#12 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 8 (Thread 0x20005de8f8b0 (LWP 93644)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005de903c0, mutex=0x20005de90378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005de90350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff244 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOMutex::lock_slow (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:839
+#5  0x00002000060427c8 in lock (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:220
+#6  AutoLock (mutex=..., this=<synthetic pointer>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:329
+#7  Realm::TaskQueue::get_best_task (queues=std::vector of length 2, capacity 2 = {...}, task_priority=@0x20005de8eb80: -2147483647) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:470
+#8  0x000020000604aa58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13ef04a0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1068
+#9  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13ef04a0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#10 0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20354402ac00) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#11 0x00002000000f8cd4 in start_thread (arg=0x20005de8f8b0) at pthread_create.c:309
+#12 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 7 (Thread 0x20005cf3f8b0 (LWP 93648)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005cf403c0, mutex=0x20005cf40378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005cf40350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20005cf40350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20005cf3eaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13f0bec0, switch_to=0x203524d04610) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f0bec0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f0bec0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x203548009a50) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005cf3f8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 6 (Thread 0x20002ffdf8b0 (LWP 93649)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002ffe03c0, mutex=0x20002ffe0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002ffe0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20002ffe0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20002ffdeaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13ef04a0, switch_to=0x20354402ac00) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13ef04a0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13ef04a0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x2035180b3f10) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20002ffdf8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 5 (Thread 0x20005d7ff8b0 (LWP 93657)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005d8003c0, mutex=0x20005d800378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005d800350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20005d800350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20005d7feaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13f13c80, switch_to=0x2034ee0568d0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f13c80) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f13c80) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x203528080bb0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005d7ff8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 4 (Thread 0x20005dc5f8b0 (LWP 93658)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005dc603c0, mutex=0x20005dc60378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005dc60350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff244 in wait (this=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOMutex::lock_slow (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:839
+#5  0x00002000060427c8 in lock (this=0x14e31870) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:220
+#6  AutoLock (mutex=..., this=<synthetic pointer>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:329
+#7  Realm::TaskQueue::get_best_task (queues=std::vector of length 2, capacity 2 = {...}, task_priority=@0x20005dc5eb80: -2147483647) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:470
+#8  0x000020000604aa58 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1068
+#9  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#10 0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20353401dc40) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#11 0x00002000000f8cd4 in start_thread (arg=0x20005dc5f8b0) at pthread_create.c:309
+#12 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 3 (Thread 0x20005d5cf8b0 (LWP 93670)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20005d5d03c0, mutex=0x20005d5d0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20005d5d0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20005d5d0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20005d5ceaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13f07fe0, switch_to=0x20353401dc40) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20352c010ba0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20005d5cf8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 2 (Thread 0x20002f4ef8b0 (LWP 93671)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20002f4f03c0, mutex=0x20002f4f0378) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20002f4f0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff778 in wait (this=0x20002f4f0350) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::FIFOCondVar::wait (this=0x20002f4eeaf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1096
+#5  0x0000200006046f68 in Realm::KernelThreadTaskScheduler::worker_sleep (this=0x13f07fe0, switch_to=0x20351806fde0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1414
+#6  0x000020000604ab90 in Realm::ThreadedTaskScheduler::scheduler_loop (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1201
+#7  0x000020000604b0cc in Realm::ThreadedTaskScheduler::scheduler_loop_wlock (this=0x13f07fe0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/tasks.cc:1217
+#8  0x000020000604e324 in Realm::KernelThread::pthread_entry (data=0x20350c034cf0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/threads.cc:781
+#9  0x00002000000f8cd4 in start_thread (arg=0x20002f4ef8b0) at pthread_create.c:309
+#10 0x00002000086e7f14 in clone () at ../sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S:104
+
+Thread 1 (Thread 0x20000a8a0000 (LWP 88814)):
+#0  0x00002000000fe92c in __pthread_cond_wait (cond=0x20000a8a0b10, mutex=0x20000a8a0ac8) at pthread_cond_wait.c:153
+#1  0x00002000060fee70 in Realm::KernelCondVar::wait (this=<error reading variable: value has been optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1168
+#2  0x00002000060ff028 in Realm::Doorbell::wait_slow (this=0x20000a8a0aa0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:355
+#3  0x00002000060ff5d8 in wait (this=0x20000a8a0aa0) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.inl:81
+#4  Realm::UnfairCondVar::wait (this=0x101e8290) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/mutex.cc:1017
+#5  0x0000200006015568 in Realm::RuntimeImpl::wait_for_shutdown (this=0x101e8160) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:2277
+#6  0x00002000060190ec in Realm::Runtime::wait_for_shutdown (this=0x7fffffff9ce8) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/realm/runtime_impl.cc:640
+#7  0x00002000053eeeb0 in Legion::Internal::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, supply_default_mapper=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/legion/runtime.cc:29464
+#8  0x0000200005079408 in Legion::Runtime::start (argc=<optimized out>, argv=<optimized out>, background=<optimized out>, default_mapper=<optimized out>) at /g/g92/wei8/debug_exp/taco/legion/legion/runtime/legion/legion.cc:7618
+#9  0x000000001002fca0 in main ()
+[Inferior 1 (process 88814) detached]
