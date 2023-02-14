@@ -729,6 +729,7 @@ def main():
     parser.add_argument("--tightsource", default=False, action="store_true")
     parser.add_argument("--oneutil", default=False, action="store_true")
     parser.add_argument("--safe", default=False, action="store_true")
+    parser.add_argument("--trymap", default=False, action='store_true')
     args = parser.parse_args()
 
     size = args.size
@@ -801,9 +802,10 @@ def main():
         bench = AdaptBench(size, args.gpus, False)
     else:
         assert(False)
-    dsl_cmd = ["-dslmapper", "-mapping", "mappings", "-tm:select_source_by_bandwidth"] # use defaultmapper's select_source
+    mapping_file = "mappings_try" if args.trymap else "mappings"
+    dsl_cmd = ["-dslmapper", "-mapping", f"{mapping_file}", "-tm:select_source_by_bandwidth"] # use defaultmapper's select_source
     if args.tightsource: # HTR mapper's select_source
-        dsl_cmd = ["-dslmapper", "-mapping", "mappings"]
+        dsl_cmd = ["-dslmapper", "-mapping", f"{mapping_file}"]
     for p in args.procs:
         wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"tacowrapper_{p}_{args.gpus}_%.log"]
         wrapper_dsl_cmd =  ["-wrapper", "-level", "mapper=debug", "-level", "nsmapper=debug", "-logfile", f"dslwrapper_{p}_{args.gpus}_%.log"]
