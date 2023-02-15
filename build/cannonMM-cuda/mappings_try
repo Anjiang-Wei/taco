@@ -57,7 +57,7 @@ def auto2d_omp(Task task) {
 # init_cublas: 1-dim, over all GPUs
 IndexTaskMap init_cublas linear_distribute;
 # task7: (gridX, gridY)
-IndexTaskMap task_7 auto2d_omp;
+# IndexTaskMap task_7 auto2d_omp;
 # task_4 originate from task_5 (GPUs)
-SingleTaskMap task_4 same_point;
+# SingleTaskMap task_4 same_point;
 # task_6 originate from task_7 (1 OMP)
