@@ -12,5 +12,5 @@ module load cuda/11.7.0
 # --onlytaco --onlydsl --trymap
 # --backtrace --wrapper --inorder --prof --inorder
 
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --wrapper
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --onlydsl --trymap --wrapper
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --wrapper --inorder --backtrace
+python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench solomonik-gpu --onlydsl --trymap --wrapper --inorder --backtrace
