@@ -12,5 +12,5 @@ module load cuda/11.7.0
 # --onlytaco --onlydsl
 # --backtrace --wrapper --inorder --prof --inorder
 
-python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench pumma-gpu
+# python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench pumma-gpu
 python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench pumma-gpu --onlydsl --trymap
