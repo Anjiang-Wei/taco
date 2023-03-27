@@ -12,7 +12,7 @@ def cannon():
     global cpp, dsl, tune
     cpp = [27117.9661,9292.142102,13372.16883,0,12376.63895,0,8899.986094]
     dsl = [27117.9661,9765.371609,14828.359592,0,12931.82461,0,10914.01774]
-    tune = [7637.040573,4326.265013,6168.003084,0,6646.54689,0,6257.619164]
+    tune = [7637.040573,4326.265013,6168.003084,3216.056572,6646.54689,2987.807476,6257.619164]
 
 def pumma():
     global cpp, dsl, tune
@@ -83,9 +83,9 @@ def pennant():
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("Thoughput Per Node ($10^{8}$ zones/s)", fontsize=20)
 
-# cannon()
+cannon()
 # pumma()
-summa()
+# summa()
 # solomonik()
 # johnson()
 # cosma()
