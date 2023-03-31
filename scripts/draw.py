@@ -68,10 +68,10 @@ def stencil():
     cells = 4 * 50 * 15000 * 15000
     ctime = [0.5578,0.5776,0.5952,0.6052,0.6112,0.6204,0.6312]
     dtime = [0.558,0.5774,0.5954,0.6052,0.6126,0.6202,0.6306]
-    ftime = [0.5582,0.586,0.5954,0.6014,0.6316,0.6396,0.6518]
+    ftime = [0.5582,0.586,0.5954,0.6016,0.6316,0.6396,0.6518]
     cpp = [cells / i / 1e10 for i in ctime]
     dsl = [cells / i / 1e10 for i in dtime]
-    dft = [cells / i / 1e10 for i in dtime]
+    dft = [cells / i / 1e10 for i in ftime]
     y = [6.5 + i * 0.5 for i in range(0, 6)]
     plt.ylim([6.5, 8.5])
     plt.yticks(y, fontsize=20)
@@ -102,8 +102,8 @@ def pennant():
 # cosma()
 
 # circuit()
-# stencil()
-pennant()
+stencil()
+# pennant()
 
 length = len(cpp)
 x = np.array(x)
