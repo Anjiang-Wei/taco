@@ -7,41 +7,49 @@ labels = [str(2**i) + " (" + str(2**i * 4) + ")" for i in range(0, len(x))]
 plt.xticks(x, labels, fontsize=20)
 # plt.yticks(y, fontsize=20)
 
+absolute = True
+
 cpp = dsl = dft = None
 GEMM = True
 
 def cannon():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [27117.9661,9292.142102,13372.16883,0,12376.63895,0,8899.986094]
     dsl = [27117.9661,9765.371609,14828.359592,0,12931.82461,0,10914.01774]
     dft = [7637.040573,4326.265013,6168.003084,3216.056572,6646.54689,2987.807476,6257.619164]
 
 def pumma():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [27210.20408,16336.72637,16023.83575,0,12648.14229,0,9151.326232]
     dsl = [27026.35135,16138.63482,15391.82299,0,13448.11935,0,9732.329684]
     dft = [7622.486899,5187.154062,5818.109091,0,5716.802144,0,6570.484061]
 
 def summa():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [26844.96644,15756.5223,15678.39295,0,12576.06603,0,8448.818482]
     dsl = [27256.55877,15205.89114,14492.57246,0,12673.18812,0,8673.822593]
     dft = [7607.988588,4796.770409,6092.840823,0,6011.609994,0,5418.43119]
 
 def solomonik():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [28267.84452,14010.13376,11790.56743,7116.391261,10657.71857,5743.173047,8850.753699]
     dsl = [28217.98942,14053.64349,12038.97667,6581.316467,10435.28453,5410.165823,10717.54166]
     dft = [28118.80492,14311.42696,16251.70137,8217.383699,11506.58037,5102.128871,0]
 
 def johnson():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [27680.96886,15154.96719,10796.08637,7473.67994,9400.6463]
     dsl = [27728.94281,15144.8233,10869.42935,6842.021776,9396.505652]
     dft = [29519.5572,12812.21179,18680.44367,10110.17248,0]
 
 def cosma():
-    global cpp, dsl, dft
+    global cpp, dsl, dft, GEMM
+    GEMM = True
     cpp = [21857.37705,15175.29579,13366.58312,8527.064636,9421.404388]
     dsl = [22252.57302,15054.13574,13417.02306,8468.026204,9407.555492]
     dft = [20024.53066,12848.58945,15332.82223,0,0]
@@ -94,6 +102,36 @@ def pennant():
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("Thoughput Per Node ($10^{8}$ zones/s)", fontsize=20)
 
+def baseline():
+    if absolute:
+        print("BENCH," + ",".join([str(item) if item > 0 else "N/A" for item in (units(cpp) if GEMM else cpp)] + ["N/A"] * (len(x) - len(cpp)) ))
+    else:
+        print(",".join(["1.0"] * (len(cpp) + 1) + ["N/A"] * (len(x) - len(cpp)) ))
+
+def compute(bench, a, b):
+    if absolute:
+        print(bench + ",".join([str(a[i]) if a[i] != 0 else "N/A" for i in range(len(a)) ]
+                           + ["N/A"] * (len(x) - len(cpp)) ))
+    else:
+        print(bench + ",".join([str(a[i] / b[i]) if ( b[i] != 0 and a[i] != 0) else "N/A" for i in range(len(a)) ]
+                           + ["N/A"] * (len(x) - len(cpp)) ))
+
+def units(a):
+    return [i / 1e3 for i in a]
+
+def numbers():
+    circuit(), baseline(), compute("circuitdsl,", dsl, cpp), compute("circuitdft,", dft, cpp)
+    stencil(), baseline(), compute("stencildsl,", dsl, cpp), compute("stencildft,", dft, cpp)
+    pennant(), baseline(), compute("pennantdsl,", dsl, cpp), compute("pennantdft,", dft, cpp)
+    # throughput
+    cannon(), baseline(), compute("cannondsl,", units(dsl), units(cpp)), compute("cannondft,", units(dft), units(cpp))
+    pumma(), baseline(), compute("pummadsl,", units(dsl), units(cpp)), compute("pummadft,", units(dft), units(cpp))
+    summa(), baseline(), compute("summadsl,", units(dsl), units(cpp)), compute("summadft,", units(dft), units(cpp))
+    solomonik(), baseline(), compute("solomonikdsl,", units(dsl), units(cpp)), compute("solomonikdft,", units(dft), units(cpp))
+    johnson(), baseline(), compute("johnsondsl,", units(dsl), units(cpp)), compute("johnsondft,", units(dft), units(cpp))
+    cosma(), baseline(), compute("cosmadsl,", units(dsl), units(cpp)), compute("cosmadft,", units(dft), units(cpp))
+    exit()
+
 # cannon()
 # pumma()
 # summa()
@@ -102,8 +140,10 @@ def pennant():
 # cosma()
 
 # circuit()
-stencil()
-# pennant()
+# stencil()
+pennant()
+
+# numbers()
 
 length = len(cpp)
 x = np.array(x)
@@ -111,18 +151,18 @@ cpp = np.array(cpp)
 dsl = np.array(dsl)
 dft = np.array(dft)
 
-plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="C++", linewidth=3, markersize=16)
-plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Maple", linewidth=3, markersize=16)
+plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="Modified C++", linewidth=3, markersize=16)
+plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Modified Maple", linewidth=3, markersize=16)
 
 if GEMM:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default Maple", linewidth=3, markersize=16)
     y = [5000 * i for i in range(0, 6)]
     plt.yticks(y, fontsize=20)
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("GFLOP/s Per Node", fontsize=20)
 # plt.plot(x, full_db, "--+", label="full - db")
 else:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default Maple", linewidth=3, markersize=16)
 
 plt.legend(fontsize=20)
 plt.show()
