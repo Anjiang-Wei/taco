@@ -64,8 +64,8 @@ def circuit():
     cpp = [wires / i / 1e7 for i in ctime]
     dsl = [wires / i / 1e7 for i in dtime]
     dft = [wires / i / 1e7 for i in ftime]
-    y = [i for i in range(0, 5)]
-    plt.ylim([0, 4])
+    y = [2 + i * 0.5 for i in range(0, 7)]
+    plt.ylim([2, 5])
     plt.yticks(y, fontsize=20)
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("Thoughput Per Node ($10^{7}$ wires/s)", fontsize=20)
@@ -151,18 +151,18 @@ cpp = np.array(cpp)
 dsl = np.array(dsl)
 dft = np.array(dft)
 
-plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="Modified C++", linewidth=3, markersize=16)
-plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Modified Maple", linewidth=3, markersize=16)
-
 if GEMM:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default Maple", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Baseline", linewidth=3, markersize=16)
     y = [5000 * i for i in range(0, 6)]
     plt.yticks(y, fontsize=20)
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("GFLOP/s Per Node", fontsize=20)
 # plt.plot(x, full_db, "--+", label="full - db")
 else:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default Maple", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Baseline", linewidth=3, markersize=16)
+
+plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="Customized C++", linewidth=3, markersize=16)
+plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Customized Maple", linewidth=3, markersize=16)
 
 plt.legend(fontsize=20)
 plt.show()
