@@ -137,11 +137,11 @@ def numbers():
 # summa()
 # solomonik()
 # johnson()
-# cosma()
+cosma()
 
 # circuit()
 # stencil()
-pennant()
+# pennant()
 
 # numbers()
 
@@ -152,17 +152,17 @@ dsl = np.array(dsl)
 dft = np.array(dft)
 
 if GEMM:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Baseline", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default", linewidth=3, markersize=16)
     y = [5000 * i for i in range(0, 6)]
     plt.yticks(y, fontsize=20)
     plt.xlabel("Nodes (GPUs)", fontsize=20)
     plt.ylabel("GFLOP/s Per Node", fontsize=20)
 # plt.plot(x, full_db, "--+", label="full - db")
 else:
-    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Baseline", linewidth=3, markersize=16)
+    plt.plot(x[:length][dft>0], dft[dft>0], "--^", label="Default", linewidth=3, markersize=16)
 
-plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="Customized C++", linewidth=3, markersize=16)
-plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Customized Maple", linewidth=3, markersize=16)
+plt.plot(x[:length][cpp > 0], cpp[cpp > 0], "--x", label="Hand-tuned C++", linewidth=3, markersize=16)
+plt.plot(x[:length][dsl > 0], dsl[dsl > 0], "--o", label="Hand-tuned Maple", linewidth=3, markersize=16)
 
 plt.legend(fontsize=20)
 plt.show()
