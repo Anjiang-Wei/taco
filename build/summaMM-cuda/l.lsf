@@ -14,7 +14,7 @@ module load cuda/11.7.0
 
 # resolve hang on 8 nodes and 32 nodes
 if (( $numnodes == 8  || $numnodes == 32 )); then
-    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu--prof
+    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --prof
     exit 0
 fi
 
