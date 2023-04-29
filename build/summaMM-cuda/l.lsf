@@ -12,6 +12,12 @@ module load cuda/11.7.0
 # --onlytaco --onlydsl
 # --backtrace --wrapper --inorder --prof --inorder
 
+# resolve hang on 8 nodes and 32 nodes
+if (( $numnodes == 8  || $numnodes == 32 )); then
+    python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu--prof
+    exit 0
+fi
+
 if (( $numnodes < 32 )); then
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --wrapper --inorder --backtrace
     python3 ../../scripts/benchmark_lassen.py --gpus $numgpus --procs $numnodes --bench summa-gpu --prof
