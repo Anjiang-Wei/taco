@@ -809,8 +809,8 @@ def main():
     for p in args.procs:
         wrapper_taco_cmd = ["-wrapper", "-level", "mapper=debug", "-logfile", f"tacowrapper_{p}_{args.gpus}_%.log"]
         wrapper_dsl_cmd =  ["-wrapper", "-level", "mapper=debug", "-level", "nsmapper=debug", "-logfile", f"dslwrapper_{p}_{args.gpus}_%.log"]
-        prof_taco_cmd = ["-lg:prof", f"{p}", "-lg:prof_logfile", f"tacoprof_{args.bench}_{p}_{args.gpus}_%.gz"]
-        prof_dsl_cmd = ["-lg:prof", f"{p}", "-lg:prof_logfile", f"dslprof_{args.bench}_{p}_{args.gpus}_%.gz"]
+        prof_taco_cmd = ["-lg:prof", f"{8 if p == 32 else p}", "-lg:prof_logfile", f"tacoprof_{args.bench}_{p}_{args.gpus}_%.gz"]
+        prof_dsl_cmd = ["-lg:prof", f"{8 if p == 32 else p}", "-lg:prof_logfile", f"dslprof_{args.bench}_{p}_{args.gpus}_%.gz"]
         cmd = bench.getCommand(p)
         if args.oneutil or args.wrapper: # if turned on wrapper, then also use 1 util to avoid writer conflict
             # replace ['-ll:util', '4'] with ['-ll:util', '1']
