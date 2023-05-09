@@ -45,7 +45,9 @@ def cmake(dir, defines={}, env=None):
     cmakeCmd = ["cmake", dir]
     for key, value in defines.items():
         assert isinstance(key, str)
-        if isinstance(value, bool):
+        if key == "LEGION_SEPARATE_META_TASKS":
+            cmakeCmd.append("-DLEGION_SEPARATE_META_TASKS")
+        elif isinstance(value, bool):
             cmakeCmd.append("-D{0}={1}".format(key, "ON" if value else "OFF"))
         elif isinstance(value, str) or isinstance(value, int):
             cmakeCmd.append("-D{0}={1}".format(key, value))
@@ -138,7 +140,7 @@ with pushd(args.deps_install_dir):
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
             "Legion_USE_HDF5": True,
-            "LEGION_SEPARATE_META_TASKS": True,
+            "LEGION_SEPARATE_META_TASKS": "should_be_-DLEGION_SEPARATE_META_TASKS"
             # "Legion_SPY": True, # below 3 specificially added for debugging
             # "Legion_BOUNDS_CHECKS": True,
             # "Legion_PRIVILEGE_CHECKS": True,
