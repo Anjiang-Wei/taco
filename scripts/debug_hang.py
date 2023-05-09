@@ -46,7 +46,7 @@ def cmake(dir, defines={}, env=None):
     for key, value in defines.items():
         assert isinstance(key, str)
         if key == "LEGION_SEPARATE_META_TASKS":
-            cmakeCmd.append("-DLEGION_SEPARATE_META_TASKS")
+            cmakeCmd.append("-DLEGION_SEPARATE_META_TASKS=ON")
         elif isinstance(value, bool):
             cmakeCmd.append("-D{0}={1}".format(key, "ON" if value else "OFF"))
         elif isinstance(value, str) or isinstance(value, int):
@@ -173,6 +173,7 @@ with pushd(args.distal_build_dir):
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_MODULE_PATH": os.path.join(distalRoot, "cmake"),
         "CMAKE_PREFIX_PATH": ";".join([cmakeInstallPath, makeInstallPath]),
+        "LEGION_SEPARATE_META_TASKS": "also -DLEGION_SEPARATE_META_TASKS=ON"
     }
     if args.openmp:
         cmakeDefs["OPENMP"] = True
