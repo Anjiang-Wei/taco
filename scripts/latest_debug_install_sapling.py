@@ -76,7 +76,7 @@ with pushd(args.deps_install_dir):
 
     # HDF5.
     if not os.path.exists("hdf5-1.10.1"):
-        wget("http://sapling.stanford.edu/~manolis/hdf/hdf5-1.10.1.tar.gz")
+        wget("http://sapling2.stanford.edu/~anjiang/hdf/hdf5-1.10.1.tar.gz")
         run("mkdir", "hdf5-1.10.1")
         run("tar", "-xf", "hdf5-1.10.1.tar.gz", "-C", "hdf5-1.10.1", "--strip-components", "1")
     with pushd("hdf5-1.10.1"):
@@ -125,9 +125,9 @@ with pushd(args.deps_install_dir):
             "CMAKE_BUILD_TYPE": "Debug",
             "CMAKE_INSTALL_PREFIX": cmakeInstallPath,
             "Legion_USE_HDF5": True,
-            # "Legion_SPY": True, # below 3 specificially added for debugging
-            # "Legion_BOUNDS_CHECKS": True,
-            # "Legion_PRIVILEGE_CHECKS": True,
+            "Legion_SPY": True, # below 3 specificially added for debugging
+            "Legion_BOUNDS_CHECKS": True,
+            "Legion_PRIVILEGE_CHECKS": True,
         }
         if args.openmp:
             cmakeDefs["Legion_USE_OpenMP"] = True
